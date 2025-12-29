@@ -1,0 +1,150 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
+            "cacheVariables": {
+                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+                "CMAKE_CXX_EXTENSIONS": "OFF",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            },
+            "condition": {
+                "type": "notEquals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "conan-base",
+            "hidden": true,
+            "inherits": "base",
+            "toolchainFile": "${sourceDir}/build/${presetName}/conan_toolchain.cmake"
+        },
+        {
+            "name": "conan-debug",
+            "displayName": "Conan Debug Config",
+            "description": "Debug build using Conan 2",
+            "inherits": "conan-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS_DEBUG": "-g -O0 -DDEBUG -fsanitize=address,undefined",
+                "CMAKE_LINKER_FLAGS_DEBUG": "-fsanitize=address,undefined"
+            }
+        },
+        {
+            "name": "conan-release",
+            "displayName": "Conan Release Config",
+            "description": "Release build using Conan 2 with optimizations",
+            "inherits": "conan-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG -march=native -flto",
+                "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+            }
+        },
+        {
+            "name": "conan-relwithdebinfo",
+            "displayName": "Conan RelWithDebInfo Config",
+            "description": "Release build with debug info using Conan 2",
+            "inherits": "conan-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "-O2 -g -DNDEBUG"
+            }
+        },
+        {
+            "name": "coverage",
+            "displayName": "Coverage Config",
+            "description": "Debug build with coverage analysis",
+            "inherits": "conan-debug",
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS_DEBUG": "-g -O0 -DDEBUG --coverage",
+                "CMAKE_LINKER_FLAGS_DEBUG": "--coverage"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "conan-debug",
+            "configurePreset": "conan-debug",
+            "displayName": "Conan Debug Build",
+            "description": "Build debug configuration with Conan"
+        },
+        {
+            "name": "conan-release",
+            "configurePreset": "conan-release",
+            "displayName": "Conan Release Build",
+            "description": "Build release configuration with Conan"
+        },
+        {
+            "name": "conan-relwithdebinfo",
+            "configurePreset": "conan-relwithdebinfo",
+            "displayName": "Conan RelWithDebInfo Build",
+            "description": "Build release with debug info using Conan"
+        },
+        {
+            "name": "coverage",
+            "configurePreset": "coverage",
+            "displayName": "Coverage Build",
+            "description": "Build with coverage analysis"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "conan-debug",
+            "configurePreset": "conan-debug",
+            "displayName": "Debug Tests (Conan)",
+            "description": "Run tests in debug mode",
+            "output": {
+                "outputOnFailure": true,
+                "verbosity": "default"
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": false
+            }
+        },
+        {
+            "name": "conan-release",
+            "configurePreset": "conan-release",
+            "displayName": "Release Tests (Conan)",
+            "description": "Run tests in release mode",
+            "output": {
+                "outputOnFailure": true,
+                "verbosity": "default"
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": false
+            }
+        },
+        {
+            "name": "coverage",
+            "configurePreset": "coverage",
+            "displayName": "Coverage Tests",
+            "description": "Run tests with coverage analysis",
+            "output": {
+                "outputOnFailure": true,
+                "verbosity": "verbose"
+            }
+        }
+    ],
+    "packagePresets": [
+        {
+            "name": "conan-release",
+            "configurePreset": "conan-release",
+            "displayName": "Release Package",
+            "description": "Create release package"
+        }
+    ]
+}

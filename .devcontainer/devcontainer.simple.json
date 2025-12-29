@@ -1,0 +1,27 @@
+{
+    "name": "FastQTools Dev (Simple)",
+    "build": {
+        "dockerfile": "../docker/Dockerfile.dev",
+        "context": "..",
+        "target": "development"
+    },
+    "workspaceFolder": "/workspace",
+    "remoteUser": "developer",
+    "overrideCommand": true,
+    "postCreateCommand": "bash -lc \"git config commit.template .gitmessage.txt || true; conan profile detect --force >/dev/null 2>&1 || true\"",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "cmake.generator": "Ninja",
+                "cmake.configureOnOpen": false,
+                "clangd.path": "/usr/bin/clangd"
+            },
+            "extensions": [
+                "ms-vscode.cmake-tools",
+                "llvm-vs-code-extensions.vscode-clangd",
+                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-extension-pack"
+            ]
+        }
+    }
+}

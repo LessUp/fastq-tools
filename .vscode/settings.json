@@ -1,0 +1,5 @@
+{
+    "git.useEditorAsCommitInput": true,
+    "git.postCommitCommand": "none",
+    "git.enableCommitSigning": false
+}
