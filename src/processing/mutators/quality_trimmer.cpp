@@ -4,6 +4,10 @@
 
 #include <fmt/format.h>
 
+#ifdef __AVX2__
+#include <immintrin.h>
+#endif
+
 namespace fq::processing {
 
 // --- QualityTrimmer ---
@@ -67,7 +71,41 @@ void QualityTrimmer::process(fq::io::FastqRecord& read) {
 auto QualityTrimmer::trimFivePrime(std::string_view sequence, std::string_view quality) const
     -> size_t {
     size_t len = std::min(sequence.size(), quality.size());
-    for (size_t i = 0; i < len; ++i) {
+    size_t i = 0;
+
+#ifdef __AVX2__
+    // Align? No usually just loadu.
+    // Quality is char, encoded.
+    // Threshold check: qual[i] - encoding >= threshold
+    // => qual[i] >= threshold + encoding
+    // Let target = threshold + encoding
+    int target = static_cast<int>(qualityThreshold_) + qualityEncoding_;
+    // If target > 127 or so, be careful with signed comparisons.
+    // char is usually signed. -128 to 127.
+    // Quality scores are usually 33..70+.
+    // _mm256_cmpgt_epi8 does signed comparison.
+    // If target > 127, we might have issues if char is signed.
+    // Standard fastq qual is printable ASCII (33-126).
+    // So all positive in signed char.
+
+    __m256i vTarget = _mm256_set1_epi8(static_cast<char>(target - 1));
+    // We want to find FIRST char where q >= target.
+    // Equivalent to q > target - 1.
+    // So we invoke cmpgt(q, target - 1).
+
+    for (; i + 32 <= len; i += 32) {
+        __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(quality.data() + i));
+        __m256i result = _mm256_cmpgt_epi8(chunk, vTarget);
+        int mask = _mm256_movemask_epi8(result);
+        if (mask != 0) {
+            // Found a high quality base
+            return i + __builtin_ctz(mask);
+        }
+    }
+    // Handle remaining... falls through to scalar
+#endif
+
+    for (; i < len; ++i) {
         if (isHighQuality(quality[i])) {
             return i;
         }

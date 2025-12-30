@@ -50,7 +50,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         add_compile_options(-g -O0)
     else()
         # Release build optimizations
-        add_compile_options(-O3 -march=native)
+        add_compile_options(-O3 -march=native -mavx2)
     endif()
 endif()
 
