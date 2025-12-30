@@ -22,6 +22,17 @@ class FastQToolsConan(ConanFile):
     def layout(self):
         cmake_layout(self)
 
+    def requirements(self):
+        self.requires("cxxopts/3.1.1")
+        self.requires("spdlog/1.12.0")
+        self.requires("fmt/10.1.1")
+        self.requires("zlib/1.3")
+        self.requires("bzip2/1.0.8")
+        self.requires("xz_utils/5.4.5")
+        self.requires("nlohmann_json/3.11.2")
+        self.requires("onetbb/2021.10.0")
+        self.requires("libdeflate/1.19", override=True)
+
     def generate(self):
         tc = CMakeToolchain(self)
         tc.generate()
