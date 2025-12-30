@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     ccache \
+    libdeflate-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN wget -q https://apt.llvm.org/llvm.sh && \
@@ -69,6 +70,7 @@ RUN apt-get update && apt-get install -y \
     zlib1g \
     libbz2-1.0 \
     liblzma5 \
+    libdeflate0 \
     && rm -rf /var/lib/apt/lists/*
 
 # 创建非root用户
@@ -84,10 +86,14 @@ WORKDIR /app
 
 # 从构建阶段复制二进制文件
 COPY --from=build /workspace/build/FastQTools /usr/local/bin/
-COPY --from=build /workspace/build/lib* /usr/local/lib/
+COPY --from=build /workspace/build/lib* /usr/local/lib/ 2>/dev/null || true
 
 # 创建符号链接
 RUN ln -sf /usr/local/bin/FastQTools /usr/local/bin/fastqtools
+
+# 创建数据目录
+RUN mkdir -p /app/data /app/output && \
+    chown -R $USERNAME:$USERNAME /app
 
 # 切换到非root用户
 USER $USERNAME
@@ -95,6 +101,8 @@ USER $USERNAME
 # 设置环境变量
 ENV PATH=/usr/local/bin:$PATH
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+ENV FASTQTOOLS_DATA_DIR=/app/data
+ENV FASTQTOOLS_OUTPUT_DIR=/app/output
 
 # 暴露端口（如果需要网络服务）
 EXPOSE 8080

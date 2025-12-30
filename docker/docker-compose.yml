@@ -29,7 +29,7 @@ services:
   prod:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.prod
+      dockerfile: docker/Dockerfile
       target: production
     container_name: fastqtools-prod
     volumes:
