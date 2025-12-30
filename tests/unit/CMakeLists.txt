@@ -63,6 +63,11 @@ add_unit_test(test_statistics
     statistics/test_statistics.cpp
 )
 
+# Memory模块测试
+add_unit_test(test_memory
+    memory/test_object_pool.cpp
+)
+
 # 创建测试组
 add_custom_target(unit_tests
     DEPENDS 
@@ -72,5 +77,6 @@ add_custom_target(unit_tests
         test_io
         test_processing
         test_statistics
+        test_memory
     COMMENT "Building all unit tests"
 )

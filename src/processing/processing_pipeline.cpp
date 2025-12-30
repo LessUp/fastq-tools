@@ -1,5 +1,6 @@
 #include "processing/processing_pipeline.h"
 
+#include "fqtools/io/fastq_batch_pool.h"
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/io/fastq_writer.h"
 #include "fqtools/processing/read_mutator_interface.h"
@@ -172,14 +173,16 @@ auto SequentialProcessingPipeline::processWithTBB() -> ProcessingStatistics {
         }
         maxTokens = std::max(static_cast<size_t>(1), maxTokens);
 
+        // 创建 FastqBatch 对象池，预分配 maxTokens 个对象
+        auto batchPool = fq::io::createFastqBatchPool(maxTokens, maxTokens * 2);
+
         tbb::parallel_pipeline(
             maxTokens,
 
             tbb::make_filter<void, std::shared_ptr<fq::io::FastqBatch>>(
                 tbb::filter_mode::serial_in_order,
-                [reader, this](tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
-                    auto batch = std::make_shared<fq::io::FastqBatch>(config_.batchCapacityBytes,
-                                                                      config_.batchSize);
+                [reader, batchPool, this](tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
+                    auto batch = batchPool->acquire();
                     if (reader->nextBatch(*batch, config_.batchSize)) {
                         return batch;
                     }
