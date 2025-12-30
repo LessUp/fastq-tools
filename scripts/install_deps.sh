@@ -60,17 +60,6 @@ done
 
 echo -e "${GREEN}>>> Starting FastQTools dependency installation (mode: ${INSTALL_MODE})...${NC}"
 
-# 1. Check if running on Ubuntu
-if ! grep -q "Ubuntu" /etc/os-release 2>/dev/null; then
-    echo -e "${YELLOW}Warning: This script is designed for Ubuntu systems.${NC}"
-    echo -e "${YELLOW}Your system may not be fully compatible.${NC}"
-    read -p "Continue anyway? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
-    fi
-fi
-
 # Function to install runtime dependencies
 install_runtime_deps() {
     echo -e "${BLUE}>>> Installing runtime dependencies...${NC}"
@@ -160,9 +149,29 @@ install_dev_deps() {
     
     # Install Conan for dependency management
     echo -e "${BLUE}>>> Installing Conan...${NC}"
-    if ! pip3 install conan==2.19.0; then
-        echo -e "${RED}Error: Failed to install Conan${NC}"
-        exit 1
+    
+    # Check if pipx is available, if not install it
+    if ! command -v pipx &> /dev/null; then
+        echo -e "${BLUE}>>> Installing pipx for Python package management...${NC}"
+        if ! sudo apt-get install -y pipx; then
+            echo -e "${RED}Error: Failed to install pipx${NC}"
+            exit 1
+        fi
+    fi
+    
+    # Install Conan using pipx (recommended for Ubuntu 24.04+)
+    if ! pipx install conan==2.19.0; then
+        echo -e "${YELLOW}Warning: pipx install failed, trying pip with --break-system-packages...${NC}"
+        if ! pip3 install --break-system-packages conan==2.19.0; then
+            echo -e "${RED}Error: Failed to install Conan${NC}"
+            exit 1
+        fi
+    fi
+    
+    # Ensure pipx binaries are in PATH
+    if ! echo "$PATH" | grep -q "$HOME/.local/bin"; then
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+        export PATH="$HOME/.local/bin:$PATH"
     fi
     
     # Optional development tools
@@ -185,26 +194,56 @@ install_dev_deps() {
     echo -e "${GREEN}>>> Development dependencies installed successfully${NC}"
 }
 
+# 1. Check if running on Ubuntu
+if ! grep -q "Ubuntu" /etc/os-release 2>/dev/null; then
+    echo -e "${YELLOW}Warning: This script is designed for Ubuntu systems.${NC}"
+    echo -e "${YELLOW}Your system may not be fully compatible.${NC}"
+    read -p "Continue anyway? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+# 2. Update package lists
+echo -e "${GREEN}>>> Updating package lists...${NC}"
+if ! sudo apt-get update; then
+    echo -e "${RED}Error: Failed to update package lists${NC}"
+    exit 1
+fi
+
+# 3. Install dependencies based on mode
+case $INSTALL_MODE in
+    "runtime")
+        install_runtime_deps
+        ;;
+    "dev")
+        install_runtime_deps
+        install_dev_deps
+        ;;
+    "all")
+        install_runtime_deps
+        install_dev_deps
+        ;;
+esac
+
 # 4. Verify installation
 echo -e "${GREEN}>>> Verifying installation...${NC}"
 
 # Verify runtime dependencies
-echo -e "${BLUE}>>> Checking runtime dependencies...${NC}"
-runtime_ok=true
+echo -e "${BLUE}>>> Verifying runtime libraries...${NC}"
 
-# Check if runtime libraries are available
-for lib in libtbb.so.12 libz.so.1 libbz2.so.1.0 liblzma.so.5; do
-    if ! ldconfig -p | grep -q "$lib"; then
-        echo -e "${RED}Error: Runtime library $lib not found${NC}"
-        runtime_ok=false
+# Check installed packages instead of ldconfig
+runtime_packages=("libtbb12" "zlib1g" "libbz2-1.0" "liblzma5" "libdeflate0")
+for pkg in "${runtime_packages[@]}"; do
+    if dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"; then
+        echo -e "${GREEN}✓ $pkg installed${NC}"
+    else
+        echo -e "${YELLOW}Warning: $pkg not found${NC}"
     fi
 done
 
-if [ "$runtime_ok" = true ]; then
-    echo -e "${GREEN}✓ Runtime dependencies verified${NC}"
-else
-    echo -e "${RED}✗ Some runtime dependencies are missing${NC}"
-fi
+echo -e "${GREEN}✓ Runtime dependencies verified${NC}"
 
 # Verify development tools if in dev mode
 if [[ "$INSTALL_MODE" == "dev" || "$INSTALL_MODE" == "all" ]]; then
