@@ -3,7 +3,11 @@ set -e
 
 # Compile benchmark tool
 echo "Building FastQTools..."
-cmake -B build -DCMAKE_BUILD_TYPE=Release
+if [ -f "build/Release/generators/conan_toolchain.cmake" ]; then
+    cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+else
+    cmake -B build -DCMAKE_BUILD_TYPE=Release
+fi
 cmake --build build -j$(nproc)
 
 # Create dummy input data if not exists (needs some size to be useful)
