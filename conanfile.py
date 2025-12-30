@@ -25,7 +25,7 @@ class FastQToolsConan(ConanFile):
     def requirements(self):
         self.requires("cxxopts/3.1.1")
         self.requires("spdlog/1.12.0")
-        self.requires("fmt/10.1.1")
+        self.requires("fmt/10.2.1")
         self.requires("zlib/1.3")
         self.requires("bzip2/1.0.8")
         self.requires("xz_utils/5.4.5")
