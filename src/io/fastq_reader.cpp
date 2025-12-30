@@ -6,6 +6,7 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <fmt/format.h>
 
 #include <zlib.h>
 
@@ -146,7 +147,11 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
             }
 
             if (*ptr != '@') {
-                break;
+                // Robustness check
+                // If we are here, we expect a record start.
+                // If EOF is reached, this loop should have terminated if we handle trailing newlines correctly.
+                // If we found junk, throw error.
+                throw std::runtime_error(fmt::format("Format Error: Expected '@' at record start. Found '{}'", *ptr));
             }
 
             const char* line1End = Impl::findEol(ptr, end);
@@ -162,7 +167,10 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
 
             const char* line3Start = line2End + 1;
             if (line3Start >= end || *line3Start != '+') {
-                break;
+                 if (line3Start < end) {
+                      throw std::runtime_error(fmt::format("Format Error: Expected '+' at line 3. Found '{}'", *line3Start));
+                 }
+                 break;
             }
             const char* line3End = Impl::findEol(line3Start, end);
             if (line3End == nullptr) {
