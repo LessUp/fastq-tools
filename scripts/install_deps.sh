@@ -34,7 +34,7 @@ fi
 
 # 3. Install essential build tools
 echo -e "${GREEN}>>> Installing essential build tools (GCC, CMake, Python)...${NC}"
-ESSENTIAL_PACKAGES="build-essential wget gnupg software-properties-common python3-pip cmake ninja-build"
+ESSENTIAL_PACKAGES="build-essential wget gnupg software-properties-common python3-pip cmake ninja-build libdeflate-dev"
 if ! sudo apt-get install -y $ESSENTIAL_PACKAGES; then
     echo -e "${RED}Error: Failed to install essential packages${NC}"
     exit 1
