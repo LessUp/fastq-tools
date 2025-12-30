@@ -1,5 +1,11 @@
 #include "fqtools/io/fastq_writer.h"
 
+#ifdef USE_LIBDEFLATE
+#include <libdeflate.h>
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 #include <algorithm>
 #include <cstring>
 #include <stdexcept>
@@ -17,29 +23,68 @@ struct FastqWriter::Impl {
     std::uint64_t totalUncompressedBytes = 0;
     static constexpr size_t kBufferThreshold = 64 * 1024;
 
+#ifdef USE_LIBDEFLATE
+    int fd = -1;
+    struct libdeflate_compressor* compressor = nullptr;
+    std::vector<char> compressedBuffer;
+#endif
+
     explicit Impl(const std::string& p, const FastqWriterOptions& opt) : path(p), options(opt) {
+#ifdef USE_LIBDEFLATE
+        // Open file with standard IO or POSIX IO
+        fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        if (fd < 0) {
+            // Fallback or error?
+        }
+        compressor = libdeflate_alloc_compressor(6); // Default level
+        buffer.reserve(options.outputBufferBytes);
+        // We need a separate buffer for compressed data
+        compressedBuffer.resize(libdeflate_gzip_compress_bound(compressor, options.outputBufferBytes));
+#else
         file = gzopen(path.c_str(), "wb");
         if (file) {
             gzbuffer(file, static_cast<unsigned>(options.zlibBufferBytes));
         }
         buffer.reserve(options.outputBufferBytes);
+#endif
     }
 
     ~Impl() {
+#ifdef USE_LIBDEFLATE
+        if (fd >= 0) {
+            flush();
+            ::close(fd);
+            libdeflate_free_compressor(compressor);
+        }
+#else
         if (file) {
             flush();
             gzclose(file);
         }
+#endif
     }
 
     void flush() {
+#ifdef USE_LIBDEFLATE
+        if (fd >= 0 && !buffer.empty()) {
+             // Compress
+             size_t compressedSize = libdeflate_gzip_compress(compressor,
+                                                              buffer.data(), buffer.size(),
+                                                              compressedBuffer.data(), compressedBuffer.size());
+             if (compressedSize > 0) {
+                 ::write(fd, compressedBuffer.data(), compressedSize);
+             }
+             buffer.clear();
+        }
+#else
         if (file && !buffer.empty()) {
             int written = gzwrite(file, buffer.data(), static_cast<unsigned>(buffer.size()));
             if (written <= 0) {
-                // Handle error? For now just log/ignore in dtor, throw in normal flow
+                // Handle error
             }
             buffer.clear();
         }
+#endif
     }
 
     void appendRecord(const FastqRecord& rec) {
@@ -94,9 +139,15 @@ FastqWriter::FastqWriter(const std::string& path) : FastqWriter(path, FastqWrite
 
 FastqWriter::FastqWriter(const std::string& path, const FastqWriterOptions& options)
     : impl_(std::make_unique<Impl>(path, options)) {
+#ifdef USE_LIBDEFLATE
+    if (impl_->fd < 0) {
+         throw std::runtime_error("Failed to open output file: " + path);
+    }
+#else
     if (!impl_->file) {
         throw std::runtime_error("Failed to open output file: " + path);
     }
+#endif
 }
 
 FastqWriter::~FastqWriter() = default;
@@ -105,7 +156,11 @@ FastqWriter::FastqWriter(FastqWriter&&) noexcept = default;
 FastqWriter& FastqWriter::operator=(FastqWriter&&) noexcept = default;
 
 bool FastqWriter::isOpen() const {
+#ifdef USE_LIBDEFLATE
+    return impl_ && impl_->fd >= 0;
+#else
     return impl_ && impl_->file != nullptr;
+#endif
 }
 
 void FastqWriter::write(const FastqBatch& batch) {
