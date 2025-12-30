@@ -72,13 +72,9 @@ find_package(LibLZMA REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(TBB CONFIG REQUIRED)
-find_package(libdeflate CONFIG)
-if(libdeflate_FOUND)
-    message(STATUS "Found libdeflate: ${libdeflate_VERSION}")
-    add_compile_definitions(USE_LIBDEFLATE)
-else()
-    message(STATUS "libdeflate not found, falling back to zlib")
-endif()
+find_package(libdeflate CONFIG REQUIRED)
+add_compile_definitions(USE_LIBDEFLATE)
+message(STATUS "Found libdeflate: ${libdeflate_VERSION}")
 
 
 
