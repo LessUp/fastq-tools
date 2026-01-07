@@ -1,0 +1,899 @@
+diff --git CMakePresets.json CMakePresets.json
+index fb6b39b..8724cfe 100644
+--- CMakePresets.json
++++ CMakePresets.json
+@@ -18,133 +18,265 @@
+                 "CMAKE_CXX_EXTENSIONS": "OFF",
+                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+             },
+             "condition": {
+                 "type": "notEquals",
+                 "lhs": "${hostSystemName}",
+                 "rhs": "Windows"
+             }
+         },
+         {
+-            "name": "conan-base",
++            "name": "gcc-base",
+             "hidden": true,
+             "inherits": "base",
++            "displayName": "GCC Base",
++            "description": "Base configuration for GCC compiler",
++            "cacheVariables": {
++                "CMAKE_C_COMPILER": "gcc",
++                "CMAKE_CXX_COMPILER": "g++"
++            },
++            "environment": {
++                "CC": "gcc",
++                "CXX": "g++"
++            }
++        },
++        {
++            "name": "clang-base",
++            "hidden": true,
++            "inherits": "base",
++            "displayName": "Clang Base",
++            "description": "Base configuration for Clang compiler with libc++",
++            "cacheVariables": {
++                "CMAKE_C_COMPILER": "clang",
++                "CMAKE_CXX_COMPILER": "clang++",
++                "CMAKE_CXX_FLAGS": "-stdlib=libc++",
++                "CMAKE_EXE_LINKER_FLAGS": "-stdlib=libc++ -lc++abi",
++                "CMAKE_SHARED_LINKER_FLAGS": "-stdlib=libc++ -lc++abi"
++            },
++            "environment": {
++                "CC": "clang",
++                "CXX": "clang++"
++            }
++        },
++        {
++            "name": "conan-gcc-base",
++            "hidden": true,
++            "inherits": "gcc-base",
+             "toolchainFile": "${sourceDir}/build/${presetName}/conan_toolchain.cmake"
+         },
+         {
+-            "name": "conan-debug",
+-            "displayName": "Conan Debug Config",
+-            "description": "Debug build using Conan 2",
+-            "inherits": "conan-base",
++            "name": "conan-clang-base",
++            "hidden": true,
++            "inherits": "clang-base",
++            "toolchainFile": "${sourceDir}/build/${presetName}/conan_toolchain.cmake"
++        },
++        {
++            "name": "gcc-debug",
++            "displayName": "GCC Debug",
++            "description": "Debug build with GCC",
++            "inherits": "conan-gcc-base",
+             "cacheVariables": {
+                 "CMAKE_BUILD_TYPE": "Debug",
+-                "CMAKE_CXX_FLAGS_DEBUG": "-g -O0 -DDEBUG -fsanitize=address,undefined",
+-                "CMAKE_LINKER_FLAGS_DEBUG": "-fsanitize=address,undefined"
++                "CMAKE_CXX_FLAGS_DEBUG": "-g -O0 -DDEBUG"
+             }
+         },
+         {
+-            "name": "conan-release",
+-            "displayName": "Conan Release Config",
+-            "description": "Release build using Conan 2 with optimizations",
+-            "inherits": "conan-base",
++            "name": "gcc-release",
++            "displayName": "GCC Release",
++            "description": "Release build with GCC (recommended for production)",
++            "inherits": "conan-gcc-base",
+             "cacheVariables": {
+                 "CMAKE_BUILD_TYPE": "Release",
+                 "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG -march=native -flto",
+                 "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+             }
+         },
+         {
+-            "name": "conan-relwithdebinfo",
+-            "displayName": "Conan RelWithDebInfo Config",
+-            "description": "Release build with debug info using Conan 2",
+-            "inherits": "conan-base",
++            "name": "gcc-relwithdebinfo",
++            "displayName": "GCC RelWithDebInfo",
++            "description": "Release build with debug info using GCC",
++            "inherits": "conan-gcc-base",
+             "cacheVariables": {
+                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                 "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "-O2 -g -DNDEBUG"
+             }
+         },
++        {
++            "name": "clang-debug",
++            "displayName": "Clang Debug",
++            "description": "Debug build with Clang + libc++ (recommended for development)",
++            "inherits": "conan-clang-base",
++            "cacheVariables": {
++                "CMAKE_BUILD_TYPE": "Debug",
++                "CMAKE_CXX_FLAGS_DEBUG": "-g -O0 -DDEBUG -stdlib=libc++"
++            }
++        },
++        {
++            "name": "clang-release",
++            "displayName": "Clang Release",
++            "description": "Release build with Clang + libc++",
++            "inherits": "conan-clang-base",
++            "cacheVariables": {
++                "CMAKE_BUILD_TYPE": "Release",
++                "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG -march=native -flto -stdlib=libc++",
++                "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
++            }
++        },
++        {
++            "name": "clang-asan",
++            "displayName": "Clang AddressSanitizer",
++            "description": "Debug build with AddressSanitizer for memory error detection",
++            "inherits": "conan-clang-base",
++            "cacheVariables": {
++                "CMAKE_BUILD_TYPE": "Debug",
++                "CMAKE_CXX_FLAGS_DEBUG": "-g -O1 -DDEBUG -stdlib=libc++ -fsanitize=address,undefined -fno-omit-frame-pointer",
++                "CMAKE_EXE_LINKER_FLAGS_DEBUG": "-stdlib=libc++ -lc++abi -fsanitize=address,undefined",
++                "CMAKE_SHARED_LINKER_FLAGS_DEBUG": "-stdlib=libc++ -lc++abi -fsanitize=address,undefined"
++            }
++        },
++        {
++            "name": "clang-tsan",
++            "displayName": "Clang ThreadSanitizer",
++            "description": "Debug build with ThreadSanitizer for data race detection",
++            "inherits": "conan-clang-base",
++            "cacheVariables": {
++                "CMAKE_BUILD_TYPE": "Debug",
++                "CMAKE_CXX_FLAGS_DEBUG": "-g -O1 -DDEBUG -stdlib=libc++ -fsanitize=thread -fno-omit-frame-pointer",
++                "CMAKE_EXE_LINKER_FLAGS_DEBUG": "-stdlib=libc++ -lc++abi -fsanitize=thread",
++                "CMAKE_SHARED_LINKER_FLAGS_DEBUG": "-stdlib=libc++ -lc++abi -fsanitize=thread"
++            }
++        },
+         {
+             "name": "coverage",
+-            "displayName": "Coverage Config",
+-            "description": "Debug build with coverage analysis",
+-            "inherits": "conan-debug",
++            "displayName": "Coverage (GCC)",
++            "description": "Debug build with coverage analysis using GCC",
++            "inherits": "gcc-debug",
+             "cacheVariables": {
+                 "CMAKE_CXX_FLAGS_DEBUG": "-g -O0 -DDEBUG --coverage",
+-                "CMAKE_LINKER_FLAGS_DEBUG": "--coverage"
++                "CMAKE_EXE_LINKER_FLAGS_DEBUG": "--coverage",
++                "ENABLE_COVERAGE": "ON"
+             }
+         }
+     ],
+     "buildPresets": [
+         {
+-            "name": "conan-debug",
+-            "configurePreset": "conan-debug",
+-            "displayName": "Conan Debug Build",
+-            "description": "Build debug configuration with Conan"
++            "name": "gcc-debug",
++            "configurePreset": "gcc-debug",
++            "displayName": "GCC Debug Build"
++        },
++        {
++            "name": "gcc-release",
++            "configurePreset": "gcc-release",
++            "displayName": "GCC Release Build"
++        },
++        {
++            "name": "gcc-relwithdebinfo",
++            "configurePreset": "gcc-relwithdebinfo",
++            "displayName": "GCC RelWithDebInfo Build"
+         },
+         {
+-            "name": "conan-release",
+-            "configurePreset": "conan-release",
+-            "displayName": "Conan Release Build",
+-            "description": "Build release configuration with Conan"
++            "name": "clang-debug",
++            "configurePreset": "clang-debug",
++            "displayName": "Clang Debug Build"
+         },
+         {
+-            "name": "conan-relwithdebinfo",
+-            "configurePreset": "conan-relwithdebinfo",
+-            "displayName": "Conan RelWithDebInfo Build",
+-            "description": "Build release with debug info using Conan"
++            "name": "clang-release",
++            "configurePreset": "clang-release",
++            "displayName": "Clang Release Build"
++        },
++        {
++            "name": "clang-asan",
++            "configurePreset": "clang-asan",
++            "displayName": "Clang ASan Build"
++        },
++        {
++            "name": "clang-tsan",
++            "configurePreset": "clang-tsan",
++            "displayName": "Clang TSan Build"
+         },
+         {
+             "name": "coverage",
+             "configurePreset": "coverage",
+-            "displayName": "Coverage Build",
+-            "description": "Build with coverage analysis"
++            "displayName": "Coverage Build"
+         }
+     ],
+     "testPresets": [
+         {
+-            "name": "conan-debug",
+-            "configurePreset": "conan-debug",
+-            "displayName": "Debug Tests (Conan)",
+-            "description": "Run tests in debug mode",
++            "name": "gcc-debug",
++            "configurePreset": "gcc-debug",
++            "displayName": "GCC Debug Tests",
+             "output": {
+-                "outputOnFailure": true,
+-                "verbosity": "default"
++                "outputOnFailure": true
+             },
+             "execution": {
+                 "noTestsAction": "error",
+                 "stopOnFailure": false
+             }
+         },
+         {
+-            "name": "conan-release",
+-            "configurePreset": "conan-release",
+-            "displayName": "Release Tests (Conan)",
+-            "description": "Run tests in release mode",
++            "name": "gcc-release",
++            "configurePreset": "gcc-release",
++            "displayName": "GCC Release Tests",
+             "output": {
+-                "outputOnFailure": true,
+-                "verbosity": "default"
++                "outputOnFailure": true
++            },
++            "execution": {
++                "noTestsAction": "error",
++                "stopOnFailure": false
++            }
++        },
++        {
++            "name": "clang-debug",
++            "configurePreset": "clang-debug",
++            "displayName": "Clang Debug Tests",
++            "output": {
++                "outputOnFailure": true
+             },
+             "execution": {
+                 "noTestsAction": "error",
+                 "stopOnFailure": false
+             }
+         },
++        {
++            "name": "clang-asan",
++            "configurePreset": "clang-asan",
++            "displayName": "Clang ASan Tests",
++            "output": {
++                "outputOnFailure": true,
++                "verbosity": "verbose"
++            },
++            "execution": {
++                "noTestsAction": "error",
++                "stopOnFailure": true
++            }
++        },
++        {
++            "name": "clang-tsan",
++            "configurePreset": "clang-tsan",
++            "displayName": "Clang TSan Tests",
++            "output": {
++                "outputOnFailure": true,
++                "verbosity": "verbose"
++            },
++            "execution": {
++                "noTestsAction": "error",
++                "stopOnFailure": true
++            }
++        },
+         {
+             "name": "coverage",
+             "configurePreset": "coverage",
+             "displayName": "Coverage Tests",
+-            "description": "Run tests with coverage analysis",
+             "output": {
+                 "outputOnFailure": true,
+                 "verbosity": "verbose"
+             }
+         }
+     ],
+     "packagePresets": [
+         {
+-            "name": "conan-release",
+-            "configurePreset": "conan-release",
+-            "displayName": "Release Package",
+-            "description": "Create release package"
++            "name": "gcc-release",
++            "configurePreset": "gcc-release",
++            "displayName": "Release Package (GCC)"
+         }
+     ]
+ }
+\ No newline at end of file
+diff --git conanfile.py conanfile.py
+index 4d01f81..2f10c8b 100644
+--- conanfile.py
++++ conanfile.py
+@@ -17,22 +17,22 @@ class FastQToolsConan(ConanFile):
+ 
+     def config_options(self):
+         if self.settings.os == "Windows":
+             del self.options.fPIC
+ 
+     def layout(self):
+         cmake_layout(self)
+ 
+     def requirements(self):
+         self.requires("cxxopts/3.1.1")
+-        self.requires("spdlog/1.12.0")
+-        self.requires("fmt/10.2.1")
++        self.requires("spdlog/1.15.0")
++        self.requires("fmt/11.0.2")
+         self.requires("zlib/1.3")
+         self.requires("bzip2/1.0.8")
+         self.requires("xz_utils/5.4.5")
+         self.requires("nlohmann_json/3.11.2")
+         self.requires("onetbb/2021.10.0")
+         self.requires("libdeflate/1.19", override=True)
+ 
+     def generate(self):
+         tc = CMakeToolchain(self)
+         tc.generate()
+diff --git config/dependencies/conanfile.py config/dependencies/conanfile.py
+index fd80c17..cf2e40a 100644
+--- config/dependencies/conanfile.py
++++ config/dependencies/conanfile.py
+@@ -11,26 +11,26 @@ class FastQTools(ConanFile):
+     settings = "os", "compiler", "build_type", "arch"
+     
+     # Sources are located in the same place as this recipe, copy them to the recipe
+     exports_sources = "CMakeLists.txt", "src/*", "app/*", "cmake/*"
+ 
+     def requirements(self):
+         """
+         Declare all dependencies for the project.
+         """
+         self.requires("cxxopts/3.1.1")
+-        self.requires("spdlog/1.12.0")
++        self.requires("spdlog/1.15.0")
+         self.requires("zlib/1.3")
+         self.requires("bzip2/1.0.8")
+         self.requires("xz_utils/5.4.5")
+         self.requires("nlohmann_json/3.11.3")
+-        self.requires("fmt/10.2.1")
++        self.requires("fmt/11.0.2")
+         # Intel's Threading Building Blocks for high-level parallelism
+         self.requires("onetbb/2021.10.0")
+         self.requires("libdeflate/1.19")
+ 
+     def build_requirements(self):
+         """
+         Dependencies required only for building the project, like testing frameworks.
+         """
+         self.tool_requires("cmake/[>=3.20]")
+         if self.options.get_safe("build_testing", True):
+diff --git docker/Dockerfile docker/Dockerfile
+index 1efd176..4a6fe70 100644
+--- docker/Dockerfile
++++ docker/Dockerfile
+@@ -1,12 +1,21 @@
++# =============================================================================
++# FastQTools Production Build
++# =============================================================================
++# 使用 GCC + libstdc++ 进行生产构建
++# 这是最稳定、兼容性最好的配置
++# =============================================================================
++
++# -----------------------------------------------------------------------------
+ # 构建阶段
+-FROM gcc:15.2-bookworm AS build
++# -----------------------------------------------------------------------------
++FROM debian:bookworm-slim AS build
+ 
+ ARG HTTP_PROXY
+ ARG HTTPS_PROXY
+ ARG ALL_PROXY
+ ARG NO_PROXY
+ 
+ ENV HTTP_PROXY=${HTTP_PROXY}
+ ENV HTTPS_PROXY=${HTTPS_PROXY}
+ ENV ALL_PROXY=${ALL_PROXY}
+ ENV NO_PROXY=${NO_PROXY}
+@@ -16,137 +25,116 @@ ENV all_proxy=${ALL_PROXY}
+ ENV no_proxy=${NO_PROXY}
+ 
+ RUN set -eux; \
+     if [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ]; then \
+         : > /etc/apt/apt.conf.d/99proxy; \
+         if [ -n "${HTTP_PROXY:-}" ]; then echo "Acquire::http::Proxy \"${HTTP_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
+         if [ -n "${HTTPS_PROXY:-}" ]; then echo "Acquire::https::Proxy \"${HTTPS_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
+     fi
+ 
+ # 安装构建依赖
+-RUN apt-get update && apt-get install -y \
++RUN apt-get update && apt-get install -y --no-install-recommends \
+     build-essential \
++    g++-12 \
+     ninja-build \
+     pkg-config \
+     git \
+     wget \
++    ca-certificates \
+     tar \
+     xz-utils \
+-    gnupg \
+-    lsb-release \
+-    software-properties-common \
+     python3 \
+     python3-pip \
+     ccache \
+     libdeflate-dev \
++    zlib1g-dev \
++    libbz2-dev \
++    liblzma-dev \
++    libtbb-dev \
+     && rm -rf /var/lib/apt/lists/*
+ 
+-RUN CMAKE_VERSION=4.2.1 && \
++# CMake
++RUN CMAKE_VERSION=3.31.3 && \
+     ARCH="$(dpkg --print-architecture)" && \
+     case "$ARCH" in \
+         amd64) CMAKE_ARCH="x86_64" ;; \
+         arm64) CMAKE_ARCH="aarch64" ;; \
+         *) echo "Unsupported architecture: $ARCH"; exit 1 ;; \
+     esac && \
+     wget -q "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz && \
+     mkdir -p /opt && \
+     tar -C /opt -xzf /tmp/cmake.tar.gz && \
+     ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake && \
+     ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/ctest" /usr/local/bin/ctest && \
+     ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack && \
+     rm -f /tmp/cmake.tar.gz
+ 
+-RUN wget -q https://apt.llvm.org/llvm.sh && \
+-    chmod +x llvm.sh && \
+-    ./llvm.sh 21 && \
+-    apt-get update && \
+-    apt-get install -y \
+-    clang-21 \
+-    lld-21 \
+-    llvm-21 && \
+-    rm -f llvm.sh && \
+-    rm -rf /var/lib/apt/lists/*
+-
+-RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100 && \
+-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
+-
+-# 安装Conan (使用 --break-system-packages 绕过 PEP 668 限制)
+-RUN pip3 install --no-cache-dir --break-system-packages conan==2.24.0
+-
+-# 设置工作目录
+-WORKDIR /workspace
+-
+-# 复制源代码
+-COPY . .
++# Conan
++RUN pip3 install --no-cache-dir --break-system-packages conan==2.12.2
+ 
+-# 配置构建环境
+-ENV CC=clang
+-ENV CXX=clang++
++# 设置编译器
++ENV CC=gcc
++ENV CXX=g++
+ ENV CONAN_HOME=/root/.conan2
+ ENV CCACHE_DIR=/root/.ccache
+ ENV PATH=/usr/lib/ccache:$PATH
+ 
+-# 安装依赖
++WORKDIR /workspace
++COPY . .
++
++# 安装依赖并构建
+ RUN conan profile detect --force
+-RUN conan install config/dependencies/ --build=missing -s build_type=Release -of=build
++RUN conan install config/dependencies/ --build=missing -s build_type=Release -of=build/gcc-release
+ 
+-# 构建项目
+-RUN cmake -B build -G Ninja \
++RUN cmake -B build/gcc-release -G Ninja \
+     -DCMAKE_BUILD_TYPE=Release \
+-    -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
++    -DCMAKE_TOOLCHAIN_FILE=build/gcc-release/conan_toolchain.cmake \
++    -DCMAKE_C_COMPILER=gcc \
++    -DCMAKE_CXX_COMPILER=g++ \
+     -DENABLE_COVERAGE=OFF \
+     -DBUILD_TESTING=OFF
+ 
+-RUN ninja -C build
++RUN ninja -C build/gcc-release
+ 
++# -----------------------------------------------------------------------------
+ # 生产阶段
+-FROM debian:12-slim AS production
++# -----------------------------------------------------------------------------
++FROM debian:bookworm-slim AS production
+ 
+-# 安装运行时依赖
+-RUN apt-get update && apt-get install -y \
++RUN apt-get update && apt-get install -y --no-install-recommends \
+     ca-certificates \
+     libtbb12 \
+     zlib1g \
+     libbz2-1.0 \
+     liblzma5 \
+     libdeflate0 \
++    libstdc++6 \
+     && rm -rf /var/lib/apt/lists/*
+ 
+-# 创建非root用户
++# 非 root 用户
+ ARG USERNAME=fastqtools
+ ARG USER_UID=1000
+ ARG USER_GID=1000
+ 
+ RUN groupadd -g $USER_GID $USERNAME \
+     && useradd -m -s /bin/bash -u $USER_UID -g $USER_GID $USERNAME
+ 
+-# 设置工作目录
+ WORKDIR /app
+ 
+-# 从构建阶段复制二进制文件
+-COPY --from=build /workspace/build/FastQTools /usr/local/bin/
+-COPY --from=build /workspace/build/lib* /usr/local/lib/ 2>/dev/null || true
+-
+-# 创建符号链接
++# 复制构建产物
++COPY --from=build /workspace/build/gcc-release/FastQTools /usr/local/bin/
+ RUN ln -sf /usr/local/bin/FastQTools /usr/local/bin/fastqtools
+ 
+-# 创建数据目录
++# 数据目录
+ RUN mkdir -p /app/data /app/output && \
+     chown -R $USERNAME:$USERNAME /app
+ 
+-# 切换到非root用户
+ USER $USERNAME
+ 
+-# 设置环境变量
+ ENV PATH=/usr/local/bin:$PATH
+-ENV LD_LIBRARY_PATH=/usr/local/lib
+ ENV FASTQTOOLS_DATA_DIR=/app/data
+ ENV FASTQTOOLS_OUTPUT_DIR=/app/output
+ 
+-# 暴露端口（如果需要网络服务）
+-EXPOSE 8080
+-
+-# 健康检查
+ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+     CMD fastqtools --help || exit 1
+ 
+ CMD ["fastqtools", "--help"]
+diff --git docker/Dockerfile.dev docker/Dockerfile.dev
+index eaab956..3f47afe 100644
+--- docker/Dockerfile.dev
++++ docker/Dockerfile.dev
+@@ -1,19 +1,23 @@
+-# Dockerfile for the Development Environment
++# =============================================================================
++# FastQTools Development Environment
++# =============================================================================
++# 支持双编译器工具链：GCC + Clang
++# - GCC 14 + libstdc++：生产编译首选
++# - Clang 18 + libc++：开发调试首选，配合 LLVM 工具链
+ #
+-# This Dockerfile creates a comprehensive development environment.
+-# It inherits from the 'build' stage of the main Dockerfile
+-# to ensure a consistent base toolchain, and then adds extra tools
+-# needed for interactive development.
++# 使用方法：
++#   GCC 编译：   cmake --preset gcc-debug && cmake --build --preset gcc-debug
++#   Clang 编译： cmake --preset clang-debug && cmake --build --preset clang-debug
++# =============================================================================
+ 
+-# 开发环境基础镜像（自包含，不依赖其他 Dockerfile 的 stage）
+-FROM gcc:15.2-bookworm AS base
++FROM debian:sid-slim AS base
+ 
+ ARG HTTP_PROXY
+ ARG HTTPS_PROXY
+ ARG ALL_PROXY
+ ARG NO_PROXY
+ 
+ ENV HTTP_PROXY=${HTTP_PROXY}
+ ENV HTTPS_PROXY=${HTTPS_PROXY}
+ ENV ALL_PROXY=${ALL_PROXY}
+ ENV NO_PROXY=${NO_PROXY}
+@@ -22,98 +26,148 @@ ENV https_proxy=${HTTPS_PROXY}
+ ENV all_proxy=${ALL_PROXY}
+ ENV no_proxy=${NO_PROXY}
+ 
+ RUN set -eux; \
+     if [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ]; then \
+         : > /etc/apt/apt.conf.d/99proxy; \
+         if [ -n "${HTTP_PROXY:-}" ]; then echo "Acquire::http::Proxy \"${HTTP_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
+         if [ -n "${HTTPS_PROXY:-}" ]; then echo "Acquire::https::Proxy \"${HTTPS_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
+     fi
+ 
+-# 基础工具链
+-RUN apt-get update && apt-get install -y \
++# =============================================================================
++# 基础工具
++# =============================================================================
++RUN apt-get update && apt-get install -y --no-install-recommends \
+     build-essential \
+     ninja-build \
+     pkg-config \
+     git \
+     wget \
++    curl \
++    ca-certificates \
+     tar \
+     xz-utils \
+     gnupg \
+     lsb-release \
+     software-properties-common \
+     python3 \
+     python3-pip \
++    python3-venv \
+     ccache \
++    sudo \
+     && rm -rf /var/lib/apt/lists/*
+ 
+-RUN CMAKE_VERSION=4.2.1 && \
++# =============================================================================
++# CMake (最新版本)
++# =============================================================================
++RUN CMAKE_VERSION=3.31.3 && \
+     ARCH="$(dpkg --print-architecture)" && \
+     case "$ARCH" in \
+         amd64) CMAKE_ARCH="x86_64" ;; \
+         arm64) CMAKE_ARCH="aarch64" ;; \
+         *) echo "Unsupported architecture: $ARCH"; exit 1 ;; \
+     esac && \
+     wget -q "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz && \
+     mkdir -p /opt && \
+     tar -C /opt -xzf /tmp/cmake.tar.gz && \
+     ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake && \
+     ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/ctest" /usr/local/bin/ctest && \
+     ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack && \
+     rm -f /tmp/cmake.tar.gz
+ 
+-RUN wget -q https://apt.llvm.org/llvm.sh && \
+-    chmod +x llvm.sh && \
+-    ./llvm.sh 21 && \
+-    apt-get update && \
+-    apt-get install -y \
+-    clang-21 \
+-    clangd-21 \
+-    clang-tidy-21 \
+-    clang-format-21 \
+-    lld-21 \
+-    llvm-21 && \
+-    rm -f llvm.sh && \
+-    rm -rf /var/lib/apt/lists/*
+-
+-RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100 && \
+-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100 && \
+-    update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-21 100 && \
+-    update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-21 100 && \
+-    update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-21 100
+-
+-# Conan (使用 --break-system-packages 绕过 PEP 668 限制)
+-RUN pip3 install --no-cache-dir --break-system-packages conan==2.24.0
+-
+-# 环境变量
+-ENV CC=clang
+-ENV CXX=clang++
+-ENV CONAN_HOME=/home/developer/.conan2
+-ENV CCACHE_DIR=/home/developer/.ccache
+-ENV PATH=/usr/lib/ccache:$PATH
++# =============================================================================
++# GCC 工具链 (生产编译)
++# =============================================================================
++RUN apt-get update && apt-get install -y --no-install-recommends \
++    gcc-14 \
++    g++-14 \
++    && rm -rf /var/lib/apt/lists/* \
++    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 \
++    && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
++
++# =============================================================================
++# LLVM/Clang 工具链 (开发调试)
++# =============================================================================
++RUN apt-get update && apt-get install -y --no-install-recommends \
++    clang-18 \
++    clangd-18 \
++    clang-tidy-18 \
++    clang-format-18 \
++    lld-18 \
++    lldb-18 \
++    llvm-18 \
++    libc++-18-dev \
++    libc++abi-18-dev \
++    && rm -rf /var/lib/apt/lists/* \
++    && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100 \
++    && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100 \
++    && update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-18 100 \
++    && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-18 100 \
++    && update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-18 100 \
++    && update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-18 100 \
++    && update-alternatives --install /usr/bin/lld lld /usr/bin/lld-18 100
++
++# =============================================================================
++# 项目依赖库
++# =============================================================================
++RUN apt-get update && apt-get install -y --no-install-recommends \
++    libdeflate-dev \
++    zlib1g-dev \
++    libbz2-dev \
++    liblzma-dev \
++    libtbb-dev \
++    && rm -rf /var/lib/apt/lists/*
++
++# =============================================================================
++# Conan 包管理器
++# =============================================================================
++RUN pip3 install --no-cache-dir --break-system-packages conan==2.12.2
+ 
+-# 额外的开发工具
++# =============================================================================
++# 开发阶段 - 添加调试和分析工具
++# =============================================================================
+ FROM base AS development
++
+ RUN apt-get update && apt-get install -y --no-install-recommends \
+     gdb \
+     valgrind \
+     lcov \
++    gcovr \
+     doxygen \
+     graphviz \
++    cppcheck \
+     && rm -rf /var/lib/apt/lists/*
+ 
++# =============================================================================
+ # 非 root 用户
++# =============================================================================
+ ARG USERNAME=developer
+ ARG USER_UID=1000
+ ARG USER_GID=$USER_UID
++
+ RUN groupadd --gid $USER_GID $USERNAME && \
+     useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
+     echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+ 
+-# 工作目录与权限
++# =============================================================================
++# 环境配置
++# =============================================================================
++ENV CONAN_HOME=/home/$USERNAME/.conan2
++ENV CCACHE_DIR=/home/$USERNAME/.ccache
++ENV PATH=/usr/lib/ccache:$PATH
++
++# 默认使用 GCC（可通过 CMake Preset 切换）
++ENV CC=gcc
++ENV CXX=g++
++
++# 工作目录
+ RUN mkdir -p /workspace && chown $USERNAME:$USERNAME /workspace
++WORKDIR /workspace
+ 
+ USER $USERNAME
+-WORKDIR /workspace
+ 
+-# 默认启动 bash
++# =============================================================================
++# 初始化 Conan
++# =============================================================================
++RUN conan profile detect --force
++
+ CMD ["/bin/bash"]
+diff --git include/fqtools/config/config.h include/fqtools/config/config.h
+index 612a1d4..43d5aa8 100644
+--- include/fqtools/config/config.h
++++ include/fqtools/config/config.h
+@@ -4,28 +4,29 @@
+  * @author LessUp
+  * @version 1.0
+  * @date 2025-07-31
+  * @copyright Copyright (c) 2025 LessUp
+  */
+ 
+ #pragma once
+ 
+ #include <cstdint>
+ #include <filesystem>
+-#include <format>
+ #include <ostream>
+ #include <string>
+ #include <string_view>
+ #include <unordered_map>
+ #include <variant>
+ #include <vector>
+ 
++#include <fmt/format.h>
++
+ #include "fqtools/error/error.h"
+ 
+ namespace fq::config {
+ 
+ /// @brief 配置项的值类型，可以是 bool, int64, double, 或 string。
+ using ConfigValue = std::variant<bool, std::int64_t, double, std::string>;
+ 
+ /**
+  * @brief 负责加载、管理和验证项目配置。
+  * @details 可以从文件、命令行参数和环境变量中加载配置。
+@@ -62,26 +63,26 @@ public:
+      *
+      * @post 配置参数被加载到实例中
+      * @note 只会加载已定义的环境变量
+      */
+     void loadFromEnv();
+ 
+     template <typename T>
+     [[nodiscard]] auto get(std::string_view key) const -> T {
+         auto it = values_.find(std::string(key));
+         if (it == values_.end()) {
+-            throw fq::error::ConfigurationError(std::format("Configuration key '{}' not found", key));
++            throw fq::error::ConfigurationError(fmt::format("Configuration key '{}' not found", key));
+         }
+         try {
+             return std::get<T>(it->second);
+         } catch (const std::bad_variant_access&) {
+-            throw fq::error::ConfigurationError(std::format("Configuration key '{}' type mismatch", key));
++            throw fq::error::ConfigurationError(fmt::format("Configuration key '{}' type mismatch", key));
+         }
+     }
+ 
+     template <typename T>
+     [[nodiscard]] auto getOr(std::string_view key, T defaultValue) const -> T {
+         auto it = values_.find(std::string(key));
+         if (it == values_.end()) {
+             return defaultValue;
+         }
+         try {
+diff --git src/config/config.cpp src/config/config.cpp
+index 72a8429..f7c0611 100644
+--- src/config/config.cpp
++++ src/config/config.cpp
+@@ -8,27 +8,28 @@
+  * @copyright Copyright (c) 2025 FastQTools
+  */
+ 
+ #include "fqtools/config/config.h"
+ 
+ #include "fqtools/common/common.h"
+ 
+ #include <algorithm>
+ #include <cctype>
+ #include <cstring>
+-#include <format>
+ #include <fstream>
+ #include <istream>
+ #include <stdexcept>
+ #include <type_traits>
+ #include <unordered_map>
+ 
++#include <fmt/format.h>
++
+ #include "fqtools/error/error.h"
+ 
+ extern char** environ;
+ 
+ namespace fq::config {
+ 
+ /**
+  * @brief 从配置文件加载参数
+  * @details 检查文件存在性并解析内容，异常时抛出配置错误
+  * @param configFile 配置文件路径

@@ -1,0 +1,14 @@
+# Conan Profile for Clang 21 + libc++
+# Usage: conan install . -pr:h config/conan/profile-clang --build=missing
+
+[settings]
+arch=x86_64
+build_type=Release
+compiler=clang
+compiler.cppstd=20
+compiler.libcxx=libc++
+compiler.version=21
+os=Linux
+
+[conf]
+tools.build:compiler_executables={"c": "clang", "cpp": "clang++"}

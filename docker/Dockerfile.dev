@@ -1,11 +1,15 @@
-# Dockerfile for the Development Environment
+# =============================================================================
+# FastQTools Development Environment
+# =============================================================================
+# 支持双编译器工具链：GCC 15 + Clang 21
+# - GCC 15 + libstdc++：生产编译首选，最新 C++23 支持
+# - Clang 21 + libc++：开发调试首选，配合 LLVM 工具链
 #
-# This Dockerfile creates a comprehensive development environment.
-# It inherits from the 'build' stage of the main Dockerfile
-# to ensure a consistent base toolchain, and then adds extra tools
-# needed for interactive development.
+# 使用方法：
+#   GCC 编译：   cmake --preset gcc-debug && cmake --build --preset gcc-debug
+#   Clang 编译： cmake --preset clang-debug && cmake --build --preset clang-debug
+# =============================================================================
 
-# 开发环境基础镜像（自包含，不依赖其他 Dockerfile 的 stage）
 FROM gcc:15.2-bookworm AS base
 
 ARG HTTP_PROXY
@@ -29,13 +33,17 @@ RUN set -eux; \
         if [ -n "${HTTPS_PROXY:-}" ]; then echo "Acquire::https::Proxy \"${HTTPS_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
     fi
 
-# 基础工具链
-RUN apt-get update && apt-get install -y \
+# =============================================================================
+# 基础工具
+# =============================================================================
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     ninja-build \
     pkg-config \
     git \
     wget \
+    curl \
+    ca-certificates \
     tar \
     xz-utils \
     gnupg \
@@ -43,10 +51,15 @@ RUN apt-get update && apt-get install -y \
     software-properties-common \
     python3 \
     python3-pip \
+    python3-venv \
     ccache \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
-RUN CMAKE_VERSION=4.2.1 && \
+# =============================================================================
+# CMake 4.x (最新版本)
+# =============================================================================
+RUN CMAKE_VERSION=4.0.2 && \
     ARCH="$(dpkg --print-architecture)" && \
     case "$ARCH" in \
         amd64) CMAKE_ARCH="x86_64" ;; \
@@ -61,59 +74,95 @@ RUN CMAKE_VERSION=4.2.1 && \
     ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack && \
     rm -f /tmp/cmake.tar.gz
 
+# =============================================================================
+# LLVM/Clang 21 工具链 (开发调试)
+# =============================================================================
 RUN wget -q https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
     ./llvm.sh 21 && \
     apt-get update && \
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
     clang-21 \
     clangd-21 \
     clang-tidy-21 \
     clang-format-21 \
     lld-21 \
-    llvm-21 && \
-    rm -f llvm.sh && \
-    rm -rf /var/lib/apt/lists/*
+    lldb-21 \
+    llvm-21 \
+    libc++-21-dev \
+    libc++abi-21-dev \
+    && rm -f llvm.sh && \
+    rm -rf /var/lib/apt/lists/* \
+    && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100 \
+    && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100 \
+    && update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-21 100 \
+    && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-21 100 \
+    && update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-21 100 \
+    && update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-21 100 \
+    && update-alternatives --install /usr/bin/lld lld /usr/bin/lld-21 100
 
-RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100 && \
-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100 && \
-    update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-21 100 && \
-    update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-21 100 && \
-    update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-21 100
+# =============================================================================
+# 项目依赖库
+# =============================================================================
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libdeflate-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    liblzma-dev \
+    libtbb-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Conan (使用 --break-system-packages 绕过 PEP 668 限制)
-RUN pip3 install --no-cache-dir --break-system-packages conan==2.24.0
+# =============================================================================
+# Conan 2.x 包管理器 (最新版本)
+# =============================================================================
+RUN pip3 install --no-cache-dir --break-system-packages conan==2.14.0
 
-# 环境变量
-ENV CC=clang
-ENV CXX=clang++
-ENV CONAN_HOME=/home/developer/.conan2
-ENV CCACHE_DIR=/home/developer/.ccache
-ENV PATH=/usr/lib/ccache:$PATH
-
-# 额外的开发工具
+# =============================================================================
+# 开发阶段 - 添加调试和分析工具
+# =============================================================================
 FROM base AS development
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gdb \
     valgrind \
     lcov \
+    gcovr \
     doxygen \
     graphviz \
+    cppcheck \
     && rm -rf /var/lib/apt/lists/*
 
+# =============================================================================
 # 非 root 用户
+# =============================================================================
 ARG USERNAME=developer
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
+
 RUN groupadd --gid $USER_GID $USERNAME && \
     useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
     echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# 工作目录与权限
-RUN mkdir -p /workspace && chown $USERNAME:$USERNAME /workspace
+# =============================================================================
+# 环境配置
+# =============================================================================
+ENV CONAN_HOME=/home/$USERNAME/.conan2
+ENV CCACHE_DIR=/home/$USERNAME/.ccache
+ENV PATH=/usr/lib/ccache:$PATH
 
-USER $USERNAME
+# 默认使用 GCC（可通过 CMake Preset 切换）
+ENV CC=gcc
+ENV CXX=g++
+
+# 工作目录
+RUN mkdir -p /workspace && chown $USERNAME:$USERNAME /workspace
 WORKDIR /workspace
 
-# 默认启动 bash
+USER $USERNAME
+
+# =============================================================================
+# 初始化 Conan
+# =============================================================================
+RUN conan profile detect --force
+
 CMD ["/bin/bash"]

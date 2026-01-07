@@ -5,9 +5,9 @@ from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout
 class FastQToolsConan(ConanFile):
     name = "fastqtools"
     version = "3.1.0"
-    license = "MIT" # Please update if not correct
-    author = "LessUp <jiashuai.mail@gmail.com>" # Please update
-    url = "https://github.com/LessUp/FastQTools" # Please update
+    license = "MIT"
+    author = "LessUp <jiashuai.mail@gmail.com>"
+    url = "https://github.com/LessUp/FastQTools"
     description = "A modern toolkit for FASTQ file processing"
     topics = ("bioinformatics", "fastq", "genomics")
     settings = "os", "compiler", "build_type", "arch"
@@ -24,8 +24,8 @@ class FastQToolsConan(ConanFile):
 
     def requirements(self):
         self.requires("cxxopts/3.1.1")
-        self.requires("spdlog/1.12.0")
-        self.requires("fmt/10.2.1")
+        self.requires("spdlog/1.15.0")
+        self.requires("fmt/11.0.2")
         self.requires("zlib/1.3")
         self.requires("bzip2/1.0.8")
         self.requires("xz_utils/5.4.5")
@@ -47,6 +47,6 @@ class FastQToolsConan(ConanFile):
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["fq_lib", "fq_cli"] # Add all relevant library targets
+        self.cpp_info.libs = ["fq_lib", "fq_cli"]
         self.cpp_info.set_property("cmake_file_name", "FastQTools")
         self.cpp_info.set_property("cmake_target_name", "FastQTools::FastQTools")

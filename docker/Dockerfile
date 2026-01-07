@@ -1,4 +1,13 @@
+# =============================================================================
+# FastQTools Production Build
+# =============================================================================
+# 使用 GCC 15 + libstdc++ 进行生产构建
+# 这是最新、性能最好的配置
+# =============================================================================
+
+# -----------------------------------------------------------------------------
 # 构建阶段
+# -----------------------------------------------------------------------------
 FROM gcc:15.2-bookworm AS build
 
 ARG HTTP_PROXY
@@ -23,12 +32,13 @@ RUN set -eux; \
     fi
 
 # 安装构建依赖
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     ninja-build \
     pkg-config \
     git \
     wget \
+    ca-certificates \
     tar \
     xz-utils \
     gnupg \
@@ -40,7 +50,8 @@ RUN apt-get update && apt-get install -y \
     libdeflate-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN CMAKE_VERSION=4.2.1 && \
+# CMake 4.x (最新版本)
+RUN CMAKE_VERSION=4.0.2 && \
     ARCH="$(dpkg --print-architecture)" && \
     case "$ARCH" in \
         amd64) CMAKE_ARCH="x86_64" ;; \
@@ -55,63 +66,49 @@ RUN CMAKE_VERSION=4.2.1 && \
     ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack && \
     rm -f /tmp/cmake.tar.gz
 
-RUN wget -q https://apt.llvm.org/llvm.sh && \
-    chmod +x llvm.sh && \
-    ./llvm.sh 21 && \
-    apt-get update && \
-    apt-get install -y \
-    clang-21 \
-    lld-21 \
-    llvm-21 && \
-    rm -f llvm.sh && \
-    rm -rf /var/lib/apt/lists/*
+# Conan 2.x (最新版本)
+RUN pip3 install --no-cache-dir --break-system-packages conan==2.14.0
 
-RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100 && \
-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
-
-# 安装Conan (使用 --break-system-packages 绕过 PEP 668 限制)
-RUN pip3 install --no-cache-dir --break-system-packages conan==2.24.0
-
-# 设置工作目录
-WORKDIR /workspace
-
-# 复制源代码
-COPY . .
-
-# 配置构建环境
-ENV CC=clang
-ENV CXX=clang++
+# 设置编译器
+ENV CC=gcc
+ENV CXX=g++
 ENV CONAN_HOME=/root/.conan2
 ENV CCACHE_DIR=/root/.ccache
 ENV PATH=/usr/lib/ccache:$PATH
 
-# 安装依赖
-RUN conan profile detect --force
-RUN conan install config/dependencies/ --build=missing -s build_type=Release -of=build
+WORKDIR /workspace
+COPY . .
 
-# 构建项目
-RUN cmake -B build -G Ninja \
+# 安装依赖并构建
+RUN conan profile detect --force
+RUN conan install config/dependencies/ --build=missing -s build_type=Release -of=build/gcc-release
+
+RUN cmake -B build/gcc-release -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
+    -DCMAKE_TOOLCHAIN_FILE=build/gcc-release/conan_toolchain.cmake \
+    -DCMAKE_C_COMPILER=gcc \
+    -DCMAKE_CXX_COMPILER=g++ \
     -DENABLE_COVERAGE=OFF \
     -DBUILD_TESTING=OFF
 
-RUN ninja -C build
+RUN ninja -C build/gcc-release
 
+# -----------------------------------------------------------------------------
 # 生产阶段
-FROM debian:12-slim AS production
+# -----------------------------------------------------------------------------
+FROM debian:bookworm-slim AS production
 
-# 安装运行时依赖
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libtbb12 \
     zlib1g \
     libbz2-1.0 \
     liblzma5 \
     libdeflate0 \
+    libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
 
-# 创建非root用户
+# 非 root 用户
 ARG USERNAME=fastqtools
 ARG USER_UID=1000
 ARG USER_GID=1000
@@ -119,33 +116,22 @@ ARG USER_GID=1000
 RUN groupadd -g $USER_GID $USERNAME \
     && useradd -m -s /bin/bash -u $USER_UID -g $USER_GID $USERNAME
 
-# 设置工作目录
 WORKDIR /app
 
-# 从构建阶段复制二进制文件
-COPY --from=build /workspace/build/FastQTools /usr/local/bin/
-COPY --from=build /workspace/build/lib* /usr/local/lib/ 2>/dev/null || true
-
-# 创建符号链接
+# 复制构建产物
+COPY --from=build /workspace/build/gcc-release/FastQTools /usr/local/bin/
 RUN ln -sf /usr/local/bin/FastQTools /usr/local/bin/fastqtools
 
-# 创建数据目录
+# 数据目录
 RUN mkdir -p /app/data /app/output && \
     chown -R $USERNAME:$USERNAME /app
 
-# 切换到非root用户
 USER $USERNAME
 
-# 设置环境变量
 ENV PATH=/usr/local/bin:$PATH
-ENV LD_LIBRARY_PATH=/usr/local/lib
 ENV FASTQTOOLS_DATA_DIR=/app/data
 ENV FASTQTOOLS_OUTPUT_DIR=/app/output
 
-# 暴露端口（如果需要网络服务）
-EXPOSE 8080
-
-# 健康检查
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
     CMD fastqtools --help || exit 1
 

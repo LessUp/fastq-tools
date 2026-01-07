@@ -66,6 +66,9 @@ RUN wget https://apt.llvm.org/llvm.sh && \
 # 3. Install specific Conan version
 RUN pip3 install conan==2.24.0
 
+ENV CC=/usr/bin/gcc
+ENV CXX=/usr/bin/g++
+
 # 4. Copy project source code
 WORKDIR /app
 COPY . .
@@ -74,7 +77,7 @@ COPY . .
 # We use the system's default GCC (which should be >= 15.1 on modern systems)
 # and the installed Clang 19. Here we configure Conan to use GCC.
 RUN conan profile detect --force && \
-    conan install config/dependencies/ --output-folder=build/conan-release --build=missing -s build_type=Release
+    conan install config/dependencies/ --output-folder=build/conan-release --build=missing -s build_type=Release -s compiler.cppstd=20
 
 # 6. Configure and build the project with CMake
 RUN cmake -B build -S . \
