@@ -67,7 +67,7 @@ RUN CMAKE_VERSION=4.0.2 && \
     rm -f /tmp/cmake.tar.gz
 
 # Conan 2.x (最新版本)
-RUN pip3 install --no-cache-dir --break-system-packages conan==2.14.0
+RUN pip3 install --no-cache-dir --break-system-packages conan==2.24.0
 
 # 设置编译器
 ENV CC=gcc
