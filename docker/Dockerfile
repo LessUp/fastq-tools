@@ -1,14 +1,15 @@
 # 构建阶段
-FROM gcc:14.2-bookworm AS build
+FROM gcc:15.2-bookworm AS build
 
 # 安装构建依赖
 RUN apt-get update && apt-get install -y \
     build-essential \
-    cmake \
     ninja-build \
     pkg-config \
     git \
     wget \
+    tar \
+    xz-utils \
     gnupg \
     lsb-release \
     software-properties-common \
@@ -18,19 +19,34 @@ RUN apt-get update && apt-get install -y \
     libdeflate-dev \
     && rm -rf /var/lib/apt/lists/*
 
+RUN CMAKE_VERSION=4.2.1 && \
+    ARCH="$(dpkg --print-architecture)" && \
+    case "$ARCH" in \
+        amd64) CMAKE_ARCH="x86_64" ;; \
+        arm64) CMAKE_ARCH="aarch64" ;; \
+        *) echo "Unsupported architecture: $ARCH"; exit 1 ;; \
+    esac && \
+    wget -q "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz && \
+    mkdir -p /opt && \
+    tar -C /opt -xzf /tmp/cmake.tar.gz && \
+    ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake && \
+    ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/ctest" /usr/local/bin/ctest && \
+    ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack && \
+    rm -f /tmp/cmake.tar.gz
+
 RUN wget -q https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
-    ./llvm.sh 19 && \
+    ./llvm.sh 21 && \
     apt-get update && \
     apt-get install -y \
-    clang-19 \
-    lld-19 \
-    llvm-19 && \
+    clang-21 \
+    lld-21 \
+    llvm-21 && \
     rm -f llvm.sh && \
     rm -rf /var/lib/apt/lists/*
 
-RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 100 && \
-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 100
+RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100 && \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
 
 # 安装Conan (使用 --break-system-packages 绕过 PEP 668 限制)
 RUN pip3 install --no-cache-dir --break-system-packages conan==2.19.0

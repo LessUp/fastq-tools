@@ -49,8 +49,8 @@ Main installation script with multiple modes:
 **Development Dependencies:**
 - All runtime dependencies
 - build-essential (GCC compiler suite)
-- cmake, ninja-build (build systems)
-- clang-19, clangd-19, clang-tidy-19, clang-format-19 (LLVM toolchain)
+- cmake 4.2.1, ninja-build (build systems)
+- clang-21, clangd-21, clang-tidy-21, clang-format-21 (LLVM toolchain)
 - python3-pip, conan (dependency management)
 - gdb, valgrind (debugging tools)
 - lcov (code coverage)
@@ -116,7 +116,7 @@ Two devcontainer configurations are available:
 2. **Simple setup** (`.devcontainer/devcontainer.simple.json`): Single Dockerfile
 
 Both provide:
-- Clang/LLVM 19 toolchain
+- Clang/LLVM 21 toolchain
 - CMake and Ninja build systems
 - Conan package manager
 - VS Code extensions for C++ development

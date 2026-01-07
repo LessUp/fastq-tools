@@ -6,16 +6,17 @@
 # needed for interactive development.
 
 # 开发环境基础镜像（自包含，不依赖其他 Dockerfile 的 stage）
-FROM gcc:14.2-bookworm AS base
+FROM gcc:15.2-bookworm AS base
 
 # 基础工具链
 RUN apt-get update && apt-get install -y \
     build-essential \
-    cmake \
     ninja-build \
     pkg-config \
     git \
     wget \
+    tar \
+    xz-utils \
     gnupg \
     lsb-release \
     software-properties-common \
@@ -24,25 +25,40 @@ RUN apt-get update && apt-get install -y \
     ccache \
     && rm -rf /var/lib/apt/lists/*
 
+RUN CMAKE_VERSION=4.2.1 && \
+    ARCH="$(dpkg --print-architecture)" && \
+    case "$ARCH" in \
+        amd64) CMAKE_ARCH="x86_64" ;; \
+        arm64) CMAKE_ARCH="aarch64" ;; \
+        *) echo "Unsupported architecture: $ARCH"; exit 1 ;; \
+    esac && \
+    wget -q "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz && \
+    mkdir -p /opt && \
+    tar -C /opt -xzf /tmp/cmake.tar.gz && \
+    ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake && \
+    ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/ctest" /usr/local/bin/ctest && \
+    ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack && \
+    rm -f /tmp/cmake.tar.gz
+
 RUN wget -q https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
-    ./llvm.sh 19 && \
+    ./llvm.sh 21 && \
     apt-get update && \
     apt-get install -y \
-    clang-19 \
-    clangd-19 \
-    clang-tidy-19 \
-    clang-format-19 \
-    lld-19 \
-    llvm-19 && \
+    clang-21 \
+    clangd-21 \
+    clang-tidy-21 \
+    clang-format-21 \
+    lld-21 \
+    llvm-21 && \
     rm -f llvm.sh && \
     rm -rf /var/lib/apt/lists/*
 
-RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 100 && \
-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 100 && \
-    update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-19 100 && \
-    update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-19 100 && \
-    update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-19 100
+RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100 && \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100 && \
+    update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-21 100 && \
+    update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-21 100 && \
+    update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-21 100
 
 # Conan (使用 --break-system-packages 绕过 PEP 668 限制)
 RUN pip3 install --no-cache-dir --break-system-packages conan==2.19.0

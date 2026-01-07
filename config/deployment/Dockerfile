@@ -12,17 +12,33 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     wget \
+    tar \
+    xz-utils \
     gnupg \
     software-properties-common \
     python3-pip \
-    cmake \
     ninja-build
 
-# 2. Install specific Clang version (19)
+RUN CMAKE_VERSION=4.2.1 && \
+    ARCH="$(dpkg --print-architecture)" && \
+    case "$ARCH" in \
+        amd64) CMAKE_ARCH="x86_64" ;; \
+        arm64) CMAKE_ARCH="aarch64" ;; \
+        *) echo "Unsupported architecture: $ARCH"; exit 1 ;; \
+    esac && \
+    wget -q "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz && \
+    mkdir -p /opt && \
+    tar -C /opt -xzf /tmp/cmake.tar.gz && \
+    ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake && \
+    ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/ctest" /usr/local/bin/ctest && \
+    ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack && \
+    rm -f /tmp/cmake.tar.gz
+
+# 2. Install specific Clang version (21)
 RUN wget https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
-    ./llvm.sh 19 && \
-    apt-get install -y clang-19 clang-tidy-19 clang-format-19 lld-19 llvm-19 && \
+    ./llvm.sh 21 && \
+    apt-get install -y clang-21 clang-tidy-21 clang-format-21 lld-21 llvm-21 && \
     rm -f llvm.sh && \
     rm -rf /var/lib/apt/lists/*
 

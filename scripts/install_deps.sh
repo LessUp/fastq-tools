@@ -93,11 +93,12 @@ install_dev_deps() {
         gnupg
         software-properties-common
         python3-pip
-        cmake
         ninja-build
         pkg-config
         git
         ccache
+        tar
+        xz-utils
     "
     
     if ! sudo apt-get install -y $ESSENTIAL_PACKAGES; then
@@ -119,8 +120,41 @@ install_dev_deps() {
         exit 1
     fi
     
-    # Install Clang/LLVM version 19 for development
-    echo -e "${BLUE}>>> Installing Clang/LLVM version 19...${NC}"
+    # Install CMake 4.2.1 (Kitware prebuilt)
+    echo -e "${BLUE}>>> Installing CMake 4.2.1...${NC}"
+    CMAKE_VERSION=4.2.1
+    ARCH="$(dpkg --print-architecture)"
+    case "$ARCH" in
+        amd64) CMAKE_ARCH="x86_64" ;;
+        arm64) CMAKE_ARCH="aarch64" ;;
+        *)
+            echo -e "${RED}Error: Unsupported architecture for CMake prebuilt: $ARCH${NC}"
+            exit 1
+            ;;
+    esac
+
+    if ! wget -q "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz; then
+        echo -e "${RED}Error: Failed to download CMake ${CMAKE_VERSION}${NC}"
+        exit 1
+    fi
+
+    if ! sudo mkdir -p /opt; then
+        echo -e "${RED}Error: Failed to create /opt for CMake installation${NC}"
+        exit 1
+    fi
+
+    if ! sudo tar -C /opt -xzf /tmp/cmake.tar.gz; then
+        echo -e "${RED}Error: Failed to extract CMake archive${NC}"
+        exit 1
+    fi
+
+    sudo ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake
+    sudo ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/ctest" /usr/local/bin/ctest
+    sudo ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
+    rm -f /tmp/cmake.tar.gz
+
+    # Install Clang/LLVM version 21 for development
+    echo -e "${BLUE}>>> Installing Clang/LLVM version 21...${NC}"
     if [ ! -f "llvm.sh" ]; then
         if ! wget https://apt.llvm.org/llvm.sh; then
             echo -e "${RED}Error: Failed to download LLVM installer${NC}"
@@ -129,23 +163,23 @@ install_dev_deps() {
     fi
     
     chmod +x llvm.sh
-    if ! sudo ./llvm.sh 19; then
-        echo -e "${RED}Error: Failed to install LLVM 19${NC}"
+    if ! sudo ./llvm.sh 21; then
+        echo -e "${RED}Error: Failed to install LLVM 21${NC}"
         exit 1
     fi
     
-    if ! sudo apt-get install -y clang-19 clangd-19 clang-tidy-19 clang-format-19 libclang-19-dev lld-19 llvm-19; then
+    if ! sudo apt-get install -y clang-21 clangd-21 clang-tidy-21 clang-format-21 libclang-21-dev lld-21 llvm-21; then
         echo -e "${RED}Error: Failed to install LLVM tools${NC}"
         exit 1
     fi
     
-    # Set default clang to version 19
-    echo -e "${BLUE}>>> Setting default clang to version 19...${NC}"
-    sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 100
-    sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 100
-    sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-19 100
-    sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-19 100
-    sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-19 100
+    # Set default clang to version 21
+    echo -e "${BLUE}>>> Setting default clang to version 21...${NC}"
+    sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100
+    sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
+    sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-21 100
+    sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-21 100
+    sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-21 100
     
     # Install Conan for dependency management
     echo -e "${BLUE}>>> Installing Conan...${NC}"
