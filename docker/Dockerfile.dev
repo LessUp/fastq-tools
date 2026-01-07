@@ -44,8 +44,8 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 100 && 
     update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-19 100 && \
     update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-19 100
 
-# Conan
-RUN pip3 install --no-cache-dir conan==2.19.0
+# Conan (使用 --break-system-packages 绕过 PEP 668 限制)
+RUN pip3 install --no-cache-dir --break-system-packages conan==2.19.0
 
 # 环境变量
 ENV CC=clang

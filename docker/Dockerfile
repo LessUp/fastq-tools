@@ -32,8 +32,8 @@ RUN wget -q https://apt.llvm.org/llvm.sh && \
 RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 100 && \
     update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 100
 
-# 安装Conan
-RUN pip3 install --no-cache-dir conan==2.19.0
+# 安装Conan (使用 --break-system-packages 绕过 PEP 668 限制)
+RUN pip3 install --no-cache-dir --break-system-packages conan==2.19.0
 
 # 设置工作目录
 WORKDIR /workspace
