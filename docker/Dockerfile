@@ -1,6 +1,27 @@
 # 构建阶段
 FROM gcc:15.2-bookworm AS build
 
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG ALL_PROXY
+ARG NO_PROXY
+
+ENV HTTP_PROXY=${HTTP_PROXY}
+ENV HTTPS_PROXY=${HTTPS_PROXY}
+ENV ALL_PROXY=${ALL_PROXY}
+ENV NO_PROXY=${NO_PROXY}
+ENV http_proxy=${HTTP_PROXY}
+ENV https_proxy=${HTTPS_PROXY}
+ENV all_proxy=${ALL_PROXY}
+ENV no_proxy=${NO_PROXY}
+
+RUN set -eux; \
+    if [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ]; then \
+        : > /etc/apt/apt.conf.d/99proxy; \
+        if [ -n "${HTTP_PROXY:-}" ]; then echo "Acquire::http::Proxy \"${HTTP_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
+        if [ -n "${HTTPS_PROXY:-}" ]; then echo "Acquire::https::Proxy \"${HTTPS_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
+    fi
+
 # 安装构建依赖
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -49,7 +70,7 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100 && 
     update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
 
 # 安装Conan (使用 --break-system-packages 绕过 PEP 668 限制)
-RUN pip3 install --no-cache-dir --break-system-packages conan==2.19.0
+RUN pip3 install --no-cache-dir --break-system-packages conan==2.24.0
 
 # 设置工作目录
 WORKDIR /workspace
@@ -117,7 +138,7 @@ USER $USERNAME
 
 # 设置环境变量
 ENV PATH=/usr/local/bin:$PATH
-ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/usr/local/lib
 ENV FASTQTOOLS_DATA_DIR=/app/data
 ENV FASTQTOOLS_OUTPUT_DIR=/app/output
 

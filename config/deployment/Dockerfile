@@ -5,6 +5,27 @@
 # Uses Ubuntu 22.04 as the base for the build environment.
 FROM ubuntu:22.04 AS builder
 
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG ALL_PROXY
+ARG NO_PROXY
+
+ENV HTTP_PROXY=${HTTP_PROXY}
+ENV HTTPS_PROXY=${HTTPS_PROXY}
+ENV ALL_PROXY=${ALL_PROXY}
+ENV NO_PROXY=${NO_PROXY}
+ENV http_proxy=${HTTP_PROXY}
+ENV https_proxy=${HTTPS_PROXY}
+ENV all_proxy=${ALL_PROXY}
+ENV no_proxy=${NO_PROXY}
+
+RUN set -eux; \
+    if [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ]; then \
+        : > /etc/apt/apt.conf.d/99proxy; \
+        if [ -n "${HTTP_PROXY:-}" ]; then echo "Acquire::http::Proxy \"${HTTP_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
+        if [ -n "${HTTPS_PROXY:-}" ]; then echo "Acquire::https::Proxy \"${HTTPS_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
+    fi
+
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -43,7 +64,7 @@ RUN wget https://apt.llvm.org/llvm.sh && \
     rm -rf /var/lib/apt/lists/*
 
 # 3. Install specific Conan version
-RUN pip3 install conan==2.19.0
+RUN pip3 install conan==2.24.0
 
 # 4. Copy project source code
 WORKDIR /app

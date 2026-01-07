@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 env:
-  CONAN_VERSION: 2.19.0
+  CONAN_VERSION: 2.24.0
 
 jobs:
   release:

@@ -194,9 +194,9 @@ install_dev_deps() {
     fi
     
     # Install Conan using pipx (recommended for Ubuntu 24.04+)
-    if ! pipx install conan==2.19.0; then
+    if ! pipx install conan==2.24.0; then
         echo -e "${YELLOW}Warning: pipx install failed, trying pip with --break-system-packages...${NC}"
-        if ! pip3 install --break-system-packages conan==2.19.0; then
+        if ! pip3 install --break-system-packages conan==2.24.0; then
             echo -e "${RED}Error: Failed to install Conan${NC}"
             exit 1
         fi
@@ -207,7 +207,7 @@ install_dev_deps() {
         echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
         export PATH="$HOME/.local/bin:$PATH"
     fi
-    
+
     # Optional development tools
     echo -e "${BLUE}>>> Installing optional development tools...${NC}"
     OPTIONAL_DEV_PACKAGES="
