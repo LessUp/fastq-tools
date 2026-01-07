@@ -26,6 +26,7 @@ class FastQTools(ConanFile):
         self.requires("fmt/10.2.1")
         # Intel's Threading Building Blocks for high-level parallelism
         self.requires("onetbb/2021.10.0")
+        self.requires("libdeflate/1.19")
 
     def build_requirements(self):
         """

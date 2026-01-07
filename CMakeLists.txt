@@ -57,10 +57,12 @@ endif()
 # --- Conan Integration ---
 # This assumes you have run `conan install config/dependencies/ --build=missing`
 # and the conan_toolchain.cmake file is in the build directory.
-if(EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
-    include("${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
-else()
-    message(STATUS "No Conan toolchain detected; attempting to use system packages.")
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    if(EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
+        include("${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
+    else()
+        message(STATUS "No Conan toolchain detected; attempting to use system packages.")
+    endif()
 endif()
 
 # --- Find Dependencies (handled by Conan) ---

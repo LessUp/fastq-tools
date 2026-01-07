@@ -66,11 +66,12 @@ ENV PATH=/usr/lib/ccache:$PATH
 
 # 安装依赖
 RUN conan profile detect --force
-RUN conan install config/dependencies/ --build=missing -s build_type=Release
+RUN conan install config/dependencies/ --build=missing -s build_type=Release -of=build
 
 # 构建项目
 RUN cmake -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
     -DENABLE_COVERAGE=OFF \
     -DBUILD_TESTING=OFF
 
