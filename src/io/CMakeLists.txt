@@ -15,4 +15,12 @@ target_link_libraries(fq_modern_io
         spdlog::spdlog
 )
 
+ if(TARGET libdeflate::libdeflate)
+     target_link_libraries(fq_modern_io PUBLIC libdeflate::libdeflate)
+ elseif(TARGET libdeflate::libdeflate_static)
+     target_link_libraries(fq_modern_io PUBLIC libdeflate::libdeflate_static)
+ elseif(TARGET libdeflate::libdeflate_shared)
+     target_link_libraries(fq_modern_io PUBLIC libdeflate::libdeflate_shared)
+ endif()
+
 target_compile_features(fq_modern_io PUBLIC cxx_std_20)
