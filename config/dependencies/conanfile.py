@@ -19,14 +19,13 @@ class FastQTools(ConanFile):
         """
         self.requires("cxxopts/3.1.1")
         self.requires("spdlog/1.15.0")
-        self.requires("zlib/1.3")
+        self.requires("zlib-ng/2.3.2")
         self.requires("bzip2/1.0.8")
         self.requires("xz_utils/5.4.5")
-        self.requires("nlohmann_json/3.11.3")
         self.requires("fmt/11.0.2")
         # Intel's Threading Building Blocks for high-level parallelism
-        self.requires("onetbb/2021.10.0")
-        self.requires("libdeflate/1.19")
+        self.requires("onetbb/2022.3.0")
+        self.requires("libdeflate/1.25")
 
     def build_requirements(self):
         """
