@@ -184,6 +184,8 @@ TEST_F(ObjectPoolTest, ConcurrentAcquireReturnsDistinctObjects) {
     std::vector<std::thread> threads;
     std::mutex mutex;
     std::set<TestObject*> allPointers;
+    // 关键修复：全局持有所有对象，防止提前释放导致指针复用
+    std::vector<std::shared_ptr<TestObject>> allObjects;
     std::atomic<int> successCount{0};
     
     for (int t = 0; t < kThreadCount; ++t) {
@@ -197,12 +199,16 @@ TEST_F(ObjectPoolTest, ConcurrentAcquireReturnsDistinctObjects) {
                 }
             }
             
-            // 检查本地对象指针唯一性
+            // 加锁插入指针并转移对象所有权到全局容器
             std::lock_guard lock(mutex);
             for (const auto& obj : localObjects) {
                 auto [it, inserted] = allPointers.insert(obj.get());
                 EXPECT_TRUE(inserted) << "Duplicate pointer detected!";
             }
+            // 将对象移动到全局容器，确保对象生命周期持续到测试结束
+            allObjects.insert(allObjects.end(), 
+                              std::make_move_iterator(localObjects.begin()),
+                              std::make_move_iterator(localObjects.end()));
         });
     }
     
@@ -212,6 +218,7 @@ TEST_F(ObjectPoolTest, ConcurrentAcquireReturnsDistinctObjects) {
     
     EXPECT_EQ(successCount.load(), kThreadCount * kAcquiresPerThread);
     EXPECT_EQ(allPointers.size(), static_cast<size_t>(kThreadCount * kAcquiresPerThread));
+    // allObjects 在此处析构，所有对象才会被释放
 }
 
 // REQ2-AC2: 并发释放正确归还
