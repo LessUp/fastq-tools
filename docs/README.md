@@ -55,6 +55,7 @@ docs/
 2. [编码规范](dev/coding-standards.md) - 代码风格和命名约定
 3. [构建指南](dev/build.md) - 构建系统和依赖管理
 4. [Git 工作流](dev/git-guidelines.md) - 提交规范和分支策略
+5. [Dev Container 团队规范](dev/devcontainer-guidelines.md) - Windows + WSL2 + Docker Desktop 的容器开发约定
 
 ### 性能优化
 

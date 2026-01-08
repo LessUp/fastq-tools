@@ -111,6 +111,7 @@ FastQTools/
 
 - 代码与命名: 见 [编码规范](docs/dev/coding-standards.md)
 - 提交信息: 见 [Git 提交规范](docs/dev/git-guidelines.md)
+- Dev Container: 见 [Dev Container 团队规范](docs/dev/devcontainer-guidelines.md)
 - 脚本说明: 见 [scripts/README.md](scripts/README.md)
 
 ## 文档
