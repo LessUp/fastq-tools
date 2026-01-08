@@ -57,10 +57,10 @@ mkdir -p .vscode
 mkdir -p logs
 
 # 设置Git配置（如果需要）
-if [ -n "$GIT_USER_NAME" ] && [ -n "$GIT_USER_EMAIL" ]; then
+if [ -n "${GIT_USER_NAME:-}" ] && [ -n "${GIT_USER_EMAIL:-}" ]; then
     print_info "配置Git用户信息..."
-    git config --global user.name "$GIT_USER_NAME"
-    git config --global user.email "$GIT_USER_EMAIL"
+    git config --global user.name "${GIT_USER_NAME}"
+    git config --global user.email "${GIT_USER_EMAIL}"
 fi
 
 # 生成compile_commands.json链接（如果存在）

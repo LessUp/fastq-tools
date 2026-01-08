@@ -8,6 +8,7 @@
 - `.devcontainer/devcontainer.json`：
   - 增加 `runServices: ["dev"]`，确保 Dev Container 仅拉起开发服务，避免默认 `compose up` 启动所有服务。
   - 增加 `forwardPorts: [8080]`，通过 VS Code 端口转发访问容器内服务。
+- `scripts/devcontainer_setup.sh`：修复在 `set -u` 模式下引用未定义环境变量（`GIT_USER_NAME` / `GIT_USER_EMAIL`）导致脚本退出的问题。
 
 ## 影响
 - 在 Windows + Docker Desktop（WSL2 后端）下启动 Dev Container 时，不再因宿主机 `8080` 被占用而失败。
