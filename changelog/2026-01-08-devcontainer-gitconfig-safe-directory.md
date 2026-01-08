@@ -16,6 +16,10 @@
     - 若存在 `/tmp/host-gitconfig` 则复制到 `/home/developer/.gitconfig`；
     - 使用 `git config --system --add safe.directory /workspace` 确保 `/workspace` 被 Git 信任。
   - 禁用 Dev Containers 内置的 Git 配置复制：`remote.containers.copyGitConfig=false`，避免启动早期阶段因 `/home/developer/.gitconfig` 被异常创建为目录而直接失败。
+  - 增加 `postAttachCommand`：每次 Attach 到已有容器也会执行相同的修复逻辑，避免仅重连/Attach（不触发容器重启）时仍遇到 `.gitconfig` 目录与 `dubious ownership`。
+
+- 更新 `.devcontainer/devcontainer.simple.json`
+  - 补齐 `postStartCommand`/`postAttachCommand`，使 simple 配置在启动与附加时行为一致。
 
 - 更新 `docker/Dockerfile.dev`
   - 预创建 `/tmp/host-gitconfig`，避免后续流程依赖该路径时出现异常。
@@ -24,6 +28,7 @@
 
 - 更新 `scripts/core/*`
   - 修正核心脚本对 `scripts/lib/common.sh` 的引用路径，避免 `source` 到不存在的 `scripts/core/lib/common.sh`。
+  - 修复 `scripts/core/*` 的可执行权限，避免在容器内执行 `./scripts/core/build`（或在 `scripts/core/` 下执行 `./build`）时报错。
 
 ## 使用说明
 - 需要 `Rebuild/Reopen in Container` 让镜像与 Dev Container 配置生效。
