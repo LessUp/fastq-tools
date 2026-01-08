@@ -14,7 +14,8 @@ target_include_directories(fq_statistics
 
 target_link_libraries(fq_statistics
     PUBLIC
-        fq_core
+        fq_common
+        fq_error
         fq_modern_io
         spdlog::spdlog
         TBB::tbb

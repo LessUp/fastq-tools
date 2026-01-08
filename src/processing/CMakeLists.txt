@@ -17,7 +17,8 @@ target_include_directories(fq_processing
 
 target_link_libraries(fq_processing
     PUBLIC
-        fq_core
+        fq_common
+        fq_error
         fq_modern_io
         spdlog::spdlog
         TBB::tbb

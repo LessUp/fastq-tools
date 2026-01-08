@@ -143,7 +143,7 @@ install(TARGETS
     fq_modern_io
     fq_processing
     fq_statistics
-    fq_core
+
     EXPORT FastQToolsTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

@@ -2,7 +2,7 @@
 add_subdirectory(common)
 add_subdirectory(error)
 add_subdirectory(config)
-add_subdirectory(core)
+
 add_subdirectory(processing)
 add_subdirectory(statistics)
 add_subdirectory(io)
@@ -16,7 +16,7 @@ INTERFACE
 fq_config  # This transitively links fq_error and fq_common
 fq_common
 fq_error
-fq_core
+
 fq_modern_io
 fq_processing
 fq_statistics
