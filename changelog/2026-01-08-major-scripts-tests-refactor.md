@@ -50,6 +50,11 @@
 --no-lto                 # 禁用 LTO
 ```
 
+新增行为:
+- ✅ 自动执行 Conan 依赖安装：当构建目录缺少 `conan_toolchain.cmake` 时，自动运行 `conan install config/dependencies/` 并注入 `CMAKE_TOOLCHAIN_FILE`
+- ✅ 自动处理旧的 CMakeCache：当构建目录已存在且 `CMAKE_TOOLCHAIN_FILE` 不匹配时（默认构建目录），自动清理构建目录以确保 toolchain 生效
+- ✅ 修复 GCC C++ 编译器选择：使用 `g++`（而非 `gcc++`）
+
 **测试脚本** (`scripts/test`):
 ```bash
 # 新增功能

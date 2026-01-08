@@ -33,6 +33,8 @@ PRESET=""
 CLEAN=false
 JOBS=$(get_cpu_cores)
 
+BUILD_DIR_DEFAULTED=false
+
 # =============================================================================
 # 帮助信息
 # =============================================================================
@@ -174,8 +176,10 @@ fi
 if [[ -z "$BUILD_DIR" ]]; then
     if [[ -n "$PRESET" ]]; then
         BUILD_DIR="build/${PRESET}"
+        BUILD_DIR_DEFAULTED=true
     else
         BUILD_DIR=$(get_build_dir "$COMPILER" "$BUILD_TYPE")
+        BUILD_DIR_DEFAULTED=true
     fi
 fi
 
@@ -210,9 +214,17 @@ CMAKE_ARGS=(
 )
 
 # 编译器设置
+C_COMPILER_BIN="${COMPILER}"
+CXX_COMPILER_BIN="${COMPILER}++"
+if [[ "${COMPILER}" == "gcc" ]]; then
+    CXX_COMPILER_BIN="g++"
+elif [[ "${COMPILER}" == "clang" ]]; then
+    CXX_COMPILER_BIN="clang++"
+fi
+
 CMAKE_ARGS+=(
-    -DCMAKE_C_COMPILER="${COMPILER}"
-    -DCMAKE_CXX_COMPILER="${COMPILER}++"
+    -DCMAKE_C_COMPILER="${C_COMPILER_BIN}"
+    -DCMAKE_CXX_COMPILER="${CXX_COMPILER_BIN}"
 )
 
 # Sanitizer
@@ -247,6 +259,66 @@ fi
 # 静态分析
 if [[ "$STATIC_ANALYSIS" == "true" ]]; then
     CMAKE_ARGS+=(-DENABLE_CLANG_TIDY=ON)
+fi
+
+if command -v conan &>/dev/null; then
+    TOOLCHAIN_PATH="${BUILD_DIR}/conan_toolchain.cmake"
+
+    if [[ -f "${BUILD_DIR}/CMakeCache.txt" ]]; then
+        CACHE_TOOLCHAIN_LINE=$(grep -E '^CMAKE_TOOLCHAIN_FILE:FILEPATH=' "${BUILD_DIR}/CMakeCache.txt" 2>/dev/null || true)
+        EXPECTED_TOOLCHAIN_LINE="CMAKE_TOOLCHAIN_FILE:FILEPATH=${TOOLCHAIN_PATH}"
+        if [[ "${CACHE_TOOLCHAIN_LINE}" != "${EXPECTED_TOOLCHAIN_LINE}" ]]; then
+            if [[ "${BUILD_DIR_DEFAULTED}" == "true" ]]; then
+                log_warning "检测到构建目录已存在且 toolchain 发生变化/未设置；将自动清理构建目录以确保 Conan toolchain 生效: ${BUILD_DIR}"
+                safe_remove_dir "${BUILD_DIR}"
+                ensure_directory "${BUILD_DIR}"
+            else
+                log_warning "检测到构建目录已存在且 toolchain 发生变化/未设置；请使用 --clean 重新配置以确保 Conan toolchain 生效"
+            fi
+        fi
+    fi
+
+    if [[ ! -f "${TOOLCHAIN_PATH}" ]]; then
+        log_info "检测到 Conan，正在生成依赖（首次构建可能较慢）"
+
+        CONAN_BUILD_TYPE="${BUILD_TYPE}"
+        if [[ "${CONAN_BUILD_TYPE}" == "Coverage" ]]; then
+            CONAN_BUILD_TYPE="Debug"
+        fi
+
+        CONAN_PROFILE=""
+        CONAN_ARCH="$(uname -m 2>/dev/null || true)"
+        if [[ "${CONAN_ARCH}" == "x86_64" ]]; then
+            if [[ "${COMPILER}" == "clang" ]]; then
+                CONAN_PROFILE="config/conan/profile-clang"
+            elif [[ "${COMPILER}" == "gcc" ]]; then
+                CONAN_PROFILE="config/conan/profile-gcc"
+            fi
+        fi
+
+        CONAN_ARGS=(install config/dependencies/ --build=missing -of="${BUILD_DIR}" -s "build_type=${CONAN_BUILD_TYPE}")
+        if [[ -n "${CONAN_PROFILE}" && -f "${CONAN_PROFILE}" ]]; then
+            CONAN_ARGS+=(-pr:h "${CONAN_PROFILE}")
+        fi
+        if conan profile list 2>/dev/null | grep -Fxq default; then
+            CONAN_ARGS+=(-pr:b default)
+        fi
+
+        if [[ "$VERBOSE" == "true" ]]; then
+            log_debug "Conan 参数: conan ${CONAN_ARGS[*]}"
+        fi
+
+        if ! conan "${CONAN_ARGS[@]}"; then
+            log_error "Conan 依赖安装失败"
+            exit 1
+        fi
+    fi
+
+    if [[ -f "${TOOLCHAIN_PATH}" ]]; then
+        CMAKE_ARGS+=(-DCMAKE_TOOLCHAIN_FILE="${TOOLCHAIN_PATH}")
+    fi
+else
+    log_warning "未检测到 conan，若依赖缺失请先安装 conan 或运行 ./scripts/install-deps --dev"
 fi
 
 # =============================================================================
