@@ -1,0 +1,339 @@
+#!/bin/bash
+# scripts/test
+# 
+# FastQTools 统一测试脚本 - 支持单元测试、集成测试和覆盖率
+# 
+# 使用示例:
+#   ./scripts/test                           # 运行所有测试
+#   ./scripts/test --filter "*timer*"        # 只运行特定测试
+#   ./scripts/test --coverage                # 生成覆盖率报告
+#   ./scripts/test --repeat 5                # 重复测试 5 次
+
+set -euo pipefail
+
+# 加载公共函数库
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib/common.sh"
+
+# =============================================================================
+# 默认配置
+# =============================================================================
+COMPILER="clang"
+BUILD_TYPE="Debug"
+BUILD_DIR=""
+FILTER=""
+VERBOSE=false
+COVERAGE=false
+JOBS=$(get_cpu_cores)
+REPEAT=1
+OUTPUT_ON_FAILURE=true
+TIMEOUT=60
+TEST_TYPE="all"  # all | unit | integration | e2e
+
+# =============================================================================
+# 帮助信息
+# =============================================================================
+print_usage() {
+    print_usage_header "FastQTools Test Runner" "运行测试套件并生成报告"
+    
+    cat << 'EOF'
+基本选项:
+  -c, --compiler NAME       编译器: gcc | clang (默认: clang)
+  -t, --type TYPE           构建类型: Debug | Release (默认: Debug)
+  -b, --build-dir DIR       构建目录 (默认: build-<compiler>-<type>)
+  -j, --jobs N              并行测试数 (默认: 自动检测)
+
+测试选择:
+  -f, --filter PATTERN      测试过滤器 (支持通配符)
+  --unit                    只运行单元测试
+  --integration             只运行集成测试
+  --e2e                     只运行端到端测试
+  -r, --repeat N            重复测试 N 次 (默认: 1)
+
+覆盖率:
+  -C, --coverage            生成覆盖率报告 (lcov + HTML)
+  --coverage-output DIR     覆盖率输出目录 (默认: coverage)
+
+输出控制:
+  -v, --verbose             详细输出
+  -q, --quiet               静默模式
+  --no-output-on-failure    测试失败时不显示输出
+  --timeout SECONDS         测试超时时间 (默认: 60)
+
+其他:
+  -h, --help                显示此帮助信息
+
+示例:
+  ./scripts/test                              # 运行所有测试
+  ./scripts/test --unit -v                    # 详细运行单元测试
+  ./scripts/test -f "*config*"                # 只运行配置相关测试
+  ./scripts/test --coverage                   # 生成覆盖率报告
+  ./scripts/test --e2e --repeat 3             # 重复运行 E2E 测试 3 次
+EOF
+}
+
+# =============================================================================
+# 参数解析
+# =============================================================================
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -c|--compiler)
+            COMPILER=$(normalize_compiler "$2") || exit 1
+            shift 2
+            ;;
+        -t|--type)
+            BUILD_TYPE=$(normalize_build_type "$2") || exit 1
+            shift 2
+            ;;
+        -b|--build-dir)
+            BUILD_DIR="$2"
+            shift 2
+            ;;
+        -j|--jobs)
+            JOBS="$2"
+            shift 2
+            ;;
+        -f|--filter)
+            FILTER="$2"
+            shift 2
+            ;;
+        --unit)
+            TEST_TYPE="unit"
+            shift
+            ;;
+        --integration)
+            TEST_TYPE="integration"
+            shift
+            ;;
+        --e2e)
+            TEST_TYPE="e2e"
+            shift
+            ;;
+        -r|--repeat)
+            REPEAT="$2"
+            shift 2
+            ;;
+        -C|--coverage)
+            COVERAGE=true
+            BUILD_TYPE="Coverage"
+            shift
+            ;;
+        --coverage-output)
+            COVERAGE_DIR="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -q|--quiet)
+            VERBOSE=false
+            OUTPUT_ON_FAILURE=false
+            shift
+            ;;
+        --no-output-on-failure)
+            OUTPUT_ON_FAILURE=false
+            shift
+            ;;
+        --timeout)
+            TIMEOUT="$2"
+            shift 2
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            log_error "未知选项: $1"
+            print_usage
+            exit 1
+            ;;
+    esac
+done
+
+# =============================================================================
+# 环境检查和准备
+# =============================================================================
+PROJECT_ROOT=$(get_project_root)
+cd "$PROJECT_ROOT"
+
+start_timer
+
+log_section "FastQTools 测试运行器"
+
+# 确定构建目录
+if [[ -z "$BUILD_DIR" ]]; then
+    BUILD_DIR=$(get_build_dir "$COMPILER" "$BUILD_TYPE")
+fi
+
+# 检查构建目录是否存在
+if [[ ! -d "$BUILD_DIR" ]]; then
+    log_error "构建目录不存在: ${BUILD_DIR}"
+    log_info "请先运行构建: ./scripts/build -c ${COMPILER} -t ${BUILD_TYPE}"
+    exit 1
+fi
+
+log_info "构建目录: ${BUILD_DIR}"
+log_info "测试类型: ${TEST_TYPE}"
+[[ -n "$FILTER" ]] && log_info "测试过滤: ${FILTER}"
+[[ "$COVERAGE" == "true" ]] && log_info "覆盖率: 已启用"
+log_info "并行任务: ${JOBS}"
+[[ $REPEAT -gt 1 ]] && log_info "重复次数: ${REPEAT}"
+
+# =============================================================================
+# 构建 CTest 参数
+# =============================================================================
+CTEST_ARGS=(
+    --test-dir "$BUILD_DIR"
+    --parallel "$JOBS"
+    --timeout "$TIMEOUT"
+)
+
+# 输出控制
+if [[ "$OUTPUT_ON_FAILURE" == "true" ]]; then
+    CTEST_ARGS+=(--output-on-failure)
+fi
+
+if [[ "$VERBOSE" == "true" ]]; then
+    CTEST_ARGS+=(--verbose)
+fi
+
+# 测试过滤
+if [[ -n "$FILTER" ]]; then
+    CTEST_ARGS+=(-R "$FILTER")
+fi
+
+# 测试类型过滤
+case "$TEST_TYPE" in
+    unit)
+        CTEST_ARGS+=(-L "unit")
+        ;;
+    integration)
+        CTEST_ARGS+=(-L "integration")
+        ;;
+    e2e)
+        CTEST_ARGS+=(-L "e2e")
+        ;;
+    all)
+        # 运行所有测试
+        ;;
+esac
+
+# 重复测试
+if [[ $REPEAT -gt 1 ]]; then
+    CTEST_ARGS+=(--repeat until-pass:"$REPEAT")
+fi
+
+# =============================================================================
+# 运行测试
+# =============================================================================
+show_step 1 3 "运行测试套件"
+
+if [[ "$VERBOSE" == "true" ]]; then
+    log_debug "CTest 参数: ${CTEST_ARGS[*]}"
+fi
+
+log_separator "-"
+
+TEST_RESULT=0
+if ! ctest "${CTEST_ARGS[@]}"; then
+    TEST_RESULT=1
+    log_error "测试失败"
+else
+    log_success "所有测试通过"
+fi
+
+log_separator "-"
+
+# =============================================================================
+# 生成覆盖率报告
+# =============================================================================
+if [[ "$COVERAGE" == "true" && "$TEST_RESULT" -eq 0 ]]; then
+    show_step 2 3 "生成覆盖率报告"
+    
+    # 设置覆盖率输出目录
+    COVERAGE_DIR="${COVERAGE_DIR:-coverage}"
+    ensure_directory "$COVERAGE_DIR"
+    
+    # 检查覆盖率工具
+    if require_command lcov "sudo apt-get install lcov" && require_command genhtml "sudo apt-get install lcov"; then
+        
+        # 捕获覆盖率数据
+        log_info "捕获覆盖率数据..."
+        lcov --capture \
+             --directory "$BUILD_DIR" \
+             --output-file "${COVERAGE_DIR}/coverage.info" \
+             --quiet || {
+            log_error "捕获覆盖率数据失败"
+            exit 1
+        }
+        
+        # 过滤外部代码
+        log_info "过滤覆盖率数据..."
+        lcov --remove "${COVERAGE_DIR}/coverage.info" \
+             '/usr/*' \
+             '*/third_party/*' \
+             '*/tests/*' \
+             --output-file "${COVERAGE_DIR}/coverage_filtered.info" \
+             --quiet || {
+            log_error "过滤覆盖率数据失败"
+            exit 1
+        }
+        
+        # 生成 HTML 报告
+        log_info "生成 HTML 报告..."
+        genhtml "${COVERAGE_DIR}/coverage_filtered.info" \
+                --output-directory "${COVERAGE_DIR}/html" \
+                --title "FastQTools Coverage Report" \
+                --legend \
+                --quiet || {
+            log_error "生成 HTML 报告失败"
+            exit 1
+        }
+        
+        log_success "覆盖率报告: ${COVERAGE_DIR}/html/index.html"
+        
+        # 显示覆盖率摘要
+        lcov --summary "${COVERAGE_DIR}/coverage_filtered.info" 2>&1 | grep -E "lines|functions"
+        
+    else
+        log_warning "未找到覆盖率工具，跳过覆盖率报告生成"
+    fi
+fi
+
+# =============================================================================
+# 运行 E2E 测试（如果需要）
+# =============================================================================
+if [[ "$TEST_TYPE" == "e2e" || "$TEST_TYPE" == "all" ]]; then
+    show_step 3 3 "运行端到端测试"
+    
+    E2E_SCRIPT="${PROJECT_ROOT}/tests/e2e/test_cli.sh"
+    if [[ -x "$E2E_SCRIPT" ]]; then
+        export FASTQTOOLS="${BUILD_DIR}/FastQTools"
+        
+        if "$E2E_SCRIPT"; then
+            log_success "E2E 测试通过"
+        else
+            log_warning "E2E 测试失败（部分测试可能是已知问题）"
+            TEST_RESULT=1
+        fi
+    else
+        log_warning "E2E 测试脚本未找到: ${E2E_SCRIPT}"
+    fi
+fi
+
+# =============================================================================
+# 测试报告
+# =============================================================================
+log_separator "="
+
+if [[ "$TEST_RESULT" -eq 0 ]]; then
+    log_success "测试完成 ✓"
+    end_timer
+    log_separator "="
+    exit 0
+else
+    log_error "测试失败 ✗"
+    log_separator "="
+    exit 1
+fi

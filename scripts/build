@@ -1,0 +1,316 @@
+#!/bin/bash
+# scripts/build
+# 
+# FastQTools 统一构建脚本 - 支持开发和生产环境
+# 
+# 使用示例:
+#   ./scripts/build                           # 默认: clang Release
+#   ./scripts/build --compiler gcc --type Debug
+#   ./scripts/build --dev                     # 开发模式: Debug + 详细输出
+#   ./scripts/build --sanitizer asan         # AddressSanitizer 构建
+#   ./scripts/build --coverage               # 覆盖率构建
+#   ./scripts/build --preset clang-release   # 使用 CMake preset
+
+set -euo pipefail
+
+# 加载公共函数库
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib/common.sh"
+
+# =============================================================================
+# 默认配置
+# =============================================================================
+COMPILER="clang"
+BUILD_TYPE="Release"
+BUILD_DIR=""
+SANITIZER=""
+COVERAGE=false
+STATIC_ANALYSIS=false
+LTO=true
+VERBOSE=false
+DEV_MODE=false
+PRESET=""
+CLEAN=false
+JOBS=$(get_cpu_cores)
+
+# =============================================================================
+# 帮助信息
+# =============================================================================
+print_usage() {
+    print_usage_header "FastQTools Build System" "统一的构建脚本，支持多种编译器、构建类型和分析工具"
+    
+    cat << 'EOF'
+基本选项:
+  -c, --compiler NAME       编译器: gcc | clang (默认: clang)
+  -t, --type TYPE           构建类型: Debug | Release | RelWithDebInfo | Coverage (默认: Release)
+  -d, --dev                 开发模式 (等同于 --type Debug --verbose)
+  -j, --jobs N              并行编译任务数 (默认: 自动检测)
+  -b, --build-dir DIR       自定义构建目录 (默认: build-<compiler>-<type>)
+  
+高级选项:
+  -s, --sanitizer TYPE      启用 Sanitizer: asan | tsan | ubsan
+  -C, --coverage            启用代码覆盖率
+  --static-analysis         启用静态分析 (clang-tidy)
+  --no-lto                  禁用链接时优化
+  --clean                   构建前清理构建目录
+  -p, --preset NAME         使用 CMake preset (覆盖其他选项)
+  
+输出控制:
+  -v, --verbose             详细输出
+  -q, --quiet               静默模式
+  
+其他:
+  -h, --help                显示此帮助信息
+
+示例:
+  ./scripts/build                                    # 标准 Release 构建
+  ./scripts/build --dev                              # 快速开发构建
+  ./scripts/build -c gcc -t Debug -v                 # GCC Debug 详细输出
+  ./scripts/build --sanitizer asan                   # AddressSanitizer 构建
+  ./scripts/build --coverage                         # 覆盖率构建
+  ./scripts/build --preset clang-release --clean     # 使用 preset 并清理
+EOF
+}
+
+# =============================================================================
+# 参数解析
+# =============================================================================
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -c|--compiler)
+            COMPILER=$(normalize_compiler "$2") || exit 1
+            shift 2
+            ;;
+        -t|--type)
+            BUILD_TYPE=$(normalize_build_type "$2") || exit 1
+            shift 2
+            ;;
+        -d|--dev)
+            DEV_MODE=true
+            BUILD_TYPE="Debug"
+            VERBOSE=true
+            shift
+            ;;
+        -j|--jobs)
+            JOBS="$2"
+            shift 2
+            ;;
+        -b|--build-dir)
+            BUILD_DIR="$2"
+            shift 2
+            ;;
+        -s|--sanitizer)
+            SANITIZER="$2"
+            shift 2
+            ;;
+        -C|--coverage)
+            COVERAGE=true
+            BUILD_TYPE="Coverage"
+            shift
+            ;;
+        --static-analysis)
+            STATIC_ANALYSIS=true
+            shift
+            ;;
+        --no-lto)
+            LTO=false
+            shift
+            ;;
+        --clean)
+            CLEAN=true
+            shift
+            ;;
+        -p|--preset)
+            PRESET="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -q|--quiet)
+            VERBOSE=false
+            shift
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            log_error "未知选项: $1"
+            print_usage
+            exit 1
+            ;;
+    esac
+done
+
+# =============================================================================
+# 环境检查
+# =============================================================================
+PROJECT_ROOT=$(get_project_root)
+cd "$PROJECT_ROOT"
+
+start_timer
+
+log_section "FastQTools 构建系统"
+
+# 检查必需的命令
+show_step 1 4 "检查构建环境"
+require_commands cmake ninja || {
+    log_error "缺少必需的构建工具"
+    log_info "请运行: ./scripts/install-deps --dev"
+    exit 1
+}
+
+# 检查编译器
+if ! require_command "${COMPILER}"; then
+    log_error "编译器 ${COMPILER} 未找到"
+    exit 1
+fi
+
+# =============================================================================
+# 配置构建目录
+# =============================================================================
+if [[ -z "$BUILD_DIR" ]]; then
+    if [[ -n "$PRESET" ]]; then
+        BUILD_DIR="build/${PRESET}"
+    else
+        BUILD_DIR=$(get_build_dir "$COMPILER" "$BUILD_TYPE")
+    fi
+fi
+
+log_info "项目根目录: ${PROJECT_ROOT}"
+log_info "构建目录: ${BUILD_DIR}"
+log_info "编译器: ${COMPILER}"
+log_info "构建类型: ${BUILD_TYPE}"
+[[ -n "$SANITIZER" ]] && log_info "Sanitizer: ${SANITIZER}"
+[[ "$COVERAGE" == "true" ]] && log_info "覆盖率: 已启用"
+[[ "$STATIC_ANALYSIS" == "true" ]] && log_info "静态分析: 已启用"
+log_info "并行任务: ${JOBS}"
+
+# =============================================================================
+# 清理（如果需要）
+# =============================================================================
+if [[ "$CLEAN" == "true" ]]; then
+    log_warning "清理构建目录: ${BUILD_DIR}"
+    safe_remove_dir "$BUILD_DIR"
+fi
+
+ensure_directory "$BUILD_DIR"
+
+# =============================================================================
+# 构建 CMake 参数
+# =============================================================================
+CMAKE_ARGS=(
+    -S .
+    -B "$BUILD_DIR"
+    -G Ninja
+    -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+)
+
+# 编译器设置
+CMAKE_ARGS+=(
+    -DCMAKE_C_COMPILER="${COMPILER}"
+    -DCMAKE_CXX_COMPILER="${COMPILER}++"
+)
+
+# Sanitizer
+if [[ -n "$SANITIZER" ]]; then
+    case "$SANITIZER" in
+        asan|address)
+            CMAKE_ARGS+=(-DENABLE_ASAN=ON)
+            ;;
+        tsan|thread)
+            CMAKE_ARGS+=(-DENABLE_TSAN=ON)
+            ;;
+        ubsan|undefined)
+            CMAKE_ARGS+=(-DENABLE_UBSAN=ON)
+            ;;
+        *)
+            log_error "未知的 sanitizer: ${SANITIZER}"
+            exit 1
+            ;;
+    esac
+fi
+
+# 覆盖率
+if [[ "$COVERAGE" == "true" ]]; then
+    CMAKE_ARGS+=(-DENABLE_COVERAGE=ON)
+fi
+
+# LTO
+if [[ "$LTO" == "false" ]]; then
+    CMAKE_ARGS+=(-DENABLE_LTO=OFF)
+fi
+
+# 静态分析
+if [[ "$STATIC_ANALYSIS" == "true" ]]; then
+    CMAKE_ARGS+=(-DENABLE_CLANG_TIDY=ON)
+fi
+
+# =============================================================================
+# CMake 配置
+# =============================================================================
+show_step 2 4 "配置 CMake"
+
+if [[ "$VERBOSE" == "true" ]]; then
+    log_debug "CMake 参数: ${CMAKE_ARGS[*]}"
+fi
+
+if ! cmake "${CMAKE_ARGS[@]}"; then
+    log_error "CMake 配置失败"
+    exit 1
+fi
+
+log_success "CMake 配置完成"
+
+# =============================================================================
+# 构建
+# =============================================================================
+show_step 3 4 "编译项目"
+
+BUILD_ARGS=(
+    --build "$BUILD_DIR"
+    --parallel "$JOBS"
+)
+
+if [[ "$VERBOSE" == "true" ]]; then
+    BUILD_ARGS+=(--verbose)
+fi
+
+if ! cmake "${BUILD_ARGS[@]}"; then
+    log_error "编译失败"
+    exit 1
+fi
+
+log_success "编译完成"
+
+# =============================================================================
+# 输出构建信息
+# =============================================================================
+show_step 4 4 "生成构建报告"
+
+BINARY_PATH="${BUILD_DIR}/FastQTools"
+if [[ -f "$BINARY_PATH" ]]; then
+    BINARY_SIZE=$(du -h "$BINARY_PATH" | cut -f1)
+    log_success "可执行文件: ${BINARY_PATH} (${BINARY_SIZE})"
+else
+    log_warning "可执行文件未找到: ${BINARY_PATH}"
+fi
+
+# 编译数据库
+if [[ -f "${BUILD_DIR}/compile_commands.json" ]]; then
+    log_success "编译数据库: ${BUILD_DIR}/compile_commands.json"
+fi
+
+log_separator "="
+end_timer
+log_separator "="
+
+if [[ "$DEV_MODE" == "true" ]]; then
+    log_info "开发模式提示:"
+    log_info "  运行测试: ./scripts/test --build-dir ${BUILD_DIR}"
+    log_info "  代码格式: ./scripts/lint format"
+    log_info "  静态检查: ./scripts/lint check"
+fi

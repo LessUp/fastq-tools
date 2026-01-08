@@ -1,0 +1,383 @@
+#!/bin/bash
+# scripts/install-deps
+# 
+# FastQTools 依赖安装脚本 - 统一管理开发和运行时依赖
+# 
+# 使用示例:
+#   ./scripts/install-deps                   # 安装开发依赖
+#   ./scripts/install-deps --runtime         # 仅运行时依赖
+#   ./scripts/install-deps --all             # 所有依赖
+
+set -euo pipefail
+
+# 加载公共函数库
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib/common.sh"
+
+# =============================================================================
+# 默认配置
+# =============================================================================
+INSTALL_MODE="dev"
+DRY_RUN=false
+SKIP_UPDATE=false
+VERBOSE=false
+
+# =============================================================================
+# 帮助信息
+# =============================================================================
+print_usage() {
+    print_usage_header "FastQTools 依赖安装" "安装和配置项目依赖"
+    
+    cat << 'EOF'
+安装模式:
+  --dev, --development      安装开发依赖（默认）
+  --runtime                 仅安装运行时依赖
+  --all                     安装所有依赖
+  
+选项:
+  --dry-run                 显示将要安装的包，但不实际安装
+  --skip-update             跳过包管理器更新
+  -v, --verbose             详细输出
+  -h, --help                显示此帮助信息
+
+示例:
+  ./scripts/install-deps                    # 开发环境完整安装
+  ./scripts/install-deps --runtime          # 生产环境最小安装
+  ./scripts/install-deps --all --verbose    # 安装所有依赖并显示详细信息
+  ./scripts/install-deps --dry-run          # 预览将要安装的包
+EOF
+}
+
+# =============================================================================
+# 运行时依赖
+# =============================================================================
+RUNTIME_PACKAGES=(
+    ca-certificates
+    libtbb12
+    zlib1g
+    libbz2-1.0
+    liblzma5
+    libdeflate0
+)
+
+# =============================================================================
+# 开发依赖
+# =============================================================================
+DEVELOPMENT_PACKAGES=(
+    build-essential
+    cmake
+    ninja-build
+    git
+    pkg-config
+    
+    # 编译器
+    gcc
+    g++
+    clang
+    clang-format
+    clang-tidy
+    
+    # 开发库
+    libtbb-dev
+    zlib1g-dev
+    libbz2-dev
+    liblzma-dev
+    libdeflate-dev
+    
+    # 测试和覆盖率
+    libgtest-dev
+    libgmock-dev
+    lcov
+    gcovr
+    
+    # Python 工具
+    python3
+    python3-pip
+    
+    # 文档
+    doxygen
+    graphviz
+)
+
+# =============================================================================
+# 可选工具
+# =============================================================================
+OPTIONAL_PACKAGES=(
+    ccache
+    distcc
+    valgrind
+    gdb
+)
+
+# =============================================================================
+# 检查系统
+# =============================================================================
+check_system() {
+    local os
+    os=$(detect_os)
+    
+    case "$os" in
+        linux)
+            local distro
+            distro=$(detect_distro)
+            
+            case "$distro" in
+                ubuntu|debian)
+                    log_success "检测到系统: ${distro} (支持)"
+                    return 0
+                    ;;
+                *)
+                    log_warning "未明确支持的发行版: ${distro}"
+                    log_warning "脚本可能无法正常工作"
+                    
+                    if ! confirm "继续安装?" "n"; then
+                        exit 1
+                    fi
+                    return 0
+                    ;;
+            esac
+            ;;
+        macos)
+            log_error "macOS 支持开发中"
+            log_info "请使用 Homebrew 手动安装依赖"
+            return 1
+            ;;
+        windows)
+            log_error "Windows 不支持此脚本"
+            log_info "请使用 vcpkg 或 conan 安装依赖"
+            return 1
+            ;;
+        *)
+            log_error "未知操作系统"
+            return 1
+            ;;
+    esac
+}
+
+# =============================================================================
+# 安装包
+# =============================================================================
+install_packages() {
+    local packages=("$@")
+    
+    if [[ ${#packages[@]} -eq 0 ]]; then
+        log_warning "没有包需要安装"
+        return 0
+    fi
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        log_info "DRY RUN: 将要安装以下包:"
+        printf '  - %s\n' "${packages[@]}"
+        return 0
+    fi
+    
+    log_info "安装 ${#packages[@]} 个包..."
+    
+    local apt_args=(install -y)
+    if [[ "$VERBOSE" == "false" ]]; then
+        apt_args+=(--quiet)
+    fi
+    
+    if ! sudo apt-get "${apt_args[@]}" "${packages[@]}"; then
+        log_error "包安装失败"
+        return 1
+    fi
+    
+    return 0
+}
+
+# =============================================================================
+# 验证安装
+# =============================================================================
+verify_installation() {
+    local mode="$1"
+    
+    log_info "验证安装..."
+    
+    local missing=()
+    
+    case "$mode" in
+        runtime)
+            for pkg in "${RUNTIME_PACKAGES[@]}"; do
+                if ! dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"; then
+                    missing+=("$pkg")
+                fi
+            done
+            ;;
+        dev)
+            # 检查关键开发工具
+            local tools=(cmake ninja gcc g++ clang git)
+            for tool in "${tools[@]}"; do
+                if ! command -v "$tool" &>/dev/null; then
+                    missing+=("$tool")
+                fi
+            done
+            ;;
+    esac
+    
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        log_success "所有依赖已正确安装 ✓"
+        return 0
+    else
+        log_warning "以下依赖缺失: ${missing[*]}"
+        return 1
+    fi
+}
+
+# =============================================================================
+# 安装 Python 依赖
+# =============================================================================
+install_python_deps() {
+    if ! command -v pip3 &>/dev/null; then
+        log_warning "pip3 未找到，跳过 Python 依赖"
+        return 0
+    fi
+    
+    log_info "安装 Python 开发工具..."
+    
+    local python_packages=(
+        pytest
+        black
+        pylint
+        mypy
+    )
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        log_info "DRY RUN: 将要安装 Python 包: ${python_packages[*]}"
+        return 0
+    fi
+    
+    pip3 install --user --upgrade "${python_packages[@]}" || {
+        log_warning "Python 包安装失败（非致命错误）"
+    }
+}
+
+# =============================================================================
+# 主逻辑
+# =============================================================================
+
+# 参数解析
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --dev|--development)
+            INSTALL_MODE="dev"
+            shift
+            ;;
+        --runtime)
+            INSTALL_MODE="runtime"
+            shift
+            ;;
+        --all)
+            INSTALL_MODE="all"
+            shift
+            ;;
+        --dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        --skip-update)
+            SKIP_UPDATE=true
+            shift
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            log_error "未知选项: $1"
+            print_usage
+            exit 1
+            ;;
+    esac
+done
+
+start_timer
+
+log_section "FastQTools 依赖安装"
+
+# 检查系统
+show_step 1 4 "检查系统兼容性"
+check_system || exit 1
+
+# 更新包列表
+if [[ "$SKIP_UPDATE" == "false" ]]; then
+    show_step 2 4 "更新包管理器"
+    
+    if [[ "$DRY_RUN" == "false" ]]; then
+        log_info "更新 apt 包列表..."
+        if ! sudo apt-get update -qq; then
+            log_error "更新包列表失败"
+            exit 1
+        fi
+        log_success "包列表已更新"
+    else
+        log_info "DRY RUN: 跳过 apt update"
+    fi
+else
+    show_step 2 4 "跳过包管理器更新"
+fi
+
+# 安装依赖
+show_step 3 4 "安装依赖包"
+
+case "$INSTALL_MODE" in
+    runtime)
+        log_info "安装模式: 运行时依赖"
+        install_packages "${RUNTIME_PACKAGES[@]}" || exit 1
+        ;;
+        
+    dev)
+        log_info "安装模式: 开发依赖（包括运行时）"
+        install_packages "${RUNTIME_PACKAGES[@]}" "${DEVELOPMENT_PACKAGES[@]}" || exit 1
+        
+        if [[ "$DRY_RUN" == "false" ]]; then
+            install_python_deps
+        fi
+        ;;
+        
+    all)
+        log_info "安装模式: 所有依赖（包括可选工具）"
+        install_packages "${RUNTIME_PACKAGES[@]}" "${DEVELOPMENT_PACKAGES[@]}" "${OPTIONAL_PACKAGES[@]}" || exit 1
+        
+        if [[ "$DRY_RUN" == "false" ]]; then
+            install_python_deps
+        fi
+        ;;
+esac
+
+# 验证
+if [[ "$DRY_RUN" == "false" ]]; then
+    show_step 4 4 "验证安装"
+    verify_installation "$INSTALL_MODE"
+else
+    show_step 4 4 "跳过验证（DRY RUN）"
+fi
+
+log_separator "="
+
+if [[ "$DRY_RUN" == "false" ]]; then
+    log_success "依赖安装完成 ✓"
+    
+    case "$INSTALL_MODE" in
+        runtime)
+            log_info "运行时环境已就绪"
+            log_info "您可以运行 FastQTools 二进制文件"
+            ;;
+        dev|all)
+            log_info "开发环境已就绪"
+            log_info "下一步:"
+            log_info "  1. 构建项目: ./scripts/build"
+            log_info "  2. 运行测试: ./scripts/test"
+            log_info "  3. 检查代码: ./scripts/lint check"
+            ;;
+    esac
+else
+    log_info "DRY RUN 完成 - 未进行实际安装"
+fi
+
+end_timer
+log_separator "="

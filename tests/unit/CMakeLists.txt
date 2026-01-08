@@ -24,6 +24,7 @@ function(add_unit_test test_name)
     
     # 设置测试属性
     set_tests_properties(${test_name} PROPERTIES
+        LABELS "unit"
         TIMEOUT 60
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
