@@ -11,6 +11,7 @@
   - 增加对 WSL2 打开方式的校验：要求通过 VS Code Remote - WSL 打开工作区后再 Reopen in Container。
   - 增加 SSH/Git 自动注入：挂载宿主机（WSL）侧 `~/.ssh` 与 `~/.gitconfig`，并转发 `SSH_AUTH_SOCK`。
   - 将 WSL2/SSH 校验由“强制失败”调整为“仅提示”（warning），避免将工作流规定写死为硬阻断。
+  - 修复 `.gitconfig` 注入导致容器内路径变成目录的问题：改为挂载到临时路径并在创建阶段复制到用户目录；同时避免在非 Git 仓库目录执行 `git config` 报错。
 - `scripts/devcontainer_setup.sh`：修复在 `set -u` 模式下引用未定义环境变量（`GIT_USER_NAME` / `GIT_USER_EMAIL`）导致脚本退出的问题。
 - 文档：新增 `docs/dev/devcontainer-guidelines.md` 作为团队 Dev Container 开发规范，并在 `README.md` / `docs/README.md` 中增加入口链接。
 
