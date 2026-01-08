@@ -24,6 +24,7 @@
     "customizations": {
         "vscode": {
             "settings": {
+                "remote.containers.copyGitConfig": false,
                 "cmake.generator": "Ninja",
                 "cmake.configureOnOpen": false,
                 "clangd.path": "/usr/bin/clangd"

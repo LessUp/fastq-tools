@@ -15,6 +15,7 @@
     - 若 `/home/developer/.gitconfig` 是目录则删除并重建为文件；
     - 若存在 `/tmp/host-gitconfig` 则复制到 `/home/developer/.gitconfig`；
     - 使用 `git config --system --add safe.directory /workspace` 确保 `/workspace` 被 Git 信任。
+  - 禁用 Dev Containers 内置的 Git 配置复制：`remote.containers.copyGitConfig=false`，避免启动早期阶段因 `/home/developer/.gitconfig` 被异常创建为目录而直接失败。
 
 - 更新 `docker/Dockerfile.dev`
   - 预创建 `/tmp/host-gitconfig`，避免后续流程依赖该路径时出现异常。
