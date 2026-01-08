@@ -21,5 +21,8 @@
   - 在镜像构建阶段初始化 `/home/developer/.gitconfig` 为普通文件。
   - 在系统级 Git 配置中预写入 `safe.directory=/workspace`，避免 `dubious ownership`。
 
+- 更新 `scripts/core/*`
+  - 修正核心脚本对 `scripts/lib/common.sh` 的引用路径，避免 `source` 到不存在的 `scripts/core/lib/common.sh`。
+
 ## 使用说明
 - 需要 `Rebuild/Reopen in Container` 让镜像与 Dev Container 配置生效。
