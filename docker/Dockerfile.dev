@@ -117,7 +117,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # =============================================================================
 # Conan 2.x 包管理器 (最新版本)
 # =============================================================================
-RUN pip3 install --no-cache-dir --break-system-packages conan==2.14.0
+RUN pip3 install --no-cache-dir --break-system-packages conan==2.24.0
 
 # =============================================================================
 # 开发阶段 - 添加调试和分析工具
