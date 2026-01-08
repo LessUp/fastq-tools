@@ -4,10 +4,16 @@
         "../docker/docker-compose.yml"
     ],
     "service": "dev",
+    "runServices": [
+        "dev"
+    ],
     "workspaceFolder": "/workspace",
     "shutdownAction": "stopCompose",
     "remoteUser": "developer",
     "overrideCommand": true,
+    "forwardPorts": [
+        8080
+    ],
     "postCreateCommand": "bash -lc \"git config commit.template .gitmessage.txt || true; conan profile detect --force >/dev/null 2>&1 || true\"",
     "customizations": {
         "vscode": {

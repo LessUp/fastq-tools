@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 开发环境
   dev:
@@ -10,16 +8,8 @@ services:
     container_name: fastqtools-dev
     volumes:
       - ..:/workspace:cached
-      - ${HOME}/.ssh:/home/developer/.ssh:ro
-      - ${HOME}/.gitconfig:/home/developer/.gitconfig:ro
-      - ${HOME}/.conan2:/home/developer/.conan2:cached
-      - ${HOME}/.ccache:/home/developer/.ccache:cached
-    environment:
-      - DISPLAY=${DISPLAY}
-      - WAYLAND_DISPLAY=${WAYLAND_DISPLAY}
-      - XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}
-    ports:
-      - "8080:8080"
+      - conan_cache:/home/developer/.conan2:cached
+      - ccache_cache:/home/developer/.ccache:cached
     stdin_open: true
     tty: true
     command: /bin/bash
@@ -51,8 +41,8 @@ services:
     container_name: fastqtools-test
     volumes:
       - ..:/workspace:cached
-      - ${HOME}/.conan2:/home/developer/.conan2:cached
-      - ${HOME}/.ccache:/home/developer/.ccache:cached
+      - conan_cache:/home/developer/.conan2:cached
+      - ccache_cache:/home/developer/.ccache:cached
     environment:
       - BUILD_TYPE=Debug
       - ENABLE_COVERAGE=ON
@@ -68,8 +58,8 @@ services:
     container_name: fastqtools-build
     volumes:
       - ..:/workspace:cached
-      - ${HOME}/.conan2:/root/.conan2:cached
-      - ${HOME}/.ccache:/root/.ccache:cached
+      - conan_cache:/root/.conan2:cached
+      - ccache_cache:/root/.ccache:cached
     command: /workspace/scripts/build.sh --release
     working_dir: /workspace
 
