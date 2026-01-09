@@ -16,17 +16,19 @@ class FastQTools(ConanFile):
     def configure(self):
         # 避免编译 fmt 库本体在新版本 GCC/Clang 下触发 consteval 相关编译失败，改为纯头文件模式
         self.options["fmt"].header_only = True
+        self.options["spdlog"].header_only = True
+        self.options["spdlog"].use_std_fmt = False
 
     def requirements(self):
         """
         Declare all dependencies for the project.
         """
         self.requires("cxxopts/3.1.1")
-        self.requires("spdlog/1.15.0")
+        self.requires("spdlog/1.17.0")
         self.requires("zlib-ng/2.3.2")
         self.requires("bzip2/1.0.8")
         self.requires("xz_utils/5.4.5")
-        self.requires("fmt/11.0.2")
+        self.requires("fmt/12.1.0")
         # Intel's Threading Building Blocks for high-level parallelism
         self.requires("onetbb/2022.3.0")
         self.requires("libdeflate/1.25")

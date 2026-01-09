@@ -8,9 +8,16 @@
 
 namespace fq::io {
 
+enum class FastqWriterCompressionMode : std::uint8_t {
+    Auto,
+    Gzip,
+    None,
+};
+
 struct FastqWriterOptions {
-    size_t zlibBufferBytes = 128 * 1024;
-    size_t outputBufferBytes = 128 * 1024;
+    size_t zlibBufferBytes = static_cast<size_t>(128) * 1024;
+    size_t outputBufferBytes = static_cast<size_t>(128) * 1024;
+    FastqWriterCompressionMode compression = FastqWriterCompressionMode::Auto;
 };
 
 class FastqWriter {

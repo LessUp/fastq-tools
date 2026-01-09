@@ -13,6 +13,7 @@ target_link_libraries(fq_modern_io
     PUBLIC
         ZLIB::ZLIB
         spdlog::spdlog
+        fmt::fmt
 )
 
  if(TARGET libdeflate::libdeflate)
