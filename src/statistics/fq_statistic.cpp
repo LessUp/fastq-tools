@@ -10,7 +10,9 @@
 
 #include "statistics/fq_statistic.h"
 
+#include "fqtools/io/fastq_batch_pool.h"
 #include "fqtools/io/fastq_reader.h"
+#include "fqtools/logging.h"
 
 #include <algorithm>
 #include <cmath>
@@ -85,7 +87,7 @@ FastqStatisticCalculator::FastqStatisticCalculator(const StatisticOptions& optio
 }
 
 void FastqStatisticCalculator::run() {
-    spdlog::info("Starting FASTQ statistics generation for '{}' using TBB pipeline (New IO).",
+    fq::logging::info("Starting FASTQ statistics generation for '{}' using TBB pipeline (New IO).",
                  options_.inputFastqPath);
 
     FqStatisticResult finalResult;
@@ -118,14 +120,17 @@ void FastqStatisticCalculator::run() {
         throw std::runtime_error("Failed to open input file: " + options_.inputFastqPath);
     }
 
+    auto batchPool = fq::io::createFastqBatchPool(maxLiveTokens, maxLiveTokens * 2);
+
     tbb::parallel_pipeline(
         maxLiveTokens,
         // Stage 1: Input Filter (Serial)
         tbb::make_filter<void, std::shared_ptr<fq::io::FastqBatch>>(
             tbb::filter_mode::serial_in_order,
-            [reader, this](tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
-                auto batch = std::make_shared<fq::io::FastqBatch>(
-                    options_.batchCapacityBytes, static_cast<size_t>(options_.batchSize));
+            [reader, batchPool, this](tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
+                auto batch = batchPool->acquire();
+                batch->buffer().reserve(options_.batchCapacityBytes);
+                batch->records().reserve(static_cast<size_t>(options_.batchSize));
                 if (reader->nextBatch(*batch, static_cast<size_t>(options_.batchSize))) {
                     return batch;
                 } else {
@@ -152,9 +157,9 @@ void FastqStatisticCalculator::run() {
                     finalResult += partialResult;
                 }));
 
-    spdlog::info("TBB pipeline finished. Aggregated results from all batches.");
+    fq::logging::info("TBB pipeline finished. Aggregated results from all batches.");
     writeResult(finalResult);
-    spdlog::info("Statistics report saved to '{}'", options_.outputStatPath);
+    fq::logging::info("Statistics report saved to '{}'", options_.outputStatPath);
 }
 
 void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
@@ -167,7 +172,7 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
     writer << std::fixed << std::setprecision(2);
 
     if (result.readCount == 0) {
-        spdlog::warn("No reads found in input file.");
+        fq::logging::warn("No reads found in input file.");
         return;
     }
 
