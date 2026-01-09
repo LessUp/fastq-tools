@@ -5,16 +5,26 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <cstring>
 #include <stdexcept>
 #include <vector>
 
 namespace fq::io {
 
+static auto endsWithGzSuffix(const std::string& path) -> bool {
+    constexpr const char* kGz = ".gz";
+    if (path.size() < 3) {
+        return false;
+    }
+    return path.compare(path.size() - 3, 3, kGz) == 0;
+}
+
 struct FastqWriter::Impl {
     int fd = -1;
     std::string path;
     FastqWriterOptions options{};
+    FastqWriterCompressionMode compression = FastqWriterCompressionMode::Auto;
     std::vector<char> buffer;
     
     struct libdeflate_compressor* compressor = nullptr;
@@ -24,44 +34,85 @@ struct FastqWriter::Impl {
     static constexpr size_t kBufferThreshold = 64 * 1024;
 
     explicit Impl(const std::string& p, const FastqWriterOptions& opt) : path(p), options(opt) {
+        if (options.compression == FastqWriterCompressionMode::Auto) {
+            compression = endsWithGzSuffix(path) ? FastqWriterCompressionMode::Gzip
+                                                : FastqWriterCompressionMode::None;
+        } else {
+            compression = options.compression;
+        }
+
         // Open file with standard POSIX IO
         fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd < 0) {
              throw std::runtime_error("Failed to open output file: " + path);
         }
         
-        // Level 6 is default zlib level
-        compressor = libdeflate_alloc_compressor(6); 
-        if (!compressor) {
-             ::close(fd);
-             throw std::runtime_error("Failed to allocate libdeflate compressor");
-        }
-
         buffer.reserve(options.outputBufferBytes);
-        // Ensure compressed buffer is large enough for worst case
-        // libdeflate_gzip_compress_bound provides the upper bound
-        compressedBuffer.resize(libdeflate_gzip_compress_bound(compressor, options.outputBufferBytes));
+
+        if (compression == FastqWriterCompressionMode::Gzip) {
+            // Level 6 is default zlib level
+            compressor = libdeflate_alloc_compressor(6);
+            if (!compressor) {
+                ::close(fd);
+                throw std::runtime_error("Failed to allocate libdeflate compressor");
+            }
+
+            // Ensure compressed buffer is large enough for worst case
+            // libdeflate_gzip_compress_bound provides the upper bound
+            compressedBuffer.resize(
+                libdeflate_gzip_compress_bound(compressor, options.outputBufferBytes));
+        }
     }
 
     ~Impl() {
         if (fd >= 0) {
-            flush();
+            try {
+                flush();
+            } catch (...) {
+                // Destructors must not throw.
+            }
             ::close(fd);
-            libdeflate_free_compressor(compressor);
+            if (compressor) {
+                libdeflate_free_compressor(compressor);
+            }
         }
     }
 
     void flush() {
         if (fd >= 0 && !buffer.empty()) {
-             size_t compressedSize = libdeflate_gzip_compress(compressor,
-                                                              buffer.data(), buffer.size(),
-                                                              compressedBuffer.data(), compressedBuffer.size());
-             if (compressedSize > 0) {
-                 ssize_t written = ::write(fd, compressedBuffer.data(), compressedSize);
-                 if (written != static_cast<ssize_t>(compressedSize)) {
-                      // In a robust app, handle short writes or errors
-                 }
-             }
+            const char* outPtr = nullptr;
+            size_t outSize = 0;
+
+            if (compression == FastqWriterCompressionMode::Gzip) {
+                const size_t compressedSize = libdeflate_gzip_compress(
+                    compressor, buffer.data(), buffer.size(), compressedBuffer.data(),
+                    compressedBuffer.size());
+                if (compressedSize == 0) {
+                    throw std::runtime_error("Failed to compress output buffer");
+                }
+                outPtr = compressedBuffer.data();
+                outSize = compressedSize;
+            } else {
+                outPtr = buffer.data();
+                outSize = buffer.size();
+            }
+
+            size_t totalWritten = 0;
+            while (totalWritten < outSize) {
+                const ssize_t written = ::write(
+                    fd, outPtr + totalWritten, outSize - totalWritten);
+                if (written < 0) {
+                    if (errno == EINTR) {
+                        continue;
+                    }
+                    throw std::runtime_error("Failed to write output file: " + path);
+                }
+                if (written == 0) {
+                    throw std::runtime_error("Failed to write output file: " + path);
+                }
+                totalWritten += static_cast<size_t>(written);
+            }
+
              buffer.clear();
         }
     }
@@ -87,7 +138,10 @@ struct FastqWriter::Impl {
             if (needed > buffer.capacity()) {
                 size_t newCap = std::max(buffer.capacity() * 2, needed + 4096);
                 buffer.reserve(newCap);
-                compressedBuffer.resize(libdeflate_gzip_compress_bound(compressor, newCap));
+
+                if (compression == FastqWriterCompressionMode::Gzip) {
+                    compressedBuffer.resize(libdeflate_gzip_compress_bound(compressor, newCap));
+                }
             }
         }
 
