@@ -3,9 +3,11 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
-#include <iostream>
+#include <cerrno>
+#include <fcntl.h>
 #include <limits>
 #include <stdexcept>
+#include <unistd.h>
 #include <fmt/format.h>
 
 #include <zlib.h>
@@ -13,22 +15,73 @@
 namespace fq::io {
 
 struct FastqReader::Impl {
-    gzFile file = nullptr;
+    gzFile gzfile = nullptr;
+    int fd = -1;
+    bool isGzip = false;
     std::string path;
     bool isEofReached = false;
     FastqReaderOptions options{};
     std::vector<char> remainder;
 
     explicit Impl(const std::string& p, const FastqReaderOptions& opt) : path(p), options(opt) {
-        file = gzopen(path.c_str(), "r");
-        if (file) {
-            gzbuffer(file, static_cast<unsigned>(options.zlibBufferBytes));
+        unsigned char header[2] = {0, 0};
+        {
+            const int sniffFd = ::open(path.c_str(), O_RDONLY);
+            if (sniffFd >= 0) {
+                const auto n = ::read(sniffFd, header, sizeof(header));
+                ::close(sniffFd);
+                if (n == static_cast<ssize_t>(sizeof(header)) && header[0] == 0x1f &&
+                    header[1] == 0x8b) {
+                    isGzip = true;
+                }
+            }
+        }
+
+        if (isGzip) {
+            gzfile = gzopen(path.c_str(), "r");
+            if (gzfile) {
+                gzbuffer(gzfile, static_cast<unsigned>(options.zlibBufferBytes));
+            }
+        } else {
+            fd = ::open(path.c_str(), O_RDONLY);
         }
     }
 
     ~Impl() {
-        if (file)
-            gzclose(file);
+        if (isGzip) {
+            if (gzfile) {
+                gzclose(gzfile);
+            }
+        } else {
+            if (fd >= 0) {
+                ::close(fd);
+            }
+        }
+    }
+
+    [[nodiscard]] auto isOpen() const -> bool {
+        if (isGzip) {
+            return gzfile != nullptr;
+        }
+        return fd >= 0;
+    }
+
+    auto readSome(char* dst, size_t toRead) -> ssize_t {
+        if (toRead == 0) {
+            return 0;
+        }
+        if (isGzip) {
+            const int n = gzread(gzfile, dst, static_cast<unsigned>(toRead));
+            return static_cast<ssize_t>(n);
+        }
+
+        while (true) {
+            const auto n = ::read(fd, dst, toRead);
+            if (n < 0 && errno == EINTR) {
+                continue;
+            }
+            return n;
+        }
     }
 
     static auto findEol(const char* ptr, const char* end) -> const char* {
@@ -47,7 +100,7 @@ FastqReader::FastqReader(FastqReader&&) noexcept = default;
 FastqReader& FastqReader::operator=(FastqReader&&) noexcept = default;
 
 auto FastqReader::isOpen() const -> bool {
-    return impl_->file != nullptr;
+    return impl_ && impl_->isOpen();
 }
 
 auto FastqReader::nextBatch(FastqBatch& batch) -> bool {
@@ -55,7 +108,7 @@ auto FastqReader::nextBatch(FastqBatch& batch) -> bool {
 }
 
 auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
-    if (!impl_->file) {
+    if (!impl_ || !impl_->isOpen()) {
         return false;
     }
 
@@ -63,8 +116,7 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
     batch.buffer().clear();
 
     if (!impl_->remainder.empty()) {
-        batch.buffer().insert(
-            batch.buffer().end(), impl_->remainder.begin(), impl_->remainder.end());
+        batch.buffer().swap(impl_->remainder);
         impl_->remainder.clear();
     }
 
@@ -113,14 +165,15 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
                 }
 
                 batch.buffer().resize(kCurrentSize + toRead);
-                const auto kBytesRead = gzread(impl_->file,
-                                               batch.buffer().data() + kCurrentSize,
-                                               static_cast<unsigned>(toRead));
+                const auto kBytesRead = impl_->readSome(batch.buffer().data() + kCurrentSize, toRead);
                 if (kBytesRead < 0) {
-                    int err = 0;
-                    const char* msg = gzerror(impl_->file, &err);
-                    throw std::runtime_error(std::string("Gzip read error: ") +
-                                             (msg != nullptr ? msg : "unknown"));
+                    if (impl_->isGzip) {
+                        int err = 0;
+                        const char* msg = gzerror(impl_->gzfile, &err);
+                        throw std::runtime_error(std::string("Gzip read error: ") +
+                                                 (msg != nullptr ? msg : "unknown"));
+                    }
+                    throw std::runtime_error("FastqReader read error");
                 }
                 batch.buffer().resize(kCurrentSize + static_cast<size_t>(kBytesRead));
                 if (kBytesRead == 0) {
