@@ -3,13 +3,13 @@
 #include "fqtools/io/fastq_batch_pool.h"
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/io/fastq_writer.h"
+#include "fqtools/logging.h"
 #include "fqtools/processing/read_mutator_interface.h"
 #include "fqtools/processing/read_predicate_interface.h"
 
 #include <algorithm>
 #include <stdexcept>
 
-#include <spdlog/spdlog.h>
 #include <tbb/global_control.h>
 #include <tbb/parallel_pipeline.h>
 
@@ -84,7 +84,7 @@ auto SequentialProcessingPipeline::processSequential() -> ProcessingStatistics {
                 (static_cast<double>(stats.elapsedMs) / 1000.0);
         }
     } catch (const std::exception& e) {
-        spdlog::error("Error in sequential processing: {}", e.what());
+        fq::logging::error("Error in sequential processing: {}", e.what());
         throw;
     }
 
@@ -227,7 +227,7 @@ auto SequentialProcessingPipeline::processWithTBB() -> ProcessingStatistics {
                 (static_cast<double>(finalStats.elapsedMs) / 1000.0);
         }
     } catch (const std::exception& e) {
-        spdlog::error("TBB pipeline failed: {}", e.what());
+        fq::logging::error("TBB pipeline failed: {}", e.what());
         throw;
     }
 

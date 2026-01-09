@@ -15,7 +15,7 @@
 #include <vector>
 
 #include <fqtools/fq.h>
-#include <spdlog/spdlog.h>
+#include <fqtools/logging.h>
 #include "commands/command_interface.h"
 #include "commands/filter_command.h"
 #include "commands/stat_command.h"
@@ -72,13 +72,7 @@ auto main(int argc, char* argv[]) -> int {
     }
 
     // 初始化日志
-    if (logLevel == "debug") {
-        fq::common::Logger::instance().setLevel(fq::common::Logger::Level::Debug);
-    } else if (logLevel == "error") {
-        fq::common::Logger::instance().setLevel(fq::common::Logger::Level::Error);
-    } else {
-        fq::common::Logger::instance().setLevel(fq::common::Logger::Level::Info);
-    }
+    fq::logging::setLevel(logLevel);
 
     // 打印项目 Logo
     fq::common::printLogo();
@@ -100,7 +94,7 @@ auto main(int argc, char* argv[]) -> int {
     // 查找对应子命令
     auto commandIt = commands.find(subcommand);
     if (commandIt == commands.end()) {
-        spdlog::error("Unknown subcommand: {}", subcommand);
+        fq::logging::error("Unknown subcommand: {}", subcommand);
         fq::cli::printGlobalHelp(commands);
         return 1;
     }
@@ -110,7 +104,7 @@ auto main(int argc, char* argv[]) -> int {
         int subArgc = static_cast<int>(subArgs.size());
         return commandIt->second->execute(subArgc, subArgs.data());
     } catch (const std::exception& e) {
-        spdlog::error("An error occurred: {}", e.what());
+        fq::logging::error("An error occurred: {}", e.what());
         return 1;
     }
 }

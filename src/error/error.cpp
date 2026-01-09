@@ -9,6 +9,7 @@
  */
 
 #include "fqtools/error/error.h"
+#include "fqtools/logging.h"
 
 #include <cstring>
 #include <utility>
@@ -153,7 +154,7 @@ auto ErrorHandler::handleError(const FastQException& error) -> bool {
                 return true;
         }
     }
-    fq::common::Logger::instance().error("Unhandled exception: {}", error.what());
+    fq::logging::error("Unhandled exception: {}", error.what());
     return false;
 }
 
