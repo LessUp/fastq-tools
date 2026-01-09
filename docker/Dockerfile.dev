@@ -54,6 +54,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-venv \
     ccache \
     sudo \
+    skopeo \
     && rm -rf /var/lib/apt/lists/*
 
 RUN touch /tmp/host-gitconfig

@@ -13,6 +13,10 @@ class FastQTools(ConanFile):
     # Sources are located in the same place as this recipe, copy them to the recipe
     exports_sources = "CMakeLists.txt", "src/*", "app/*", "cmake/*"
 
+    def configure(self):
+        # 避免编译 fmt 库本体在新版本 GCC/Clang 下触发 consteval 相关编译失败，改为纯头文件模式
+        self.options["fmt"].header_only = True
+
     def requirements(self):
         """
         Declare all dependencies for the project.
