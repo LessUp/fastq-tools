@@ -10,7 +10,7 @@
 
 - `.devcontainer/devcontainer.json`
   - 新增 `initializeCommand`：在宿主机侧确保 `~/.gitconfig` 存在且为文件（若为目录则报错并提示修复）。
-  - 调整 `mounts`：使用 `/home/${localEnv:USER}/.gitconfig` 作为 bind mount source，避免依赖 `${localEnv:HOME}`。
+  - 调整 `mounts`：不再直接挂载 `~/.gitconfig`，改为将宿主机 `~/.gitconfig` 复制到 `/tmp/fastqtools-host-gitconfig` 并从该路径进行 bind mount，避免 `${localEnv:HOME}` 展开异常导致路径变为 `/.gitconfig`。
 - `.devcontainer/devcontainer.simple.json`
   - 同步上述 `initializeCommand` 与 `mounts` 调整。
 

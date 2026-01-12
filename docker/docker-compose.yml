@@ -1,6 +1,7 @@
 services:
   # 开发环境
   dev:
+    image: fastqtools-dev
     build:
       context: ..
       dockerfile: docker/Dockerfile.dev
@@ -19,6 +20,7 @@ services:
 
   # 生产环境
   prod:
+    image: fastqtools-prod
     build:
       context: ..
       dockerfile: docker/Dockerfile
@@ -36,6 +38,7 @@ services:
 
   # 测试环境
   test:
+    image: fastqtools-test
     build:
       context: ..
       dockerfile: docker/Dockerfile.dev
@@ -53,6 +56,7 @@ services:
 
   # 构建服务
   build:
+    image: fastqtools-build
     build:
       context: ..
       dockerfile: docker/Dockerfile
