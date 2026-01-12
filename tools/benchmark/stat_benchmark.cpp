@@ -4,7 +4,9 @@
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <random>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -59,7 +61,7 @@ BasicStats computeBasicStats(fq::io::FastqReader& reader) {
     double quality_sum = 0.0;
     std::size_t quality_count = 0;
 
-    while (reader.next_batch(batch)) {
+    while (reader.nextBatch(batch)) {
         for (const auto& rec : batch) {
             ++stats.total_reads;
             stats.total_bases += rec.seq.size();
@@ -136,7 +138,7 @@ static void BM_Stat_BaseComposition(::benchmark::State& state) {
         fq::io::FastqBatch batch;
         std::array<std::size_t, 5> base_counts = {0, 0, 0, 0, 0};
 
-        while (reader.next_batch(batch)) {
+        while (reader.nextBatch(batch)) {
             for (const auto& rec : batch) {
                 for (char c : rec.seq) {
                     switch (c) {
@@ -171,7 +173,7 @@ static void BM_Stat_QualityDistribution(::benchmark::State& state) {
         fq::io::FastqBatch batch;
         std::array<std::size_t, 42> qual_histogram = {};  // Q0-Q41
 
-        while (reader.next_batch(batch)) {
+        while (reader.nextBatch(batch)) {
             for (const auto& rec : batch) {
                 for (char c : rec.qual) {
                     int q = static_cast<int>(c) - 33;
@@ -203,7 +205,7 @@ static void BM_Stat_LengthDistribution(::benchmark::State& state) {
         fq::io::FastqBatch batch;
         std::vector<std::size_t> length_histogram(500, 0);
 
-        while (reader.next_batch(batch)) {
+        while (reader.nextBatch(batch)) {
             for (const auto& rec : batch) {
                 std::size_t len = rec.seq.size();
                 if (len < length_histogram.size()) {

@@ -5,7 +5,9 @@
 #include <filesystem>
 #include <fstream>
 #include <random>
+#include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace fq::benchmark {
@@ -44,7 +46,7 @@ std::filesystem::path write_temp_fastq(const std::string& prefix, const std::str
     return path;
 }
 
-double calculateMeanQuality(const std::string& qual) {
+double calculateMeanQuality(std::string_view qual) {
     if (qual.empty()) return 0.0;
     double sum = 0.0;
     for (char c : qual) {
@@ -53,7 +55,7 @@ double calculateMeanQuality(const std::string& qual) {
     return sum / static_cast<double>(qual.size());
 }
 
-double calculateNRatio(const std::string& seq) {
+double calculateNRatio(std::string_view seq) {
     if (seq.empty()) return 0.0;
     std::size_t n_count = 0;
     for (char c : seq) {
@@ -76,7 +78,7 @@ static void BM_Filter_NoFilter(::benchmark::State& state) {
         fq::io::FastqWriter writer(output_path.string());
         fq::io::FastqBatch batch;
         std::size_t passed = 0;
-        while (reader.next_batch(batch)) {
+        while (reader.nextBatch(batch)) {
             for (const auto& rec : batch) {
                 writer.write(rec);
                 ++passed;
@@ -105,7 +107,7 @@ static void BM_Filter_MinLength(::benchmark::State& state) {
         fq::io::FastqWriter writer(output_path.string());
         fq::io::FastqBatch batch;
         std::size_t passed = 0;
-        while (reader.next_batch(batch)) {
+        while (reader.nextBatch(batch)) {
             for (const auto& rec : batch) {
                 if (rec.seq.size() >= min_length) {
                     writer.write(rec);
@@ -136,7 +138,7 @@ static void BM_Filter_MinQuality(::benchmark::State& state) {
         fq::io::FastqWriter writer(output_path.string());
         fq::io::FastqBatch batch;
         std::size_t passed = 0;
-        while (reader.next_batch(batch)) {
+        while (reader.nextBatch(batch)) {
             for (const auto& rec : batch) {
                 if (calculateMeanQuality(rec.qual) >= min_quality) {
                     writer.write(rec);
@@ -167,7 +169,7 @@ static void BM_Filter_MaxNRatio(::benchmark::State& state) {
         fq::io::FastqWriter writer(output_path.string());
         fq::io::FastqBatch batch;
         std::size_t passed = 0;
-        while (reader.next_batch(batch)) {
+        while (reader.nextBatch(batch)) {
             for (const auto& rec : batch) {
                 if (calculateNRatio(rec.seq) <= max_n_ratio) {
                     writer.write(rec);
@@ -200,7 +202,7 @@ static void BM_Filter_Combined(::benchmark::State& state) {
         fq::io::FastqWriter writer(output_path.string());
         fq::io::FastqBatch batch;
         std::size_t passed = 0;
-        while (reader.next_batch(batch)) {
+        while (reader.nextBatch(batch)) {
             for (const auto& rec : batch) {
                 if (rec.seq.size() >= min_length &&
                     calculateMeanQuality(rec.qual) >= min_quality &&

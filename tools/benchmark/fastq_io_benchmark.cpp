@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <random>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -72,7 +73,7 @@ static void BM_FastQReader_Small(::benchmark::State& state) {
         fq::io::FastqReader reader(path.string());
         fq::io::FastqBatch batch;
         std::size_t total_reads = 0;
-        while (reader.next_batch(batch)) {
+        while (reader.nextBatch(batch)) {
             total_reads += batch.size();
         }
         ::benchmark::DoNotOptimize(total_reads);
@@ -97,7 +98,7 @@ static void BM_FastQReader_Medium(::benchmark::State& state) {
         fq::io::FastqReader reader(path.string());
         fq::io::FastqBatch batch;
         std::size_t total_reads = 0;
-        while (reader.next_batch(batch)) {
+        while (reader.nextBatch(batch)) {
             total_reads += batch.size();
         }
         ::benchmark::DoNotOptimize(total_reads);
@@ -109,7 +110,6 @@ static void BM_FastQReader_Medium(::benchmark::State& state) {
 
     std::filesystem::remove(path);
 }
-
 
 static void BM_FastQReader_Parameterized(::benchmark::State& state) {
     const std::size_t num_reads = static_cast<std::size_t>(state.range(0));
@@ -123,7 +123,7 @@ static void BM_FastQReader_Parameterized(::benchmark::State& state) {
         fq::io::FastqReader reader(path.string());
         fq::io::FastqBatch batch;
         std::size_t total_reads = 0;
-        while (reader.next_batch(batch)) {
+        while (reader.nextBatch(batch)) {
             total_reads += batch.size();
         }
         ::benchmark::DoNotOptimize(total_reads);
