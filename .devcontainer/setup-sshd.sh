@@ -43,25 +43,22 @@ ${MARK_END}
 EOF
 fi
 
-if sudo test -f "${AUTHORIZED_KEYS_FALLBACK}"; then
-  exit 0
-fi
+TMP_KEYS="$(mktemp)"
+trap 'rm -f "${TMP_KEYS}"' EXIT
 
-if test -f /home/developer/.ssh/authorized_keys; then
-  sudo install -o developer -g developer -m 0600 /home/developer/.ssh/authorized_keys "${AUTHORIZED_KEYS_FALLBACK}"
-  exit 0
-fi
-
-PUBKEY=""
-for candidate in /home/developer/.ssh/id_ed25519.pub /home/developer/.ssh/id_rsa.pub /home/developer/.ssh/id_ecdsa.pub /home/developer/.ssh/id_dsa.pub; do
-  if test -f "${candidate}"; then
-    PUBKEY="${candidate}"
-    break
-  fi
-done
-
-if test -n "${PUBKEY}"; then
-  sudo install -o developer -g developer -m 0600 "${PUBKEY}" "${AUTHORIZED_KEYS_FALLBACK}"
+if test -s /home/developer/.ssh/authorized_keys; then
+  cat /home/developer/.ssh/authorized_keys >"${TMP_KEYS}"
 else
-  sudo install -o developer -g developer -m 0600 /dev/null "${AUTHORIZED_KEYS_FALLBACK}"
+  for candidate in /home/developer/.ssh/id_ed25519.pub /home/developer/.ssh/id_rsa.pub /home/developer/.ssh/id_ecdsa.pub /home/developer/.ssh/id_dsa.pub; do
+    if test -s "${candidate}"; then
+      cat "${candidate}" >>"${TMP_KEYS}"
+      printf '\n' >>"${TMP_KEYS}"
+    fi
+  done
 fi
+
+if ! test -s "${TMP_KEYS}"; then
+  : >"${TMP_KEYS}"
+fi
+
+sudo install -o developer -g developer -m 0600 "${TMP_KEYS}" "${AUTHORIZED_KEYS_FALLBACK}"
