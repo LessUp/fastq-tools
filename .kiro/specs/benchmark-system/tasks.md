@@ -97,13 +97,13 @@
     - **Property 12: Baseline Management**
     - **Validates: Requirements 6.2, 6.4, 6.5**
 
-- [-] 7. 测试数据生成器
-  - [-] 7.1 增强现有 gen_fastq.py 脚本
+- [x] 7. 测试数据生成器
+  - [x] 7.1 增强现有 gen_fastq.py 脚本
     - 添加更多配置选项（质量分布、N 比例）
     - 支持生成压缩文件
     - _Requirements: 7.2, 7.3_
 
-  - [ ] 7.2 实现输入文件验证
+  - [x] 7.2 实现输入文件验证
     - 验证 FASTQ 格式正确性
     - 支持 .gz 和未压缩文件
     - _Requirements: 7.4, 7.5_
@@ -120,27 +120,27 @@
     - **Property 9: File Format Support**
     - **Validates: Requirements 7.5**
 
-- [ ] 8. Checkpoint - 确保数据生成和验证测试通过
+- [x] 8. Checkpoint - 确保数据生成和验证测试通过
   - 确保所有测试通过，如有问题请询问用户
 
-- [ ] 9. 报告生成器 (Python)
-  - [ ] 9.1 创建 Python 报告生成器框架
+- [x] 9. 报告生成器 (Python)
+  - [x] 9.1 创建 Python 报告生成器框架
     - 创建 `tools/benchmark/report_generator.py`
     - 实现 JSON 结果加载
     - _Requirements: 3.1_
 
-  - [ ] 9.2 实现 Markdown 报告生成
+  - [x] 9.2 实现 Markdown 报告生成
     - 生成性能摘要表格
     - 生成配置对比表格
     - _Requirements: 3.3, 3.6_
 
-  - [ ] 9.3 实现图表生成
+  - [x] 9.3 实现图表生成
     - 使用 matplotlib 生成吞吐量趋势图
     - 生成线程扩展性图
     - 输出 SVG/PNG 格式
     - _Requirements: 3.1, 3.2, 3.4_
 
-  - [ ] 9.4 实现 README 嵌入功能
+  - [x] 9.4 实现 README 嵌入功能
     - 生成可嵌入的性能摘要
     - 实现文档更新（保留现有内容）
     - _Requirements: 8.1, 8.2, 8.3_
@@ -153,14 +153,14 @@
     - **Property 11: Documentation Update Preservation**
     - **Validates: Requirements 8.3, 8.4**
 
-- [ ] 10. 回归检测器
-  - [ ] 10.1 实现回归检测逻辑
+- [x] 10. 回归检测器
+  - [x] 10.1 实现回归检测逻辑
     - 创建 `tools/benchmark/regression_detector.py`
     - 实现阈值比较（10% warning, 20% critical）
     - 支持自定义阈值
     - _Requirements: 4.1, 4.2, 4.5_
 
-  - [ ] 10.2 实现回归报告输出
+  - [x] 10.2 实现回归报告输出
     - 生成详细的指标对比
     - 输出 CI 友好格式
     - _Requirements: 4.3, 4.4_
@@ -169,27 +169,27 @@
     - **Property 5: Regression Detection Thresholds**
     - **Validates: Requirements 4.1, 4.2, 4.4, 4.5**
 
-- [ ] 11. Checkpoint - 确保报告和回归检测测试通过
+- [x] 11. Checkpoint - 确保报告和回归检测测试通过
   - 确保所有测试通过，如有问题请询问用户
 
-- [ ] 12. CLI 和 CI 集成
-  - [ ] 12.1 创建统一的 benchmark CLI 脚本
+- [x] 12. CLI 和 CI 集成
+  - [x] 12.1 创建统一的 benchmark CLI 脚本
     - 创建 `scripts/benchmark` 主入口
     - 实现 run/report/compare/baseline 子命令
     - _Requirements: 5.1_
 
-  - [ ] 12.2 实现 CI 模式
+  - [x] 12.2 实现 CI 模式
     - 添加 `--ci` 标志
     - 实现 GitHub Actions 注解输出
     - 实现正确的退出码
     - _Requirements: 5.2, 5.3, 5.4_
 
-  - [ ] 12.3 创建 GitHub Actions workflow
+  - [x] 12.3 创建 GitHub Actions workflow
     - 创建 `.github/workflows/benchmark.yml`
     - 配置定期运行和 PR 触发
     - _Requirements: 5.1_
 
-  - [ ] 12.4 实现性能徽章生成
+  - [x] 12.4 实现性能徽章生成
     - 生成 shields.io 兼容的徽章
     - _Requirements: 5.5_
 
@@ -197,23 +197,23 @@
     - **Property 6: CI Exit Code Consistency**
     - **Validates: Requirements 5.2, 5.4**
 
-- [ ] 13. 文档和集成
-  - [ ] 13.1 创建性能报告文档页面
+- [x] 13. 文档和集成
+  - [x] 13.1 创建性能报告文档页面
     - 创建 `docs/performance/benchmark-report.md`
     - 包含方法论和系统规格说明
     - _Requirements: 8.1, 8.4_
 
-  - [ ] 13.2 更新 README.md 添加性能部分
+  - [x] 13.2 更新 README.md 添加性能部分
     - 添加性能摘要部分
     - 添加性能徽章
     - _Requirements: 8.2_
 
-  - [ ] 13.3 创建 benchmark 使用文档
+  - [x] 13.3 创建 benchmark 使用文档
     - 创建 `docs/dev/benchmark-guide.md`
     - 说明如何运行和解读 benchmark
     - _Requirements: 8.4_
 
-- [ ] 14. Final Checkpoint - 确保所有测试通过
+- [x] 14. Final Checkpoint - 确保所有测试通过
   - 运行完整测试套件
   - 验证 CI 集成工作正常
   - 确保所有测试通过，如有问题请询问用户

@@ -121,6 +121,26 @@ FastQTools/
 - [架构设计](docs/dev/architecture.md) - 技术架构和设计原则
 - [编码规范](docs/dev/coding-standards.md) - 代码与文件命名约定
 - [Git 提交规范](docs/dev/git-guidelines.md) - 提交格式与示例
+- [性能报告](docs/performance/benchmark-report.md) - 性能基准测试结果
+
+<!-- BENCHMARK_START -->
+## 性能
+
+FastQTools 针对高吞吐量场景进行了优化。运行 `./scripts/benchmark run` 获取最新性能数据。
+
+```bash
+# 运行基准测试
+./scripts/benchmark run
+
+# 生成性能报告
+./scripts/benchmark report
+
+# 检测性能回归
+./scripts/benchmark compare baseline.json current.json
+```
+
+详细性能报告请参阅 [性能文档](docs/performance/benchmark-report.md)。
+<!-- BENCHMARK_END -->
 
 ## 许可证
 

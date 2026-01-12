@@ -1,0 +1,390 @@
+#!/bin/bash
+# FastQTools Benchmark CLI
+# 统一的性能基准测试命令行接口
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+BENCHMARK_DIR="$PROJECT_ROOT/benchmark_results"
+TOOLS_DIR="$PROJECT_ROOT/tools/benchmark"
+
+# 默认配置
+BUILD_DIR="${BUILD_DIR:-$PROJECT_ROOT/build-clang-release}"
+CI_MODE=false
+VERBOSE=false
+
+# 颜色输出
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+usage() {
+    cat << EOF
+FastQTools Benchmark CLI
+
+Usage: $(basename "$0") <command> [options]
+
+Commands:
+  run         执行基准测试
+  report      生成性能报告
+  compare     比较两个基准测试结果
+  baseline    管理性能基线
+  data        生成测试数据
+
+Options:
+  --ci        CI 模式，输出适合 GitHub Actions 的格式
+  --verbose   详细输出
+  --help      显示帮助信息
+
+Examples:
+  $(basename "$0") run                    # 运行所有基准测试
+  $(basename "$0") run --ci               # CI 模式运行
+  $(basename "$0") report                 # 生成最新报告
+  $(basename "$0") compare baseline.json current.json
+  $(basename "$0") baseline save v1.0     # 保存当前结果为基线
+  $(basename "$0") baseline list          # 列出所有基线
+  $(basename "$0") data generate          # 生成测试数据
+EOF
+}
+
+# 确保目录存在
+ensure_dirs() {
+    mkdir -p "$BENCHMARK_DIR/results"
+    mkdir -p "$BENCHMARK_DIR/baselines"
+    mkdir -p "$BENCHMARK_DIR/reports/charts"
+    mkdir -p "$BENCHMARK_DIR/data"
+}
+
+# 检查构建
+check_build() {
+    if [[ ! -d "$BUILD_DIR" ]]; then
+        log_error "Build directory not found: $BUILD_DIR"
+        log_info "Please run: ./scripts/build.sh"
+        exit 1
+    fi
+}
+
+# 运行基准测试
+cmd_run() {
+    local output_file=""
+    local benchmark_args=""
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --output|-o)
+                output_file="$2"
+                shift 2
+                ;;
+            --filter)
+                benchmark_args="$benchmark_args --benchmark_filter=$2"
+                shift 2
+                ;;
+            --repetitions)
+                benchmark_args="$benchmark_args --benchmark_repetitions=$2"
+                shift 2
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+    
+    check_build
+    ensure_dirs
+    
+    # 生成输出文件名
+    if [[ -z "$output_file" ]]; then
+        local timestamp=$(date +%Y-%m-%d_%H-%M-%S)
+        local commit=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+        output_file="$BENCHMARK_DIR/results/${timestamp}_${commit}.json"
+    fi
+    
+    log_info "Running benchmarks..."
+    
+    # 查找并运行所有 benchmark 可执行文件
+    local benchmark_exe="$BUILD_DIR/tools/benchmark/benchmark_fastq_io"
+    
+    if [[ -x "$benchmark_exe" ]]; then
+        log_info "Running: benchmark_fastq_io"
+        "$benchmark_exe" \
+            --benchmark_format=json \
+            --benchmark_out="$output_file" \
+            $benchmark_args
+        
+        log_success "Results saved to: $output_file"
+    else
+        log_error "Benchmark executable not found: $benchmark_exe"
+        log_info "Please build with: cmake --build $BUILD_DIR --target benchmarks"
+        exit 1
+    fi
+    
+    # CI 模式下检查回归
+    if [[ "$CI_MODE" == "true" ]]; then
+        local baseline="$BENCHMARK_DIR/baselines/default.json"
+        if [[ -f "$baseline" ]]; then
+            log_info "Checking for regressions..."
+            python3 "$TOOLS_DIR/regression_detector.py" \
+                "$baseline" "$output_file" \
+                --google-benchmark --ci
+        fi
+    fi
+}
+
+# 生成报告
+cmd_report() {
+    local input_file=""
+    local format="markdown"
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --input|-i)
+                input_file="$2"
+                shift 2
+                ;;
+            --format|-f)
+                format="$2"
+                shift 2
+                ;;
+            --charts)
+                local charts=true
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+    
+    ensure_dirs
+    
+    # 如果没有指定输入，使用最新的结果
+    if [[ -z "$input_file" ]]; then
+        input_file=$(ls -t "$BENCHMARK_DIR/results"/*.json 2>/dev/null | head -1)
+        if [[ -z "$input_file" ]]; then
+            log_error "No benchmark results found"
+            exit 1
+        fi
+    fi
+    
+    log_info "Generating report from: $input_file"
+    
+    local report_args="--format $format --google-benchmark"
+    if [[ "$charts" == "true" ]]; then
+        report_args="$report_args --charts"
+    fi
+    
+    python3 "$TOOLS_DIR/report_generator.py" "$input_file" $report_args
+    
+    log_success "Report generated in: $BENCHMARK_DIR/reports/"
+}
+
+# 比较结果
+cmd_compare() {
+    if [[ $# -lt 2 ]]; then
+        log_error "Usage: $(basename "$0") compare <baseline> <current>"
+        exit 1
+    fi
+    
+    local baseline="$1"
+    local current="$2"
+    shift 2
+    
+    local compare_args=""
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --warning-threshold)
+                compare_args="$compare_args --warning-threshold $2"
+                shift 2
+                ;;
+            --critical-threshold)
+                compare_args="$compare_args --critical-threshold $2"
+                shift 2
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+    
+    if [[ "$CI_MODE" == "true" ]]; then
+        compare_args="$compare_args --ci"
+    fi
+    
+    if [[ "$VERBOSE" == "true" ]]; then
+        compare_args="$compare_args --verbose"
+    fi
+    
+    python3 "$TOOLS_DIR/regression_detector.py" \
+        "$baseline" "$current" \
+        --google-benchmark $compare_args
+}
+
+# 基线管理
+cmd_baseline() {
+    local subcmd="${1:-list}"
+    shift || true
+    
+    ensure_dirs
+    
+    case $subcmd in
+        save)
+            local name="${1:-default}"
+            local source="${2:-}"
+            
+            # 如果没有指定源文件，使用最新的结果
+            if [[ -z "$source" ]]; then
+                source=$(ls -t "$BENCHMARK_DIR/results"/*.json 2>/dev/null | head -1)
+                if [[ -z "$source" ]]; then
+                    log_error "No benchmark results found"
+                    exit 1
+                fi
+            fi
+            
+            local target="$BENCHMARK_DIR/baselines/${name}.json"
+            cp "$source" "$target"
+            log_success "Saved baseline: $name"
+            log_info "Source: $source"
+            ;;
+        
+        list)
+            log_info "Available baselines:"
+            for f in "$BENCHMARK_DIR/baselines"/*.json; do
+                if [[ -f "$f" ]]; then
+                    local name=$(basename "$f" .json)
+                    local date=$(stat -c %y "$f" 2>/dev/null | cut -d' ' -f1 || stat -f %Sm "$f" 2>/dev/null)
+                    echo "  - $name ($date)"
+                fi
+            done
+            ;;
+        
+        delete)
+            local name="$1"
+            if [[ -z "$name" ]]; then
+                log_error "Usage: $(basename "$0") baseline delete <name>"
+                exit 1
+            fi
+            
+            local target="$BENCHMARK_DIR/baselines/${name}.json"
+            if [[ -f "$target" ]]; then
+                rm "$target"
+                log_success "Deleted baseline: $name"
+            else
+                log_error "Baseline not found: $name"
+                exit 1
+            fi
+            ;;
+        
+        *)
+            log_error "Unknown baseline command: $subcmd"
+            echo "Available commands: save, list, delete"
+            exit 1
+            ;;
+    esac
+}
+
+# 数据生成
+cmd_data() {
+    local subcmd="${1:-generate}"
+    shift || true
+    
+    ensure_dirs
+    
+    case $subcmd in
+        generate)
+            log_info "Generating benchmark test data..."
+            python3 "$TOOLS_DIR/gen_benchmark_data.py" \
+                --generate-dataset \
+                --output-dir "$BENCHMARK_DIR/data"
+            log_success "Test data generated in: $BENCHMARK_DIR/data/"
+            ;;
+        
+        validate)
+            local file="$1"
+            if [[ -z "$file" ]]; then
+                log_error "Usage: $(basename "$0") data validate <file>"
+                exit 1
+            fi
+            python3 "$TOOLS_DIR/gen_benchmark_data.py" --validate "$file"
+            ;;
+        
+        *)
+            log_error "Unknown data command: $subcmd"
+            echo "Available commands: generate, validate"
+            exit 1
+            ;;
+    esac
+}
+
+# 主入口
+main() {
+    # 解析全局选项
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --ci)
+                CI_MODE=true
+                shift
+                ;;
+            --verbose|-v)
+                VERBOSE=true
+                shift
+                ;;
+            --help|-h)
+                usage
+                exit 0
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+    
+    local cmd="${1:-help}"
+    shift || true
+    
+    case $cmd in
+        run)
+            cmd_run "$@"
+            ;;
+        report)
+            cmd_report "$@"
+            ;;
+        compare)
+            cmd_compare "$@"
+            ;;
+        baseline)
+            cmd_baseline "$@"
+            ;;
+        data)
+            cmd_data "$@"
+            ;;
+        help|--help|-h)
+            usage
+            ;;
+        *)
+            log_error "Unknown command: $cmd"
+            usage
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"
