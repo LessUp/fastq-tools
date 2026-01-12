@@ -33,14 +33,24 @@
             "settings": {
                 "remote.containers.copyGitConfig": false,
                 "cmake.generator": "Ninja",
+                "cmake.useCMakePresets": "always",
                 "cmake.configureOnOpen": false,
-                "clangd.path": "/usr/bin/clangd"
+                "cmake.copyCompileCommands": "/workspace/compile_commands.json",
+                "cmake.configureSettings": {
+                    "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+                },
+                "clangd.path": "/usr/bin/clangd",
+                "clangd.arguments": [
+                    "--background-index",
+                    "--clang-tidy",
+                    "--completion-style=detailed",
+                    "--header-insertion=never"
+                ]
             },
             "extensions": [
                 "ms-vscode.cmake-tools",
                 "llvm-vs-code-extensions.vscode-clangd",
-                "ms-vscode.cpptools",
-                "ms-vscode.cpptools-extension-pack"
+                "vadimcn.vscode-lldb"
             ]
         }
     }
