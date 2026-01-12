@@ -53,6 +53,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     python3-venv \
     ccache \
+    openssh-server \
+    openssh-client \
+    procps \
     sudo \
     skopeo \
     && rm -rf /var/lib/apt/lists/*

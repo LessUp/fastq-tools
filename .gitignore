@@ -84,3 +84,12 @@ benchmark-*.csv
 *.gcov
 *.profraw
 *.profdata
+
+# Benchmark 结果（保留目录结构，排除临时结果）
+benchmark_results/results/*.json
+benchmark_results/reports/*.md
+benchmark_results/reports/charts/*.svg
+benchmark_results/reports/charts/*.png
+benchmark_results/data/*.fastq
+benchmark_results/data/*.fastq.gz
+!benchmark_results/baselines/*.json

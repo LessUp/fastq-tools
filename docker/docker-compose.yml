@@ -10,6 +10,8 @@ services:
       - ..:/workspace:cached
       - conan_cache:/home/developer/.conan2:cached
       - ccache_cache:/home/developer/.ccache:cached
+    ports:
+      - "${FASTQTOOLS_SSH_BIND:-127.0.0.1}:${FASTQTOOLS_SSH_PORT:-2222}:2222"
     stdin_open: true
     tty: true
     command: /bin/bash
