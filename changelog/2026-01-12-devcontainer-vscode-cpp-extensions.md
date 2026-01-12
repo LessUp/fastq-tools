@@ -28,6 +28,7 @@
   - 配置时导出 `compile_commands.json`（`CMAKE_EXPORT_COMPILE_COMMANDS=ON`）
   - 配置后将 `compile_commands.json` 复制到 `/workspace/compile_commands.json`（`cmake.copyCompileCommands`），便于 clangd 自动发现
   - 为 clangd 增加常用参数（后台索引、clang-tidy 等）
+  - 为 clangd 增加 `--query-driver`（覆盖 `g++/gcc/clang++/clang`），提升在以 `gcc-debug` 为主生成 `compile_commands.json` 时对系统头文件与标准库路径的识别稳定性
 
 ## 影响
 
