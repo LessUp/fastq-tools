@@ -1,0 +1,178 @@
+#!/bin/bash
+# scripts/tools/valgrind-memcheck
+#
+# Run Valgrind Memcheck on FastQTools executable or tests
+#
+# Usage:
+#   ./scripts/tools/valgrind-memcheck                    # Run on main executable
+#   ./scripts/tools/valgrind-memcheck --test             # Run on test executable
+#   ./scripts/tools/valgrind-memcheck -- stat input.fq   # Run with arguments
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/common.sh"
+
+# =============================================================================
+# Configuration
+# =============================================================================
+BUILD_DIR=""
+RUN_TESTS=false
+OUTPUT_FILE=""
+VERBOSE=false
+EXTRA_ARGS=()
+
+# =============================================================================
+# Help
+# =============================================================================
+print_usage() {
+    print_usage_header "Valgrind Memcheck" "Memory error detection using Valgrind"
+    
+    cat << 'EOF'
+Options:
+  -b, --build-dir DIR       Build directory (default: auto-detect)
+  -t, --test                Run tests instead of main executable
+  -o, --output FILE         Save output to file
+  -v, --verbose             Verbose output
+  -h, --help                Show this help
+
+Arguments after -- are passed to the executable.
+
+Examples:
+  ./scripts/tools/valgrind-memcheck                      # Check main executable
+  ./scripts/tools/valgrind-memcheck --test               # Check test executable
+  ./scripts/tools/valgrind-memcheck -- stat input.fq     # Check with arguments
+  ./scripts/tools/valgrind-memcheck -o report.txt        # Save report to file
+EOF
+}
+
+# =============================================================================
+# Argument Parsing
+# =============================================================================
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -b|--build-dir)
+            BUILD_DIR="$2"
+            shift 2
+            ;;
+        -t|--test)
+            RUN_TESTS=true
+            shift
+            ;;
+        -o|--output)
+            OUTPUT_FILE="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        --)
+            shift
+            EXTRA_ARGS=("$@")
+            break
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            print_usage
+            exit 1
+            ;;
+    esac
+done
+
+# =============================================================================
+# Setup
+# =============================================================================
+PROJECT_ROOT=$(get_project_root)
+cd "$PROJECT_ROOT"
+
+# Check for valgrind
+if ! require_command valgrind "sudo apt-get install valgrind"; then
+    exit 1
+fi
+
+# Find build directory
+if [[ -z "$BUILD_DIR" ]]; then
+    for dir in build-clang-debug build-gcc-debug build-clang-release build-gcc-release; do
+        if [[ -d "$dir" ]]; then
+            BUILD_DIR="$dir"
+            break
+        fi
+    done
+fi
+
+if [[ -z "$BUILD_DIR" || ! -d "$BUILD_DIR" ]]; then
+    log_error "Build directory not found. Please build the project first."
+    exit 1
+fi
+
+log_section "Valgrind Memcheck"
+log_info "Build directory: ${BUILD_DIR}"
+
+# =============================================================================
+# Valgrind Configuration
+# =============================================================================
+SUPPRESSION_FILE="${PROJECT_ROOT}/config/valgrind/suppressions.supp"
+
+VALGRIND_ARGS=(
+    --leak-check=full
+    --show-leak-kinds=all
+    --track-origins=yes
+    --error-exitcode=1
+    --gen-suppressions=all
+)
+
+if [[ -f "$SUPPRESSION_FILE" ]]; then
+    VALGRIND_ARGS+=(--suppressions="$SUPPRESSION_FILE")
+    log_info "Using suppressions: ${SUPPRESSION_FILE}"
+fi
+
+if [[ "$VERBOSE" == "true" ]]; then
+    VALGRIND_ARGS+=(--verbose)
+fi
+
+# =============================================================================
+# Run Valgrind
+# =============================================================================
+if [[ "$RUN_TESTS" == "true" ]]; then
+    # Find test executable
+    TEST_EXEC=$(find "$BUILD_DIR" -name "*_test" -o -name "*_tests" | head -1)
+    if [[ -z "$TEST_EXEC" ]]; then
+        log_error "Test executable not found in ${BUILD_DIR}"
+        exit 1
+    fi
+    EXECUTABLE="$TEST_EXEC"
+    log_info "Running tests: ${EXECUTABLE}"
+else
+    EXECUTABLE="${BUILD_DIR}/FastQTools"
+    if [[ ! -x "$EXECUTABLE" ]]; then
+        log_error "Executable not found: ${EXECUTABLE}"
+        exit 1
+    fi
+    log_info "Running: ${EXECUTABLE}"
+fi
+
+log_separator "-"
+
+if [[ -n "$OUTPUT_FILE" ]]; then
+    log_info "Output will be saved to: ${OUTPUT_FILE}"
+    valgrind "${VALGRIND_ARGS[@]}" "$EXECUTABLE" "${EXTRA_ARGS[@]}" 2>&1 | tee "$OUTPUT_FILE"
+    RESULT=${PIPESTATUS[0]}
+else
+    valgrind "${VALGRIND_ARGS[@]}" "$EXECUTABLE" "${EXTRA_ARGS[@]}"
+    RESULT=$?
+fi
+
+log_separator "-"
+
+if [[ $RESULT -eq 0 ]]; then
+    log_success "Valgrind Memcheck passed ✓"
+else
+    log_error "Valgrind Memcheck found issues ✗"
+fi
+
+exit $RESULT

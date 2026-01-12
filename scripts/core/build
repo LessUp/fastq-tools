@@ -239,8 +239,16 @@ if [[ -n "$SANITIZER" ]]; then
         ubsan|undefined)
             CMAKE_ARGS+=(-DENABLE_UBSAN=ON)
             ;;
+        msan|memory)
+            if [[ "${COMPILER}" != "clang" ]]; then
+                log_error "MemorySanitizer (msan) 仅支持 Clang 编译器"
+                exit 1
+            fi
+            CMAKE_ARGS+=(-DENABLE_MSAN=ON)
+            ;;
         *)
             log_error "未知的 sanitizer: ${SANITIZER}"
+            log_info "支持的 sanitizer: asan, tsan, ubsan, msan"
             exit 1
             ;;
     esac

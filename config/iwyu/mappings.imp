@@ -1,0 +1,118 @@
+# Include-What-You-Use (IWYU) Mapping File for FastQTools
+#
+# This file maps private/internal headers to their public equivalents.
+# IWYU uses this to suggest the correct headers to include.
+#
+# Usage:
+#   include-what-you-use -Xiwyu --mapping_file=config/iwyu/mappings.imp
+#
+# Format:
+#   { include: ["private_header", "private", "public_header", "public"] }
+#   { symbol: ["symbol_name", "private", "public_header", "public"] }
+#
+# Documentation: https://github.com/include-what-you-use/include-what-you-use/blob/master/docs/IWYUMappings.md
+
+[
+  # ==========================================================================
+  # C++ Standard Library Mappings
+  # ==========================================================================
+  
+  # bits headers -> standard headers
+  { include: ["<bits/types/struct_iovec.h>", "private", "<sys/uio.h>", "public"] },
+  { include: ["<bits/stdint-uintn.h>", "private", "<cstdint>", "public"] },
+  { include: ["<bits/stdint-intn.h>", "private", "<cstdint>", "public"] },
+  { include: ["<bits/types/struct_timeval.h>", "private", "<sys/time.h>", "public"] },
+  { include: ["<bits/types/time_t.h>", "private", "<ctime>", "public"] },
+  { include: ["<bits/types/clock_t.h>", "private", "<ctime>", "public"] },
+  { include: ["<bits/types/FILE.h>", "private", "<cstdio>", "public"] },
+  { include: ["<bits/types/struct_FILE.h>", "private", "<cstdio>", "public"] },
+  { include: ["<bits/shared_ptr.h>", "private", "<memory>", "public"] },
+  { include: ["<bits/unique_ptr.h>", "private", "<memory>", "public"] },
+  { include: ["<bits/allocator.h>", "private", "<memory>", "public"] },
+  { include: ["<bits/stl_vector.h>", "private", "<vector>", "public"] },
+  { include: ["<bits/stl_map.h>", "private", "<map>", "public"] },
+  { include: ["<bits/stl_set.h>", "private", "<set>", "public"] },
+  { include: ["<bits/stl_pair.h>", "private", "<utility>", "public"] },
+  { include: ["<bits/stl_function.h>", "private", "<functional>", "public"] },
+  { include: ["<bits/basic_string.h>", "private", "<string>", "public"] },
+  { include: ["<bits/basic_string.tcc>", "private", "<string>", "public"] },
+  { include: ["<bits/char_traits.h>", "private", "<string>", "public"] },
+  { include: ["<bits/stringfwd.h>", "private", "<string>", "public"] },
+  { include: ["<bits/postypes.h>", "private", "<iosfwd>", "public"] },
+  { include: ["<bits/ios_base.h>", "private", "<ios>", "public"] },
+  { include: ["<bits/ostream.tcc>", "private", "<ostream>", "public"] },
+  { include: ["<bits/istream.tcc>", "private", "<istream>", "public"] },
+  { include: ["<bits/sstream.tcc>", "private", "<sstream>", "public"] },
+  { include: ["<bits/fstream.tcc>", "private", "<fstream>", "public"] },
+  { include: ["<bits/streambuf.tcc>", "private", "<streambuf>", "public"] },
+  { include: ["<bits/exception.h>", "private", "<exception>", "public"] },
+  { include: ["<bits/std_abs.h>", "private", "<cstdlib>", "public"] },
+  { include: ["<bits/std_function.h>", "private", "<functional>", "public"] },
+  { include: ["<bits/refwrap.h>", "private", "<functional>", "public"] },
+  { include: ["<bits/invoke.h>", "private", "<functional>", "public"] },
+  { include: ["<bits/move.h>", "private", "<utility>", "public"] },
+  { include: ["<bits/utility.h>", "private", "<utility>", "public"] },
+  { include: ["<bits/ranges_base.h>", "private", "<ranges>", "public"] },
+  { include: ["<bits/ranges_util.h>", "private", "<ranges>", "public"] },
+  
+  # ==========================================================================
+  # Symbol Mappings
+  # ==========================================================================
+  
+  { symbol: ["std::string", "private", "<string>", "public"] },
+  { symbol: ["std::vector", "private", "<vector>", "public"] },
+  { symbol: ["std::map", "private", "<map>", "public"] },
+  { symbol: ["std::set", "private", "<set>", "public"] },
+  { symbol: ["std::pair", "private", "<utility>", "public"] },
+  { symbol: ["std::tuple", "private", "<tuple>", "public"] },
+  { symbol: ["std::unique_ptr", "private", "<memory>", "public"] },
+  { symbol: ["std::shared_ptr", "private", "<memory>", "public"] },
+  { symbol: ["std::make_unique", "private", "<memory>", "public"] },
+  { symbol: ["std::make_shared", "private", "<memory>", "public"] },
+  { symbol: ["std::move", "private", "<utility>", "public"] },
+  { symbol: ["std::forward", "private", "<utility>", "public"] },
+  { symbol: ["std::function", "private", "<functional>", "public"] },
+  { symbol: ["std::optional", "private", "<optional>", "public"] },
+  { symbol: ["std::variant", "private", "<variant>", "public"] },
+  { symbol: ["std::any", "private", "<any>", "public"] },
+  { symbol: ["std::span", "private", "<span>", "public"] },
+  { symbol: ["std::string_view", "private", "<string_view>", "public"] },
+  { symbol: ["std::filesystem::path", "private", "<filesystem>", "public"] },
+  { symbol: ["std::chrono::seconds", "private", "<chrono>", "public"] },
+  { symbol: ["std::chrono::milliseconds", "private", "<chrono>", "public"] },
+  { symbol: ["std::thread", "private", "<thread>", "public"] },
+  { symbol: ["std::mutex", "private", "<mutex>", "public"] },
+  { symbol: ["std::lock_guard", "private", "<mutex>", "public"] },
+  { symbol: ["std::unique_lock", "private", "<mutex>", "public"] },
+  { symbol: ["std::condition_variable", "private", "<condition_variable>", "public"] },
+  { symbol: ["std::atomic", "private", "<atomic>", "public"] },
+  { symbol: ["std::future", "private", "<future>", "public"] },
+  { symbol: ["std::promise", "private", "<future>", "public"] },
+  { symbol: ["std::async", "private", "<future>", "public"] },
+  
+  # ==========================================================================
+  # Third-Party Library Mappings
+  # ==========================================================================
+  
+  # fmt library
+  { include: ["@<fmt/.*>", "private", "<fmt/format.h>", "public"] },
+  
+  # spdlog library
+  { include: ["@<spdlog/details/.*>", "private", "<spdlog/spdlog.h>", "public"] },
+  { include: ["@<spdlog/sinks/.*>", "private", "<spdlog/spdlog.h>", "public"] },
+  
+  # TBB library
+  { include: ["@<tbb/.*>", "private", "<tbb/tbb.h>", "public"] },
+  { include: ["@<oneapi/tbb/.*>", "private", "<oneapi/tbb.h>", "public"] },
+  
+  # zlib
+  { include: ["<zconf.h>", "private", "<zlib.h>", "public"] },
+  
+  # ==========================================================================
+  # Project-Specific Mappings
+  # ==========================================================================
+  
+  # FastQTools internal headers
+  { include: ["@\"common/.*\"", "private", "\"fqtools/common.h\"", "public"] },
+  { include: ["@\"error/.*\"", "private", "\"fqtools/error.h\"", "public"] }
+]

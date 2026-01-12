@@ -29,6 +29,8 @@ REPEAT=1
 OUTPUT_ON_FAILURE=true
 TIMEOUT=60
 TEST_TYPE="all"  # all | unit | integration | e2e
+VALGRIND=false
+VALGRIND_OPTS=""
 
 # =============================================================================
 # 帮助信息
@@ -53,6 +55,10 @@ print_usage() {
 覆盖率:
   -C, --coverage            生成覆盖率报告 (lcov + HTML)
   --coverage-output DIR     覆盖率输出目录 (默认: coverage)
+
+Valgrind:
+  --valgrind                使用 Valgrind Memcheck 运行测试
+  --valgrind-opts OPTS      传递额外的 Valgrind 选项
 
 输出控制:
   -v, --verbose             详细输出
@@ -122,6 +128,14 @@ while [[ $# -gt 0 ]]; do
             COVERAGE_DIR="$2"
             shift 2
             ;;
+        --valgrind)
+            VALGRIND=true
+            shift
+            ;;
+        --valgrind-opts)
+            VALGRIND_OPTS="$2"
+            shift 2
+            ;;
         -v|--verbose)
             VERBOSE=true
             shift
@@ -177,8 +191,33 @@ log_info "构建目录: ${BUILD_DIR}"
 log_info "测试类型: ${TEST_TYPE}"
 [[ -n "$FILTER" ]] && log_info "测试过滤: ${FILTER}"
 [[ "$COVERAGE" == "true" ]] && log_info "覆盖率: 已启用"
+[[ "$VALGRIND" == "true" ]] && log_info "Valgrind: 已启用"
 log_info "并行任务: ${JOBS}"
 [[ $REPEAT -gt 1 ]] && log_info "重复次数: ${REPEAT}"
+
+# =============================================================================
+# Valgrind 配置
+# =============================================================================
+VALGRIND_CMD=""
+if [[ "$VALGRIND" == "true" ]]; then
+    if ! require_command valgrind "sudo apt-get install valgrind"; then
+        log_error "Valgrind 未安装"
+        exit 1
+    fi
+    
+    SUPPRESSION_FILE="${PROJECT_ROOT}/config/valgrind/suppressions.supp"
+    VALGRIND_CMD="valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1"
+    
+    if [[ -f "$SUPPRESSION_FILE" ]]; then
+        VALGRIND_CMD+=" --suppressions=${SUPPRESSION_FILE}"
+    fi
+    
+    if [[ -n "$VALGRIND_OPTS" ]]; then
+        VALGRIND_CMD+=" ${VALGRIND_OPTS}"
+    fi
+    
+    log_info "Valgrind 命令: ${VALGRIND_CMD}"
+fi
 
 # =============================================================================
 # 构建 CTest 参数
@@ -222,6 +261,17 @@ esac
 # 重复测试
 if [[ $REPEAT -gt 1 ]]; then
     CTEST_ARGS+=(--repeat until-pass:"$REPEAT")
+fi
+
+# Valgrind 测试包装
+if [[ "$VALGRIND" == "true" ]]; then
+    # 使用 ctest 的 memcheck 模式或手动运行
+    CTEST_ARGS+=(-T memcheck)
+    export CTEST_MEMORYCHECK_COMMAND="valgrind"
+    export CTEST_MEMORYCHECK_COMMAND_OPTIONS="--leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1"
+    if [[ -f "${PROJECT_ROOT}/config/valgrind/suppressions.supp" ]]; then
+        export CTEST_MEMORYCHECK_SUPPRESSIONS_FILE="${PROJECT_ROOT}/config/valgrind/suppressions.supp"
+    fi
 fi
 
 # =============================================================================

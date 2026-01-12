@@ -1,0 +1,318 @@
+#!/bin/bash
+# scripts/tools/coverage-report
+#
+# Generate code coverage report for FastQTools
+#
+# Usage:
+#   ./scripts/tools/coverage-report                    # Default: build-clang-debug
+#   ./scripts/tools/coverage-report -b build-gcc-debug # Specific build dir
+#   ./scripts/tools/coverage-report --xml              # Generate Cobertura XML
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/common.sh"
+
+# =============================================================================
+# Configuration
+# =============================================================================
+BUILD_DIR=""
+OUTPUT_DIR="coverage_report"
+GENERATE_XML=false
+GENERATE_HTML=true
+CHECK_THRESHOLD=false
+VERBOSE=false
+
+# =============================================================================
+# Help
+# =============================================================================
+print_usage() {
+    print_usage_header "Coverage Report Generator" "Generate code coverage reports from test runs"
+    
+    cat << 'EOF'
+Options:
+  -b, --build-dir DIR       Build directory with coverage data (default: auto-detect)
+  -o, --output-dir DIR      Output directory for reports (default: coverage_report)
+  --xml                     Generate Cobertura XML report for CI
+  --no-html                 Skip HTML report generation
+  --check-threshold         Check coverage against thresholds
+  -v, --verbose             Verbose output
+  -h, --help                Show this help
+
+Prerequisites:
+  1. Build with coverage: ./scripts/core/build --coverage --dev
+  2. Run tests: ./scripts/core/test -b build-clang-debug
+
+Examples:
+  ./scripts/tools/coverage-report                      # Generate HTML report
+  ./scripts/tools/coverage-report --xml                # Generate XML for CI
+  ./scripts/tools/coverage-report --check-threshold    # Check coverage thresholds
+EOF
+}
+
+# =============================================================================
+# Argument Parsing
+# =============================================================================
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -b|--build-dir)
+            BUILD_DIR="$2"
+            shift 2
+            ;;
+        -o|--output-dir)
+            OUTPUT_DIR="$2"
+            shift 2
+            ;;
+        --xml)
+            GENERATE_XML=true
+            shift
+            ;;
+        --no-html)
+            GENERATE_HTML=false
+            shift
+            ;;
+        --check-threshold)
+            CHECK_THRESHOLD=true
+            shift
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            print_usage
+            exit 1
+            ;;
+    esac
+done
+
+# =============================================================================
+# Setup
+# =============================================================================
+PROJECT_ROOT=$(get_project_root)
+cd "$PROJECT_ROOT"
+
+start_timer
+
+log_section "Coverage Report Generator"
+
+# Check for required tools
+if ! check_tool lcov; then
+    exit 1
+fi
+
+if [[ "$GENERATE_HTML" == "true" ]] && ! check_tool genhtml; then
+    log_warning "genhtml not found, HTML report will be skipped"
+    GENERATE_HTML=false
+fi
+
+# Find build directory
+if [[ -z "$BUILD_DIR" ]]; then
+    for dir in build-clang-debug build-gcc-debug; do
+        if [[ -d "$dir" ]]; then
+            BUILD_DIR="$dir"
+            break
+        fi
+    done
+fi
+
+if [[ -z "$BUILD_DIR" || ! -d "$BUILD_DIR" ]]; then
+    log_error "Build directory not found"
+    log_info "Please build with coverage first: ./scripts/core/build --coverage --dev"
+    exit 1
+fi
+
+# Check for coverage data
+GCDA_COUNT=$(find "$BUILD_DIR" -name "*.gcda" 2>/dev/null | wc -l)
+if [[ $GCDA_COUNT -eq 0 ]]; then
+    log_error "No coverage data found in ${BUILD_DIR}"
+    log_info "Please run tests first: ./scripts/core/test -b ${BUILD_DIR}"
+    exit 1
+fi
+
+log_info "Build directory: ${BUILD_DIR}"
+log_info "Output directory: ${OUTPUT_DIR}"
+log_info "Coverage data files: ${GCDA_COUNT}"
+
+ensure_directory "$OUTPUT_DIR"
+
+# =============================================================================
+# Capture Coverage Data
+# =============================================================================
+show_step 1 4 "Capturing coverage data"
+
+COVERAGE_INFO="${OUTPUT_DIR}/coverage.info"
+COVERAGE_FILTERED="${OUTPUT_DIR}/coverage.filtered.info"
+
+LCOV_ARGS=(
+    --capture
+    --directory "$BUILD_DIR"
+    --output-file "$COVERAGE_INFO"
+    --ignore-errors mismatch
+)
+
+if [[ "$VERBOSE" == "false" ]]; then
+    LCOV_ARGS+=(--quiet)
+fi
+
+if ! lcov "${LCOV_ARGS[@]}"; then
+    log_error "Failed to capture coverage data"
+    exit 1
+fi
+
+log_success "Coverage data captured"
+
+# =============================================================================
+# Filter Coverage Data
+# =============================================================================
+show_step 2 4 "Filtering coverage data"
+
+FILTER_ARGS=(
+    --remove "$COVERAGE_INFO"
+    '/usr/*'
+    '*/tests/*'
+    '*/third_party/*'
+    '*/build*/*'
+    '*/_deps/*'
+    --output-file "$COVERAGE_FILTERED"
+    --ignore-errors unused
+)
+
+if [[ "$VERBOSE" == "false" ]]; then
+    FILTER_ARGS+=(--quiet)
+fi
+
+if ! lcov "${FILTER_ARGS[@]}"; then
+    log_warning "Some files could not be filtered (this is usually OK)"
+fi
+
+log_success "Coverage data filtered"
+
+# =============================================================================
+# Generate HTML Report
+# =============================================================================
+if [[ "$GENERATE_HTML" == "true" ]]; then
+    show_step 3 4 "Generating HTML report"
+    
+    HTML_DIR="${OUTPUT_DIR}/html"
+    
+    GENHTML_ARGS=(
+        "$COVERAGE_FILTERED"
+        --output-directory "$HTML_DIR"
+        --title "FastQTools Coverage Report"
+        --legend
+        --show-details
+        --highlight
+        --demangle-cpp
+    )
+    
+    if [[ "$VERBOSE" == "false" ]]; then
+        GENHTML_ARGS+=(--quiet)
+    fi
+    
+    if genhtml "${GENHTML_ARGS[@]}"; then
+        log_success "HTML report: ${HTML_DIR}/index.html"
+    else
+        log_warning "HTML report generation had issues"
+    fi
+fi
+
+# =============================================================================
+# Generate XML Report (Cobertura format)
+# =============================================================================
+if [[ "$GENERATE_XML" == "true" ]]; then
+    show_step 3 4 "Generating Cobertura XML report"
+    
+    XML_FILE="${OUTPUT_DIR}/coverage.xml"
+    
+    # Check for lcov_cobertura or gcovr
+    if command -v lcov_cobertura &>/dev/null; then
+        lcov_cobertura "$COVERAGE_FILTERED" -o "$XML_FILE"
+        log_success "Cobertura XML: ${XML_FILE}"
+    elif command -v gcovr &>/dev/null; then
+        gcovr --root "$PROJECT_ROOT" \
+              --filter "src/" \
+              --filter "include/" \
+              --xml-pretty \
+              --output "$XML_FILE"
+        log_success "Cobertura XML: ${XML_FILE}"
+    else
+        log_warning "Neither lcov_cobertura nor gcovr found"
+        log_info "Install with: pip install lcov_cobertura / pip install gcovr"
+    fi
+fi
+
+# =============================================================================
+# Coverage Summary
+# =============================================================================
+show_step 4 4 "Coverage summary"
+
+log_separator "-"
+
+# Extract coverage percentages
+SUMMARY=$(lcov --summary "$COVERAGE_FILTERED" 2>&1)
+echo "$SUMMARY"
+
+# Parse coverage values
+LINE_COV=$(echo "$SUMMARY" | grep "lines" | grep -oE '[0-9]+\.[0-9]+%' | head -1 | tr -d '%')
+FUNC_COV=$(echo "$SUMMARY" | grep "functions" | grep -oE '[0-9]+\.[0-9]+%' | head -1 | tr -d '%')
+BRANCH_COV=$(echo "$SUMMARY" | grep "branches" | grep -oE '[0-9]+\.[0-9]+%' | head -1 | tr -d '%')
+
+log_separator "-"
+
+# =============================================================================
+# Check Thresholds
+# =============================================================================
+if [[ "$CHECK_THRESHOLD" == "true" ]]; then
+    THRESHOLD_FILE="${PROJECT_ROOT}/config/coverage/thresholds.json"
+    THRESHOLD_FAILED=false
+    
+    if [[ -f "$THRESHOLD_FILE" ]]; then
+        # Read thresholds from JSON (simple parsing)
+        LINE_MIN=$(grep -A1 '"line_coverage"' "$THRESHOLD_FILE" | grep '"minimum"' | grep -oE '[0-9]+' | head -1)
+        FUNC_MIN=$(grep -A1 '"function_coverage"' "$THRESHOLD_FILE" | grep '"minimum"' | grep -oE '[0-9]+' | head -1)
+        
+        LINE_MIN=${LINE_MIN:-70}
+        FUNC_MIN=${FUNC_MIN:-80}
+        
+        log_info "Checking coverage thresholds..."
+        
+        if [[ -n "$LINE_COV" ]] && (( $(echo "$LINE_COV < $LINE_MIN" | bc -l) )); then
+            log_error "Line coverage ${LINE_COV}% is below minimum ${LINE_MIN}%"
+            THRESHOLD_FAILED=true
+        else
+            log_success "Line coverage: ${LINE_COV}% >= ${LINE_MIN}%"
+        fi
+        
+        if [[ -n "$FUNC_COV" ]] && (( $(echo "$FUNC_COV < $FUNC_MIN" | bc -l) )); then
+            log_error "Function coverage ${FUNC_COV}% is below minimum ${FUNC_MIN}%"
+            THRESHOLD_FAILED=true
+        else
+            log_success "Function coverage: ${FUNC_COV}% >= ${FUNC_MIN}%"
+        fi
+        
+        if [[ "$THRESHOLD_FAILED" == "true" ]]; then
+            log_error "Coverage threshold check failed"
+            exit 1
+        fi
+    else
+        log_warning "Threshold file not found: ${THRESHOLD_FILE}"
+    fi
+fi
+
+# =============================================================================
+# Finish
+# =============================================================================
+log_separator "="
+log_success "Coverage report generation complete ✓"
+end_timer
+log_separator "="
+
+if [[ "$GENERATE_HTML" == "true" ]]; then
+    log_info "Open report: ${OUTPUT_DIR}/html/index.html"
+fi

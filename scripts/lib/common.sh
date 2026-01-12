@@ -349,6 +349,97 @@ version_ge() {
 }
 
 # =============================================================================
+# 工具检查函数
+# =============================================================================
+
+# 检查工具是否存在并提供安装提示
+check_tool() {
+    local tool="$1"
+    local install_hint="${2:-}"
+    
+    if ! command -v "$tool" &>/dev/null; then
+        log_warning "$tool 未找到"
+        if [[ -n "$install_hint" ]]; then
+            log_info "安装提示: $install_hint"
+        else
+            # 提供默认安装提示
+            case "$tool" in
+                valgrind)
+                    log_info "安装提示: sudo apt-get install valgrind / brew install valgrind"
+                    ;;
+                cppcheck)
+                    log_info "安装提示: sudo apt-get install cppcheck / brew install cppcheck"
+                    ;;
+                include-what-you-use|iwyu)
+                    log_info "安装提示: sudo apt-get install iwyu / brew install include-what-you-use"
+                    ;;
+                clang-format)
+                    log_info "安装提示: sudo apt-get install clang-format / brew install clang-format"
+                    ;;
+                clang-tidy)
+                    log_info "安装提示: sudo apt-get install clang-tidy / brew install llvm"
+                    ;;
+                lcov|genhtml)
+                    log_info "安装提示: sudo apt-get install lcov / brew install lcov"
+                    ;;
+                *)
+                    log_info "请安装 $tool 后重试"
+                    ;;
+            esac
+        fi
+        return 1
+    fi
+    return 0
+}
+
+# 检查多个工具并返回缺失列表
+check_tools_list() {
+    local missing=()
+    local tool
+    
+    for tool in "$@"; do
+        if ! command -v "$tool" &>/dev/null; then
+            missing+=("$tool")
+        fi
+    done
+    
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        echo "${missing[*]}"
+        return 1
+    fi
+    return 0
+}
+
+# 获取工具版本
+get_tool_version() {
+    local tool="$1"
+    local version=""
+    
+    case "$tool" in
+        gcc|g++)
+            version=$("$tool" --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            ;;
+        clang|clang++)
+            version=$("$tool" --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            ;;
+        cmake)
+            version=$(cmake --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+            ;;
+        valgrind)
+            version=$(valgrind --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+            ;;
+        cppcheck)
+            version=$(cppcheck --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+')
+            ;;
+        *)
+            version=$("$tool" --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)
+            ;;
+    esac
+    
+    echo "$version"
+}
+
+# =============================================================================
 # 导出函数
 # =============================================================================
 
@@ -361,3 +452,4 @@ export -f ensure_directory safe_remove_dir check_executable
 export -f get_cpu_cores normalize_build_type normalize_compiler
 export -f show_step start_timer end_timer
 export -f detect_os detect_distro confirm version_ge
+export -f check_tool check_tools_list get_tool_version

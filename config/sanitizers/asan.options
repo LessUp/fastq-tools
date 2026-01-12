@@ -1,0 +1,39 @@
+# AddressSanitizer (ASan) Options
+# 
+# Usage: export ASAN_OPTIONS=$(cat config/sanitizers/asan.options | tr '\n' ':' | sed 's/#[^:]*://g')
+# Or source this file: source config/sanitizers/asan.env
+#
+# Documentation: https://github.com/google/sanitizers/wiki/AddressSanitizerFlags
+
+# Enable memory leak detection
+detect_leaks=1
+
+# Continue running after first error (useful for finding multiple issues)
+halt_on_error=0
+
+# Print statistics at exit
+print_stats=1
+
+# Print full stack trace
+print_legend=1
+
+# Detect stack-use-after-return bugs
+detect_stack_use_after_return=1
+
+# Check for memory leaks at exit
+check_initialization_order=1
+
+# Detect use of uninitialized memory
+detect_invalid_pointer_pairs=2
+
+# Verbosity level (0=silent, 1=errors only, 2=warnings, 3=all)
+verbosity=0
+
+# Symbolize stack traces
+symbolize=1
+
+# Maximum number of malloc contexts to store
+malloc_context_size=30
+
+# Abort on error (for CI)
+# abort_on_error=1

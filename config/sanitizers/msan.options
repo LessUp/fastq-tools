@@ -1,0 +1,25 @@
+# MemorySanitizer (MSan) Options - Clang Only
+#
+# Usage: export MSAN_OPTIONS=$(cat config/sanitizers/msan.options | tr '\n' ':' | sed 's/#[^:]*://g')
+# Or source this file: source config/sanitizers/msan.env
+#
+# Documentation: https://clang.llvm.org/docs/MemorySanitizer.html
+#
+# Note: MSan requires all code (including libraries) to be compiled with MSan.
+# This may require building dependencies from source with MSan enabled.
+
+# Continue running after first error
+halt_on_error=0
+
+# Verbosity level
+verbosity=0
+
+# Symbolize stack traces
+symbolize=1
+
+# Print statistics at exit
+print_stats=1
+
+# Track origins of uninitialized values (1=yes, 2=more detailed)
+# Note: This is set at compile time with -fsanitize-memory-track-origins
+# origin_tracking=2
