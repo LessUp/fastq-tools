@@ -1,6 +1,6 @@
 ---
 title: "/code-formatting"
-description: "对 FastQTools 进行 clang-format/clang-tidy 代码质量检查与自动修复（复用 scripts/lint.sh）。"
+description: "对 FastQTools 进行 clang-format/clang-tidy 代码质量检查与自动修复（复用 scripts/core/lint）。"
 auto_execution_mode: 1
 ---
 
@@ -20,18 +20,18 @@ auto_execution_mode: 1
    // turbo
    - `command -v clang-tidy`
    // turbo
-   - `test -x scripts/lint.sh && echo OK`
+   - `test -x scripts/core/lint && echo OK`
 
 3. **仅检查（不写文件）**
-   - 运行格式检查：`./scripts/lint.sh format-check`
-   - 运行静态检查：`./scripts/lint.sh lint --build-dir build-clang-release`
-     - 若提示缺少 `build-clang-release/compile_commands.json`，先运行：`./scripts/build.sh clang Release`
+   - 运行格式检查：`./scripts/core/lint format-check`
+   - 运行静态检查：`./scripts/core/lint tidy -b build-clang-release`
+     - 若提示缺少 `build-clang-release/compile_commands.json`，先运行：`./scripts/core/build -c clang -t Release`
 
 4. **自动修复（会写文件）**
-   - 格式化：`./scripts/lint.sh format`
-   - 可选：clang-tidy 自动修复（变更可能较大，建议单独提交）：`./scripts/lint.sh lint-fix --build-dir build-clang-release`
+   - 格式化：`./scripts/core/lint format`
+   - 可选：clang-tidy 自动修复（变更可能较大，建议单独提交）：`./scripts/core/lint tidy-fix -b build-clang-release`
 
 5. **复检与收尾**
-   - `./scripts/lint.sh format-check`
-   - `./scripts/lint.sh lint --build-dir build-clang-release`
+   - `./scripts/core/lint format-check`
+   - `./scripts/core/lint tidy -b build-clang-release`
    - 汇总哪些文件发生了修改：`git diff --name-only`
