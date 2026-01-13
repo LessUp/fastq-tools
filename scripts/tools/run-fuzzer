@@ -1,0 +1,286 @@
+#!/bin/bash
+# scripts/tools/run-fuzzer
+#
+# Run fuzzing tests for FastQTools
+#
+# Usage:
+#   ./scripts/tools/run-fuzzer                    # Run all fuzzers
+#   ./scripts/tools/run-fuzzer parser             # Run specific fuzzer
+#   ./scripts/tools/run-fuzzer --build            # Build and run
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/common.sh"
+
+# =============================================================================
+# Configuration
+# =============================================================================
+BUILD_DIR="build-fuzz"
+FUZZER_NAME=""
+BUILD_FIRST=false
+MAX_LEN=4096
+MAX_TIME=60
+JOBS=1
+VERBOSE=false
+CORPUS_DIR=""
+
+# =============================================================================
+# Help
+# =============================================================================
+print_usage() {
+    print_usage_header "Fuzzer Runner" "Run libFuzzer-based fuzz tests"
+    
+    cat << 'EOF'
+Usage: ./scripts/tools/run-fuzzer [OPTIONS] [FUZZER_NAME]
+
+Options:
+  -b, --build               Build fuzzers before running
+  -d, --build-dir DIR       Build directory (default: build-fuzz)
+  -c, --corpus DIR          Custom corpus directory
+  -l, --max-len N           Maximum input length (default: 4096)
+  -t, --max-time SECONDS    Maximum run time per fuzzer (default: 60)
+  -j, --jobs N              Number of parallel fuzzer jobs (default: 1)
+  -v, --verbose             Verbose output
+  -h, --help                Show this help
+
+Available Fuzzers:
+  parser                    FASTQ parser fuzzer
+  record                    FASTQ record operations fuzzer
+  all                       Run all fuzzers (default)
+
+Examples:
+  ./scripts/tools/run-fuzzer --build              # Build and run all fuzzers
+  ./scripts/tools/run-fuzzer parser -t 300        # Run parser fuzzer for 5 minutes
+  ./scripts/tools/run-fuzzer -j 4 -t 3600         # Run all fuzzers in parallel for 1 hour
+
+Requirements:
+  - Clang compiler with libFuzzer support
+  - Build with: cmake -DENABLE_FUZZING=ON -DCMAKE_CXX_COMPILER=clang++
+EOF
+}
+
+# =============================================================================
+# Argument Parsing
+# =============================================================================
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -b|--build)
+            BUILD_FIRST=true
+            shift
+            ;;
+        -d|--build-dir)
+            BUILD_DIR="$2"
+            shift 2
+            ;;
+        -c|--corpus)
+            CORPUS_DIR="$2"
+            shift 2
+            ;;
+        -l|--max-len)
+            MAX_LEN="$2"
+            shift 2
+            ;;
+        -t|--max-time)
+            MAX_TIME="$2"
+            shift 2
+            ;;
+        -j|--jobs)
+            JOBS="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        parser|record|all)
+            FUZZER_NAME="$1"
+            shift
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            print_usage
+            exit 1
+            ;;
+    esac
+done
+
+# Default to all fuzzers
+FUZZER_NAME="${FUZZER_NAME:-all}"
+
+# =============================================================================
+# Setup
+# =============================================================================
+PROJECT_ROOT=$(get_project_root)
+cd "$PROJECT_ROOT"
+
+start_timer
+
+log_section "FastQTools Fuzzer Runner"
+
+# =============================================================================
+# Build Fuzzers
+# =============================================================================
+if [[ "$BUILD_FIRST" == "true" ]]; then
+    show_step 1 3 "Building fuzzers"
+    
+    # Check for Clang
+    if ! command -v clang++ &>/dev/null; then
+        log_error "Clang compiler not found. Fuzzing requires Clang."
+        exit 1
+    fi
+    
+    log_info "Building with fuzzing enabled..."
+    
+    # Configure
+    cmake -S . -B "$BUILD_DIR" \
+        -G Ninja \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DENABLE_FUZZING=ON \
+        -DBUILD_TESTING=OFF
+    
+    # Build
+    cmake --build "$BUILD_DIR" --parallel "$(get_cpu_cores)"
+    
+    log_success "Fuzzers built successfully"
+fi
+
+# =============================================================================
+# Verify Fuzzers Exist
+# =============================================================================
+FUZZER_DIR="${BUILD_DIR}/fuzzers"
+
+if [[ ! -d "$FUZZER_DIR" ]]; then
+    log_error "Fuzzer directory not found: ${FUZZER_DIR}"
+    log_info "Build fuzzers first with: ./scripts/tools/run-fuzzer --build"
+    exit 1
+fi
+
+# Set default corpus directory
+CORPUS_DIR="${CORPUS_DIR:-${PROJECT_ROOT}/tools/fuzz/corpus}"
+
+if [[ ! -d "$CORPUS_DIR" ]]; then
+    log_warning "Corpus directory not found: ${CORPUS_DIR}"
+    log_info "Creating empty corpus directory..."
+    mkdir -p "$CORPUS_DIR"
+fi
+
+log_info "Build directory: ${BUILD_DIR}"
+log_info "Corpus directory: ${CORPUS_DIR}"
+log_info "Max input length: ${MAX_LEN}"
+log_info "Max time per fuzzer: ${MAX_TIME}s"
+
+# =============================================================================
+# Run Fuzzers
+# =============================================================================
+show_step 2 3 "Running fuzzers"
+
+run_single_fuzzer() {
+    local fuzzer_path="$1"
+    local fuzzer_name=$(basename "$fuzzer_path")
+    
+    log_info "Running fuzzer: ${fuzzer_name}"
+    log_separator "-"
+    
+    local fuzzer_args=(
+        "$CORPUS_DIR"
+        "-max_len=${MAX_LEN}"
+        "-max_total_time=${MAX_TIME}"
+    )
+    
+    if [[ "$JOBS" -gt 1 ]]; then
+        fuzzer_args+=("-jobs=${JOBS}" "-workers=${JOBS}")
+    fi
+    
+    if [[ "$VERBOSE" == "true" ]]; then
+        fuzzer_args+=("-verbosity=1")
+    else
+        fuzzer_args+=("-verbosity=0")
+    fi
+    
+    # Create artifacts directory
+    local artifacts_dir="${BUILD_DIR}/fuzz_artifacts/${fuzzer_name}"
+    mkdir -p "$artifacts_dir"
+    fuzzer_args+=("-artifact_prefix=${artifacts_dir}/")
+    
+    # Run fuzzer
+    if "$fuzzer_path" "${fuzzer_args[@]}"; then
+        log_success "${fuzzer_name} completed without crashes"
+        return 0
+    else
+        local exit_code=$?
+        if [[ $exit_code -eq 77 ]]; then
+            # Exit code 77 means crash found
+            log_error "${fuzzer_name} found a crash!"
+            log_info "Crash artifacts saved to: ${artifacts_dir}"
+            return 1
+        else
+            log_warning "${fuzzer_name} exited with code: ${exit_code}"
+            return $exit_code
+        fi
+    fi
+}
+
+FUZZERS_RUN=0
+FUZZERS_FAILED=0
+
+case "$FUZZER_NAME" in
+    parser)
+        if [[ -x "${FUZZER_DIR}/fastq_parser_fuzzer" ]]; then
+            run_single_fuzzer "${FUZZER_DIR}/fastq_parser_fuzzer" || ((FUZZERS_FAILED++))
+            ((FUZZERS_RUN++))
+        else
+            log_error "Parser fuzzer not found"
+            exit 1
+        fi
+        ;;
+    record)
+        if [[ -x "${FUZZER_DIR}/fastq_record_fuzzer" ]]; then
+            run_single_fuzzer "${FUZZER_DIR}/fastq_record_fuzzer" || ((FUZZERS_FAILED++))
+            ((FUZZERS_RUN++))
+        else
+            log_error "Record fuzzer not found"
+            exit 1
+        fi
+        ;;
+    all)
+        for fuzzer in "${FUZZER_DIR}"/*_fuzzer; do
+            if [[ -x "$fuzzer" ]]; then
+                run_single_fuzzer "$fuzzer" || ((FUZZERS_FAILED++))
+                ((FUZZERS_RUN++))
+                log_separator "-"
+            fi
+        done
+        ;;
+esac
+
+# =============================================================================
+# Summary
+# =============================================================================
+show_step 3 3 "Summary"
+
+log_separator "="
+
+if [[ $FUZZERS_RUN -eq 0 ]]; then
+    log_error "No fuzzers were run"
+    exit 1
+fi
+
+log_info "Fuzzers run: ${FUZZERS_RUN}"
+
+if [[ $FUZZERS_FAILED -eq 0 ]]; then
+    log_success "All fuzzers completed without crashes ✓"
+    end_timer
+    exit 0
+else
+    log_error "${FUZZERS_FAILED} fuzzer(s) found crashes ✗"
+    log_info "Check artifacts in: ${BUILD_DIR}/fuzz_artifacts/"
+    end_timer
+    exit 1
+fi

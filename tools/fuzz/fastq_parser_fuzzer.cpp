@@ -169,4 +169,43 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
         const int maxRecords = 100;  // Limit to prevent infinite loops
 
         while (pos < input.size() && recordCount < maxRecords) {
-            // Fin
+            // Find next record start
+            while (pos < input.size() && input[pos] != '@') {
+                pos++;
+            }
+
+            if (pos >= input.size()) {
+                break;
+            }
+
+            // Try to parse record starting at pos
+            std::string_view remaining = input.substr(pos);
+            FuzzFastqRecord record;
+            
+            if (parseFastqRecord(remaining, record)) {
+                recordCount++;
+                // Move past this record
+                pos += record.header.length() + record.sequence.length() + 
+                       record.quality.length() + 4;  // +4 for newlines and +
+            } else {
+                pos++;
+            }
+        }
+    }
+
+    // Test 3: String operations on input
+    {
+        std::string inputStr(input);
+        
+        // Test various string operations that might be used in parsing
+        (void)inputStr.find('@');
+        (void)inputStr.find('\n');
+        (void)inputStr.find('+');
+        
+        if (!inputStr.empty()) {
+            (void)inputStr.substr(0, std::min(size_t(100), inputStr.size()));
+        }
+    }
+
+    return 0;
+}

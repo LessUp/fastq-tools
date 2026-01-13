@@ -272,6 +272,27 @@ if [[ "$CHECK_THRESHOLD" == "true" ]]; then
     THRESHOLD_FILE="${PROJECT_ROOT}/config/coverage/thresholds.json"
     THRESHOLD_FAILED=false
     
+    percent_to_basis_points() {
+        local percent="$1"
+        local whole frac
+        
+        whole="${percent%%.*}"
+        if [[ "$percent" == *.* ]]; then
+            frac="${percent#*.}"
+        else
+            frac="0"
+        fi
+        
+        frac="${frac:0:2}"
+        if [[ ${#frac} -eq 0 ]]; then
+            frac="00"
+        elif [[ ${#frac} -eq 1 ]]; then
+            frac="${frac}0"
+        fi
+        
+        printf '%d' "$((10#${whole} * 100 + 10#${frac}))"
+    }
+    
     if [[ -f "$THRESHOLD_FILE" ]]; then
         # Read thresholds from JSON (simple parsing)
         LINE_MIN=$(grep -A1 '"line_coverage"' "$THRESHOLD_FILE" | grep '"minimum"' | grep -oE '[0-9]+' | head -1)
@@ -282,18 +303,26 @@ if [[ "$CHECK_THRESHOLD" == "true" ]]; then
         
         log_info "Checking coverage thresholds..."
         
-        if [[ -n "$LINE_COV" ]] && (( $(echo "$LINE_COV < $LINE_MIN" | bc -l) )); then
-            log_error "Line coverage ${LINE_COV}% is below minimum ${LINE_MIN}%"
-            THRESHOLD_FAILED=true
+        if [[ -n "$LINE_COV" ]]; then
+            if (( $(percent_to_basis_points "$LINE_COV") < LINE_MIN * 100 )); then
+                log_error "Line coverage ${LINE_COV}% is below minimum ${LINE_MIN}%"
+                THRESHOLD_FAILED=true
+            else
+                log_success "Line coverage: ${LINE_COV}% >= ${LINE_MIN}%"
+            fi
         else
-            log_success "Line coverage: ${LINE_COV}% >= ${LINE_MIN}%"
+            log_warning "Unable to parse line coverage percentage"
         fi
         
-        if [[ -n "$FUNC_COV" ]] && (( $(echo "$FUNC_COV < $FUNC_MIN" | bc -l) )); then
-            log_error "Function coverage ${FUNC_COV}% is below minimum ${FUNC_MIN}%"
-            THRESHOLD_FAILED=true
+        if [[ -n "$FUNC_COV" ]]; then
+            if (( $(percent_to_basis_points "$FUNC_COV") < FUNC_MIN * 100 )); then
+                log_error "Function coverage ${FUNC_COV}% is below minimum ${FUNC_MIN}%"
+                THRESHOLD_FAILED=true
+            else
+                log_success "Function coverage: ${FUNC_COV}% >= ${FUNC_MIN}%"
+            fi
         else
-            log_success "Function coverage: ${FUNC_COV}% >= ${FUNC_MIN}%"
+            log_warning "Unable to parse function coverage percentage"
         fi
         
         if [[ "$THRESHOLD_FAILED" == "true" ]]; then

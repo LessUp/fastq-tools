@@ -390,7 +390,7 @@ log_separator "="
 
 if [[ "$DEV_MODE" == "true" ]]; then
     log_info "开发模式提示:"
-    log_info "  运行测试: ./scripts/test --build-dir ${BUILD_DIR}"
-    log_info "  代码格式: ./scripts/lint format"
-    log_info "  静态检查: ./scripts/lint check"
+    log_info "  运行测试: ./scripts/core/test --build-dir ${BUILD_DIR}"
+    log_info "  代码格式: ./scripts/core/lint format"
+    log_info "  静态检查: ./scripts/core/lint check"
 fi

@@ -19,7 +19,7 @@ echo ">>> Preparing package for version ${VERSION}..."
 
 # 1. Build the project in Release mode using the build script
 echo ">>> Building project in Release mode..."
-./scripts/build.sh clang Release
+./scripts/core/build -c clang -t Release
 
 # 2. Create the package directory structure
 echo ">>> Creating package directory: ${PACKAGE_DIR}"

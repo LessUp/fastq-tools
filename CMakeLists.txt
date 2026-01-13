@@ -106,6 +106,12 @@ if(BUILD_BENCHMARKS)
     add_subdirectory(tools/benchmark)
 endif()
 
+# --- Fuzzing Support ---
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/fq_fuzzing.cmake)
+if(ENABLE_FUZZING)
+    add_subdirectory(tools/fuzz)
+endif()
+
 # --- Testing ---
 include(CTest)
 option(BUILD_TESTING "Build tests" ON)
