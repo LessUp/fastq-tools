@@ -44,6 +44,13 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
         return 0;
     }
 
+    if (!result.count("input") || !result.count("output")) {
+        std::cerr << "Error: both --input and --output options are required for the stat command."
+                  << std::endl;
+        std::cerr << options.help() << std::endl;
+        return 1;
+    }
+
     // Use the interface-level options struct
     fq::statistic::StatisticOptions statOptions;
     statOptions.inputFastqPath = result["input"].as<std::string>();
