@@ -1,0 +1,28 @@
+# Build directories
+build*/
+_output/
+build_verify/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+
+# Cache
+.cache/
+.ccache/
+.conan2/
+__pycache__/
+*.pyc
+
+# Test artifacts
+benchmark_results/results/
+coverage/
+
+# Temporary files
+*.tmp
+*.log
