@@ -5,6 +5,7 @@ services:
   # 开发环境
   dev:
     image: fastqtools-dev:latest
+    pull_policy: never
     build:
       context: ..
       dockerfile: docker/Dockerfile.dev
