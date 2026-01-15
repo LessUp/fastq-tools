@@ -1,0 +1,178 @@
+# .github/workflows/valgrind.yml
+#
+# Valgrind Memory Check for FastQTools
+# Runs weekly to perform deep memory analysis
+#
+# Valgrind is slower than ASan but can find different types of issues
+
+name: Valgrind Check
+
+on:
+  # Run weekly on Sunday at 2:00 AM UTC
+  schedule:
+    - cron: '0 2 * * 0'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      full_check:
+        description: 'Run full Valgrind check (slower)'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  BUILD_TYPE: Debug
+  CONAN_HOME: ${{ github.workspace }}/.conan2
+
+jobs:
+  # ===========================================================================
+  # Valgrind Memcheck
+  # ===========================================================================
+  valgrind-memcheck:
+    name: Valgrind Memcheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-13 \
+            g++-13 \
+            ninja-build \
+            valgrind \
+            python3-pip
+          
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
+          
+          pip3 install conan
+      
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CONAN_HOME }}
+          key: conan-${{ runner.os }}-gcc-${{ hashFiles('conanfile.py') }}
+          restore-keys: |
+            conan-${{ runner.os }}-gcc-
+      
+      - name: Setup Conan
+        run: |
+          conan profile detect --force
+      
+      - name: Build
+        run: |
+          ./scripts/core/build -c gcc -t Debug
+      
+      - name: Run Valgrind Memcheck
+        run: |
+          ./scripts/core/test -b build-gcc-debug --valgrind
+        continue-on-error: true
+        id: valgrind
+      
+      - name: Upload Valgrind report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: valgrind-memcheck-report
+          path: |
+            build-gcc-debug/Testing/Temporary/MemoryChecker*.log
+          retention-days: 30
+      
+      - name: Check Valgrind result
+        if: steps.valgrind.outcome == 'failure'
+        run: |
+          echo "::warning::Valgrind found memory issues. Check the uploaded report."
+          # Don't fail the workflow for scheduled runs, just warn
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            exit 1
+          fi
+  
+  # ===========================================================================
+  # Valgrind Helgrind (Thread Check)
+  # ===========================================================================
+  valgrind-helgrind:
+    name: Valgrind Helgrind
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    if: github.event.inputs.full_check == 'true' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-13 \
+            g++-13 \
+            ninja-build \
+            valgrind \
+            python3-pip
+          
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
+          
+          pip3 install conan
+      
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CONAN_HOME }}
+          key: conan-${{ runner.os }}-gcc-${{ hashFiles('conanfile.py') }}
+          restore-keys: |
+            conan-${{ runner.os }}-gcc-
+      
+      - name: Setup Conan
+        run: |
+          conan profile detect --force
+      
+      - name: Build
+        run: |
+          ./scripts/core/build -c gcc -t Debug
+      
+      - name: Run Valgrind Helgrind
+        run: |
+          # Run Helgrind on the test executable
+          TEST_EXEC=$(find build-gcc-debug -name "*_test" -o -name "*_tests" | head -1)
+          if [[ -n "$TEST_EXEC" ]]; then
+            valgrind --tool=helgrind \
+              --suppressions=config/valgrind/suppressions.supp \
+              --error-exitcode=0 \
+              "$TEST_EXEC" 2>&1 | tee helgrind_report.txt
+          fi
+        continue-on-error: true
+      
+      - name: Upload Helgrind report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: valgrind-helgrind-report
+          path: helgrind_report.txt
+          retention-days: 30
+  
+  # ===========================================================================
+  # Summary
+  # ===========================================================================
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    needs: [valgrind-memcheck]
+    if: always()
+    
+    steps:
+      - name: Create summary
+        run: |
+          echo "## Valgrind Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Memcheck | ${{ needs.valgrind-memcheck.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Reports are available in the workflow artifacts." >> $GITHUB_STEP_SUMMARY

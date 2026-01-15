@@ -54,6 +54,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     endif()
 endif()
 
+# --- Sanitizer Support ---
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/fq_sanitizers.cmake)
+fq_add_sanitizer_flags_global()
+
 # --- Conan Integration ---
 # This assumes you have run `conan install config/dependencies/ --build=missing`
 # and the conan_toolchain.cmake file is in the build directory.
@@ -88,12 +92,9 @@ endif()
 
 
 # --- Code Coverage ---
-option(ENABLE_COVERAGE "Enable coverage analysis" OFF)
-if(ENABLE_COVERAGE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        add_compile_options(--coverage)
-        add_link_options(--coverage)
-    endif()
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/fq_coverage.cmake)
+if(ENABLE_COVERAGE)
+    fq_add_coverage_flags_global()
 endif()
 
 # --- Add Subdirectories ---
@@ -103,6 +104,12 @@ add_subdirectory(src)
 option(BUILD_BENCHMARKS "Build benchmarks" OFF)
 if(BUILD_BENCHMARKS)
     add_subdirectory(tools/benchmark)
+endif()
+
+# --- Fuzzing Support ---
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/fq_fuzzing.cmake)
+if(ENABLE_FUZZING)
+    add_subdirectory(tools/fuzz)
 endif()
 
 # --- Testing ---

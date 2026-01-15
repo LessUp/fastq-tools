@@ -78,7 +78,7 @@ ensure_dirs() {
 check_build() {
     if [[ ! -d "$BUILD_DIR" ]]; then
         log_error "Build directory not found: $BUILD_DIR"
-        log_info "Please run: ./scripts/build.sh"
+        log_info "Please run: ./scripts/core/build -c clang -t Release"
         exit 1
     fi
 }

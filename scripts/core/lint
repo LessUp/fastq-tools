@@ -39,7 +39,9 @@ print_usage() {
   format-check              仅检查格式（不修改）
   tidy                      运行 clang-tidy 静态分析
   tidy-fix                  运行 clang-tidy 并自动修复
-  all                       运行所有检查
+  cppcheck                  运行 Cppcheck 静态分析
+  iwyu                      运行 Include-What-You-Use 分析
+  all                       运行所有检查 (format + tidy + cppcheck)
   
 选项:
   -b, --build-dir DIR       构建目录（包含 compile_commands.json）
@@ -144,6 +146,122 @@ run_format() {
 }
 
 # =============================================================================
+# Cppcheck 函数
+# =============================================================================
+run_cppcheck() {
+    log_info "运行 Cppcheck 静态分析..."
+    
+    if ! check_tools cppcheck; then
+        log_error "Cppcheck 未安装"
+        log_info "安装提示: sudo apt-get install cppcheck / brew install cppcheck"
+        return 1
+    fi
+    
+    local cppcheck_args=(
+        --enable=warning,style,performance,portability
+        --std=c++20
+        --error-exitcode=1
+        --inline-suppr
+        --quiet
+    )
+    
+    # 使用抑制文件
+    local suppression_file="${PROJECT_ROOT}/config/cppcheck/suppressions.txt"
+    if [[ -f "$suppression_file" ]]; then
+        cppcheck_args+=(--suppressions-list="$suppression_file")
+    fi
+    
+    # 使用编译数据库（如果存在）
+    if [[ -n "$BUILD_DIR" && -f "${BUILD_DIR}/compile_commands.json" ]]; then
+        cppcheck_args+=(--project="${BUILD_DIR}/compile_commands.json")
+    else
+        cppcheck_args+=(src include)
+    fi
+    
+    if [[ "$VERBOSE" == "true" ]]; then
+        cppcheck_args+=(--verbose)
+        log_debug "Cppcheck 参数: ${cppcheck_args[*]}"
+    fi
+    
+    local issues=0
+    if ! cppcheck "${cppcheck_args[@]}" 2>&1; then
+        issues=1
+    fi
+    
+    if [[ $issues -eq 0 ]]; then
+        log_success "Cppcheck 分析通过 ✓"
+        return 0
+    else
+        log_error "Cppcheck 发现问题"
+        return 1
+    fi
+}
+
+# =============================================================================
+# IWYU 函数
+# =============================================================================
+run_iwyu() {
+    log_info "运行 Include-What-You-Use 分析..."
+    
+    if ! check_tools include-what-you-use; then
+        log_error "Include-What-You-Use 未安装"
+        log_info "安装提示: sudo apt-get install iwyu / brew install include-what-you-use"
+        return 1
+    fi
+    
+    # 确定构建目录
+    if [[ -z "$BUILD_DIR" ]]; then
+        for dir in build-clang-* build-gcc-*; do
+            if [[ -f "$dir/compile_commands.json" ]]; then
+                BUILD_DIR="$dir"
+                break
+            fi
+        done
+    fi
+    
+    if [[ -z "$BUILD_DIR" || ! -f "${BUILD_DIR}/compile_commands.json" ]]; then
+        log_error "未找到编译数据库"
+        log_info "请先运行构建或使用 -b 指定构建目录"
+        return 1
+    fi
+    
+    log_info "使用编译数据库: ${BUILD_DIR}/compile_commands.json"
+    
+    local mapping_file="${PROJECT_ROOT}/config/iwyu/mappings.imp"
+    local iwyu_args=(-p "$BUILD_DIR")
+    
+    if [[ -f "$mapping_file" ]]; then
+        iwyu_args+=(-Xiwyu --mapping_file="$mapping_file")
+    fi
+    
+    # 收集源文件
+    local files
+    files=$(find src -type f -name "*.cpp" 2>/dev/null | head -20)
+    
+    if [[ -z "$files" ]]; then
+        log_warning "未找到需要分析的文件"
+        return 0
+    fi
+    
+    local issues=0
+    local count=0
+    
+    while IFS= read -r file; do
+        ((count++))
+        if [[ "$VERBOSE" == "true" ]]; then
+            log_debug "分析 [${count}]: $file"
+        fi
+        
+        # IWYU 返回非零表示有建议，不一定是错误
+        include-what-you-use "${iwyu_args[@]}" "$file" 2>&1 || true
+    done <<< "$files"
+    
+    log_success "IWYU 分析完成 (检查了 ${count} 个文件)"
+    log_info "注意: IWYU 的建议需要人工审核，不是所有建议都需要采纳"
+    return 0
+}
+
+# =============================================================================
 # Clang-Tidy 函数
 # =============================================================================
 run_tidy() {
@@ -233,7 +351,7 @@ run_tidy() {
 # =============================================================================
 if [[ $# -gt 0 ]]; then
     case "$1" in
-        check|format|format-check|tidy|tidy-fix|all)
+        check|format|format-check|tidy|tidy-fix|cppcheck|iwyu|all)
             COMMAND="$1"
             shift
             ;;
@@ -312,21 +430,37 @@ case "$COMMAND" in
     all)
         check_tools clang-format clang-tidy || exit 1
         
-        log_info "步骤 1/2: 代码格式检查"
+        log_info "步骤 1/3: 代码格式检查"
         run_format_check
         FORMAT_RESULT=$?
         
         log_separator "-"
         
-        log_info "步骤 2/2: 静态分析"
+        log_info "步骤 2/3: Clang-Tidy 静态分析"
         run_tidy "check"
         TIDY_RESULT=$?
         
-        if [[ $FORMAT_RESULT -eq 0 && $TIDY_RESULT -eq 0 ]]; then
+        log_separator "-"
+        
+        log_info "步骤 3/3: Cppcheck 静态分析"
+        run_cppcheck
+        CPPCHECK_RESULT=$?
+        
+        if [[ $FORMAT_RESULT -eq 0 && $TIDY_RESULT -eq 0 && $CPPCHECK_RESULT -eq 0 ]]; then
             RESULT=0
         else
             RESULT=1
         fi
+        ;;
+        
+    cppcheck)
+        run_cppcheck
+        RESULT=$?
+        ;;
+        
+    iwyu)
+        run_iwyu
+        RESULT=$?
         ;;
         
     *)

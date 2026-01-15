@@ -1,0 +1,24 @@
+# UndefinedBehaviorSanitizer (UBSan) Options
+#
+# Usage: export UBSAN_OPTIONS=$(cat config/sanitizers/ubsan.options | tr '\n' ':' | sed 's/#[^:]*://g')
+# Or source this file: source config/sanitizers/ubsan.env
+#
+# Documentation: https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
+
+# Print stack trace on error
+print_stacktrace=1
+
+# Continue running after first error
+halt_on_error=0
+
+# Verbosity level
+verbosity=0
+
+# Symbolize stack traces
+symbolize=1
+
+# Report error type
+report_error_type=1
+
+# Silence recoverable errors (set to 0 to see all)
+silence_unsigned_overflow=0

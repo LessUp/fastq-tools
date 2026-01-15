@@ -1,0 +1,30 @@
+# ThreadSanitizer (TSan) Options
+#
+# Usage: export TSAN_OPTIONS=$(cat config/sanitizers/tsan.options | tr '\n' ':' | sed 's/#[^:]*://g')
+# Or source this file: source config/sanitizers/tsan.env
+#
+# Documentation: https://github.com/google/sanitizers/wiki/ThreadSanitizerFlags
+
+# Continue running after first error
+halt_on_error=0
+
+# Print second stack trace for deadlock detection
+second_deadlock_stack=1
+
+# History size (larger = more memory, better reports)
+history_size=4
+
+# Verbosity level
+verbosity=0
+
+# Symbolize stack traces
+symbolize=1
+
+# Detect deadlocks
+detect_deadlocks=1
+
+# Print full stack trace
+print_full_thread_history=1
+
+# Suppress known false positives (use suppressions file)
+# suppressions=config/sanitizers/tsan.supp

@@ -122,27 +122,36 @@ FastQTools/
 - [编码规范](docs/dev/coding-standards.md) - 代码与文件命名约定
 - [Git 提交规范](docs/dev/git-guidelines.md) - 提交格式与示例
 - [性能报告](docs/performance/benchmark-report.md) - 性能基准测试结果
-
-<!-- BENCHMARK_START -->
-## 性能
-
-FastQTools 针对高吞吐量场景进行了优化。运行 `./scripts/benchmark run` 获取最新性能数据。
-
-```bash
-# 运行基准测试
-./scripts/benchmark run
-
-# 生成性能报告
-./scripts/benchmark report
-
-# 检测性能回归
-./scripts/benchmark compare baseline.json current.json
-```
-
-详细性能报告请参阅 [性能文档](docs/performance/benchmark-report.md)。
-<!-- BENCHMARK_END -->
-
-## 许可证
+ 
+ <!-- BENCHMARK_START -->
+ ## 性能
+ 
+ FastQTools 针对高吞吐量场景进行了优化。运行 `./scripts/benchmark run` 获取最新性能数据。
+ 
+ ### 最新基准测试结果（100K reads, 150bp）
+ 
+ | Operation | Throughput | Time |
+ |-----------|------------|------|
+ | FastQReader Medium | 1696.50 MB/s | 18.8 ms |
+ | FastQWriter Medium | 1.76 M reads/s | 57.0 ms |
+ | Filter Combined (100K) | 1.67 M reads/s | 60.5 ms |
+ | Stat Full (100K) | 301.91 MB/s | 104.6 ms |
+ 
+ - **详细报告**: [docs/benchmark-reports/latest.md](docs/benchmark-reports/latest.md)
+ - **原始数据**: [docs/benchmark-reports/latest.json](docs/benchmark-reports/latest.json)
+ 
+ ```bash
+ # 运行基准测试
+ ./scripts/benchmark run
+ 
+ # 生成性能报告
+ ./scripts/benchmark report
+ 
+ # 检测性能回归
+ ./scripts/benchmark compare baseline.json current.json
+ ```
+ <!-- BENCHMARK_END -->
+ 
+ ## 许可证
 
 MIT License - 详见 [LICENSE](LICENSE) 文件
-

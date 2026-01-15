@@ -183,7 +183,7 @@ class ReportGenerator:
             
             for r in results:
                 time_ms = r.mean_time_ns / 1e6
-                throughput = f"{r.throughput_mbps:.2f} MB/s" if r.throughput_mbps > 0 else "-"
+                throughput = self._format_throughput(r)
                 lines.append(f"| {r.name} | {time_ms:.2f} | {throughput} | {r.iterations} |")
             
             lines.append("")
@@ -194,6 +194,24 @@ class ReportGenerator:
             f.write(content)
         
         return content
+
+    def _format_rate(self, value: float, unit: str) -> str:
+        if value <= 0:
+            return "-"
+        if value >= 1e9:
+            return f"{value / 1e9:.2f} G {unit}"
+        if value >= 1e6:
+            return f"{value / 1e6:.2f} M {unit}"
+        if value >= 1e3:
+            return f"{value / 1e3:.2f} K {unit}"
+        return f"{value:.0f} {unit}"
+
+    def _format_throughput(self, r: BenchmarkResult) -> str:
+        if r.throughput_mbps > 0:
+            return f"{r.throughput_mbps:.2f} MB/s"
+        if r.throughput_reads_per_sec > 0:
+            return self._format_rate(r.throughput_reads_per_sec, "reads/s")
+        return "-"
     
     def generate_summary_table(self, report: BenchmarkReport) -> str:
         """生成简洁的性能摘要表格（用于 README）"""
@@ -201,18 +219,21 @@ class ReportGenerator:
             "| Operation | Throughput | Time |",
             "|-----------|------------|------|",
         ]
-        
-        # 选择关键指标
-        key_benchmarks = ['BM_FastQReader_Medium', 'BM_FastQWriter_Medium', 
-                         'BM_Filter_Combined', 'BM_Stat_Full']
-        
-        for r in report.results:
-            if any(key in r.name for key in key_benchmarks):
-                time_ms = r.mean_time_ns / 1e6
-                throughput = f"{r.throughput_mbps:.1f} MB/s" if r.throughput_mbps > 0 else "-"
-                # 简化名称
-                name = r.name.replace('BM_', '').replace('_', ' ')
-                lines.append(f"| {name} | {throughput} | {time_ms:.1f} ms |")
+
+        wanted = [
+            ("FastQReader Medium", lambda r: r.name == "BM_FastQReader_Medium"),
+            ("FastQWriter Medium", lambda r: r.name == "BM_FastQWriter_Medium"),
+            ("Filter Combined (100K)", lambda r: r.name == "BM_Filter_Combined/100000"),
+            ("Stat Full (100K)", lambda r: r.name == "BM_Stat_Full/100000"),
+        ]
+
+        for display, pred in wanted:
+            match = next((r for r in report.results if pred(r)), None)
+            if not match:
+                continue
+            time_ms = match.mean_time_ns / 1e6
+            throughput = self._format_throughput(match)
+            lines.append(f"| {display} | {throughput} | {time_ms:.1f} ms |")
         
         return "\n".join(lines)
     

@@ -26,8 +26,8 @@ gh api --paginate repos/<owner>/<repo>/pulls/<id>/comments \
 - 如果能修：先实现修复，再进入下一条
 
 4. **每条修复后的最小验证**
-- 若是代码风格/静态检查相关：优先跑 `./scripts/lint.sh format-check` 或 `./scripts/lint.sh lint --build-dir build-clang-release`
-- 若涉及行为修改：优先跑相关单测（`./scripts/test.sh -f "<pattern>"`）或 `./tests/e2e/test_cli.sh`
+- 若是代码风格/静态检查相关：优先跑 `./scripts/core/lint format-check` 或 `./scripts/core/lint tidy -b build-clang-release`
+- 若涉及行为修改：优先跑相关单测（`./scripts/core/test -f "<pattern>"`）或 `./tests/e2e/test_cli.sh`
 
 5. **总结**
 - 汇总：已处理的 comment 列表、对应 commit/文件

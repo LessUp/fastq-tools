@@ -66,11 +66,70 @@
 # Check formatting
 ./scripts/core/lint check
 
-# Static analysis
+# Static analysis (clang-tidy)
 ./scripts/core/lint tidy
 
-# All checks
+# Cppcheck analysis
+./scripts/core/lint cppcheck
+
+# Include-What-You-Use
+./scripts/core/lint iwyu
+
+# All checks (format + tidy + cppcheck)
 ./scripts/core/lint all
+```
+
+### Sanitizers
+
+```bash
+# AddressSanitizer (memory errors)
+./scripts/core/build --sanitizer asan --dev
+
+# ThreadSanitizer (data races)
+./scripts/core/build --sanitizer tsan --dev
+
+# UndefinedBehaviorSanitizer
+./scripts/core/build --sanitizer ubsan --dev
+
+# MemorySanitizer (Clang only)
+./scripts/core/build --sanitizer msan --dev -c clang
+```
+
+### Valgrind
+
+```bash
+# Run tests with Valgrind
+./scripts/core/test --valgrind
+
+# Memcheck analysis
+./scripts/tools/valgrind-memcheck
+
+# Cache performance analysis
+./scripts/tools/valgrind-cachegrind
+```
+
+### Coverage
+
+```bash
+# Build with coverage
+./scripts/core/build --coverage --dev
+
+# Run tests and generate report
+./scripts/core/test --coverage
+./scripts/tools/coverage-report
+
+# Generate XML for CI
+./scripts/tools/coverage-report --xml
+```
+
+### Fuzzing
+
+```bash
+# Build and run fuzzers
+./scripts/tools/run-fuzzer --build
+
+# Run specific fuzzer
+./scripts/tools/run-fuzzer parser -t 300
 ```
 
 ### Dependencies

@@ -1,0 +1,224 @@
+# Valgrind Suppression File for FastQTools
+#
+# This file contains suppressions for known false positives from third-party libraries.
+# Usage: valgrind --suppressions=config/valgrind/suppressions.supp ./FastQTools
+#
+# Documentation: https://valgrind.org/docs/manual/manual-core.html#manual-core.suppress
+
+# =============================================================================
+# Intel TBB (Threading Building Blocks) Suppressions
+# =============================================================================
+
+{
+   TBB_internal_malloc
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   ...
+   obj:*libtbb*
+}
+
+{
+   TBB_internal_calloc
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   ...
+   obj:*libtbb*
+}
+
+{
+   TBB_arena_allocation
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:*tbb*arena*
+}
+
+{
+   TBB_scheduler_init
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:*tbb*scheduler*
+}
+
+{
+   TBB_task_group
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:*tbb*task_group*
+}
+
+# =============================================================================
+# spdlog Suppressions
+# =============================================================================
+
+{
+   spdlog_static_init
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:*spdlog*
+}
+
+{
+   spdlog_registry
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:*spdlog*registry*
+}
+
+{
+   spdlog_logger_creation
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:*spdlog*logger*
+}
+
+# =============================================================================
+# fmt Library Suppressions
+# =============================================================================
+
+{
+   fmt_format_buffer
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:*fmt*
+}
+
+# =============================================================================
+# zlib Suppressions
+# =============================================================================
+
+{
+   zlib_inflate
+   Memcheck:Cond
+   fun:inflateReset2
+   ...
+}
+
+{
+   zlib_deflate
+   Memcheck:Cond
+   fun:deflate
+   ...
+}
+
+# =============================================================================
+# libdeflate Suppressions
+# =============================================================================
+
+{
+   libdeflate_alloc
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:*libdeflate*
+}
+
+# =============================================================================
+# Standard Library Suppressions
+# =============================================================================
+
+{
+   std_string_ctor
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:*basic_string*
+}
+
+{
+   std_locale_init
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:*locale*
+}
+
+{
+   std_iostream_init
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:*iostream*
+}
+
+# =============================================================================
+# GCC/libstdc++ Runtime Suppressions
+# =============================================================================
+
+{
+   libstdcxx_pool_alloc
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:*libstdc++*
+}
+
+{
+   gcc_eh_alloc
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:malloc
+   fun:__cxa_allocate_exception
+}
+
+# =============================================================================
+# LLVM/libc++ Runtime Suppressions
+# =============================================================================
+
+{
+   libcxx_locale
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:*libc++*
+}
+
+# =============================================================================
+# pthread Suppressions
+# =============================================================================
+
+{
+   pthread_create
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate_tls
+   fun:pthread_create*
+}
+
+{
+   pthread_once
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:pthread_once*
+}
+
+# =============================================================================
+# dlopen/dlsym Suppressions
+# =============================================================================
+
+{
+   dl_open
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_dl_open
+}
+
+{
+   dl_init
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_dl_init
+}

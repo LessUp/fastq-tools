@@ -10,7 +10,7 @@ auto_execution_mode: 1
 
 ## 工作流步骤
 1. **构建可执行文件**
-   - 若未构建：`./scripts/build.sh clang Release`
+   - 若未构建：`./scripts/core/build -c clang -t Release`
    - 默认可执行文件路径通常为：`build-clang-release/FastQTools`
 
 2. **运行 E2E**

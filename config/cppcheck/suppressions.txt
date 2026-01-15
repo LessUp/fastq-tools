@@ -1,0 +1,68 @@
+# Cppcheck Suppressions for FastQTools
+#
+# Format: [error id]:[filename]:[line]
+# Or: [error id]:*:[filename pattern]
+#
+# Usage: cppcheck --suppressions-list=config/cppcheck/suppressions.txt
+
+# =============================================================================
+# System and Third-Party Headers
+# =============================================================================
+
+# Missing system includes (handled by compiler)
+missingIncludeSystem
+
+# =============================================================================
+# Known False Positives
+# =============================================================================
+
+# TBB parallel constructs may trigger false positives
+unusedFunction:*tbb*
+
+# spdlog macros
+preprocessorErrorDirective:*spdlog*
+
+# =============================================================================
+# Intentional Design Patterns
+# =============================================================================
+
+# Virtual destructors in interface classes
+missingOverride
+
+# Unused private members that are part of PIMPL pattern
+unusedPrivateFunction
+
+# =============================================================================
+# Test Code
+# =============================================================================
+
+# Test fixtures may have unused members
+unusedStructMember:tests/*
+
+# Test helper functions
+unusedFunction:tests/*
+
+# =============================================================================
+# Performance Warnings (Review Case by Case)
+# =============================================================================
+
+# Pass by value for small types is intentional
+passedByValue
+
+# =============================================================================
+# Style Warnings (Handled by clang-tidy)
+# =============================================================================
+
+# These are better handled by clang-tidy
+variableScope
+shadowVariable
+
+# =============================================================================
+# Specific File Suppressions
+# =============================================================================
+
+# Main entry point
+unusedFunction:src/cli/main.cpp
+
+# Generated code
+*:*_generated*

@@ -1,0 +1,180 @@
+#!/bin/bash
+# scripts/tools/valgrind-cachegrind
+#
+# Run Valgrind Cachegrind for cache performance analysis
+#
+# Usage:
+#   ./scripts/tools/valgrind-cachegrind                    # Analyze main executable
+#   ./scripts/tools/valgrind-cachegrind -- stat input.fq   # Analyze with arguments
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/common.sh"
+
+# =============================================================================
+# Configuration
+# =============================================================================
+BUILD_DIR=""
+OUTPUT_DIR="cachegrind_results"
+ANNOTATE=false
+VERBOSE=false
+EXTRA_ARGS=()
+
+# =============================================================================
+# Help
+# =============================================================================
+print_usage() {
+    print_usage_header "Valgrind Cachegrind" "Cache performance analysis using Valgrind"
+    
+    cat << 'EOF'
+Options:
+  -b, --build-dir DIR       Build directory (default: auto-detect)
+  -o, --output-dir DIR      Output directory (default: cachegrind_results)
+  -a, --annotate            Generate annotated source files
+  -v, --verbose             Verbose output
+  -h, --help                Show this help
+
+Arguments after -- are passed to the executable.
+
+Examples:
+  ./scripts/tools/valgrind-cachegrind                      # Basic analysis
+  ./scripts/tools/valgrind-cachegrind --annotate           # With source annotation
+  ./scripts/tools/valgrind-cachegrind -- stat input.fq     # Analyze specific command
+EOF
+}
+
+# =============================================================================
+# Argument Parsing
+# =============================================================================
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -b|--build-dir)
+            BUILD_DIR="$2"
+            shift 2
+            ;;
+        -o|--output-dir)
+            OUTPUT_DIR="$2"
+            shift 2
+            ;;
+        -a|--annotate)
+            ANNOTATE=true
+            shift
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        --)
+            shift
+            EXTRA_ARGS=("$@")
+            break
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            print_usage
+            exit 1
+            ;;
+    esac
+done
+
+# =============================================================================
+# Setup
+# =============================================================================
+PROJECT_ROOT=$(get_project_root)
+cd "$PROJECT_ROOT"
+
+# Check for valgrind
+if ! require_command valgrind "sudo apt-get install valgrind"; then
+    exit 1
+fi
+
+# Find build directory
+if [[ -z "$BUILD_DIR" ]]; then
+    for dir in build-clang-release build-gcc-release build-clang-debug build-gcc-debug; do
+        if [[ -d "$dir" ]]; then
+            BUILD_DIR="$dir"
+            break
+        fi
+    done
+fi
+
+if [[ -z "$BUILD_DIR" || ! -d "$BUILD_DIR" ]]; then
+    log_error "Build directory not found. Please build the project first."
+    exit 1
+fi
+
+EXECUTABLE="${BUILD_DIR}/FastQTools"
+if [[ ! -x "$EXECUTABLE" ]]; then
+    log_error "Executable not found: ${EXECUTABLE}"
+    exit 1
+fi
+
+ensure_directory "$OUTPUT_DIR"
+
+log_section "Valgrind Cachegrind"
+log_info "Build directory: ${BUILD_DIR}"
+log_info "Output directory: ${OUTPUT_DIR}"
+
+# =============================================================================
+# Run Cachegrind
+# =============================================================================
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+OUTPUT_FILE="${OUTPUT_DIR}/cachegrind.out.${TIMESTAMP}"
+
+CACHEGRIND_ARGS=(
+    --tool=cachegrind
+    --cachegrind-out-file="$OUTPUT_FILE"
+    --branch-sim=yes
+)
+
+if [[ "$VERBOSE" == "true" ]]; then
+    CACHEGRIND_ARGS+=(--verbose)
+fi
+
+log_info "Running Cachegrind analysis..."
+log_separator "-"
+
+valgrind "${CACHEGRIND_ARGS[@]}" "$EXECUTABLE" "${EXTRA_ARGS[@]}"
+RESULT=$?
+
+log_separator "-"
+
+if [[ $RESULT -ne 0 ]]; then
+    log_warning "Program exited with code: ${RESULT}"
+fi
+
+# =============================================================================
+# Generate Report
+# =============================================================================
+log_info "Generating report..."
+
+# Use cg_annotate to generate human-readable report
+REPORT_FILE="${OUTPUT_DIR}/cachegrind_report_${TIMESTAMP}.txt"
+cg_annotate "$OUTPUT_FILE" > "$REPORT_FILE"
+
+log_success "Cachegrind output: ${OUTPUT_FILE}"
+log_success "Report: ${REPORT_FILE}"
+
+# Show summary
+log_separator "-"
+log_info "Cache Summary:"
+head -50 "$REPORT_FILE" | grep -E "^(I|D|LL|Branches)" || true
+log_separator "-"
+
+# Generate annotated source if requested
+if [[ "$ANNOTATE" == "true" ]]; then
+    log_info "Generating annotated source files..."
+    ANNOTATE_DIR="${OUTPUT_DIR}/annotated_${TIMESTAMP}"
+    ensure_directory "$ANNOTATE_DIR"
+    
+    # Find source files and annotate
+    cg_annotate --auto=yes "$OUTPUT_FILE" > "${ANNOTATE_DIR}/full_annotation.txt"
+    log_success "Annotated source: ${ANNOTATE_DIR}/full_annotation.txt"
+fi
+
+log_success "Cachegrind analysis complete ✓"
