@@ -64,11 +64,16 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
     const size_t memGb = result["memory-limit-gb"].as<size_t>();
     statOptions.memoryLimitBytes = memGb == 0 ? 0 : (memGb * 1024ULL * 1024ULL * 1024ULL);
 
-    // Use the factory to create an instance of the calculator
-    auto stater = fq::statistic::createStatisticCalculator(statOptions);
+    try {
+        // Use the factory to create an instance of the calculator
+        auto stater = fq::statistic::createStatisticCalculator(statOptions);
 
-    // Call run via the interface pointer
-    stater->run();
+        // Call run via the interface pointer
+        stater->run();
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
 
     return 0;
 }

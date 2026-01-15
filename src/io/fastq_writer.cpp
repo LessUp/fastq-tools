@@ -42,7 +42,7 @@ struct FastqWriter::Impl {
         }
 
         // Open file with standard POSIX IO
-        fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd < 0) {
              throw std::runtime_error("Failed to open output file: " + path);
         }

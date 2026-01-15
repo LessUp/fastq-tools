@@ -27,8 +27,6 @@ class FastQToolsConan(ConanFile):
         self.requires("spdlog/1.17.0")
         self.requires("fmt/12.1.0")
         self.requires("zlib-ng/2.3.2")
-        self.requires("bzip2/1.0.8")
-        self.requires("xz_utils/5.4.5")
         self.requires("onetbb/2022.3.0")
         self.requires("libdeflate/1.25", override=True)
 
