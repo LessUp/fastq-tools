@@ -52,6 +52,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
     python3-venv \
+    nodejs \
+    npm \
     ccache \
     openssh-server \
     openssh-client \
@@ -137,6 +139,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     graphviz \
     cppcheck \
     && rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# Claude Code / Codex CLI
+# =============================================================================
+RUN set -eux; \
+    curl -fsSL https://claude.ai/install.sh | bash; \
+    npm install -g @openai/codex; \
+    if [ -x /root/.local/bin/claude ]; then ln -sf /root/.local/bin/claude /usr/local/bin/claude; fi
 
 # =============================================================================
 # 非 root 用户

@@ -7,7 +7,7 @@
     },
     "workspaceFolder": "/workspace",
     "remoteUser": "developer",
-    "initializeCommand": "bash -lc \"H=\\\"${HOME:-}\\\"; if [ -z \\\"$H\\\" ] && command -v getent >/dev/null 2>&1; then H=\\\"$(getent passwd $(id -un) | cut -d: -f6)\\\"; fi; if [ -n \\\"$H\\\" ]; then if [ -d \\\"$H/.gitconfig\\\" ]; then echo 'ERROR: ~/.gitconfig 是目录，会导致 devcontainer bind mount 失败，请删除该目录并改为文件。' >&2; exit 1; fi; if [ ! -e \\\"$H/.gitconfig\\\" ]; then touch \\\"$H/.gitconfig\\\"; fi; cp -f \\\"$H/.gitconfig\\\" /tmp/fastqtools-host-gitconfig; fi; if [ ! -e /tmp/fastqtools-host-gitconfig ]; then touch /tmp/fastqtools-host-gitconfig; fi; true\"",
+    "initializeCommand": "bash -lc \"H=\\\"${HOME:-}\\\"; if [ -z \\\"$H\\\" ] && command -v getent >/dev/null 2>&1; then H=\\\"$(getent passwd $(id -un) | cut -d: -f6)\\\"; fi; if [ -n \\\"$H\\\" ]; then if [ -d \\\"$H/.gitconfig\\\" ]; then echo 'ERROR: ~/.gitconfig 是目录，会导致 devcontainer bind mount 失败，请删除该目录并改为文件。' >&2; exit 1; fi; if [ ! -e \\\"$H/.gitconfig\\\" ]; then touch \\\"$H/.gitconfig\\\"; fi; cp -f \\\"$H/.gitconfig\\\" /tmp/fastqtools-host-gitconfig; if [ ! -d \\\"$H/.claude\\\" ]; then mkdir -p \\\"$H/.claude\\\"; fi; if [ ! -d \\\"$H/.codex\\\" ]; then mkdir -p \\\"$H/.codex\\\"; fi; fi; if [ ! -e /tmp/fastqtools-host-gitconfig ]; then touch /tmp/fastqtools-host-gitconfig; fi; true\"",
     "overrideCommand": true,
     "runArgs": [
         "-p",
@@ -15,6 +15,8 @@
     ],
     "mounts": [
         "type=bind,source=${localEnv:HOME}/.ssh,target=/home/developer/.ssh,readonly",
+        "type=bind,source=${localEnv:HOME}/.claude,target=/home/developer/.claude",
+        "type=bind,source=${localEnv:HOME}/.codex,target=/home/developer/.codex",
         "type=bind,source=/tmp/fastqtools-host-gitconfig,target=/tmp/host-gitconfig,readonly",
         "type=bind,source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent"
     ],
