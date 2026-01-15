@@ -6,6 +6,8 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.dev
       target: development
+      args:
+        - USE_CHINA_MIRROR=${USE_CHINA_MIRROR:-0}
     container_name: fastqtools-dev
     volumes:
       - ..:/workspace:cached
@@ -25,6 +27,8 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       target: production
+      args:
+        - USE_CHINA_MIRROR=${USE_CHINA_MIRROR:-0}
     container_name: fastqtools-prod
     volumes:
       - ./data:/app/data:ro
@@ -43,6 +47,8 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.dev
       target: development
+      args:
+        - USE_CHINA_MIRROR=${USE_CHINA_MIRROR:-0}
     container_name: fastqtools-test
     volumes:
       - ..:/workspace:cached
@@ -61,6 +67,8 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       target: build
+      args:
+        - USE_CHINA_MIRROR=${USE_CHINA_MIRROR:-0}
     container_name: fastqtools-build
     volumes:
       - ..:/workspace:cached

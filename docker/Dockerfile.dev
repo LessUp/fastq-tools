@@ -34,9 +34,26 @@ RUN set -eux; \
     fi
 
 # =============================================================================
+# APT 镜像源配置 (中国大陆用户可启用国内镜像加速)
+# 设置 USE_CHINA_MIRROR=1 启用阿里云镜像
+# =============================================================================
+ARG USE_CHINA_MIRROR=1
+RUN if [ "${USE_CHINA_MIRROR}" = "1" ]; then \
+        sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
+        sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null || true; \
+    fi
+
+# =============================================================================
+# APT 重试配置 (处理镜像临时故障)
+# =============================================================================
+RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80retries && \
+    echo 'Acquire::http::Timeout "30";' >> /etc/apt/apt.conf.d/80retries && \
+    echo 'Acquire::https::Timeout "30";' >> /etc/apt/apt.conf.d/80retries
+
+# =============================================================================
 # 基础工具
 # =============================================================================
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     build-essential \
     ninja-build \
     pkg-config \
@@ -89,7 +106,7 @@ RUN wget -q https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
     ./llvm.sh 21 && \
     apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends --fix-missing \
     clang-21 \
     clangd-21 \
     clang-tidy-21 \
@@ -112,7 +129,7 @@ RUN wget -q https://apt.llvm.org/llvm.sh && \
 # =============================================================================
 # 项目依赖库
 # =============================================================================
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     libdeflate-dev \
     zlib1g-dev \
     libbz2-dev \
@@ -130,7 +147,7 @@ RUN pip3 install --no-cache-dir --break-system-packages conan==2.24.0
 # =============================================================================
 FROM base AS development
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     gdb \
     valgrind \
     lcov \

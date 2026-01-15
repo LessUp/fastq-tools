@@ -31,8 +31,20 @@ RUN set -eux; \
         if [ -n "${HTTPS_PROXY:-}" ]; then echo "Acquire::https::Proxy \"${HTTPS_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
     fi
 
+# APT 镜像源配置 (中国大陆用户可启用国内镜像加速)
+ARG USE_CHINA_MIRROR=1
+RUN if [ "${USE_CHINA_MIRROR}" = "1" ]; then \
+        sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
+        sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null || true; \
+    fi
+
+# APT 重试配置 (处理镜像临时故障)
+RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80retries && \
+    echo 'Acquire::http::Timeout "30";' >> /etc/apt/apt.conf.d/80retries && \
+    echo 'Acquire::https::Timeout "30";' >> /etc/apt/apt.conf.d/80retries
+
 # 安装构建依赖
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     build-essential \
     ninja-build \
     pkg-config \
@@ -98,7 +110,10 @@ RUN ninja -C build/gcc-release
 # -----------------------------------------------------------------------------
 FROM debian:bookworm-slim AS production
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# APT 重试配置
+RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80retries
+
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     ca-certificates \
     libtbb12 \
     zlib1g \
