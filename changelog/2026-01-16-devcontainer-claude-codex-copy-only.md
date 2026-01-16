@@ -8,8 +8,9 @@
 
 - `.devcontainer/devcontainer.json`
   - 移除宿主机 `.claude` / `.codex` 目录的整体挂载。
-  - 改为仅挂载指定文件到 `/tmp/host-claude` / `/tmp/host-codex`，并在容器内复制到 `/home/developer/.claude` 与 `/home/developer/.codex`。
-  - 新增宿主机侧临时目录 `~/.fastqtools-host-claude` / `~/.fastqtools-host-codex`，用于承载需要同步的单文件。
+  - 改为挂载宿主机暂存目录 `~/.fastqtools-host-claude` / `~/.fastqtools-host-codex` 到容器 `/tmp/host-claude` / `/tmp/host-codex`，再由容器脚本复制到 `/home/developer/.claude` 与 `/home/developer/.codex`。
+  - 通过 `.devcontainer/scripts/host-prepare.sh` 在宿主机准备暂存目录与文件。
+  - 通过 `.devcontainer/scripts/container-setup.sh` 在容器内执行配置同步。
 - `.devcontainer/devcontainer.simple.json`
   - 同步上述调整。
 

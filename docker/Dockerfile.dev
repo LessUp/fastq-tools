@@ -229,24 +229,7 @@ USER $USERNAME
 # =============================================================================
 # Claude Code CLI (developer 用户安装)
 # =============================================================================
-# 注意：Claude CLI 安装可能因网络问题失败，设置为可选
-RUN set -eu; \
-    mkdir -p "$HOME/.local/bin" "$HOME/.claude/bin"; \
-    if curl -fsSL --connect-timeout 30 https://claude.ai/install.sh | bash; then \
-        CLAUDE_BIN=""; \
-        for candidate in "$HOME/.local/bin/claude" "$HOME/.claude/bin/claude" \
-                         "$HOME/.claude/local/bin/claude"; do \
-            if [ -x "$candidate" ]; then CLAUDE_BIN="$candidate"; break; fi; \
-        done; \
-        if [ -n "$CLAUDE_BIN" ]; then \
-            sudo install -m 0755 "$CLAUDE_BIN" /usr/local/bin/claude; \
-            echo "Claude CLI 安装成功: $CLAUDE_BIN"; \
-        else \
-            echo "WARNING: Claude CLI 安装后未找到可执行文件" >&2; \
-        fi; \
-    else \
-        echo "WARNING: Claude CLI 安装失败（网络问题？），跳过" >&2; \
-    fi
+RUN curl -fsSL https://claude.ai/install.sh | bash
 
 # =============================================================================
 # 初始化 Conan

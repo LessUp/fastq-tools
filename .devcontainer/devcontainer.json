@@ -19,18 +19,10 @@
         "type=bind,source=${localEnv:HOME}/.ssh,target=/home/developer/.ssh,readonly",
         // Git 配置
         "type=bind,source=${localEnv:HOME}/.fastqtools-host-gitconfig,target=/tmp/host-gitconfig,readonly",
-        // Claude 配置
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-claude/CLAUDE.md,target=/tmp/host-claude/CLAUDE.md,readonly",
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-claude/settings.json,target=/tmp/host-claude/settings.json,readonly",
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-claude/settings.duck.json,target=/tmp/host-claude/settings.duck.json,readonly",
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-claude/settings.glm.json,target=/tmp/host-claude/settings.glm.json,readonly",
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-claude/settings.kimi.json,target=/tmp/host-claude/settings.kimi.json,readonly",
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-claude/settings.local.json,target=/tmp/host-claude/settings.local.json,readonly",
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-claude/settings.minimax.json,target=/tmp/host-claude/settings.minimax.json,readonly",
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-claude/settings.wong.json,target=/tmp/host-claude/settings.wong.json,readonly",
-        // Codex 配置
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-codex/auth.json,target=/tmp/host-codex/auth.json,readonly",
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-codex/config.toml,target=/tmp/host-codex/config.toml,readonly"
+        // Claude 配置（仅挂载暂存目录，容器内复制）
+        "type=bind,source=${localEnv:HOME}/.fastqtools-host-claude,target=/tmp/host-claude,readonly",
+        // Codex 配置（仅挂载暂存目录，容器内复制）
+        "type=bind,source=${localEnv:HOME}/.fastqtools-host-codex,target=/tmp/host-codex,readonly"
     ],
     // 环境变量
     "remoteEnv": {
