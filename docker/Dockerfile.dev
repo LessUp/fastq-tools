@@ -161,9 +161,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
 # Claude Code / Codex CLI
 # =============================================================================
 RUN set -eux; \
-    curl -fsSL https://claude.ai/install.sh | bash; \
-    npm install -g @openai/codex; \
-    if [ -x /root/.local/bin/claude ]; then ln -sf /root/.local/bin/claude /usr/local/bin/claude; fi
+    npm install -g @openai/codex
 
 # =============================================================================
 # 非 root 用户
@@ -181,11 +179,41 @@ RUN rm -rf /home/$USERNAME/.gitconfig && \
     chown $USERNAME:$USERNAME /home/$USERNAME/.gitconfig
 
 # =============================================================================
+# Claude Code 启动函数（bashrc/profile）
+# =============================================================================
+RUN cat <<'EOF' >/etc/profile.d/claude-config.sh
+# claude-config
+claude-duck() {
+    claude --settings "$HOME/.claude/settings.duck.json" "$@"
+}
+
+claude-glm() {
+    claude --settings "$HOME/.claude/settings.glm.json" "$@"
+}
+
+claude-kimi() {
+    claude --settings "$HOME/.claude/settings.kimi.json" "$@"
+}
+
+claude-minimax() {
+    claude --settings "$HOME/.claude/settings.minimax.json" "$@"
+}
+
+claude-wong() {
+    claude --settings "$HOME/.claude/settings.wong.json" "$@"
+}
+EOF
+RUN if [ -f /etc/bash.bashrc ] && ! grep -Fxq 'source /etc/profile.d/claude-config.sh' /etc/bash.bashrc; then \
+    echo 'source /etc/profile.d/claude-config.sh' >> /etc/bash.bashrc; \
+fi
+
+# =============================================================================
 # 环境配置
 # =============================================================================
+ENV HOME=/home/$USERNAME
 ENV CONAN_HOME=/home/$USERNAME/.conan2
 ENV CCACHE_DIR=/home/$USERNAME/.ccache
-ENV PATH=/usr/lib/ccache:$PATH
+ENV PATH=/home/$USERNAME/.local/bin:/home/$USERNAME/.claude/bin:/usr/lib/ccache:$PATH
 
 # 默认使用 GCC（可通过 CMake Preset 切换）
 ENV CC=gcc
@@ -197,6 +225,19 @@ RUN git config --system --add safe.directory /workspace
 WORKDIR /workspace
 
 USER $USERNAME
+
+# =============================================================================
+# Claude Code CLI (developer 用户安装)
+# =============================================================================
+RUN set -eux; \
+    mkdir -p "$HOME/.local/bin" "$HOME/.claude/bin"; \
+    curl -fsSL https://claude.ai/install.sh | bash; \
+    CLAUDE_BIN=""; \
+    for candidate in "$HOME/.local/bin/claude" "$HOME/.claude/bin/claude"; do \
+        if [ -x "$candidate" ]; then CLAUDE_BIN="$candidate"; break; fi; \
+    done; \
+    if [ -z "$CLAUDE_BIN" ]; then echo 'ERROR: Claude CLI 未找到，请检查安装脚本输出。' >&2; exit 1; fi; \
+    sudo install -m 0755 "$CLAUDE_BIN" /usr/local/bin/claude
 
 # =============================================================================
 # 初始化 Conan
