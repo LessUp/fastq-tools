@@ -49,6 +49,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     ninja-build \
     pkg-config \
     git \
+    vim \
+    neovim \
+    less \
+    tree \
+    grep \
+    htop \
+    tmux \
+    ripgrep \
+    zip \
+    unzip \
+    jq \
     wget \
     ca-certificates \
     tar \
