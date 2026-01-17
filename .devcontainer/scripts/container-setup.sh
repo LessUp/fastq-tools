@@ -53,6 +53,7 @@ sync_claude_config() {
     
     local files=(
         "CLAUDE.md"
+        "config.json"
         "settings.json"
         "settings.duck.json"
         "settings.glm.json"
@@ -67,6 +68,11 @@ sync_claude_config() {
             cp -f "$source_dir/$f" "$target_dir/$f"
         fi
     done
+
+    # Claude CLI 登录信息（宿主机侧已放入 /tmp/host-claude/.claude.json）
+    if [ -s "$source_dir/.claude.json" ]; then
+        cp -f "$source_dir/.claude.json" "$DEVELOPER_HOME/.claude.json"
+    fi
 }
 
 # 同步 Codex 配置

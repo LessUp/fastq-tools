@@ -102,6 +102,7 @@ main() {
     # 2. 准备 Claude 配置
     local claude_files=(
         "CLAUDE.md"
+        "config.json"
         "settings.json"
         "settings.duck.json"
         "settings.glm.json"
@@ -111,6 +112,15 @@ main() {
         "settings.wong.json"
     )
     sync_files "$H/.claude" "$H/.fastqtools-host-claude" "${claude_files[@]}"
+
+    # Claude CLI 登录信息（位于 HOME 根目录）
+    local claude_root_src="$H/.claude.json"
+    local claude_root_dst="$H/.fastqtools-host-claude/.claude.json"
+    if [ -f "$claude_root_src" ]; then
+        cp -f "$claude_root_src" "$claude_root_dst"
+    elif [ ! -e "$claude_root_dst" ]; then
+        touch "$claude_root_dst"
+    fi
     
     # 3. 准备 Codex 配置
     local codex_files=(
