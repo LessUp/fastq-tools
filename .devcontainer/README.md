@@ -10,6 +10,19 @@
 2. 打开项目目录
 3. 按 `F1` → `Dev Containers: Reopen in Container`
 
+#### 使用简化配置（devcontainer.simple.json）
+
+当你希望跳过 docker-compose、直接用 Dockerfile 构建时：
+
+1. 按 `F1` → `Dev Containers: Open Folder in Container...`
+2. 选择配置文件：`.devcontainer/devcontainer.simple.json`
+
+也可以使用 devcontainer CLI：
+
+```bash
+devcontainer up --workspace-folder . --config .devcontainer/devcontainer.simple.json
+```
+
 ### 远程服务器（Windsurf/Cursor/Remote-SSH）
 
 ```bash
