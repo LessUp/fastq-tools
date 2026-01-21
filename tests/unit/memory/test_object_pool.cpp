@@ -10,6 +10,7 @@
 #include <gmock/gmock.h>
 
 #include <atomic>
+#include <mutex>
 #include <set>
 #include <thread>
 #include <vector>
