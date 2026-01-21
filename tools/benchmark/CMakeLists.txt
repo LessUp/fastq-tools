@@ -54,6 +54,20 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/stat_benchmark.cpp")
     )
 endif()
 
+# Pipeline 流水线基准测试
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/pipeline_benchmark.cpp")
+    add_benchmark(benchmark_pipeline
+        pipeline_benchmark.cpp
+    )
+endif()
+
+# ObjectPool 对象池基准测试
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/object_pool_benchmark.cpp")
+    add_benchmark(benchmark_object_pool
+        object_pool_benchmark.cpp
+    )
+endif()
+
 # 端到端性能基准测试
 if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/performance_benchmark.cpp")
     add_executable(performance_benchmark
@@ -81,6 +95,14 @@ endif()
 
 if (TARGET benchmark_stat)
     list(APPEND ALL_BENCHMARK_TARGETS benchmark_stat)
+endif()
+
+if (TARGET benchmark_pipeline)
+    list(APPEND ALL_BENCHMARK_TARGETS benchmark_pipeline)
+endif()
+
+if (TARGET benchmark_object_pool)
+    list(APPEND ALL_BENCHMARK_TARGETS benchmark_object_pool)
 endif()
 
 # 创建基准测试组
