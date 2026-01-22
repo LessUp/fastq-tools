@@ -12,25 +12,25 @@
 
 FROM gcc:15.2-bookworm AS base
 
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG ALL_PROXY
-ARG NO_PROXY
+ARG DEVCONTAINER_HTTP_PROXY
+ARG DEVCONTAINER_HTTPS_PROXY
+ARG DEVCONTAINER_ALL_PROXY
+ARG DEVCONTAINER_NO_PROXY
 
-ENV HTTP_PROXY=${HTTP_PROXY}
-ENV HTTPS_PROXY=${HTTPS_PROXY}
-ENV ALL_PROXY=${ALL_PROXY}
-ENV NO_PROXY=${NO_PROXY}
-ENV http_proxy=${HTTP_PROXY}
-ENV https_proxy=${HTTPS_PROXY}
-ENV all_proxy=${ALL_PROXY}
-ENV no_proxy=${NO_PROXY}
+ENV HTTP_PROXY=${DEVCONTAINER_HTTP_PROXY}
+ENV HTTPS_PROXY=${DEVCONTAINER_HTTPS_PROXY}
+ENV ALL_PROXY=${DEVCONTAINER_ALL_PROXY}
+ENV NO_PROXY=${DEVCONTAINER_NO_PROXY}
+ENV http_proxy=${DEVCONTAINER_HTTP_PROXY}
+ENV https_proxy=${DEVCONTAINER_HTTPS_PROXY}
+ENV all_proxy=${DEVCONTAINER_ALL_PROXY}
+ENV no_proxy=${DEVCONTAINER_NO_PROXY}
 
 RUN set -eux; \
-    if [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ]; then \
+    if [ -n "${DEVCONTAINER_HTTP_PROXY:-}" ] || [ -n "${DEVCONTAINER_HTTPS_PROXY:-}" ]; then \
         : > /etc/apt/apt.conf.d/99proxy; \
-        if [ -n "${HTTP_PROXY:-}" ]; then echo "Acquire::http::Proxy \"${HTTP_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
-        if [ -n "${HTTPS_PROXY:-}" ]; then echo "Acquire::https::Proxy \"${HTTPS_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
+        if [ -n "${DEVCONTAINER_HTTP_PROXY:-}" ]; then echo "Acquire::http::Proxy \"${DEVCONTAINER_HTTP_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
+        if [ -n "${DEVCONTAINER_HTTPS_PROXY:-}" ]; then echo "Acquire::https::Proxy \"${DEVCONTAINER_HTTPS_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
     fi
 
 # =============================================================================
