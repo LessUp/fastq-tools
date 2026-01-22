@@ -23,6 +23,8 @@
 devcontainer up --workspace-folder . --config .devcontainer/devcontainer.simple.json
 ```
 
+简化配置不读取 `docker/.env`，请在本机环境中设置 `FASTQTOOLS_HOST_DATA_PATH`，否则挂载 `/data` 会失败。
+
 ### 远程服务器（Windsurf/Cursor/Remote-SSH）
 
 ```bash
@@ -63,6 +65,7 @@ docker/
 | `USE_CHINA_MIRROR` | `0` | 启用国内镜像源 |
 | `FASTQTOOLS_SSH_PORT` | `2222` | SSH 端口 |
 | `FASTQTOOLS_SSH_BIND` | `127.0.0.1` | SSH 绑定地址 |
+| `FASTQTOOLS_HOST_DATA_PATH` | `/tmp/fastqtools-data` | dev 容器挂载到 `/data` 的宿主机路径 |
 
 ### 宿主机文件
 
@@ -72,6 +75,20 @@ devcontainer 会自动同步以下宿主机配置：
 - `~/.ssh/` → SSH 密钥（只读）
 - `~/.claude/` → Claude Code 配置
 - `~/.codex/` → OpenAI Codex 配置
+
+### 宿主机数据目录挂载
+
+dev 容器会把宿主机的数据目录挂载到容器内 `/data`。请在 `docker/.env` 中设置绝对路径（`~` 不会展开）：
+
+```bash
+# WSL
+FASTQTOOLS_HOST_DATA_PATH=/home/<user>/data
+
+# 远程服务器
+FASTQTOOLS_HOST_DATA_PATH=/data
+```
+
+如需在 `start_devcontainer.sh` 中临时覆盖，可使用 `--data-path` 或导出 `FASTQTOOLS_HOST_DATA_PATH`。
 
 ## 故障排除
 

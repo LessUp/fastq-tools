@@ -20,6 +20,7 @@ services:
     # VS Code devcontainer 会自动管理容器名
     volumes:
       - ..:/workspace:cached
+      - "${FASTQTOOLS_HOST_DATA_PATH:-/tmp/fastqtools-data}:/data:cached"
       - conan_cache:/home/developer/.conan2:cached
       - ccache_cache:/home/developer/.ccache:cached
     ports:

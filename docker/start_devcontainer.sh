@@ -48,6 +48,8 @@ ${CYAN}FastQTools DevContainer 启动脚本${NC}
   --port <port>             宿主机 SSH 端口 (默认: 2222)
   --authorized-keys <file>  authorized_keys 文件路径
                             (默认: \$HOME/.ssh/authorized_keys)
+  --data-path <path>        宿主机数据目录挂载到容器 /data
+                            (默认: /tmp/fastqtools-data)
   --no-build                跳过 docker compose build
   --rebuild                 强制重新构建镜像
   -h, --help                显示此帮助信息
@@ -66,6 +68,7 @@ ${CYAN}FastQTools DevContainer 启动脚本${NC}
   FASTQTOOLS_SSH_BIND       等同于 --bind
   FASTQTOOLS_SSH_PORT       等同于 --port
   FASTQTOOLS_AUTHORIZED_KEYS_FILE  等同于 --authorized-keys
+  FASTQTOOLS_HOST_DATA_PATH 等同于 --data-path
 EOF
 }
 
@@ -75,6 +78,7 @@ EOF
 BIND="${FASTQTOOLS_SSH_BIND:-127.0.0.1}"
 PORT="${FASTQTOOLS_SSH_PORT:-2222}"
 AUTHORIZED_KEYS_FILE="${FASTQTOOLS_AUTHORIZED_KEYS_FILE:-${HOME}/.ssh/authorized_keys}"
+DATA_PATH="${FASTQTOOLS_HOST_DATA_PATH:-/tmp/fastqtools-data}"
 NO_BUILD=0
 REBUILD=0
 
@@ -86,6 +90,8 @@ while [ $# -gt 0 ]; do
             PORT="$2"; shift 2 ;;
         --authorized-keys)
             AUTHORIZED_KEYS_FILE="$2"; shift 2 ;;
+        --data-path)
+            DATA_PATH="$2"; shift 2 ;;
         --no-build)
             NO_BUILD=1; shift ;;
         --rebuild)
@@ -109,6 +115,7 @@ COMPOSE_FILE="${REPO_ROOT}/docker/docker-compose.yml"
 # 导出环境变量供 docker-compose 使用
 export FASTQTOOLS_SSH_BIND="${BIND}"
 export FASTQTOOLS_SSH_PORT="${PORT}"
+export FASTQTOOLS_HOST_DATA_PATH="${DATA_PATH}"
 
 # =============================================================================
 # 主流程
@@ -116,6 +123,7 @@ export FASTQTOOLS_SSH_PORT="${PORT}"
 main() {
     log_info "FastQTools DevContainer 启动"
     log_info "SSH 绑定: ${BIND}:${PORT}"
+    log_info "数据挂载: ${DATA_PATH} -> /data"
     
     # 1. 构建镜像
     if [ "${REBUILD}" -eq 1 ]; then
