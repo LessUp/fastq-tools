@@ -101,7 +101,7 @@ build_image() {
     
     case $env in
         production)
-            docker build -f docker/Dockerfile -t "fastqtools:$tag" --target production .
+            docker build -f docker/Dockerfile.prod -t "fastqtools:$tag" --target production .
             ;;
         development)
             docker build -f docker/Dockerfile.dev -t "fastqtools-dev:$tag" --target development .

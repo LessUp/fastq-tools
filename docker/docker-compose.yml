@@ -35,7 +35,7 @@ services:
     image: fastqtools-prod:latest
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.prod
       target: production
       args:
         - USE_CHINA_MIRROR=${USE_CHINA_MIRROR:-0}
@@ -75,7 +75,7 @@ services:
     image: fastqtools-build:latest
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.prod
       target: build
       args:
         - USE_CHINA_MIRROR=${USE_CHINA_MIRROR:-0}

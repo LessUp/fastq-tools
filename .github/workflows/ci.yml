@@ -193,7 +193,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -f docker/Dockerfile -t fastqtools:latest .
+          docker build -f docker/Dockerfile.prod -t fastqtools:latest .
 
       - name: Build development Docker image
         run: |

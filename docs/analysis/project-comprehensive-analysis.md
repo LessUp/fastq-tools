@@ -371,7 +371,7 @@ clang++ -fsanitize=fuzzer,address fuzz_parser.cpp -o fuzz_parser
 
 ### 7.1 Docker 配置分析
 
-**多阶段构建** (docker/Dockerfile):
+**多阶段构建** (docker/Dockerfile.prod):
 ```dockerfile
 # 构建阶段
 FROM gcc:14.2-bookworm AS build

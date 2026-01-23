@@ -80,7 +80,7 @@ docker-compose -f docker/docker-compose.yml up -d prod
 
 ## Container Images
 
-### Production Image (`docker/Dockerfile`)
+### Production Image (`docker/Dockerfile.prod`)
 - **Base**: debian:12-slim
 - **Size**: ~100MB
 - **Contents**: FastQTools binary + runtime libraries only
