@@ -16,6 +16,7 @@ ARG DEVCONTAINER_HTTP_PROXY
 ARG DEVCONTAINER_HTTPS_PROXY
 ARG DEVCONTAINER_ALL_PROXY
 ARG DEVCONTAINER_NO_PROXY
+ARG NODE_MAJOR=20
 
 ENV HTTP_PROXY=${DEVCONTAINER_HTTP_PROXY}
 ENV HTTPS_PROXY=${DEVCONTAINER_HTTPS_PROXY}
@@ -80,8 +81,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     python3 \
     python3-pip \
     python3-venv \
-    nodejs \
-    npm \
     ccache \
     openssh-server \
     openssh-client \
@@ -91,6 +90,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     && rm -rf /var/lib/apt/lists/*
 
 RUN touch /tmp/host-gitconfig
+
+# Node.js for modern CLI tooling (npx zcf requires >=20)
+RUN set -eux; \
+    curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash -; \
+    apt-get install -y --no-install-recommends nodejs; \
+    rm -rf /var/lib/apt/lists/*
 
 # =============================================================================
 # CMake 4.x (最新版本)
