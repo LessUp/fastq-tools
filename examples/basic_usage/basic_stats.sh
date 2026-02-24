@@ -16,7 +16,6 @@ NC='\033[0m' # No Color
 THREADS=${FASTQTOOLS_THREADS:-4}
 BATCH_SIZE=${FASTQTOOLS_BATCH_SIZE:-50000}
 OUTPUT_DIR="./results"
-HTML_FILE=""
 
 print_usage() {
     echo "FastQTools 基本统计示例"
@@ -57,15 +56,23 @@ FASTQTOOLS_BIN="${FASTQTOOLS:-}"
 if [[ -z "${FASTQTOOLS_BIN}" ]]; then
     if command -v FastQTools &> /dev/null; then
         FASTQTOOLS_BIN="FastQTools"
-    elif [[ -x "../../build-clang-release/FastQTools" ]]; then
-        FASTQTOOLS_BIN="../../build-clang-release/FastQTools"
-    elif [[ -x "../../build-clang-debug/FastQTools" ]]; then
-        FASTQTOOLS_BIN="../../build-clang-debug/FastQTools"
+    else
+        # 按优先级搜索构建产物
+        for candidate in \
+            "../../build-clang-release/FastQTools" \
+            "../../build-gcc-release/FastQTools" \
+            "../../build-clang-debug/FastQTools" \
+            "../../build-gcc-debug/FastQTools"; do
+            if [[ -x "$candidate" ]]; then
+                FASTQTOOLS_BIN="$candidate"
+                break
+            fi
+        done
     fi
 fi
 
 if [[ -z "${FASTQTOOLS_BIN}" ]]; then
-    echo -e "${RED}错误: FastQTools 未找到，请先构建（../../scripts/build.sh）或设置 FASTQTOOLS=/path/to/FastQTools${NC}"
+    echo -e "${RED}错误: FastQTools 未找到，请先构建（../../scripts/core/build）或设置 FASTQTOOLS=/path/to/FastQTools${NC}"
     exit 1
 fi
 
@@ -89,7 +96,12 @@ echo "  文件大小: $FILE_SIZE"
 
 if [[ "$INPUT_FILE" == *.gz ]]; then
     echo "  压缩格式: gzip"
-    UNCOMPRESSED_SIZE=$(zcat "$INPUT_FILE" | wc -c | numfmt --to=iec)
+    RAW_BYTES=$(gzip -dc "$INPUT_FILE" | wc -c)
+    if command -v numfmt &> /dev/null; then
+        UNCOMPRESSED_SIZE=$(echo "$RAW_BYTES" | numfmt --to=iec)
+    else
+        UNCOMPRESSED_SIZE=$(awk "BEGIN{split(\"B K M G T\",u); s=$RAW_BYTES+0; i=1; while(s>=1024 && i<5){s/=1024; i++} printf \"%.1f%s\", s, u[i]}")
+    fi
     echo "  解压后大小: $UNCOMPRESSED_SIZE"
 fi
 
@@ -158,68 +170,9 @@ else
     echo -e "${RED}警告: 结果文件未生成${NC}"
 fi
 
-# 生成简单的 HTML 报告（可选）
-if command -v python3 &> /dev/null; then
-    echo ""
-    echo -e "${BLUE}生成 HTML 报告...${NC}"
-    
-    HTML_FILE="$OUTPUT_DIR/${OUTPUT_PREFIX}.report.html"
-    
-    python3 -c "
-import sys
-import os
-
-# 读取统计文件
-try:
-    with open('$OUTPUT_FILE', 'r') as f:
-        content = f.read()
-    
-    # 生成简单的 HTML 报告
-    html = '''<!DOCTYPE html>
-<html>
-<head>
-    <title>FastQ 统计报告 - $OUTPUT_PREFIX</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .header { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-        .stats { background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; }
-        .highlight { color: #e74c3c; font-weight: bold; }
-        pre { background: #2c3e50; color: white; padding: 15px; border-radius: 5px; overflow-x: auto; }
-    </style>
-</head>
-<body>
-    <h1 class=\"header\">FastQ 统计报告</h1>
-    <div class=\"stats\">
-        <h2>文件信息</h2>
-        <p><strong>输入文件:</strong> $INPUT_FILE</p>
-        <p><strong>分析时间:</strong> $(date)</p>
-        <p><strong>处理参数:</strong> 线程数=$THREADS, 批大小=$BATCH_SIZE</p>
-    </div>
-    <div class=\"stats\">
-        <h2>统计结果</h2>
-        <pre>''' + content + '''</pre>
-    </div>
-</body>
-</html>'''
-    
-    with open('$HTML_FILE', 'w') as f:
-        f.write(html)
-    
-    print('HTML 报告已生成: $HTML_FILE')
-    
-except Exception as e:
-    print(f'生成 HTML 报告失败: {e}')
-"
-fi
-
 echo ""
 echo -e "${GREEN}🎉 分析完成！${NC}"
 echo ""
 echo -e "${YELLOW}下一步建议:${NC}"
 echo "1. 查看详细结果: cat $OUTPUT_FILE"
-echo "2. 比较多个文件: ./batch_processing.sh *.fastq.gz"
-echo "3. 处理双端数据: ./paired_end_analysis.sh read1.fq.gz read2.fq.gz"
-
-if [[ -f "$HTML_FILE" ]]; then
-    echo "4. 在浏览器中查看: $HTML_FILE"
-fi
+echo "2. 查看使用指南: ../../docs/dev/usage.md"

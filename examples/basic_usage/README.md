@@ -26,7 +26,7 @@ ls ../../tools/data/*.fastq
 
 ```bash
 # 先构建 FastQTools
-../../scripts/build.sh
+../../scripts/core/build
 
 # 基本统计
 ./basic_stats.sh ../../tools/data/sample_10k.fastq
@@ -60,7 +60,7 @@ export FASTQTOOLS_BATCH_SIZE=100000
 
 1. 确保 FastQTools 可执行文件可用：
    - 已安装在 PATH 中，或
-   - 已在仓库根目录执行 `./scripts/build.sh`，或
+   - 已在仓库根目录执行 `./scripts/core/build`，或
    - 设置 `FASTQTOOLS=/path/to/FastQTools`
 2. 示例脚本需要可执行权限：`chmod +x *.sh`
 3. 某些示例可能需要较大内存，建议在配置充足的机器上运行
@@ -75,4 +75,4 @@ export FASTQTOOLS_BATCH_SIZE=100000
 3. 系统资源是否充足
 4. 权限设置是否正确
 
-更多帮助请参考 [使用指南](../../docs/user/usage.md) 或提交 [Issue](https://github.com/LessUp/FastQTools/issues)。
+更多帮助请参考 [使用指南](../../docs/guide/usage.md) 或提交 [Issue](https://github.com/LessUp/FastQTools/issues)。
