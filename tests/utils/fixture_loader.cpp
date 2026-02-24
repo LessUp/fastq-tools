@@ -1,6 +1,8 @@
 #include "fixture_loader.h"
 
+#include <algorithm>
 #include <fstream>
+#include <random>
 #include <sstream>
 
 namespace fq::test {
@@ -45,6 +47,50 @@ std::filesystem::path FixtureLoader::getFixturePath(const std::string& filename)
 
 bool FixtureLoader::fixtureExists(const std::string& filename) {
     return std::filesystem::exists(getFixturePath(filename));
+}
+
+std::filesystem::path FixtureLoader::createTempFastq(size_t records, size_t read_length) {
+    auto temp_dir = std::filesystem::temp_directory_path();
+    auto temp_file = temp_dir / ("fastqtools_fixture_" +
+                                 std::to_string(std::random_device{}()) + ".fastq");
+
+    std::ofstream out(temp_file);
+    if (!out.is_open()) {
+        throw std::runtime_error("Cannot create temp FASTQ file: " + temp_file.string());
+    }
+
+    static const char bases[] = "ACGT";
+    std::mt19937 gen(std::random_device{}());
+    std::uniform_int_distribution<> base_dist(0, 3);
+    std::uniform_int_distribution<> qual_dist(20, 40);
+
+    for (size_t i = 0; i < records; ++i) {
+        out << "@read_" << i << '\n';
+        for (size_t j = 0; j < read_length; ++j) {
+            out << bases[base_dist(gen)];
+        }
+        out << '\n' << "+\n";
+        for (size_t j = 0; j < read_length; ++j) {
+            out << static_cast<char>(qual_dist(gen) + 33);
+        }
+        out << '\n';
+    }
+
+    return temp_file;
+}
+
+bool FixtureLoader::compareFiles(const std::filesystem::path& file1,
+                                 const std::filesystem::path& file2) {
+    std::ifstream f1(file1, std::ios::binary);
+    std::ifstream f2(file2, std::ios::binary);
+
+    if (!f1.is_open() || !f2.is_open()) {
+        return false;
+    }
+
+    return std::equal(std::istreambuf_iterator<char>(f1.rdbuf()),
+                      std::istreambuf_iterator<char>(),
+                      std::istreambuf_iterator<char>(f2.rdbuf()));
 }
 
 }  // namespace fq::test

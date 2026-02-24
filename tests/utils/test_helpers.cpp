@@ -46,9 +46,8 @@ std::string TestHelpers::generateFastQRecords(size_t count, size_t readLength) {
 
 std::string TestHelpers::generateRandomDNA(size_t length) {
     static const char bases[] = "ATGC";
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<> dis(0, 3);
+    thread_local std::mt19937 gen(std::random_device{}());
+    std::uniform_int_distribution<> dis(0, 3);
 
     std::string sequence;
     sequence.reserve(length);
@@ -61,8 +60,7 @@ std::string TestHelpers::generateRandomDNA(size_t length) {
 }
 
 std::string TestHelpers::generateRandomQuality(size_t length, int minQuality, int maxQuality) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
+    thread_local std::mt19937 gen(std::random_device{}());
     std::uniform_int_distribution<> dis(minQuality, maxQuality);
 
     std::string quality;
