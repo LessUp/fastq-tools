@@ -19,7 +19,7 @@ log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
 # 配置常量
 DEVELOPER_HOME="/home/developer"
-WORKSPACE="/workspace"
+WORKSPACE="${WORKSPACE:-/workspace}"
 
 # =============================================================================
 # 配置同步函数
@@ -117,7 +117,7 @@ setup_conan() {
 
 # 启动 SSHD
 start_sshd() {
-    local sshd_script="$WORKSPACE/.devcontainer/start-sshd.sh"
+    local sshd_script="$WORKSPACE/.devcontainer/scripts/start-sshd.sh"
     if [ -x "$sshd_script" ]; then
         bash "$sshd_script" || true
     fi
@@ -167,7 +167,7 @@ cmd_create() {
     setup_conan
     
     # setup-sshd.sh 用于首次配置
-    local setup_script="$WORKSPACE/.devcontainer/setup-sshd.sh"
+    local setup_script="$WORKSPACE/.devcontainer/scripts/setup-sshd.sh"
     if [ -x "$setup_script" ]; then
         bash "$setup_script" || true
     fi

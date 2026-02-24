@@ -1,4 +1,7 @@
 {
+    // =========================================================================
+    // FastQTools Dev Container Configuration
+    // =========================================================================
     "name": "FastQTools Dev",
     "dockerComposeFile": [
         "../docker/docker-compose.yml"
@@ -10,45 +13,87 @@
     "workspaceFolder": "/workspace",
     "shutdownAction": "stopCompose",
     "remoteUser": "developer",
-    // 宿主机准备脚本 - 在容器启动前运行
     "initializeCommand": "bash ${localWorkspaceFolder}/.devcontainer/scripts/host-prepare.sh",
     "overrideCommand": true,
-    // 挂载配置
-    "mounts": [
-        // SSH 配置（只读）
-        "type=bind,source=${localEnv:HOME}/.ssh,target=/home/developer/.ssh,readonly",
-        // Git 配置
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-gitconfig,target=/tmp/host-gitconfig,readonly",
-        // Claude 配置（仅挂载暂存目录，容器内复制）
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-claude,target=/tmp/host-claude,readonly",
-        // Codex 配置（仅挂载暂存目录，容器内复制）
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-codex,target=/tmp/host-codex,readonly"
-    ],
-    // 环境变量
-    "remoteEnv": {
-        "WSL_DISTRO_NAME": "${localEnv:WSL_DISTRO_NAME}",
-        "WORKSPACE": "/workspace"
+
+    // =========================================================================
+    // DevContainer Features - 标准化工具安装
+    // =========================================================================
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,
+            "configureZshAsDefaultShell": false,
+            "installOhMyZsh": true,
+            "upgradePackages": false,
+            "username": "developer"
+        }
     },
-    // 端口转发
-    "forwardPorts": [
-        8080,
-        2222
+
+    // =========================================================================
+    // Volume Mounts - 宿主机配置映射
+    // =========================================================================
+    "mounts": [
+        "type=bind,source=${localEnv:HOME}/.ssh,target=/home/developer/.ssh,readonly",
+        "type=bind,source=${localEnv:HOME}/.fastqtools-host-gitconfig,target=/tmp/host-gitconfig,readonly",
+        "type=bind,source=${localEnv:HOME}/.fastqtools-host-claude,target=/tmp/host-claude,readonly",
+        "type=bind,source=${localEnv:HOME}/.fastqtools-host-codex,target=/tmp/host-codex,readonly",
+        "type=bind,source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent"
     ],
-    // 生命周期钩子
+
+    // =========================================================================
+    // Environment Variables
+    // =========================================================================
+    "remoteEnv": {
+        "SSH_AUTH_SOCK": "/ssh-agent",
+        "WSL_DISTRO_NAME": "${localEnv:WSL_DISTRO_NAME}",
+        "WORKSPACE": "/workspace",
+        "EDITOR": "code --wait",
+        "VISUAL": "code --wait"
+    },
+
+    // =========================================================================
+    // Port Forwarding
+    // =========================================================================
+    "forwardPorts": [
+        8080
+    ],
+    "portsAttributes": {
+        "2222": {
+            "label": "SSH",
+            "onAutoForward": "silent"
+        },
+        "8080": {
+            "label": "HTTP",
+            "onAutoForward": "notify"
+        }
+    },
+
+    // =========================================================================
+    // Lifecycle Commands
+    // =========================================================================
     "postCreateCommand": "bash /workspace/.devcontainer/scripts/container-setup.sh create",
     "postStartCommand": "bash /workspace/.devcontainer/scripts/container-setup.sh start",
     "postAttachCommand": "bash /workspace/.devcontainer/scripts/container-setup.sh attach",
-    // VS Code 配置
+
+    // =========================================================================
+    // VS Code Customizations
+    // =========================================================================
     "customizations": {
         "vscode": {
             "settings": {
+                // 终端配置
                 "remote.containers.copyGitConfig": false,
                 "terminal.integrated.defaultProfile.linux": "bash",
                 "terminal.integrated.profiles.linux": {
                     "bash": {
                         "path": "/bin/bash"
+                    },
+                    "zsh": {
+                        "path": "/bin/zsh"
                     }
                 },
+
+                // CMake 配置
                 "cmake.generator": "Ninja",
                 "cmake.useCMakePresets": "always",
                 "cmake.configureOnOpen": false,
@@ -56,19 +101,71 @@
                 "cmake.configureSettings": {
                     "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
                 },
+                "cmake.buildDirectory": "${workspaceFolder}/build/${buildPreset}",
+
+                // Clangd 配置 (C++ 智能提示)
                 "clangd.path": "/usr/bin/clangd",
                 "clangd.arguments": [
                     "--background-index",
                     "--clang-tidy",
                     "--completion-style=detailed",
                     "--header-insertion=never",
+                    "--all-scopes-completion",
+                    "--pch-storage=memory",
                     "--query-driver=/usr/bin/g++,/usr/bin/gcc,/usr/bin/clang++,/usr/bin/clang"
-                ]
+                ],
+                "clangd.checkUpdates": false,
+
+                // 编辑器配置
+                "editor.formatOnSave": true,
+                "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+                "[cpp]": {
+                    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+                },
+                "[c]": {
+                    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+                },
+
+                // 文件配置
+                "files.associations": {
+                    "*.h": "cpp",
+                    "*.hpp": "cpp",
+                    "CMakeLists.txt": "cmake",
+                    "conanfile.py": "python"
+                },
+                "files.trimTrailingWhitespace": true,
+                "files.insertFinalNewline": true,
+
+                // 搜索排除
+                "search.exclude": {
+                    "**/build": true,
+                    "**/cmake-build-*": true,
+                    "**/.conan2": true,
+                    "**/.ccache": true
+                }
             },
             "extensions": [
+                // C++ 开发
                 "ms-vscode.cmake-tools",
                 "llvm-vs-code-extensions.vscode-clangd",
-                "vadimcn.vscode-lldb"
+                "vadimcn.vscode-lldb",
+                "twxs.cmake",
+                "jeff-hykin.better-cpp-syntax",
+
+                // 代码质量
+                "streetsidesoftware.code-spell-checker",
+                "EditorConfig.EditorConfig",
+
+                // Docker & 容器
+                "ms-azuretools.vscode-docker",
+
+                // Git
+                "eamodio.gitlens",
+                "mhutchie.git-graph",
+
+                // 实用工具
+                "yzhang.markdown-all-in-one",
+                "redhat.vscode-yaml"
             ]
         }
     }

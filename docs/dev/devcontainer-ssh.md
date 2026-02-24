@@ -47,17 +47,16 @@
 
 - `docker/Dockerfile.dev`
   - 安装 `openssh-server`/`openssh-client`/`procps`。
-- `.devcontainer/setup-sshd.sh`
+- `.devcontainer/scripts/setup-sshd.sh`
   - 幂等配置 `sshd_config`（优先写入 `sshd_config.d`）。
   - 设置：端口 `2222`、禁用密码登录、禁用 root 登录、限制用户 `developer`。
   - 生成 host keys、准备 `/var/run/sshd`。
   - 处理 `authorized_keys` fallback。
-- `.devcontainer/start-sshd.sh`
+- `.devcontainer/scripts/start-sshd.sh`
   - 每次启动时检测 `sshd` 是否已运行，未运行则启动（daemonize）。
-- `.devcontainer/devcontainer.json` / `.devcontainer/devcontainer.simple.json`
+- `.devcontainer/devcontainer.json`
   - 在原有 `postCreateCommand` 末尾追加 `setup-sshd.sh`。
   - 在 `postStartCommand` / `postAttachCommand` 末尾追加 `start-sshd.sh`。
-  - `devcontainer.simple.json` 额外通过 `runArgs` 发布端口：`127.0.0.1:2222 -> 2222`，便于本机直接 SSH 到容器。
 - `docker/docker-compose.yml`
   - 为 dev 服务增加端口映射：`2222`（默认仅绑定本机回环）。
   - 支持环境变量：

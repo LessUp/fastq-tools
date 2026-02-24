@@ -10,21 +10,6 @@
 2. 打开项目目录
 3. 按 `F1` → `Dev Containers: Reopen in Container`
 
-#### 使用简化配置（devcontainer.simple.json）
-
-当你希望跳过 docker-compose、直接用 Dockerfile 构建时：
-
-1. 按 `F1` → `Dev Containers: Open Folder in Container...`
-2. 选择配置文件：`.devcontainer/devcontainer.simple.json`
-
-也可以使用 devcontainer CLI：
-
-```bash
-devcontainer up --workspace-folder . --config .devcontainer/devcontainer.simple.json
-```
-
-简化配置不读取 `docker/.env`，请在本机环境中设置 `FASTQTOOLS_HOST_DATA_PATH`，否则挂载 `/data` 会失败。
-
 ### 远程服务器（Windsurf/Cursor/Remote-SSH）
 
 ```bash
@@ -40,12 +25,11 @@ ssh -p 2222 developer@<服务器IP>
 ```
 .devcontainer/
 ├── devcontainer.json       # 主配置（使用 docker-compose）
-├── devcontainer.simple.json # 简化配置（直接构建）
-├── setup-sshd.sh           # SSHD 配置脚本
-├── start-sshd.sh           # SSHD 启动脚本
 ├── scripts/
 │   ├── host-prepare.sh     # 宿主机准备脚本（initializeCommand）
-│   └── container-setup.sh  # 容器内设置脚本（postXxxCommand）
+│   ├── container-setup.sh  # 容器内设置脚本（postXxxCommand）
+│   ├── setup-sshd.sh       # SSHD 配置脚本
+│   └── start-sshd.sh       # SSHD 启动脚本
 └── README.md               # 本文件
 
 docker/
@@ -143,9 +127,6 @@ DEVCONTAINER_HTTPS_PROXY=http://host.docker.internal:10808
 - **分析**: clang-tidy + cppcheck + lcov
 - **AI**: Claude Code CLI + OpenAI Codex
 
-## 切换配置
+## 配置说明
 
-- `devcontainer.json` - 使用 docker-compose，支持持久化缓存
-- `devcontainer.simple.json` - 直接构建，更简单但无缓存持久化
-
-切换方法：重命名文件或在 VS Code 中选择配置。
+默认使用 `devcontainer.json`（docker-compose 模式），支持持久化缓存和完整的开发环境配置。

@@ -21,7 +21,7 @@ if ! command -v sshd >/dev/null 2>&1; then
 fi
 
 WORKSPACE="${WORKSPACE:-/workspace}"
-SETUP_SCRIPT="${WORKSPACE}/.devcontainer/setup-sshd.sh"
+SETUP_SCRIPT="${WORKSPACE}/.devcontainer/scripts/setup-sshd.sh"
 SETUP_SENTINEL="/tmp/.sshd-setup-done"
 
 # 仅在首次或脚本更新后重新配置
