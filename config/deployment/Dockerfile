@@ -55,7 +55,7 @@ RUN CMAKE_VERSION=4.2.1 && \
     ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack && \
     rm -f /tmp/cmake.tar.gz
 
-# 2. Install specific Clang version (21)
+# 2. Install Clang 21 (clang, clang-tidy, clang-format, lld, llvm)
 RUN wget https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
     ./llvm.sh 21 && \
@@ -74,8 +74,8 @@ WORKDIR /app
 COPY . .
 
 # 5. Run Conan to install project dependencies
-# We use the system's default GCC (which should be >= 15.1 on modern systems)
-# and the installed Clang 19. Here we configure Conan to use GCC.
+# Uses the system's default GCC from Ubuntu 22.04 (build-essential)
+# and the installed Clang 21 for optional Clang builds.
 RUN conan profile detect --force && \
     conan install config/dependencies/ --output-folder=build/conan-release --build=missing -s build_type=Release -s compiler.cppstd=20
 
