@@ -1,7 +1,6 @@
 # AddressSanitizer (ASan) Options
 # 
-# Usage: export ASAN_OPTIONS=$(cat config/sanitizers/asan.options | tr '\n' ':' | sed 's/#[^:]*://g')
-# Or source this file: source config/sanitizers/asan.env
+# Usage: export ASAN_OPTIONS=$(grep -v '^#' config/sanitizers/asan.options | grep -v '^$' | tr '\n' ':')
 #
 # Documentation: https://github.com/google/sanitizers/wiki/AddressSanitizerFlags
 

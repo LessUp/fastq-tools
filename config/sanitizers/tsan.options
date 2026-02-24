@@ -1,7 +1,6 @@
 # ThreadSanitizer (TSan) Options
 #
-# Usage: export TSAN_OPTIONS=$(cat config/sanitizers/tsan.options | tr '\n' ':' | sed 's/#[^:]*://g')
-# Or source this file: source config/sanitizers/tsan.env
+# Usage: export TSAN_OPTIONS=$(grep -v '^#' config/sanitizers/tsan.options | grep -v '^$' | tr '\n' ':')
 #
 # Documentation: https://github.com/google/sanitizers/wiki/ThreadSanitizerFlags
 

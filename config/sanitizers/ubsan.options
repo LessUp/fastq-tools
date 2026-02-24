@@ -1,7 +1,6 @@
 # UndefinedBehaviorSanitizer (UBSan) Options
 #
-# Usage: export UBSAN_OPTIONS=$(cat config/sanitizers/ubsan.options | tr '\n' ':' | sed 's/#[^:]*://g')
-# Or source this file: source config/sanitizers/ubsan.env
+# Usage: export UBSAN_OPTIONS=$(grep -v '^#' config/sanitizers/ubsan.options | grep -v '^$' | tr '\n' ':')
 #
 # Documentation: https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
 

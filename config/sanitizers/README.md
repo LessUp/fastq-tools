@@ -65,14 +65,20 @@ export MSAN_OPTIONS="halt_on_error=0:print_stats=1"
 
 ## Suppression Files
 
-Create suppression files to ignore known false positives:
+If needed, create suppression files to ignore known false positives:
 
-- `tsan.supp` - ThreadSanitizer suppressions
-- `lsan.supp` - LeakSanitizer suppressions (used with ASan)
-
-Example suppression:
-```
-# tsan.supp
+```bash
+# Example: config/sanitizers/tsan.supp
 race:third_party_library
 deadlock:known_safe_pattern
+
+# Example: config/sanitizers/lsan.supp (used with ASan)
+leak:third_party_allocator
+```
+
+Then reference them via environment variables:
+
+```bash
+export TSAN_OPTIONS="suppressions=config/sanitizers/tsan.supp:$TSAN_OPTIONS"
+export LSAN_OPTIONS="suppressions=config/sanitizers/lsan.supp"
 ```
