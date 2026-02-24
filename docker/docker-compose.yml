@@ -39,6 +39,10 @@ services:
       target: production
       args:
         - USE_CHINA_MIRROR=${USE_CHINA_MIRROR:-0}
+        - DEVCONTAINER_HTTP_PROXY=${DEVCONTAINER_HTTP_PROXY:-}
+        - DEVCONTAINER_HTTPS_PROXY=${DEVCONTAINER_HTTPS_PROXY:-}
+        - DEVCONTAINER_ALL_PROXY=${DEVCONTAINER_ALL_PROXY:-}
+        - DEVCONTAINER_NO_PROXY=${DEVCONTAINER_NO_PROXY:-localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,.local}
     container_name: fastqtools-prod
     volumes:
       - ./data:/app/data:ro
@@ -59,6 +63,10 @@ services:
       target: development
       args:
         - USE_CHINA_MIRROR=${USE_CHINA_MIRROR:-0}
+        - DEVCONTAINER_HTTP_PROXY=${DEVCONTAINER_HTTP_PROXY:-}
+        - DEVCONTAINER_HTTPS_PROXY=${DEVCONTAINER_HTTPS_PROXY:-}
+        - DEVCONTAINER_ALL_PROXY=${DEVCONTAINER_ALL_PROXY:-}
+        - DEVCONTAINER_NO_PROXY=${DEVCONTAINER_NO_PROXY:-localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,.local}
     container_name: fastqtools-test
     volumes:
       - ..:/workspace:cached
@@ -71,6 +79,7 @@ services:
     working_dir: /workspace
 
   # 构建服务
+  # 注意：使用独立缓存卷，避免与 dev/test（uid 1000）的权限冲突
   build:
     image: fastqtools-build:latest
     build:
@@ -79,14 +88,20 @@ services:
       target: build
       args:
         - USE_CHINA_MIRROR=${USE_CHINA_MIRROR:-0}
+        - DEVCONTAINER_HTTP_PROXY=${DEVCONTAINER_HTTP_PROXY:-}
+        - DEVCONTAINER_HTTPS_PROXY=${DEVCONTAINER_HTTPS_PROXY:-}
+        - DEVCONTAINER_ALL_PROXY=${DEVCONTAINER_ALL_PROXY:-}
+        - DEVCONTAINER_NO_PROXY=${DEVCONTAINER_NO_PROXY:-localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,.local}
     container_name: fastqtools-build
     volumes:
       - ..:/workspace:cached
-      - conan_cache:/root/.conan2:cached
-      - ccache_cache:/root/.ccache:cached
+      - build_conan_cache:/root/.conan2:cached
+      - build_ccache_cache:/root/.ccache:cached
     command: /workspace/scripts/build.sh --release
     working_dir: /workspace
 
 volumes:
   conan_cache:
   ccache_cache:
+  build_conan_cache:
+  build_ccache_cache:

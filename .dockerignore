@@ -23,6 +23,17 @@ __pycache__/
 benchmark_results/results/
 coverage/
 
+# Docker runtime data
+docker/data/
+docker/output/
+
+# Documentation (not needed for build)
+docs/
+changelog/
+*.md
+!README.md
+!CHANGELOG.md
+
 # Temporary files
 *.tmp
 *.log
