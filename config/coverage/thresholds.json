@@ -1,0 +1,4 @@
+{
+  "line_coverage": { "minimum": 70, "target": 80 },
+  "function_coverage": { "minimum": 80, "target": 90 }
+}

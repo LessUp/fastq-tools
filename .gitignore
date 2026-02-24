@@ -40,6 +40,7 @@ docs/generated/
 
 # 忽略所有的覆盖率报告
 coverage/
+!config/coverage/
 *.gcda
 *.gcno
 *.gcov
