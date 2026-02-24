@@ -29,6 +29,32 @@ class TestFastQToolsCLI(unittest.TestCase):
         result = subprocess.run(cmd, capture_output=True, text=True)
         return result
 
+    @staticmethod
+    def _is_gzip(filepath):
+        """Check if a file is gzip-compressed by reading its magic bytes."""
+        with open(filepath, 'rb') as f:
+            return f.read(2) == b'\x1f\x8b'
+
+    @classmethod
+    def _read_fastq_lines(cls, filepath):
+        """Read lines from a FASTQ file, auto-detecting gzip compression."""
+        if cls._is_gzip(filepath):
+            with gzip.open(filepath, 'rt') as f:
+                return f.readlines()
+        else:
+            with open(filepath, 'r') as f:
+                return f.readlines()
+
+    @classmethod
+    def _read_fastq_content(cls, filepath):
+        """Read full content from a FASTQ file, auto-detecting gzip compression."""
+        if cls._is_gzip(filepath):
+            with gzip.open(filepath, 'rt') as f:
+                return f.read()
+        else:
+            with open(filepath, 'r') as f:
+                return f.read()
+
     def test_global_help(self):
         result = self.run_cmd(["--help"])
         self.assertEqual(result.returncode, 0)
@@ -54,9 +80,8 @@ class TestFastQToolsCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(output_fastq))
         
         # Count reads in output (each read is 4 lines in FASTQ)
-        with gzip.open(output_fastq, 'rt') as f:
-            lines = f.readlines()
-            self.assertEqual(len(lines), 40000) # 10k reads * 4 lines
+        lines = self._read_fastq_lines(output_fastq)
+        self.assertEqual(len(lines), 40000) # 10k reads * 4 lines
 
     def test_stat_basic(self):
         output_stats = os.path.join(self.test_dir, "stats.txt")
@@ -78,8 +103,7 @@ class TestFastQToolsCLI(unittest.TestCase):
         
         self.assertEqual(result.returncode, 0)
         self.assertTrue(os.path.exists(output_fastq))
-        with gzip.open(output_fastq, 'rt') as f:
-            self.assertEqual(f.read(), "")
+        self.assertEqual(self._read_fastq_content(output_fastq), "")
 
     def test_filter_max_length(self):
         # Filter for max 99bp should result in 0 reads.
@@ -88,8 +112,7 @@ class TestFastQToolsCLI(unittest.TestCase):
         
         self.assertEqual(result.returncode, 0)
         self.assertTrue(os.path.exists(output_fastq))
-        with gzip.open(output_fastq, 'rt') as f:
-            self.assertEqual(f.read(), "")
+        self.assertEqual(self._read_fastq_content(output_fastq), "")
 
 if __name__ == "__main__":
     unittest.main()
