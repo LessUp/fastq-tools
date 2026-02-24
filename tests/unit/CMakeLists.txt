@@ -1,71 +1,42 @@
 # 单元测试配置
-
-# 通用测试设置函数
-function(add_unit_test test_name)
-    set(source_files ${ARGN})
-    add_executable(${test_name} ${source_files})
-    
-    target_link_libraries(${test_name} PRIVATE
-        GTest::gtest_main
-        GTest::gtest
-        GTest::gmock
-        fq_lib
-        test_utils
-    )
-    
-    target_include_directories(${test_name} PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/../utils
-    )
-    
-    # 添加到CTest
-    add_test(NAME ${test_name} COMMAND ${test_name})
-    
-    # 设置测试属性
-    set_tests_properties(${test_name} PROPERTIES
-        LABELS "unit"
-        TIMEOUT 60
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-endfunction()
+# 使用父级 tests/CMakeLists.txt 中定义的 add_fq_test(name label timeout sources...)
 
 # Common模块测试
-add_unit_test(test_common
+add_fq_test(test_common "unit" 60
     common/test_timer.cpp
     common/test_common.cpp
 )
 
 # Config模块测试
-add_unit_test(test_config
+add_fq_test(test_config "unit" 60
     config/test_configuration.cpp
     config/test_config_parsing.cpp
 )
 
 # Error模块测试
-add_unit_test(test_error
+add_fq_test(test_error "unit" 60
     error/test_exceptions.cpp
     error/test_error_handler.cpp
 )
 
 # IO模块测试
-add_unit_test(test_io
+add_fq_test(test_io "unit" 60
     io/test_fastq_reader.cpp
     io/test_writer.cpp
 )
 
 # Processing模块测试
-add_unit_test(test_processing
+add_fq_test(test_processing "unit" 60
     processing/test_pipeline_smoke.cpp
 )
 
 # Statistics模块测试
-add_unit_test(test_statistics
+add_fq_test(test_statistics "unit" 60
     statistics/test_statistics.cpp
 )
 
 # Memory模块测试
-add_unit_test(test_memory
+add_fq_test(test_memory "unit" 60
     memory/test_object_pool.cpp
 )
 
