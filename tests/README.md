@@ -27,7 +27,9 @@ tests/
 unit/
 ├── common/           # 通用工具测试
 ├── config/           # 配置模块测试
+├── error/            # 错误处理测试
 ├── io/               # I/O 模块测试
+├── memory/           # 内存池测试
 ├── processing/       # 处理模块测试
 ├── statistics/       # 统计模块测试
 └── CMakeLists.txt
@@ -48,8 +50,8 @@ TEST_F(ConfigTest, LoadValidConfig) {
 
 **运行单元测试**:
 ```bash
-./scripts/test --unit
-./scripts/test --unit --filter "*config*"
+./scripts/core/test --unit
+./scripts/core/test --unit --filter "*config*"
 ```
 
 ---
@@ -84,7 +86,7 @@ TEST_F(PipelineIntegrationTest, ReadProcessWrite) {
 
 **运行集成测试**:
 ```bash
-./scripts/test --integration
+./scripts/core/test --integration
 ```
 
 ---
@@ -114,7 +116,7 @@ diff filtered.fastq expected.fastq
 
 **运行 E2E 测试**:
 ```bash
-./scripts/test --e2e
+./scripts/core/test --e2e
 ./tests/e2e/test_cli.sh
 ```
 
@@ -186,26 +188,26 @@ EXPECT_TRUE(TestHelpers::compareFiles(output, expected));
 
 ```bash
 # 运行所有测试
-./scripts/test
+./scripts/core/test
 
 # 运行特定类型的测试
-./scripts/test --unit
-./scripts/test --integration
-./scripts/test --e2e
+./scripts/core/test --unit
+./scripts/core/test --integration
+./scripts/core/test --e2e
 
 # 过滤测试
-./scripts/test --filter "*config*"
-./scripts/test --filter "*timer*" --verbose
+./scripts/core/test --filter "*config*"
+./scripts/core/test --filter "*timer*" --verbose
 
 # 重复测试（稳定性测试）
-./scripts/test --repeat 5
+./scripts/core/test --repeat 5
 ```
 
 ### 覆盖率报告
 
 ```bash
 # 生成覆盖率报告
-./scripts/test --coverage
+./scripts/core/test --coverage
 
 # 查看 HTML 报告
 open coverage/html/index.html  # macOS
@@ -216,7 +218,7 @@ xdg-open coverage/html/index.html  # Linux
 
 ```bash
 # 详细输出
-./scripts/test --verbose
+./scripts/core/test --verbose
 
 # 使用 GDB 调试
 gdb --args build-clang-debug/test_common
@@ -365,8 +367,8 @@ INSTANTIATE_TEST_SUITE_P(
 # .github/workflows/ci.yml
 - name: Run tests
   run: |
-    ./scripts/build --dev
-    ./scripts/test --coverage
+    ./scripts/core/build --dev
+    ./scripts/core/test --coverage
     
 - name: Upload coverage
   uses: codecov/codecov-action@v3
@@ -396,13 +398,13 @@ INSTANTIATE_TEST_SUITE_P(
 
 ### 测试失败
 
-1. 查看详细输出：`./scripts/test --verbose`
-2. 只运行失败的测试：`./scripts/test --filter "*FailingTest*"`
+1. 查看详细输出：`./scripts/core/test --verbose`
+2. 只运行失败的测试：`./scripts/core/test --filter "*FailingTest*"`
 3. 使用调试器：`gdb --args build-clang-debug/test_name`
 
 ### 随机失败
 
-1. 重复运行：`./scripts/test --repeat 10`
+1. 重复运行：`./scripts/core/test --repeat 10`
 2. 检查并发问题
 3. 检查资源清理
 4. 添加更详细的断言信息
@@ -411,8 +413,8 @@ INSTANTIATE_TEST_SUITE_P(
 
 ```bash
 # 使用 AddressSanitizer
-./scripts/build --sanitizer asan
-./scripts/test
+./scripts/core/build --sanitizer asan
+./scripts/core/test
 
 # 或使用 Valgrind
 valgrind --leak-check=full build-clang-debug/test_name
