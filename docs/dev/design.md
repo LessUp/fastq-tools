@@ -59,5 +59,5 @@
 
 ## 6. 发布
 
-- `scripts/package_release.sh`：本地生成 `dist/*.tar.gz`。
+- `scripts/tools/package-release`：本地生成 `dist/*.tar.gz`。
 - `.github/workflows/release.yml`：tag 触发，执行打包并上传 GitHub Release。

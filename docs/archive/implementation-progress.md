@@ -12,7 +12,7 @@
 - ✅ **FASTQ 数据结构优化（原 1.1.3）**：已由 `FastqRecord(string_view)` + `FastqBatch` 实现零拷贝与复用。
 - ✅ **日志系统（原 1.5.3）**：已提供 `fq::logging` 统一初始化/级别控制。
 - ✅ **发布流程自动化（原 5.1.3）**：`release.yml` 已实现 tag 发布。
-- ✅ **发布打包脚本（原 4.1.3）**：`scripts/package_release.sh` 已存在。
+- ✅ **发布打包脚本（原 4.1.3）**：`scripts/tools/package-release` 已存在。
 - ✅ **LTO（原 6.1.1）**：`CMakePresets.json` Release preset 已启用 `-flto` + IPO。
 
 ### 2.2 待办（保留，但改为可执行/低复杂度表述）

@@ -254,3 +254,70 @@ conan install . --build=missing
 ```bash
 pip install matplotlib
 ```
+
+## 测试方法论
+
+### 测试环境
+
+基准测试在以下标准化环境中执行：
+
+- **操作系统**: Ubuntu 22.04 LTS
+- **编译器**: Clang 19 / GCC 11+
+- **构建类型**: Release (-O3)
+- **CPU**: 多核 x86_64 处理器
+- **内存**: 16GB+ RAM
+
+### 测试数据
+
+使用合成 FASTQ 数据进行测试，确保结果可重复：
+
+| 数据集 | Reads 数量 | Read 长度 | 文件大小 |
+|--------|-----------|-----------|----------|
+| Small | 10,000 | 150bp | ~2.5 MB |
+| Medium | 100,000 | 150bp | ~25 MB |
+| Large | 1,000,000 | 150bp | ~250 MB |
+
+### 测试指标
+
+| 指标 | 说明 | 单位 |
+|------|------|------|
+| `mean_time_ns` | 平均执行时间 | 纳秒 |
+| `std_dev_ns` | 标准差 | 纳秒 |
+| `throughput_mbps` | 数据吞吐量 | MB/s |
+| `throughput_reads_per_sec` | Reads 吞吐量 | reads/s |
+| `peak_memory_bytes` | 峰值内存 | bytes |
+
+## 基准测试类别
+
+### IO 基准测试
+
+测试 FASTQ 文件的读取和写入性能：
+
+- `BM_FastQReader_*`: 读取性能测试
+- `BM_FastQWriter_*`: 写入性能测试（含 gzip 压缩）
+
+### Filter 基准测试
+
+测试不同过滤条件下的处理性能：
+
+- `BM_Filter_NoFilter`: 无过滤（基线）
+- `BM_Filter_MinLength`: 最小长度过滤
+- `BM_Filter_MinQuality`: 最小质量过滤
+- `BM_Filter_MaxNRatio`: N 比例过滤
+- `BM_Filter_Combined`: 组合过滤
+
+### Stat 基准测试
+
+测试统计分析功能的性能：
+
+- `BM_Stat_Basic`: 基本统计
+- `BM_Stat_BaseComposition`: 碱基组成统计
+- `BM_Stat_QualityDistribution`: 质量分布统计
+- `BM_Stat_LengthDistribution`: 长度分布统计
+- `BM_Stat_Full`: 完整统计
+
+## 性能优化建议
+
+1. **使用多线程**: FastQTools 支持并行处理，使用 `--threads` 参数
+2. **批量处理**: 处理大文件时使用批量模式
+3. **压缩输出**: 使用 `.gz` 扩展名自动启用压缩

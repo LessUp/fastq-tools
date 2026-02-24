@@ -117,11 +117,11 @@ FastQTools/
 ## 文档
 
 - [构建指南](docs/dev/build.md) - 系统要求和构建说明
-- [使用指南](docs/user/usage.md) - 命令行用法和示例
+- [使用指南](docs/guide/usage.md) - 命令行用法和示例
 - [架构设计](docs/dev/architecture.md) - 技术架构和设计原则
 - [编码规范](docs/dev/coding-standards.md) - 代码与文件命名约定
 - [Git 提交规范](docs/dev/git-guidelines.md) - 提交格式与示例
-- [性能报告](docs/performance/benchmark-report.md) - 性能基准测试结果
+- [性能报告](docs/dev/benchmark-guide.md) - 性能基准测试与报告
  
  <!-- BENCHMARK_START -->
  ## 性能

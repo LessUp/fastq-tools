@@ -8,36 +8,37 @@
 
 ```
 docs/
-├── README.md                    # 本文件 - 文档索引
-├── installation.md              # 安装指南
-├── git_commit_guide.md          # Git 提交规范
+├── README.md                          # 本文件 - 文档索引
+├── installation.md                    # 安装指南
 │
-├── user/                        # 用户文档
-│   └── usage.md                 # 使用指南
+├── guide/                             # 用户指南
+│   └── usage.md                       # CLI 使用指南
 │
-├── dev/                         # 开发者文档
-│   ├── architecture.md          # 架构设计
-│   ├── design.md                # 设计文档
-│   ├── coding-standards.md      # 编码规范
-│   ├── build.md                 # 构建指南
-│   ├── git-guidelines.md        # Git 工作流
-│   ├── requirements.md          # 需求文档
-│   └── implementation-progress.md # 实现进度
+├── dev/                               # 开发者文档（活跃维护）
+│   ├── architecture.md                # 架构设计
+│   ├── design.md                      # 核心设计
+│   ├── build.md                       # 构建指南
+│   ├── coding-standards.md            # 编码规范
+│   ├── git-guidelines.md              # Git 提交规范与工作流
+│   ├── quality-tools.md               # 代码质量工具指南
+│   ├── benchmark-guide.md             # Benchmark 使用与报告指南
+│   ├── devcontainer-guidelines.md     # Dev Container 团队规范
+│   └── devcontainer-ssh.md            # Windsurf/Cursor SSH 方案
 │
-├── optimization/                # 优化相关文档
-│   ├── requirements.md          # 优化需求
-│   ├── design.md                # 优化设计
-│   ├── implementation.md        # 实现计划
-│   └── critical-analysis.md     # 关键分析
+├── decisions/                         # 架构决策记录（ADR）
+│   ├── optimization-decisions.md      # 优化决策与辩证分析
+│   └── project-assessment.md          # 项目评估报告
 │
-├── analysis/                    # 项目分析文档
-│   ├── project-comprehensive-analysis.md  # 全面分析报告
-│   ├── thinking-process.md      # 思维过程记录
-│   ├── implementation-proposals.md # 实现方案
-│   └── optimization-roadmap.md  # 优化路线图
+├── benchmark-reports/                 # 基准测试数据（自动生成）
+│   ├── results/                       # 历史测试结果
+│   ├── latest.json                    # 最新结果（JSON）
+│   └── latest.md                      # 最新结果（Markdown）
 │
-└── audit/                       # 审计记录
-    └── 2025-12-29-docs-style/   # 文档风格审计
+└── archive/                           # 归档（历史性、一次性文档）
+    ├── audit-2025-12-29-docs-style.md # 文档风格审计
+    ├── thinking-process.md            # 分析思维过程
+    ├── implementation-progress.md     # 实现进度快照
+    └── requirements.md                # 需求文档快照
 ```
 
 ---
@@ -47,28 +48,24 @@ docs/
 ### 新用户入门
 
 1. [安装指南](installation.md) - 环境配置和安装步骤
-2. [使用指南](user/usage.md) - 命令行用法和示例
+2. [使用指南](guide/usage.md) - 命令行用法和示例
 
 ### 开发者指南
 
 1. [架构设计](dev/architecture.md) - 系统架构和设计原则
-2. [编码规范](dev/coding-standards.md) - 代码风格和命名约定
-3. [构建指南](dev/build.md) - 构建系统和依赖管理
-4. [Git 工作流](dev/git-guidelines.md) - 提交规范和分支策略
-5. [Dev Container 团队规范](dev/devcontainer-guidelines.md) - Windows + WSL2 + Docker Desktop 的容器开发约定
+2. [核心设计](dev/design.md) - 数据模型、流水线、日志等
+3. [编码规范](dev/coding-standards.md) - 代码风格和命名约定
+4. [构建指南](dev/build.md) - 构建系统和依赖管理
+5. [Git 工作流](dev/git-guidelines.md) - 提交规范和分支策略
+6. [代码质量工具](dev/quality-tools.md) - Sanitizers、Valgrind、静态分析、覆盖率、模糊测试
+7. [Benchmark 指南](dev/benchmark-guide.md) - 性能基准测试使用与报告
+8. [Dev Container 规范](dev/devcontainer-guidelines.md) - Windows + WSL2 + Docker Desktop
+9. [DevContainer SSH](dev/devcontainer-ssh.md) - Windsurf/Cursor 远程 SSH 方案
 
-### 性能优化
+### 架构决策
 
-1. [优化需求](optimization/requirements.md) - 性能优化目标
-2. [优化设计](optimization/design.md) - 优化方案设计
-3. [实现计划](optimization/implementation.md) - 分阶段实施
-
-### 项目分析
-
-1. [全面分析报告](analysis/project-comprehensive-analysis.md) - 项目评估
-2. [思维过程](analysis/thinking-process.md) - 分析方法论
-3. [实现方案](analysis/implementation-proposals.md) - 具体实现
-4. [优化路线图](analysis/optimization-roadmap.md) - 里程碑规划
+1. [优化决策](decisions/optimization-decisions.md) - 优化需求、辩证分析、实施状态
+2. [项目评估](decisions/project-assessment.md) - 架构、性能、依赖、测试全面评估
 
 ---
 
@@ -83,6 +80,7 @@ docs/
 
 | 日期 | 更新内容 |
 |------|----------|
+| 2025-02-24 | 重构文档目录：合并重复内容、消除碎片目录、引入 decisions/ 和 archive/ |
 | 2025-12-30 | 添加项目分析文档，重组目录结构 |
 | 2025-12-29 | 文档风格统一 |
 

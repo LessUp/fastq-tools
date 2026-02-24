@@ -62,22 +62,22 @@ Lightweight script for production environments that only installs runtime depend
 
 ## Docker Deployment
 
-### `scripts/docker_deploy.sh`
+### `scripts/tools/deploy`
 
 Comprehensive Docker deployment script supporting multiple environments:
 
 ```bash
 # Build production image
-./scripts/docker_deploy.sh --env production --action build
+./scripts/tools/deploy --env production --action build
 
 # Run development environment
-./scripts/docker_deploy.sh --env development --action run
+./scripts/tools/deploy --env development --action run
 
 # Run tests in container
-./scripts/docker_deploy.sh --env test --action run
+./scripts/tools/deploy --env test --action run
 
 # Push to registry
-./scripts/docker_deploy.sh --action push --registry myregistry.com/fastqtools --tag v3.1.0
+./scripts/tools/deploy --action push --registry myregistry.com/fastqtools --tag v3.1.0
 ```
 
 **Supported environments:**
