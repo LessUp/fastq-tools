@@ -10,25 +10,24 @@ scripts/
 │   ├── build               # 统一构建脚本
 │   ├── test                # 统一测试运行器
 │   ├── lint                # 代码质量检查
-│   ├── install-deps        # 依赖安装
-│   └── README.md           # 核心脚本文档
+│   └── install-deps        # 依赖安装
 │
 ├── tools/                   # 🛠️ 工具脚本（特定场景）
+│   ├── benchmark           # 性能基准测试 CLI
 │   ├── benchmark-io        # I/O 性能基准测试
-│   ├── package-release     # 发布打包
-│   ├── deploy              # 部署脚本
+│   ├── coverage-report     # 覆盖率报告生成
+│   ├── deploy              # Docker 部署
 │   ├── generate-diff       # 差异报告生成
+│   ├── install-llvm        # LLVM 工具链安装
+│   ├── package-release     # 发布打包
+│   ├── run-fuzzer          # Fuzz 测试
 │   ├── setup-devcontainer  # DevContainer 初始化
-│   └── README.md           # 工具脚本文档
+│   ├── valgrind-cachegrind # 缓存性能分析
+│   └── valgrind-memcheck   # 内存检查
 │
-├── lib/                     # 📚 公共函数库
-│   └── common.sh           # 核心工具函数
-│
-├── deprecated/              # ⚠️ 已废弃脚本（仅兼容）
-│   ├── build.sh            # → 使用 core/build
-│   ├── test.sh             # → 使用 core/test
-│   ├── lint.sh             # → 使用 core/lint
-│   └── README.md           # 废弃说明
+├── lib/                     # 📚 公共函数库 / 内部工具
+│   ├── common.sh           # 核心工具函数
+│   └── gcov-wrapper        # gcov/llvm-cov 包装器
 │
 ├── README.md               # 本文件
 └── ARCHITECTURE.md         # 架构设计文档
@@ -114,19 +113,26 @@ scripts/
 
 ## 🛠️ 工具脚本
 
-### benchmark-io - 性能基准测试
+### benchmark - 性能基准测试 CLI
+```bash
+./scripts/tools/benchmark run              # 运行基准测试
+./scripts/tools/benchmark report           # 生成报告
+./scripts/tools/benchmark compare a.json b.json
+```
+
+### benchmark-io - I/O 性能测试
 ```bash
 ./scripts/tools/benchmark-io
 ```
 
-### package-release - 发布打包
+### coverage-report - 覆盖率报告
 ```bash
-./scripts/tools/package-release 3.1.0
+./scripts/tools/coverage-report
 ```
 
-### deploy - 部署
+### deploy - Docker 部署
 ```bash
-./scripts/tools/deploy docker
+./scripts/tools/deploy --env production --action build
 ```
 
 ### generate-diff - 差异报告
@@ -134,29 +140,33 @@ scripts/
 ./scripts/tools/generate-diff
 ```
 
+### install-llvm - LLVM 工具链安装
+```bash
+sudo ./scripts/tools/install-llvm 21      # 安装 LLVM 21
+```
+
+### package-release - 发布打包
+```bash
+./scripts/tools/package-release 3.1.0
+```
+
+### run-fuzzer - Fuzz 测试
+```bash
+./scripts/tools/run-fuzzer
+```
+
 ### setup-devcontainer - DevContainer 初始化
 ```bash
 ./scripts/tools/setup-devcontainer
 ```
 
+### valgrind-cachegrind / valgrind-memcheck
+```bash
+./scripts/tools/valgrind-cachegrind
+./scripts/tools/valgrind-memcheck
+```
+
 详细文档：`scripts/tools/README.md`
-
-## ⚠️ 废弃脚本
-
-`scripts/deprecated/` 目录包含旧版脚本，仅供兼容性保留。
-
-**请勿使用！** 这些脚本将在 2026-07-01 完全移除。
-
-| 废弃脚本 | 替代方案 |
-|----------|----------|
-| `build.sh` | `core/build` |
-| `build-dev.sh` | `core/build --dev` |
-| `test.sh` | `core/test` |
-| `lint.sh` | `core/lint` |
-| `install_deps.sh` | `core/install-deps` |
-| `install_runtime.sh` | `core/install-deps --runtime` |
-
-迁移指南：`../MIGRATION.md`
 
 ## 📚 公共函数库
 
@@ -226,8 +236,7 @@ scripts/
 ### 1. 清晰的职责分离
 - **core/** - 日常必需的核心功能
 - **tools/** - 特定场景的专用工具
-- **lib/** - 可复用的公共函数
-- **deprecated/** - 废弃但保留兼容的脚本
+- **lib/** - 可复用的公共函数和内部工具
 
 ### 2. 统一的接口规范
 - 无扩展名的可执行文件
@@ -251,7 +260,6 @@ scripts/
 - **核心脚本**: `scripts/core/README.md`
 - **工具脚本**: `scripts/tools/README.md`
 - **测试系统**: `../tests/README.md`
-- **迁移指南**: `../MIGRATION.md`
 
 ## 🔧 开发指南
 
@@ -319,8 +327,14 @@ chmod +x scripts/tools/*
 
 ## 📊 版本历史
 
+- **v2.1** (2026-02-24): 清理与优化
+  - 删除所有重复的根目录 .sh 脚本
+  - 迁移 benchmark/gcov_wrapper/llvm 到 tools/ 和 lib/
+  - 移除 deprecated/ 分层，旧脚本已完成迁移
+  - 工具脚本统一复用 lib/common.sh
+
 - **v2.0** (2026-01-08): 重大架构重构
-  - 引入 core/tools/deprecated 分层
+  - 引入 core/tools 分层
   - 创建公共函数库
   - 统一脚本接口
 
@@ -341,4 +355,4 @@ chmod +x scripts/tools/*
 
 **维护**: FastQTools 团队  
 **更新**: 2026-01-08  
-**版本**: 2.0
+**版本**: 2.1

@@ -4,6 +4,22 @@
 
 ## 工具列表
 
+### 🏆 benchmark
+**性能基准测试 CLI**
+
+统一的性能基准测试命令行接口，支持运行、报告、对比和基线管理。
+
+```bash
+./scripts/tools/benchmark run                    # 运行基准测试
+./scripts/tools/benchmark run --ci               # CI 模式
+./scripts/tools/benchmark report                 # 生成报告
+./scripts/tools/benchmark compare a.json b.json  # 对比结果
+./scripts/tools/benchmark baseline save v1.0     # 保存基线
+./scripts/tools/benchmark data generate          # 生成测试数据
+```
+
+---
+
 ### 🚀 benchmark-io
 **I/O 性能基准测试**
 
@@ -108,10 +124,49 @@
 - 配置 shell 环境
 - 设置 Git hooks
 
-**用途**:
-- DevContainer 首次启动
-- 环境重置
-- 自动化配置
+---
+
+### 🔧 install-llvm
+**LLVM 工具链安装**
+
+在 Debian/Ubuntu 上安装指定版本的 LLVM 工具链（第三方脚本）。
+
+```bash
+sudo ./scripts/tools/install-llvm 21        # 安装 LLVM 21
+sudo ./scripts/tools/install-llvm 21 all    # 安装所有包
+```
+
+---
+
+### 📊 coverage-report
+**覆盖率报告生成**
+
+生成 lcov/HTML 格式的代码覆盖率报告。
+
+```bash
+./scripts/tools/coverage-report
+```
+
+---
+
+### 🔍 run-fuzzer
+**Fuzz 测试运行器**
+
+运行 FASTQ 解析器的 fuzz 测试。
+
+```bash
+./scripts/tools/run-fuzzer
+```
+
+---
+
+### 🧠 valgrind-memcheck / valgrind-cachegrind
+**内存检查与缓存性能分析**
+
+```bash
+./scripts/tools/valgrind-memcheck            # 内存泄漏 / 非法访问
+./scripts/tools/valgrind-cachegrind          # 缓存命中 / 指令级性能
+```
 
 ---
 
@@ -199,4 +254,4 @@
 ---
 
 **维护**: FastQTools 团队  
-**更新**: 2026-01-08
+**更新**: 2026-02-24

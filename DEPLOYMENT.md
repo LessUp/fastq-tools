@@ -49,10 +49,10 @@ For developers who want to build and modify FastQTools:
 
 ```bash
 # Build optimized production image
-./scripts/docker_deploy.sh --env production --action build
+./scripts/tools/deploy --env production --action build
 
 # Run production container
-./scripts/docker_deploy.sh --env production --action run
+./scripts/tools/deploy --env production --action run
 
 # Or use docker-compose
 docker-compose -f docker/docker-compose.yml up -d prod
@@ -62,7 +62,7 @@ docker-compose -f docker/docker-compose.yml up -d prod
 
 ```bash
 # Run development container with full toolchain
-./scripts/docker_deploy.sh --env development --action run
+./scripts/tools/deploy --env development --action run
 
 # Or use VS Code DevContainer
 # Open in VS Code and select "Reopen in Container"
@@ -72,10 +72,10 @@ docker-compose -f docker/docker-compose.yml up -d prod
 
 ```bash
 # Build and test
-./scripts/docker_deploy.sh --env test --action run
+./scripts/tools/deploy --env test --action run
 
 # Push to registry
-./scripts/docker_deploy.sh --action push --registry your-registry.com/fastqtools --tag v3.1.0
+./scripts/tools/deploy --action push --registry your-registry.com/fastqtools --tag v3.1.0
 ```
 
 ## Container Images

@@ -10,23 +10,22 @@ scripts/
 │   ├── lint                # 代码质量检查
 │   └── install-deps        # 依赖安装
 │
-├── lib/                     # 公共函数库
-│   └── common.sh           # 核心工具函数
+├── lib/                     # 公共函数库 / 内部工具
+│   ├── common.sh           # 核心工具函数
+│   └── gcov-wrapper        # gcov/llvm-cov 包装器
 │
 ├── tools/                   # 工具脚本
+│   ├── benchmark           # 性能基准测试 CLI
 │   ├── benchmark-io        # I/O 性能基准测试
-│   ├── package-release     # 发布打包
-│   ├── deploy              # 部署脚本
+│   ├── coverage-report     # 覆盖率报告生成
+│   ├── deploy              # Docker 部署脚本
 │   ├── generate-diff       # 生成差异报告
-│   └── setup-devcontainer  # DevContainer 初始化
-│
-├── deprecated/              # 已废弃脚本（仅兼容）
-│   ├── build.sh            ⚠️ 使用 core/build
-│   ├── build-dev.sh        ⚠️ 使用 core/build --dev
-│   ├── test.sh             ⚠️ 使用 core/test
-│   ├── lint.sh             ⚠️ 使用 core/lint
-│   ├── install_deps.sh     ⚠️ 使用 core/install-deps
-│   └── install_runtime.sh  ⚠️ 使用 core/install-deps --runtime
+│   ├── install-llvm        # LLVM 工具链安装
+│   ├── package-release     # 发布打包
+│   ├── run-fuzzer          # Fuzz 测试运行器
+│   ├── setup-devcontainer  # DevContainer 初始化
+│   ├── valgrind-cachegrind # 缓存性能分析
+│   └── valgrind-memcheck   # 内存检查
 │
 └── README.md                # 脚本系统文档
 ```
@@ -39,18 +38,13 @@ scripts/
 - 简短、语义明确
 
 ### 工具脚本
-- 无扩展名或 `.sh`
+- 无扩展名
 - 使用连字符分隔单词
 - 描述性名称（如 `benchmark-io`, `package-release`）
 
 ### 库文件
-- `.sh` 扩展名
-- 小写加下划线（如 `common.sh`）
-
-### 废弃脚本
-- 保持原有命名
-- 添加废弃警告
-- 定期清理
+- 函数库使用 `.sh` 扩展名（如 `common.sh`）
+- 可执行包装器无扩展名（如 `gcov-wrapper`）
 
 ## 职责划分
 
@@ -63,20 +57,21 @@ scripts/
 
 ### tools/ - 专用工具脚本
 特定场景使用的脚本：
-- `benchmark-io` - 性能测试
-- `package-release` - 发布流程
-- `deploy` - 部署脚本
+- `benchmark` - 性能基准测试 CLI
+- `benchmark-io` - I/O 性能测试
+- `coverage-report` - 覆盖率报告
+- `deploy` - Docker 部署
 - `generate-diff` - 差异分析
+- `install-llvm` - LLVM 工具链安装
+- `package-release` - 发布打包
+- `run-fuzzer` - Fuzz 测试
+- `setup-devcontainer` - DevContainer 初始化
+- `valgrind-cachegrind` - 缓存性能分析
+- `valgrind-memcheck` - 内存检查
 
-### lib/ - 公共函数库
-被其他脚本引用的函数库：
+### lib/ - 公共函数库和内部工具
 - `common.sh` - 通用工具函数
-
-### deprecated/ - 废弃脚本
-旧版脚本，仅用于兼容性：
-- 显示警告信息
-- 重定向到新脚本
-- 定期清理
+- `gcov-wrapper` - gcov/llvm-cov 包装器
 
 ## 使用原则
 
@@ -86,16 +81,7 @@ scripts/
    ./scripts/core/test --unit
    ```
 
-2. **避免使用 deprecated/ 脚本**
-   ```bash
-   # ❌ 不推荐
-   ./scripts/deprecated/build.sh
-   
-   # ✅ 推荐
-   ./scripts/core/build
-   ```
-
-3. **工具脚本按需使用**
+2. **工具脚本按需使用**
    ```bash
    ./scripts/tools/benchmark-io
    ./scripts/tools/package-release 3.1.0
@@ -106,9 +92,7 @@ scripts/
 | 日期 | 操作 |
 |------|------|
 | 2026-01-08 | 新架构生效 |
-| 2026-02-01 | deprecated/ 脚本显示警告 |
-| 2026-04-01 | 移除 deprecated/ 脚本的功能实现 |
-| 2026-07-01 | 完全删除 deprecated/ 目录 |
+| 2026-02-24 | 清理完成：旧脚本删除，所有脚本归入 core/tools/lib |
 
 ## 扩展指南
 

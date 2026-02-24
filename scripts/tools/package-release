@@ -1,10 +1,10 @@
 #!/bin/bash
-# scripts/package_release.sh
+# scripts/tools/package-release
 #
 # Creates a distributable package for FastQTools.
 #
 # Usage:
-# ./scripts/package_release.sh [VERSION]
+# ./scripts/tools/package-release [VERSION]
 #
 # Parameters:
 #   VERSION: The version number for the package (e.g., 3.1.0). Defaults to 'dev'.

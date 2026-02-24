@@ -1,17 +1,13 @@
 #!/bin/bash
-# scripts/docker_deploy.sh
+# scripts/tools/deploy
 #
 # Docker deployment script for FastQTools
 # Supports building and deploying different environments
 
 set -euo pipefail
 
-# Color codes for output
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly NC='\033[0m' # No Color
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/../lib/common.sh"
 
 # Default values
 ENVIRONMENT="production"
@@ -58,7 +54,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo -e "${RED}Error: Unknown option $1${NC}"
+            log_error "Unknown option $1"
             usage
             exit 1
             ;;
@@ -70,7 +66,7 @@ case $ENVIRONMENT in
     production|development|test)
         ;;
     *)
-        echo -e "${RED}Error: Invalid environment '$ENVIRONMENT'. Must be production, development, or test.${NC}"
+        log_error "Invalid environment '$ENVIRONMENT'. Must be production, development, or test."
         exit 1
         ;;
 esac
@@ -80,24 +76,24 @@ case $ACTION in
     build|run|stop|push)
         ;;
     *)
-        echo -e "${RED}Error: Invalid action '$ACTION'. Must be build, run, stop, or push.${NC}"
+        log_error "Invalid action '$ACTION'. Must be build, run, stop, or push."
         exit 1
         ;;
 esac
 
-echo -e "${GREEN}>>> FastQTools Docker Deployment${NC}"
-echo -e "${BLUE}Environment: $ENVIRONMENT${NC}"
-echo -e "${BLUE}Action: $ACTION${NC}"
-echo -e "${BLUE}Tag: $TAG${NC}"
+log_section "FastQTools Docker Deployment"
+log_info "Environment: $ENVIRONMENT"
+log_info "Action: $ACTION"
+log_info "Tag: $TAG"
 
 # Change to project root directory
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 build_image() {
     local env=$1
     local tag=$2
     
-    echo -e "${GREEN}>>> Building $env image...${NC}"
+    log_info "Building $env image..."
     
     case $env in
         production)
@@ -112,9 +108,9 @@ build_image() {
     esac
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✓ Successfully built $env image${NC}"
+        log_success "Successfully built $env image"
     else
-        echo -e "${RED}✗ Failed to build $env image${NC}"
+        log_error "Failed to build $env image"
         exit 1
     fi
 }
@@ -122,7 +118,7 @@ build_image() {
 run_container() {
     local env=$1
     
-    echo -e "${GREEN}>>> Running $env container...${NC}"
+    log_info "Running $env container..."
     
     case $env in
         production)
@@ -137,12 +133,12 @@ run_container() {
     esac
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✓ Successfully started $env container${NC}"
+        log_success "Successfully started $env container"
         if [ "$env" != "test" ]; then
-            echo -e "${BLUE}Container is running. Use 'docker logs fastqtools-$env' to view logs.${NC}"
+            log_info "Container is running. Use 'docker logs fastqtools-$env' to view logs."
         fi
     else
-        echo -e "${RED}✗ Failed to start $env container${NC}"
+        log_error "Failed to start $env container"
         exit 1
     fi
 }
@@ -150,7 +146,7 @@ run_container() {
 stop_container() {
     local env=$1
     
-    echo -e "${GREEN}>>> Stopping $env container...${NC}"
+    log_info "Stopping $env container..."
     
     case $env in
         production)
@@ -167,7 +163,7 @@ stop_container() {
             ;;
     esac
     
-    echo -e "${GREEN}✓ Stopped $env container${NC}"
+    log_success "Stopped $env container"
 }
 
 push_image() {
@@ -176,11 +172,11 @@ push_image() {
     local registry=$3
     
     if [ -z "$registry" ]; then
-        echo -e "${RED}Error: Registry not specified for push action${NC}"
+        log_error "Registry not specified for push action"
         exit 1
     fi
     
-    echo -e "${GREEN}>>> Pushing $env image to registry...${NC}"
+    log_info "Pushing $env image to registry..."
     
     local image_name
     case $env in
@@ -202,9 +198,9 @@ push_image() {
     docker push "$registry:$tag"
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✓ Successfully pushed to $registry:$tag${NC}"
+        log_success "Successfully pushed to $registry:$tag"
     else
-        echo -e "${RED}✗ Failed to push to registry${NC}"
+        log_error "Failed to push to registry"
         exit 1
     fi
 }
@@ -226,4 +222,4 @@ case $ACTION in
         ;;
 esac
 
-echo -e "${GREEN}>>> Docker deployment completed successfully!${NC}"
+log_success "Docker deployment completed successfully!"

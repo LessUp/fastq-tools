@@ -254,7 +254,7 @@ chmod +x scripts/core/*
 - 失败时查看 `--verbose` 输出
 
 ### ❌ DON'T
-- 不要使用 `scripts/deprecated/` 中的脚本
+- 不要使用旧的 `.sh` 脚本（已删除）
 - 不要跳过代码格式化
 - 不要忽略 sanitizer 警告
 - 不要硬编码路径

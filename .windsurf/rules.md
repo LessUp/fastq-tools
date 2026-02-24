@@ -9,11 +9,10 @@ description: FastQTools project rules for Cascade/Windsurf
 - **测试**: `./scripts/core/test`
 - **代码质量**: `./scripts/core/lint`
 - **依赖安装**: `./scripts/core/install-deps`
-- **Benchmark 系统**: `./scripts/benchmark`（基于 `tools/benchmark` + `benchmark_results/`）
+- **Benchmark 系统**: `./scripts/tools/benchmark`（基于 `tools/benchmark` + `benchmark_results/`）
 
 ## 禁止/避免
-- **不要使用** `scripts/deprecated/` 目录下脚本。
-- 仓库历史上存在 `scripts/*_release.sh` / `scripts/*_io.sh` 等旧脚本，若与 `scripts/core/*` 冲突，以 `scripts/core/*` 为准。
+- 旧的 `.sh` 脚本已删除，所有功能已迁移至 `scripts/core/` 和 `scripts/tools/`。
 
 ## 构建系统约定
 - **CMake + Ninja**（`CMakePresets.json` 也可参考，但常用入口仍是 `scripts/core/build`）。

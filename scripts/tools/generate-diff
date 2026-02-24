@@ -1,5 +1,5 @@
 #!/bin/bash
-# generate-diff.sh
+# scripts/tools/generate-diff
 #
 # 一个用于生成 git diff 文件的 Bash 脚本。
 

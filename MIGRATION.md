@@ -65,11 +65,11 @@ FastQTools 进行了全面的脚本系统重构，提供了更清晰、更一致
 
 | 旧脚本 | 新脚本 | 状态 |
 |--------|--------|------|
-| `package_release.sh` | 待更新 | 保留但需要更新 |
-| `docker_deploy.sh` | 待更新 | 保留但需要更新 |
-| `gcov_wrapper.sh` | 保留 | 内部使用 |
-| `devcontainer_setup.sh` | 保留 | 特定用途 |
-| `benchmark_io.sh` | 保留 | 工具脚本 |
+| `package_release.sh` | `scripts/tools/package-release` | 已迁移 |
+| `docker_deploy.sh` | `scripts/tools/deploy` | 已迁移 |
+| `gcov_wrapper.sh` | `scripts/lib/gcov-wrapper` | 已迁移 |
+| `devcontainer_setup.sh` | `scripts/tools/setup-devcontainer` | 已迁移 |
+| `benchmark_io.sh` | `scripts/tools/benchmark-io` | 已迁移 |
 
 ---
 
@@ -198,7 +198,7 @@ grep -r "install_deps.sh" docs/
 
 ### Q1: 旧脚本什么时候会被删除？
 
-**A**: 旧脚本将在 **2 个版本周期**后（约 3-6 个月）被移除。在此期间它们会被移到 `scripts/deprecated/` 目录并标记为废弃。
+**A**: 旧脚本已在 2026-02-24 完成清理。所有功能已迁移至 `scripts/core/` 和 `scripts/tools/`。
 
 ### Q2: 如果新脚本不工作怎么办？
 
@@ -312,7 +312,7 @@ cp scripts/build.sh.backup scripts/build.sh
 
 ### 文档资源
 
-- **脚本文档**: `scripts/README.new.md`
+- **脚本文档**: `scripts/README.md`
 - **测试文档**: `tests/README.md`
 - **API 文档**: 运行 `doxygen` 生成
 
