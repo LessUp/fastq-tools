@@ -20,8 +20,7 @@
         "type=bind,source=${localEnv:FASTQTOOLS_HOST_DATA_PATH},target=/data",
         "type=bind,source=${localEnv:HOME}/.fastqtools-host-claude,target=/tmp/host-claude,readonly",
         "type=bind,source=${localEnv:HOME}/.fastqtools-host-codex,target=/tmp/host-codex,readonly",
-        "type=bind,source=${localEnv:HOME}/.fastqtools-host-gitconfig,target=/tmp/host-gitconfig,readonly",
-        "type=bind,source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent"
+        "type=bind,source=${localEnv:HOME}/.fastqtools-host-gitconfig,target=/tmp/host-gitconfig,readonly"
     ],
     "remoteEnv": {
         "WSL_DISTRO_NAME": "${localEnv:WSL_DISTRO_NAME}",

@@ -22,10 +22,14 @@ fi
 
 WORKSPACE="${WORKSPACE:-/workspace}"
 SETUP_SCRIPT="${WORKSPACE}/.devcontainer/setup-sshd.sh"
+SETUP_SENTINEL="/tmp/.sshd-setup-done"
 
-# 确保配置已完成
+# 仅在首次或脚本更新后重新配置
 if [ -x "$SETUP_SCRIPT" ]; then
-    bash "$SETUP_SCRIPT" || true
+    if [ ! -f "$SETUP_SENTINEL" ] || [ "$SETUP_SCRIPT" -nt "$SETUP_SENTINEL" ]; then
+        bash "$SETUP_SCRIPT" || true
+        touch "$SETUP_SENTINEL"
+    fi
 fi
 
 # 检查是否已运行
