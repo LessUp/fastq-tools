@@ -1,4 +1,5 @@
 add_library(fq_statistics STATIC
+    factory.cpp
     fq_statistic.cpp
     fq_statistic_worker.cpp
 )
@@ -12,11 +13,13 @@ target_include_directories(fq_statistics
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+# spdlog/TBB 仅在 .cpp 实现中使用，设为 PRIVATE
 target_link_libraries(fq_statistics
     PUBLIC
         fq_common
         fq_error
         fq_modern_io
+    PRIVATE
         spdlog::spdlog
         TBB::tbb
 )

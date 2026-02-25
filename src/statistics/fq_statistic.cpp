@@ -36,47 +36,36 @@ namespace fq::statistic {
 auto FqStatisticResult::operator+=(const FqStatisticResult& other) -> FqStatisticResult& {
     this->readCount += other.readCount;
     this->totalBases += other.totalBases;
+
+    // 确保 this 能容纳 other 的最大长度
     if (other.maxReadLength > this->maxReadLength) {
-        this->maxReadLength = other.maxReadLength;
-        if (this->maxReadLength > this->posQualityDist.size()) {
-            this->posQualityDist.resize(this->maxReadLength, std::vector<uint64_t>(kMaxQual, 0));
-            this->posBaseDist.resize(this->maxReadLength, std::vector<uint64_t>(kMaxBaseNum, 0));
-        }
+        ensureCapacity(other.maxReadLength);
     }
 
-    // Merge position stats
-    size_t mergeLen = std::min(this->posQualityDist.size(), other.posQualityDist.size());
-    for (size_t i = 0; i < mergeLen; ++i) {
-        for (size_t j = 0; j < kMaxQual; ++j) {
-            this->posQualityDist[i][j] += other.posQualityDist[i][j];
-        }
-        for (size_t j = 0; j < kMaxBaseNum; ++j) {
-            this->posBaseDist[i][j] += other.posBaseDist[i][j];
-        }
+    // 合并统计数据：扁平化布局下可直接按元素累加
+    const size_t qualElements = std::min(posQualityDist.size(), other.posQualityDist.size());
+    for (size_t i = 0; i < qualElements; ++i) {
+        posQualityDist[i] += other.posQualityDist[i];
     }
 
-    // If other is longer, copy the rest (should be handled by resize above? no, operator+= logic)
-    // Actually, if we resized 'this', the new parts are 0, so we just add.
-    if (other.posQualityDist.size() > mergeLen) {
-        // Copy remaining parts from other
-        for (size_t i = mergeLen; i < other.posQualityDist.size(); ++i) {
-            this->posQualityDist[i] = other.posQualityDist[i];
-            this->posBaseDist[i] = other.posBaseDist[i];
-        }
+    const size_t baseElements = std::min(posBaseDist.size(), other.posBaseDist.size());
+    for (size_t i = 0; i < baseElements; ++i) {
+        posBaseDist[i] += other.posBaseDist[i];
     }
 
     return *this;
 }
 
-// Helper function
-[[nodiscard]] static auto calculateErrorPerPosition(const std::vector<uint64_t>& posQualityDist, uint64_t readCount) -> double {
+// Helper function: 计算单个位置的错误率
+// qualSlot 指向该位置的 kMaxQual 个质量分数槽位（扁平化布局）
+[[nodiscard]] static auto calculateErrorPerPosition(const uint64_t* qualSlot, uint64_t readCount) -> double {
     if (readCount == 0) {
         return 0.0;
     }
 
     double errPerPos = 0.0;
     for (int i = 0; i < kMaxQual; ++i) {
-        errPerPos += static_cast<double>(posQualityDist[i]) * std::pow(10.0, -0.1 * static_cast<double>(i));
+        errPerPos += static_cast<double>(qualSlot[i]) * std::pow(10.0, -0.1 * static_cast<double>(i));
     }
     return errPerPos / static_cast<double>(readCount);
 }
@@ -194,24 +183,23 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
     uint64_t nQ20 = 0, nQ30 = 0;
     uint64_t nA = 0, nC = 0, nG = 0, nT = 0, nN = 0;
 
-    // Iterate up to maxReadLength
+    // Iterate up to maxReadLength（扁平化布局：使用 qualityAt/baseAt 访问器）
     for (size_t i = 0; i < result.maxReadLength; ++i) {
-        if (i >= result.posQualityDist.size()) {
-            break;
-        }
+        const uint64_t* qSlot = result.qualityAt(i);
+        const uint64_t* bSlot = result.baseAt(i);
 
         for (int j = kQ20Threshold; j < kMaxQual; ++j) {
-            nQ20 += result.posQualityDist[i][j];
+            nQ20 += qSlot[j];
         }
         for (int j = kQ30Threshold; j < kMaxQual; ++j) {
-            nQ30 += result.posQualityDist[i][j];
+            nQ30 += qSlot[j];
         }
 
-        nA += result.posBaseDist[i][0];
-        nC += result.posBaseDist[i][1];
-        nG += result.posBaseDist[i][2];
-        nT += result.posBaseDist[i][3];
-        nN += result.posBaseDist[i][4];
+        nA += bSlot[0];
+        nC += bSlot[1];
+        nG += bSlot[2];
+        nT += bSlot[3];
+        nN += bSlot[4];
     }
 
     writer << "#Q20(>=20)\t" << nQ20 << "\t"
@@ -234,26 +222,26 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
 
     writer << "#Pos\tA\tC\tG\tT\tN\tAvgQual\tErrRate\n";
     for (size_t i = 0; i < result.maxReadLength; ++i) {
-        if (i >= result.posBaseDist.size())
-            break;
+        const uint64_t* bSlot = result.baseAt(i);
+        const uint64_t* qSlot = result.qualityAt(i);
 
         writer << i + 1 << "\t";
-        writer << result.posBaseDist[i][0] << "\t" << result.posBaseDist[i][1] << "\t"
-               << result.posBaseDist[i][2] << "\t" << result.posBaseDist[i][3] << "\t"
-               << result.posBaseDist[i][4] << "\t";
+        writer << bSlot[0] << "\t" << bSlot[1] << "\t"
+               << bSlot[2] << "\t" << bSlot[3] << "\t"
+               << bSlot[4] << "\t";
 
         uint64_t sumQual = 0;
-        uint64_t countReadsAtPos = 0;  // Reads that cover this position
+        uint64_t countReadsAtPos = 0;
 
         for (int j = 0; j < kMaxQual; ++j) {
-            sumQual += result.posQualityDist[i][j] * j;
-            countReadsAtPos += result.posQualityDist[i][j];
+            sumQual += qSlot[j] * j;
+            countReadsAtPos += qSlot[j];
         }
 
         if (countReadsAtPos > 0) {
             writer << static_cast<double>(sumQual) / static_cast<double>(countReadsAtPos)
                    << "\t";
-            writer << calculateErrorPerPosition(result.posQualityDist[i], countReadsAtPos) << "\n";
+            writer << calculateErrorPerPosition(qSlot, countReadsAtPos) << "\n";
         } else {
             writer << "0.0\t0.0\n";
         }

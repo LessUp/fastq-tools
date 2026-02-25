@@ -1,6 +1,5 @@
 add_library(fq_config STATIC
     config.cpp
-    ${CMAKE_SOURCE_DIR}/include/fqtools/config/config.h
 )
 
 target_include_directories(fq_config

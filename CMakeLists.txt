@@ -76,6 +76,7 @@ find_package(ZLIB REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(TBB CONFIG REQUIRED)
 find_package(libdeflate CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 add_compile_definitions(USE_LIBDEFLATE)
 message(STATUS "Found libdeflate: ${libdeflate_VERSION}")
 

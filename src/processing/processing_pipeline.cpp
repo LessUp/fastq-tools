@@ -15,26 +15,26 @@
 
 namespace fq::processing {
 
-SequentialProcessingPipeline::SequentialProcessingPipeline() = default;
-SequentialProcessingPipeline::~SequentialProcessingPipeline() = default;
+ProcessingPipeline::ProcessingPipeline() = default;
+ProcessingPipeline::~ProcessingPipeline() = default;
 
-void SequentialProcessingPipeline::setInputPath(const std::string& inputPath) {
+void ProcessingPipeline::setInputPath(const std::string& inputPath) {
     inputPath_ = inputPath;
 }
-void SequentialProcessingPipeline::setOutputPath(const std::string& outputPath) {
+void ProcessingPipeline::setOutputPath(const std::string& outputPath) {
     outputPath_ = outputPath;
 }
-void SequentialProcessingPipeline::setProcessingConfig(const ProcessingConfig& config) {
+void ProcessingPipeline::setProcessingConfig(const ProcessingConfig& config) {
     config_ = config;
 }
-void SequentialProcessingPipeline::addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator) {
+void ProcessingPipeline::addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator) {
     mutators_.push_back(std::move(mutator));
 }
-void SequentialProcessingPipeline::addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicate) {
+void ProcessingPipeline::addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicate) {
     predicates_.push_back(std::move(predicate));
 }
 
-auto SequentialProcessingPipeline::run() -> ProcessingStatistics {
+auto ProcessingPipeline::run() -> ProcessingStatistics {
     if (config_.threadCount > 1) {
         return processWithTBB();
     } else {
@@ -42,7 +42,7 @@ auto SequentialProcessingPipeline::run() -> ProcessingStatistics {
     }
 }
 
-auto SequentialProcessingPipeline::processSequential() -> ProcessingStatistics {
+auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
     ProcessingStatistics stats;
 
     try {
@@ -91,7 +91,7 @@ auto SequentialProcessingPipeline::processSequential() -> ProcessingStatistics {
     return stats;
 }
 
-auto SequentialProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
+auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
                                                 ProcessingStatistics& stats) -> bool {
     stats.inputBytes += batch.buffer().size();
     auto& records = batch.records();
@@ -135,7 +135,7 @@ auto SequentialProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
     return true;
 }
 
-auto SequentialProcessingPipeline::processWithTBB() -> ProcessingStatistics {
+auto ProcessingPipeline::processWithTBB() -> ProcessingStatistics {
     ProcessingStatistics finalStats;
     auto startTime = std::chrono::steady_clock::now();
 

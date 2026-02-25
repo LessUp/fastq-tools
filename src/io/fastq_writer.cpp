@@ -117,8 +117,8 @@ struct FastqWriter::Impl {
         }
     }
 
+    /// 批量追加：先计算总大小，一次 resize，然后用 memcpy 拼接
     void appendRecord(const FastqRecord& rec) {
-        // Calculate size needed
         size_t needed = 1 + rec.id.size() + 1 +  // @ + ID + \n
             rec.seq.size() + 1 +                 // Seq + \n
             2 +                                  // +\n
@@ -133,8 +133,7 @@ struct FastqWriter::Impl {
         // Flush if buffer full
         if (buffer.size() + needed > buffer.capacity()) {
             flush();
-            
-            // If single record is huge, resize buffer and compressed buffer
+
             if (needed > buffer.capacity()) {
                 size_t newCap = std::max(buffer.capacity() * 2, needed + 4096);
                 buffer.reserve(newCap);
@@ -145,24 +144,32 @@ struct FastqWriter::Impl {
             }
         }
 
-        // Append logic
-        buffer.push_back('@');
-        buffer.insert(buffer.end(), rec.id.begin(), rec.id.end());
+        // 一次 resize + memcpy 批量拼接，避免逐字符 push_back/insert 开销
+        const size_t oldSize = buffer.size();
+        buffer.resize(oldSize + needed);
+        char* dst = buffer.data() + oldSize;
+
+        *dst++ = '@';
+        std::memcpy(dst, rec.id.data(), rec.id.size());
+        dst += rec.id.size();
 
         if (!rec.comment.empty()) {
-            buffer.push_back(' ');
-            buffer.insert(buffer.end(), rec.comment.begin(), rec.comment.end());
+            *dst++ = ' ';
+            std::memcpy(dst, rec.comment.data(), rec.comment.size());
+            dst += rec.comment.size();
         }
-        buffer.push_back('\n');
+        *dst++ = '\n';
 
-        buffer.insert(buffer.end(), rec.seq.begin(), rec.seq.end());
-        buffer.push_back('\n');
+        std::memcpy(dst, rec.seq.data(), rec.seq.size());
+        dst += rec.seq.size();
+        *dst++ = '\n';
 
-        buffer.push_back('+');
-        buffer.push_back('\n');
+        *dst++ = '+';
+        *dst++ = '\n';
 
-        buffer.insert(buffer.end(), rec.qual.begin(), rec.qual.end());
-        buffer.push_back('\n');
+        std::memcpy(dst, rec.qual.data(), rec.qual.size());
+        dst += rec.qual.size();
+        *dst++ = '\n';
     }
 };
 

@@ -15,11 +15,15 @@ target_include_directories(fq_processing
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+# fq_modern_io: 公共头文件引用了 FastqBatch 等类型，需 PUBLIC
+# fq_common/fq_error: 公共头文件间接引用，需 PUBLIC
+# spdlog/TBB/fmt: 仅在 .cpp 实现中使用，设为 PRIVATE
 target_link_libraries(fq_processing
     PUBLIC
         fq_common
         fq_error
         fq_modern_io
+    PRIVATE
         spdlog::spdlog
         TBB::tbb
         fmt::fmt

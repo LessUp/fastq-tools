@@ -3,6 +3,10 @@
  * @brief 核心功能组件定义。
  * @details 提供FastQ数据处理的基础类和工具，包括ID管理、序列和质量验证等功能。
  *
+ * @deprecated 此头文件目前在项目中无实际引用，其中的接口（Cloneable, Serializable,
+ *             Validatable, MemoryTrackable 等）尚未被任何模块使用。
+ *             计划在后续版本中按需拆分到各模块或移除。
+ *
  * @author FastQTools Team
  * @date 2024
  * @version 1.0
