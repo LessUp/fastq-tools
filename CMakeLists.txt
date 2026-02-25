@@ -43,6 +43,19 @@ else()
 endif()
 
 
+# --- Link-Time Optimization (LTO/IPO) ---
+# Release 构建启用跨模块内联优化，显著提升小函数密集型项目的性能
+include(CheckIPOSupported)
+check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT IPO_OUTPUT)
+if(IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "IPO/LTO is supported and enabled for non-Debug builds.")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+else()
+    if(NOT IPO_SUPPORTED)
+        message(STATUS "IPO/LTO is not supported: ${IPO_OUTPUT}")
+    endif()
+endif()
+
 # --- Compiler-specific options ---
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
@@ -51,7 +64,18 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     else()
         # Release build optimizations
         add_compile_options(-O3 -march=native -mavx2)
+        # 显式启用向量化和循环展开（-O3 默认包含，但显式声明确保一致性）
+        add_compile_options(-ftree-vectorize -funroll-loops)
+        # 允许编译器重排浮点运算以提升向量化效果（统计模块受益）
+        add_compile_options(-ffast-math)
     endif()
+    # 使用函数段和数据段，配合链接器 --gc-sections 消除未使用代码
+    add_compile_options(-ffunction-sections -fdata-sections)
+endif()
+
+# 链接器优化：移除未使用的段
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_link_options(-Wl,--gc-sections)
 endif()
 
 # --- Sanitizer Support ---

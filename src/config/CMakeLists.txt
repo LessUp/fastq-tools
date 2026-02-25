@@ -2,12 +2,7 @@ add_library(fq_config STATIC
     config.cpp
 )
 
-target_include_directories(fq_config
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-)
-
+# fq_error PUBLIC 传递 fq_common 和 include 路径，无需重复声明
 target_link_libraries(fq_config
     PUBLIC
         fq_error

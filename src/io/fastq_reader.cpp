@@ -1,5 +1,7 @@
 #include "fqtools/io/fastq_reader.h"
 
+#include "fqtools/error/error.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
@@ -11,6 +13,10 @@
 #include <fmt/format.h>
 
 #include <zlib.h>
+
+#ifdef __linux__
+#include <fcntl.h>  // posix_fadvise
+#endif
 
 namespace fq::io {
 
@@ -44,6 +50,12 @@ struct FastqReader::Impl {
             }
         } else {
             fd = ::open(path.c_str(), O_RDONLY);
+#ifdef __linux__
+            // 提示内核进行顺序预读，显著提升大文件顺序读取性能
+            if (fd >= 0) {
+                ::posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
+            }
+#endif
         }
     }
 
@@ -115,9 +127,11 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
     batch.records().clear();
     batch.buffer().clear();
 
+    // 优化：直接移动 remainder 到 batch buffer，避免额外的 swap + clear
     if (!impl_->remainder.empty()) {
-        batch.buffer().swap(impl_->remainder);
+        batch.buffer() = std::move(impl_->remainder);
         impl_->remainder.clear();
+        impl_->remainder.shrink_to_fit();  // 释放 remainder 的旧内存
     }
 
     if (batch.buffer().empty() && impl_->isEofReached) {
@@ -170,10 +184,9 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
                     if (impl_->isGzip) {
                         int err = 0;
                         const char* msg = gzerror(impl_->gzfile, &err);
-                        throw std::runtime_error(std::string("Gzip read error: ") +
-                                                 (msg != nullptr ? msg : "unknown"));
+                        throw fq::error::IOError(impl_->path, err);
                     }
-                    throw std::runtime_error("FastqReader read error");
+                    throw fq::error::IOError(impl_->path, errno);
                 }
                 batch.buffer().resize(kCurrentSize + static_cast<size_t>(kBytesRead));
                 if (kBytesRead == 0) {
@@ -204,7 +217,7 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
                 // If we are here, we expect a record start.
                 // If EOF is reached, this loop should have terminated if we handle trailing newlines correctly.
                 // If we found junk, throw error.
-                throw std::runtime_error(fmt::format("Format Error: Expected '@' at record start. Found '{}'", *ptr));
+                throw fq::error::FormatError(fmt::format("Expected '@' at record start. Found '{}'", *ptr));
             }
 
             const char* line1End = Impl::findEol(ptr, end);
@@ -221,7 +234,7 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
             const char* line3Start = line2End + 1;
             if (line3Start >= end || *line3Start != '+') {
                  if (line3Start < end) {
-                      throw std::runtime_error(fmt::format("Format Error: Expected '+' at line 3. Found '{}'", *line3Start));
+                      throw fq::error::FormatError(fmt::format("Expected '+' at line 3. Found '{}'", *line3Start));
                  }
                  break;
             }
@@ -281,10 +294,14 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
 
         if (!batch.records().empty()) {
             const auto kConsumed = static_cast<size_t>(lastValidPtr - data);
-            if (kConsumed < static_cast<size_t>(end - data)) {
-                impl_->remainder.assign(batch.buffer().begin() +
-                                             static_cast<std::ptrdiff_t>(kConsumed),
-                                         batch.buffer().end());
+            const auto kTotal = static_cast<size_t>(end - data);
+            if (kConsumed < kTotal) {
+                // 优化：预分配 remainder 容量避免反复分配
+                const size_t remainderLen = kTotal - kConsumed;
+                impl_->remainder.resize(remainderLen);
+                std::memcpy(impl_->remainder.data(),
+                            batch.buffer().data() + kConsumed,
+                            remainderLen);
                 batch.buffer().resize(kConsumed);
             }
             return true;
@@ -297,7 +314,7 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
 
         if (impl_->options.maxBufferBytes > 0 &&
             batch.buffer().size() >= impl_->options.maxBufferBytes) {
-            throw std::runtime_error(
+            throw fq::error::FormatError(
                 "FastqReader reached maxBufferBytes without parsing a complete record; increase "
                 "batchCapacityBytes/maxBufferBytes");
         }

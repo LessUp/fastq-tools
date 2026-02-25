@@ -1,15 +1,16 @@
 /**
  * @file core.h
- * @brief 核心功能组件定义。
- * @details 提供FastQ数据处理的基础类和工具，包括ID管理、序列和质量验证等功能。
+ * @brief 核心工具类定义。
+ * @details 提供 FastQ 数据处理的基础工具，包括质量分数转换和序列验证等功能。
  *
- * @deprecated 此头文件目前在项目中无实际引用，其中的接口（Cloneable, Serializable,
- *             Validatable, MemoryTrackable 等）尚未被任何模块使用。
- *             计划在后续版本中按需拆分到各模块或移除。
+ * @note 此头文件经过精简，移除了所有未被项目使用的抽象接口
+ *       （WithID, Cloneable, Serializable, Validatable, MemoryTrackable,
+ *       Statisticable, Configurable, PerformanceMetrics）。
+ *       如需这些接口，可在具体模块中按需定义。
  *
  * @author FastQTools Team
  * @date 2024
- * @version 1.0
+ * @version 2.0
  *
  * @copyright Copyright (c) 2024 FastQTools
  * @license MIT License
@@ -17,32 +18,17 @@
 
 #pragma once
 
-// 传统头文件使用，尚未模块化
-// export module fq.core;  // 当前尚不支持此模块导出
-
-#include "fqtools/common/common.h"
-
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <cstdint>
-#include <iostream>
-#include <memory>
-#include <numeric>
 #include <ranges>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
-#include "fqtools/error/error.h"
-
-// import fq.common;
-// import fq.error;
-
 namespace fq::core {
-// 基础ID类型
-using ReadID = std::uint64_t;
-using BatchID = std::uint32_t;
 
 // 质量评分类型
 enum class QScoreType {
@@ -59,82 +45,6 @@ enum class QScoreType {
 // 测序代数
 enum class SequencingGeneration { Second = 2, Third = 3 };
 
-/**
- * @class WithID
- * @brief 提供ID管理功能的基础接口。
- */
-class WithID {
-public:
-    virtual ~WithID() = default;
-
-    [[nodiscard]] auto id() const noexcept -> ReadID {
-        return id_;
-    }
-
-protected:
-    void setId(ReadID id) noexcept {
-        id_ = id;
-    }
-
-    WithID() : id_(fq::common::IDGenerator::nextId()) {}
-    explicit WithID(ReadID id) : id_(id) {}
-
-private:
-    ReadID id_;
-};
-
-// 可克隆接口
-template <typename T>
-class Cloneable {
-public:
-    virtual ~Cloneable() = default;
-    [[nodiscard]] virtual auto clone() const -> std::unique_ptr<T> = 0;
-};
-
-// 可序列化接口
-class Serializable {
-public:
-    virtual ~Serializable() = default;
-    virtual void serialize(std::ostream& os) const = 0;
-    virtual void deserialize(std::istream& is) = 0;
-};
-
-// 可验证接口
-class Validatable {
-public:
-    virtual ~Validatable() = default;
-    [[nodiscard]] virtual auto isValid() const noexcept -> bool = 0;
-    [[nodiscard]] virtual auto validationErrors() const -> std::vector<std::string> {
-        return {};
-    }
-};
-
-// 内存使用统计接口
-class MemoryTrackable {
-public:
-    virtual ~MemoryTrackable() = default;
-    [[nodiscard]] virtual auto memoryUsage() const noexcept -> std::size_t = 0;
-};
-
-// 统计信息接口
-class Statisticable {
-public:
-    virtual ~Statisticable() = default;
-    [[nodiscard]] virtual auto getStatistics() const
-        -> std::unordered_map<std::string, std::uint64_t> = 0;
-    virtual void resetStatistics() = 0;
-};
-
-// 可配置接口
-class Configurable {
-public:
-    virtual ~Configurable() = default;
-    virtual void configure(const std::unordered_map<std::string, std::string>& config) = 0;
-    [[nodiscard]] virtual auto getConfigSchema() const -> std::vector<std::string> {
-        return {};
-    }
-};
-
 // 质量分数工具
 class QualityScore {
 public:
@@ -150,10 +60,7 @@ public:
 
     static auto qualityToSanger(int quality) -> char {
         if (quality < kMinQuality || quality > kMaxQuality) {
-            throw fq::error::FastQException(fq::error::ErrorCategory::Validation,
-                                            fq::error::ErrorSeverity::Error,
-                                            std::string("Quality score out of range: ") +
-                                                std::to_string(quality));
+            throw std::out_of_range("Quality score out of range: " + std::to_string(quality));
         }
         return static_cast<char>('!' + quality);
     }
@@ -298,65 +205,4 @@ public:
     }
 };
 
-// 性能统计工具
-class PerformanceMetrics {
-public:
-    struct Metrics {
-        std::chrono::nanoseconds processingTime{0};
-        std::size_t itemsProcessed = 0;
-        std::size_t bytesProcessed = 0;
-        std::size_t peakMemoryUsage = 0;
-
-        [[nodiscard]] auto itemsPerSecond() const -> double {
-            if (processingTime.count() == 0)
-                return 0.0;
-            return static_cast<double>(itemsProcessed) /
-                (static_cast<double>(processingTime.count()) / 1e9);
-        }
-
-        [[nodiscard]] auto bytesPerSecond() const -> double {
-            if (processingTime.count() == 0)
-                return 0.0;
-            return static_cast<double>(bytesProcessed) /
-                (static_cast<double>(processingTime.count()) / 1e9);
-        }
-
-        [[nodiscard]] auto megabytesPerSecond() const -> double {
-            return bytesPerSecond() / (1024.0 * 1024.0);
-        }
-    };
-
-    void startTiming() {
-        startTime_ = std::chrono::high_resolution_clock::now();
-    }
-
-    void stopTiming() {
-        auto endTime = std::chrono::high_resolution_clock::now();
-        metrics_.processingTime += endTime - startTime_;
-    }
-
-    void addItemsProcessed(std::size_t count) {
-        metrics_.itemsProcessed += count;
-    }
-
-    void addBytesProcessed(std::size_t bytes) {
-        metrics_.bytesProcessed += bytes;
-    }
-
-    void updatePeakMemory(std::size_t currentMemory) {
-        metrics_.peakMemoryUsage = std::max(metrics_.peakMemoryUsage, currentMemory);
-    }
-
-    [[nodiscard]] auto getMetrics() const -> const Metrics& {
-        return metrics_;
-    }
-
-    void reset() {
-        metrics_ = Metrics{};
-    }
-
-private:
-    Metrics metrics_;
-    std::chrono::high_resolution_clock::time_point startTime_;
-};
 }  // namespace fq::core

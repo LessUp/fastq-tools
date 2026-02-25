@@ -1,5 +1,7 @@
 #include "fqtools/io/fastq_writer.h"
 
+#include "fqtools/error/error.h"
+
 #include <libdeflate.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -9,6 +11,10 @@
 #include <cstring>
 #include <stdexcept>
 #include <vector>
+
+#ifdef __linux__
+#include <fcntl.h>  // posix_fadvise
+#endif
 
 namespace fq::io {
 
@@ -33,6 +39,9 @@ struct FastqWriter::Impl {
     std::uint64_t totalUncompressedBytes = 0;
     static constexpr size_t kBufferThreshold = 64 * 1024;
 
+    // 记录已刷写到磁盘的文件偏移，用于 posix_fadvise DONTNEED
+    off_t flushedOffset = 0;
+
     explicit Impl(const std::string& p, const FastqWriterOptions& opt) : path(p), options(opt) {
         if (options.compression == FastqWriterCompressionMode::Auto) {
             compression = endsWithGzSuffix(path) ? FastqWriterCompressionMode::Gzip
@@ -44,7 +53,7 @@ struct FastqWriter::Impl {
         // Open file with standard POSIX IO
         fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd < 0) {
-             throw std::runtime_error("Failed to open output file: " + path);
+             throw fq::error::IOError(path, errno);
         }
         
         buffer.reserve(options.outputBufferBytes);
@@ -54,7 +63,10 @@ struct FastqWriter::Impl {
             compressor = libdeflate_alloc_compressor(6);
             if (!compressor) {
                 ::close(fd);
-                throw std::runtime_error("Failed to allocate libdeflate compressor");
+                throw fq::error::FastQException(
+                    fq::error::ErrorCategory::Resource,
+                    fq::error::ErrorSeverity::Critical,
+                    "Failed to allocate libdeflate compressor");
             }
 
             // Ensure compressed buffer is large enough for worst case
@@ -88,7 +100,7 @@ struct FastqWriter::Impl {
                     compressor, buffer.data(), buffer.size(), compressedBuffer.data(),
                     compressedBuffer.size());
                 if (compressedSize == 0) {
-                    throw std::runtime_error("Failed to compress output buffer");
+                    throw fq::error::IOError(path, 0);
                 }
                 outPtr = compressedBuffer.data();
                 outSize = compressedSize;
@@ -105,15 +117,22 @@ struct FastqWriter::Impl {
                     if (errno == EINTR) {
                         continue;
                     }
-                    throw std::runtime_error("Failed to write output file: " + path);
+                    throw fq::error::IOError(path, errno);
                 }
                 if (written == 0) {
-                    throw std::runtime_error("Failed to write output file: " + path);
+                    throw fq::error::IOError(path, 0);
                 }
                 totalWritten += static_cast<size_t>(written);
             }
 
              buffer.clear();
+
+#ifdef __linux__
+            // 通知内核释放已写出的 page cache，减少大文件写出时的内存压力
+            ::posix_fadvise(fd, flushedOffset, static_cast<off_t>(outSize),
+                            POSIX_FADV_DONTNEED);
+            flushedOffset += static_cast<off_t>(outSize);
+#endif
         }
     }
 

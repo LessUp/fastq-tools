@@ -95,25 +95,28 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
                                                 ProcessingStatistics& stats) -> bool {
     stats.inputBytes += batch.buffer().size();
     auto& records = batch.records();
+    const size_t totalInBatch = records.size();
     size_t passedCount = 0;
+    const bool hasPredicates = !predicates_.empty();
+    const bool hasMutators = !mutators_.empty();
 
-    for (size_t i = 0; i < records.size(); ++i) {
+    for (size_t i = 0; i < totalInBatch; ++i) {
         auto& read = records[i];
-        stats.totalReads++;
 
         bool passed = true;
-        for (const auto& predicate : predicates_) {
-            if (!predicate->evaluate(read)) {
-                passed = false;
-                break;
+        if (hasPredicates) {
+            for (const auto& predicate : predicates_) {
+                if (!predicate->evaluate(read)) {
+                    passed = false;
+                    break;
+                }
             }
         }
 
-        if (passed) {
+        if (passed && hasMutators) {
             for (const auto& mutator : mutators_) {
                 mutator->process(read);
             }
-
             if (read.empty()) {
                 passed = false;
             }
@@ -124,12 +127,13 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
                 records[passedCount] = read;
             }
             passedCount++;
-        } else {
-            stats.filteredReads++;
         }
     }
 
+    // 批量更新统计，避免循环内逐条累加
+    stats.totalReads += totalInBatch;
     stats.passedReads += passedCount;
+    stats.filteredReads += (totalInBatch - passedCount);
     records.resize(passedCount);
 
     return true;

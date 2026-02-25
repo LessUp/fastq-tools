@@ -82,8 +82,9 @@ auto join(const std::vector<std::string>& parts, std::string_view delimiter) -> 
  * @brief 一个简单的单例日志记录器。
  * @details 提供分级别的日志记录功能，并支持使用 `fmt` 库进行格式化。
  * @note 这是一个线程安全的单例，但日志消息的输出顺序不完全保证。
+ * @deprecated 请使用 fq::logging（基于 spdlog）替代，该类将在后续版本中移除。
  */
-class Logger {
+class [[deprecated("Use fq::logging (spdlog-based) instead")]] Logger {
 public:
     /**
      * @brief 日志级别枚举。

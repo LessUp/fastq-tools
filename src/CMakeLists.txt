@@ -1,13 +1,17 @@
-# Add components directly
+# Add core components
 add_subdirectory(common)
 add_subdirectory(error)
 add_subdirectory(config)
 
+add_subdirectory(io)
 add_subdirectory(processing)
 add_subdirectory(statistics)
-add_subdirectory(io)
-add_subdirectory(benchmark)
 add_subdirectory(cli)
+
+# benchmark 数据收集模块仅在需要时编译
+if(BUILD_BENCHMARKS)
+    add_subdirectory(benchmark)
+endif()
 
 # 聚合库：将所有组件统一为一个 INTERFACE target，供 CLI 层链接
 # 依赖传递关系：fq_config → fq_error → fq_common（→ fmt::fmt）

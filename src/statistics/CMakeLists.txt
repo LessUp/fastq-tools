@@ -4,10 +4,8 @@ add_library(fq_statistics STATIC
     fq_statistic_worker.cpp
 )
 
+# fq_common PUBLIC 传递 include 路径，无需重复声明 PUBLIC include
 target_include_directories(fq_statistics
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}

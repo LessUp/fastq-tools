@@ -1,89 +1,88 @@
-# 高性能架构优化
+# 高性能架构设计全面优化
 
 **日期**: 2025-02-25
-**类型**: refactor, perf, build
-**范围**: src/, CMake, statistics, io, processing
+**类型**: perf, refactor, build
+**范围**: CMakeLists.txt, src/io, src/processing, src/statistics, include/fqtools/core, include/fqtools/common
 
 ## 概述
 
-对 `src/` 目录下的 CMake 构建配置、性能热点和架构设计进行了全面优化，
-涵盖构建依赖清理、统计模块内存布局优化、Writer I/O 性能提升和模块职责分离。
+对 `src/` 全部子模块和 CMake 构建系统进行了 P0~P4 五个层级的全面性能与架构优化。
 
 ## 变更内容
 
-### 第一层：CMake 构建优化
+### P0：构建级优化（零代码改动，全局提升）
 
-1. **清理 `fq_lib` INTERFACE 冗余依赖**
-   - 移除了 `fq_common`、`fq_error`、`fmt::fmt` 的重复列出
-   - 这些已被 `fq_config` 和其他子模块传递链接
+1. **LTO/IPO 跨模块内联优化**
+   - 使用 `CheckIPOSupported` + `CMAKE_INTERPROCEDURAL_OPTIMIZATION` 在非 Debug 构建全局启用
+   - 所有静态库 target 自动获得链接时优化
 
-2. **收紧依赖可见性（PUBLIC → PRIVATE）**
-   - `fq_error`: `spdlog::spdlog` 改为 PRIVATE，移除冗余 `fmt::fmt`
-   - `fq_modern_io`: `ZLIB::ZLIB`、`spdlog::spdlog`、`fmt::fmt`、`libdeflate` 改为 PRIVATE
-   - `fq_processing`: `spdlog::spdlog`、`TBB::tbb`、`fmt::fmt` 改为 PRIVATE
-   - `fq_statistics`: `spdlog::spdlog`、`TBB::tbb` 改为 PRIVATE
+2. **编译优化标志增强**
+   - Release 新增 `-ftree-vectorize -funroll-loops -ffast-math`
+   - 全局新增 `-ffunction-sections -fdata-sections` 配合链接器 `--gc-sections` 消除死代码
 
-3. **清理 `fq_error` 重复编译选项**
-   - 移除冗余的 `-Wall -Wextra -Wpedantic`（根 CMakeLists.txt 已全局设置）
-   - 移除冗余的 `CXX_STANDARD 20` 属性设置
+### P1：I/O 热路径优化
 
-4. **移除 `add_library` 中不必要的头文件**
-   - `fq_config`: 移除 `config.h`
-   - `fq_error`: 移除 `error.h`
+3. **Reader `posix_fadvise(POSIX_FADV_SEQUENTIAL)`**
+   - 非 gzip 模式下提示内核进行顺序预读，提升大文件顺序读取性能
 
-5. **为 `src/benchmark` 添加 CMakeLists.txt**
-   - 新增 `fq_benchmark` STATIC 库 target
-   - 根 CMakeLists.txt 添加 `find_package(nlohmann_json)`
+4. **Reader remainder 处理优化**
+   - 使用 `std::move` 语义传递 remainder → batch buffer，避免 swap + clear
+   - 使用 `memcpy` 替代 `assign(iter, iter)` 保存 remainder，减少拷贝开销
 
-### 第二层：性能热点优化
+5. **Writer `posix_fadvise(POSIX_FADV_DONTNEED)`**
+   - flush 后通知内核释放已写出的 page cache，减少大文件写出时的内存压力
 
-6. **Statistics Worker 查找表优化**
-   - 用 `constexpr` 查找表替代碱基分类的 `switch/case`
-   - 消除分支预测开销，提升热循环性能
-   - 提取 `data()` 指针避免重复 `string_view::operator[]` 调用
+### P2：处理管道优化
 
-7. **扁平化统计结果内存布局**
-   - `posQualityDist`: `vector<vector<uint64_t>>` → 一维 `vector<uint64_t>`（stride = kMaxQual）
-   - `posBaseDist`: `vector<vector<uint64_t>>` → 一维 `vector<uint64_t>`（stride = kMaxBaseNum）
-   - 新增 `ensureCapacity()`、`qualityAt()`、`baseAt()` 访问器方法
-   - `operator+=` 简化为逐元素累加，消除二维 vector 的指针追逐
-   - 减少内存碎片化，提升缓存局部性
+6. **`FqStatisticResult::operator+=` 向量化友好合并**
+   - 使用 `__restrict__` 指针消除别名分析障碍，让 `-O3 -ftree-vectorize` 生成 AVX2 SIMD 指令
 
-8. **Writer 缓冲区批量拼接**
-   - 用一次 `resize` + `memcpy` 替代逐字符 `push_back`/`insert`
-   - 减少函数调用和内存边界检查开销
+7. **`FqStatisticWorker` 预分配 Result 容量**
+   - 在 TBB Stage 2 中为 Result 预分配 150bp 容量（典型 Illumina read length）
+   - 避免 `ensureCapacity` 在处理每条 read 时反复 resize
 
-### 第三层：架构改进
+8. **`processBatch` 过滤循环优化**
+   - 将 `hasPredicates/hasMutators` 提取到循环外避免重复检查
+   - 统计计数改为批量更新（循环外一次性累加），消除循环内逐条 `stats.totalReads++`
 
-9. **拆分 `factory.cpp`**
-   - `createStatisticCalculator()` 从 `src/processing/factory.cpp` 移至 `src/statistics/factory.cpp`
-   - 遵循单一职责原则，消除跨模块耦合
+### P3：架构卫生
 
-10. **重命名 `SequentialProcessingPipeline` → `ProcessingPipeline`**
-    - 该类实际支持串行和 TBB 并行两种模式，原名称具有误导性
-    - 影响文件：`processing_pipeline.h`、`processing_pipeline.cpp`、`factory.cpp`
+9. **`core.h` 死代码精简**（363 行 → ~209 行）
+   - 移除所有未使用的抽象接口：WithID, Cloneable, Serializable, Validatable, MemoryTrackable, Statisticable, Configurable, PerformanceMetrics
+   - 保留有价值的 QualityScore 和 SequenceUtils 工具类
+   - 移除对 `fqtools/common/common.h` 和 `fqtools/error/error.h` 的不必要依赖
 
-11. **标记 `core.h` 为 deprecated**
-    - 确认 `include/fqtools/core/core.h` 在整个代码库中零引用
-    - 添加 `@deprecated` 注释，计划后续拆分或移除
+10. **`fq::common::Logger` 标记 `[[deprecated]]`**
+    - 添加 `[[deprecated("Use fq::logging (spdlog-based) instead")]]`
+    - 引导迁移到 `fq::logging`（基于 spdlog），保持向后兼容
+
+11. **`fq_modern_io` 统一异常处理**
+    - Reader: `std::runtime_error` → `fq::error::IOError` / `fq::error::FormatError`
+    - Writer: `std::runtime_error` → `fq::error::IOError` / `fq::error::FastQException`
+    - CMake: `fq_modern_io` 新增 PRIVATE 链接 `fq_error`
+
+### P4：CMake 依赖精度
+
+12. **`target_include_directories` 去重**
+    - `fq_error`、`fq_config`、`fq_processing`、`fq_statistics` 移除冗余 PUBLIC include 声明
+    - 统一由 `fq_common` PUBLIC 传递 `${CMAKE_SOURCE_DIR}/include`
+
+13. **`fq_benchmark` 条件编译守卫**
+    - `src/CMakeLists.txt` 中 `add_subdirectory(benchmark)` 改为 `if(BUILD_BENCHMARKS)` 守卫
+    - 非 benchmark 构建不再编译 benchmark 数据收集模块
 
 ## 受影响文件
 
-- `CMakeLists.txt`（根）
-- `src/CMakeLists.txt`
-- `src/common/CMakeLists.txt`（未修改，参考）
-- `src/error/CMakeLists.txt`
-- `src/config/CMakeLists.txt`
-- `src/io/CMakeLists.txt`
-- `src/processing/CMakeLists.txt`
-- `src/statistics/CMakeLists.txt`
-- `src/benchmark/CMakeLists.txt`（新增）
-- `src/io/fastq_writer.cpp`
-- `src/statistics/fq_statistic.h`
-- `src/statistics/fq_statistic.cpp`
-- `src/statistics/fq_statistic_worker.cpp`
-- `src/statistics/factory.cpp`（新增）
-- `src/processing/factory.cpp`
-- `src/processing/processing_pipeline.h`
-- `src/processing/processing_pipeline.cpp`
-- `include/fqtools/core/core.h`
+- `CMakeLists.txt`（根）— LTO/IPO、编译标志、链接器优化
+- `src/CMakeLists.txt` — benchmark 条件编译、子目录顺序调整
+- `src/error/CMakeLists.txt` — 移除冗余 include
+- `src/config/CMakeLists.txt` — 移除冗余 include
+- `src/io/CMakeLists.txt` — 新增 fq_error 链接
+- `src/io/fastq_reader.cpp` — posix_fadvise、remainder 优化、统一异常
+- `src/io/fastq_writer.cpp` — posix_fadvise DONTNEED、统一异常
+- `src/processing/CMakeLists.txt` — 移除冗余 include
+- `src/processing/processing_pipeline.cpp` — processBatch 优化
+- `src/statistics/CMakeLists.txt` — 移除冗余 include
+- `src/statistics/fq_statistic.cpp` — 向量化合并、预分配 Result
+- `include/fqtools/core/core.h` — 精简死代码
+- `include/fqtools/common/common.h` — Logger deprecated
