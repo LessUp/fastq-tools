@@ -155,7 +155,7 @@ public:
 使用 Python 实现可视化报告生成，利用 matplotlib 生成图表。
 
 ```python
-# tools/benchmark/report_generator.py
+# tools/benchmark/scripts/report_generator.py
 
 from dataclasses import dataclass
 from typing import List, Dict, Optional
@@ -210,7 +210,7 @@ class ReportGenerator:
 ### 4. Regression Detector
 
 ```python
-# tools/benchmark/regression_detector.py
+# tools/benchmark/scripts/regression_detector.py
 
 @dataclass
 class RegressionResult:

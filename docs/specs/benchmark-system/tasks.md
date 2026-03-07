@@ -125,7 +125,7 @@
 
 - [x] 9. 报告生成器 (Python)
   - [x] 9.1 创建 Python 报告生成器框架
-    - 创建 `tools/benchmark/report_generator.py`
+    - 创建 `tools/benchmark/scripts/report_generator.py`
     - 实现 JSON 结果加载
     - _Requirements: 3.1_
 
@@ -155,7 +155,7 @@
 
 - [x] 10. 回归检测器
   - [x] 10.1 实现回归检测逻辑
-    - 创建 `tools/benchmark/regression_detector.py`
+    - 创建 `tools/benchmark/scripts/regression_detector.py`
     - 实现阈值比较（10% warning, 20% critical）
     - 支持自定义阈值
     - _Requirements: 4.1, 4.2, 4.5_

@@ -80,7 +80,7 @@ jobs:
     
     - name: Generate test data
       run: |
-        python3 tools/benchmark/gen_benchmark_data.py \
+        python3 tools/benchmark/scripts/gen_benchmark_data.py \
           --generate-dataset \
           --output-dir benchmark_results/data
     
@@ -104,7 +104,7 @@ jobs:
       if: github.event_name == 'pull_request'
       run: |
         if [[ -f benchmark_results/baselines/default.json ]]; then
-          python3 tools/benchmark/regression_detector.py \
+          python3 tools/benchmark/scripts/regression_detector.py \
             benchmark_results/baselines/default.json \
             benchmark_results/results/current.json \
             --google-benchmark --ci
@@ -114,7 +114,7 @@ jobs:
     
     - name: Generate report
       run: |
-        python3 tools/benchmark/report_generator.py \
+        python3 tools/benchmark/scripts/report_generator.py \
           benchmark_results/results/current.json \
           --google-benchmark \
           --format markdown \

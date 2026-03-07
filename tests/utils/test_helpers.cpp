@@ -1,15 +1,16 @@
 #include "test_helpers.h"
 
-#include <algorithm>
+#include <fstream>
 #include <random>
 #include <sstream>
 
 namespace fq::test {
 
-std::vector<std::filesystem::path> TestHelpers::tempPaths_;
+std::vector<std::filesystem::path> TestDataGenerator::tempPaths_;
 
-std::filesystem::path TestHelpers::createTempFile(const std::string& content,
-                                                  const std::string& suffix) {
+auto TestDataGenerator::createTempFile(const std::string& content,
+                                       const std::string& suffix)
+    -> std::filesystem::path {
     auto tempDir = std::filesystem::temp_directory_path();
     auto tempFile =
         tempDir / ("fastqtools_test_" + std::to_string(std::random_device{}()) + suffix);
@@ -22,29 +23,20 @@ std::filesystem::path TestHelpers::createTempFile(const std::string& content,
     return tempFile;
 }
 
-std::filesystem::path TestHelpers::createTempDir() {
-    auto tempDir = std::filesystem::temp_directory_path();
-    auto testDir = tempDir / ("fastqtools_test_dir_" + std::to_string(std::random_device{}()));
-
-    std::filesystem::create_directories(testDir);
-    tempPaths_.push_back(testDir);
-    return testDir;
-}
-
-std::string TestHelpers::generateFastQRecords(size_t count, size_t readLength) {
+auto TestDataGenerator::generateFastQRecords(size_t count, size_t readLength) -> std::string {
     std::ostringstream oss;
 
     for (size_t i = 0; i < count; ++i) {
-        oss << "@read_" << i << "\n";
-        oss << generateRandomDNA(readLength) << "\n";
+        oss << "@read_" << i << '\n';
+        oss << generateRandomDNA(readLength) << '\n';
         oss << "+\n";
-        oss << generateRandomQuality(readLength) << "\n";
+        oss << generateRandomQuality(readLength) << '\n';
     }
 
     return oss.str();
 }
 
-std::string TestHelpers::generateRandomDNA(size_t length) {
+auto TestDataGenerator::generateRandomDNA(size_t length) -> std::string {
     static const char bases[] = "ATGC";
     thread_local std::mt19937 gen(std::random_device{}());
     std::uniform_int_distribution<> dis(0, 3);
@@ -59,7 +51,8 @@ std::string TestHelpers::generateRandomDNA(size_t length) {
     return sequence;
 }
 
-std::string TestHelpers::generateRandomQuality(size_t length, int minQuality, int maxQuality) {
+auto TestDataGenerator::generateRandomQuality(size_t length, int minQuality, int maxQuality)
+    -> std::string {
     thread_local std::mt19937 gen(std::random_device{}());
     std::uniform_int_distribution<> dis(minQuality, maxQuality);
 
@@ -67,27 +60,13 @@ std::string TestHelpers::generateRandomQuality(size_t length, int minQuality, in
     quality.reserve(length);
 
     for (size_t i = 0; i < length; ++i) {
-        quality += static_cast<char>(dis(gen) + 33);  // Phred+33 encoding
+        quality += static_cast<char>(dis(gen) + 33);  // Phred+33 编码
     }
 
     return quality;
 }
 
-bool TestHelpers::compareFiles(const std::filesystem::path& file1,
-                               const std::filesystem::path& file2) {
-    std::ifstream f1(file1, std::ios::binary);
-    std::ifstream f2(file2, std::ios::binary);
-
-    if (!f1.is_open() || !f2.is_open()) {
-        return false;
-    }
-
-    return std::equal(std::istreambuf_iterator<char>(f1.rdbuf()),
-                      std::istreambuf_iterator<char>(),
-                      std::istreambuf_iterator<char>(f2.rdbuf()));
-}
-
-void TestHelpers::cleanup() {
+void TestDataGenerator::cleanup() {
     for (const auto& path : tempPaths_) {
         std::error_code ec;
         if (std::filesystem::is_directory(path)) {
@@ -100,12 +79,11 @@ void TestHelpers::cleanup() {
 }
 
 void FastQToolsTest::SetUp() {
-    tempDir_ = TestHelpers::createTempDir();
-    testDataDir_ = std::filesystem::current_path() / "tests" / "fixtures";
+    testDataDir_ = std::filesystem::current_path() / "tools" / "data";
 }
 
 void FastQToolsTest::TearDown() {
-    TestHelpers::cleanup();
+    TestDataGenerator::cleanup();
 }
 
 }  // namespace fq::test

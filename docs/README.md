@@ -1,85 +1,113 @@
 # FastQTools 文档中心
 
-> 本目录包含 FastQTools 项目的所有文档资源。
+> 本目录包含 FastQTools 项目的所有文档资源，按受众和用途组织。
 
 ---
 
-## 📁 目录结构
+## 目录结构
 
 ```
 docs/
-├── README.md                          # 本文件 - 文档索引
-├── installation.md                    # 安装指南
+├── README.md                          # 本文件 — 文档索引
 │
-├── guide/                             # 用户指南
-│   └── usage.md                       # CLI 使用指南
+├── guide/                             # 用户指南（面向使用者）
+│   ├── getting-started.md             # 快速开始（安装 + 首次使用）
+│   ├── cli-reference.md               # CLI 完整参考
+│   ├── configuration.md               # 配置管理
+│   └── deployment.md                  # 部署指南（Docker + 生产环境）
 │
-├── dev/                               # 开发者文档（活跃维护）
+├── dev/                               # 开发者文档（面向开发者）
 │   ├── architecture.md                # 架构设计
-│   ├── design.md                      # 核心设计
+│   ├── design.md                      # 核心设计（数据模型、流水线）
 │   ├── build.md                       # 构建指南
+│   ├── testing.md                     # 测试策略
 │   ├── coding-standards.md            # 编码规范
 │   ├── git-guidelines.md              # Git 提交规范与工作流
-│   ├── quality-tools.md               # 代码质量工具指南
-│   ├── benchmark-guide.md             # Benchmark 使用与报告指南
-│   ├── devcontainer-guidelines.md     # Dev Container 团队规范
-│   └── devcontainer-ssh.md            # Windsurf/Cursor SSH 方案
+│   ├── quality-tools.md               # 代码质量工具
+│   ├── benchmark-guide.md             # Benchmark 使用与报告
+│   ├── devcontainer.md                # DevContainer 开发环境
+│   └── migration.md                   # 脚本迁移指南
+│
+├── api/                               # API 参考（面向库集成）
+│   ├── overview.md                    # API 概览与快速示例
+│   ├── io.md                          # IO 模块（Reader/Writer/Record/Batch）
+│   ├── processing.md                  # 处理流水线（Pipeline/Predicate/Mutator）
+│   ├── statistics.md                  # 统计分析
+│   └── core.md                        # 核心工具（Config/Error/Logging）
 │
 ├── decisions/                         # 架构决策记录（ADR）
 │   ├── optimization-decisions.md      # 优化决策与辩证分析
 │   └── project-assessment.md          # 项目评估报告
+│
+├── specs/                             # 功能规格
+│   ├── steering/                      # 产品/技术/结构规格
+│   ├── advanced-cpp-tooling/          # 高级 C++ 工具链规格
+│   ├── benchmark-system/              # 基准测试系统规格
+│   └── memory-pool/                   # 内存池规格
 │
 ├── benchmark-reports/                 # 基准测试数据（自动生成）
 │   ├── results/                       # 历史测试结果
 │   ├── latest.json                    # 最新结果（JSON）
 │   └── latest.md                      # 最新结果（Markdown）
 │
-└── archive/                           # 归档（历史性、一次性文档）
-    ├── audit-2025-12-29-docs-style.md # 文档风格审计
-    ├── thinking-process.md            # 分析思维过程
-    ├── implementation-progress.md     # 实现进度快照
-    └── requirements.md                # 需求文档快照
+└── archive/                           # 归档（历史性文档）
+    ├── audit-2025-12-29-docs-style.md
+    ├── thinking-process.md
+    ├── implementation-progress.md
+    └── requirements.md
 ```
 
 ---
 
-## 📖 快速导航
+## 快速导航
 
 ### 新用户入门
 
-1. [安装指南](installation.md) - 环境配置和安装步骤
-2. [使用指南](guide/usage.md) - 命令行用法和示例
+1. [快速开始](guide/getting-started.md) — 安装、构建、运行第一个命令
+2. [CLI 参考](guide/cli-reference.md) — stat / filter 完整用法
+3. [配置管理](guide/configuration.md) — 环境变量、配置文件、命令行参数
+4. [部署指南](guide/deployment.md) — Docker 与生产环境
 
 ### 开发者指南
 
-1. [架构设计](dev/architecture.md) - 系统架构和设计原则
-2. [核心设计](dev/design.md) - 数据模型、流水线、日志等
-3. [编码规范](dev/coding-standards.md) - 代码风格和命名约定
-4. [构建指南](dev/build.md) - 构建系统和依赖管理
-5. [Git 工作流](dev/git-guidelines.md) - 提交规范和分支策略
-6. [代码质量工具](dev/quality-tools.md) - Sanitizers、Valgrind、静态分析、覆盖率、模糊测试
-7. [Benchmark 指南](dev/benchmark-guide.md) - 性能基准测试使用与报告
-8. [Dev Container 规范](dev/devcontainer-guidelines.md) - Windows + WSL2 + Docker Desktop
-9. [DevContainer SSH](dev/devcontainer-ssh.md) - Windsurf/Cursor 远程 SSH 方案
+1. [架构设计](dev/architecture.md) — 分层架构、技术栈、并发模型
+2. [核心设计](dev/design.md) — 数据模型、流水线、日志
+3. [构建指南](dev/build.md) — 编译器、CMake、Conan、Sanitizers
+4. [测试策略](dev/testing.md) — 单元测试、集成测试、E2E、覆盖率
+5. [编码规范](dev/coding-standards.md) — 命名、格式、现代 C++ 实践
+6. [Git 工作流](dev/git-guidelines.md) — 提交规范、分支策略
+7. [代码质量工具](dev/quality-tools.md) — Sanitizers、Valgrind、静态分析、模糊测试
+8. [Benchmark 指南](dev/benchmark-guide.md) — 性能基准测试与报告
+9. [DevContainer](dev/devcontainer.md) — 容器化开发环境、SSH 方案
+10. [脚本迁移](dev/migration.md) — 从旧脚本系统迁移
+
+### API 参考
+
+1. [API 概览](api/overview.md) — 入口、模块架构、快速示例
+2. [IO 模块](api/io.md) — FastqReader / FastqWriter / FastqRecord
+3. [处理流水线](api/processing.md) — Pipeline / Predicate / Mutator
+4. [统计分析](api/statistics.md) — StatisticCalculator
+5. [核心工具](api/core.md) — Configuration / Error / Logging
 
 ### 架构决策
 
-1. [优化决策](decisions/optimization-decisions.md) - 优化需求、辩证分析、实施状态
-2. [项目评估](decisions/project-assessment.md) - 架构、性能、依赖、测试全面评估
+1. [优化决策](decisions/optimization-decisions.md) — 优化需求、辩证分析、实施状态
+2. [项目评估](decisions/project-assessment.md) — 架构、性能、依赖、测试全面评估
 
 ---
 
-## 📝 文档维护
+## 文档维护
 
 ### 命名约定
 
-- 文档文件: `kebab-case.md`
-- 目录名: `lowercase`
+- 文档文件：`kebab-case.md`
+- 目录名：`lowercase`
 
 ### 更新记录
 
 | 日期 | 更新内容 |
 |------|----------|
+| 2026-03-07 | 彻底重构文档目录：消除重复、合并 wiki/、新增 api/ 和 guide/、统一中文 |
 | 2025-02-24 | 重构文档目录：合并重复内容、消除碎片目录、引入 decisions/ 和 archive/ |
 | 2025-12-30 | 添加项目分析文档，重组目录结构 |
 | 2025-12-29 | 文档风格统一 |

@@ -13,8 +13,8 @@
 
 ### 手动统一命令
 
-- 全量格式化：`./scripts/lint.sh format`
-- 只检查格式：`./scripts/lint.sh format-check`
+- 全量格式化：`./scripts/core/lint format`
+- 只检查格式：`./scripts/core/lint check`
 
 ## 命名约定
 
@@ -22,7 +22,7 @@
 |------|------|------|
 | 代码文件/目录 | `snake_case` | `file_parser.h`, `src/utils/` |
 | 文档 | `kebab-case` | `docs/dev/git-guidelines.md` |
-| 脚本 | `snake_case` | `scripts/install_deps.sh` |
+| 脚本 | `kebab-case` | `scripts/core/install-deps` |
 | 类/结构体 | `PascalCase` | `class FastQReader;` |
 | 函数/方法 | `camelCase` | `void processBatch();` |
 | 变量（局部变量/参数） | `camelCase` | `int readCount = 0;` |

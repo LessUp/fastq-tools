@@ -1,429 +1,164 @@
 # FastQTools 测试架构
 
-本文档描述 FastQTools 测试套件的组织结构、测试策略和最佳实践。
-
-## 测试层次结构
+## 目录结构
 
 ```
 tests/
-├── unit/                 # 单元测试 - 测试单个组件
-├── integration/          # 集成测试 - 测试组件间交互
-├── e2e/                  # 端到端测试 - 测试完整工作流
-└── utils/                # 测试工具库 - 共享测试辅助代码
+├── CMakeLists.txt            # 测试根配置 + add_fq_test() 函数定义
+├── unit/                     # 单元测试（GTest，按模块镜像 src/ 目录）
+│   ├── common/               #   Timer、StringUtils、Logger
+│   ├── config/               #   Configuration 加载与解析
+│   ├── error/                #   异常体系、ErrorHandler
+│   ├── io/                   #   FastqReader、FastqWriter
+│   ├── memory/               #   ObjectPool、FastqBatchPool
+│   ├── processing/           #   Pipeline 冒烟测试
+│   ├── statistics/           #   FqStatisticWorker
+│   └── CMakeLists.txt
+├── integration/              # 集成测试（跨模块交互、文件 I/O）
+│   ├── test_pipeline_integration.cpp
+│   └── CMakeLists.txt
+├── e2e/                      # 端到端测试（CLI 黑盒测试）
+│   ├── test_cli.sh           #   Bash：基本 CLI 回归
+│   └── test_advanced_cli.py  #   Python：高级 CLI 场景
+├── utils/                    # 测试工具库（共享辅助代码）
+│   ├── fixture_loader.h/cpp  #   数据加载、TempDirectory、文件比较
+│   ├── test_helpers.h/cpp    #   FASTQ 数据生成、测试基类
+│   └── CMakeLists.txt
+└── cmake_package_consumer/   # CMake 包消费测试（独立构建验证）
+    ├── CMakeLists.txt
+    └── main.cpp
 ```
-
-### 1. 单元测试 (Unit Tests)
-
-**目的**: 测试单个类、函数或模块的行为
-
-**特点**:
-- 快速执行（< 1秒）
-- 不依赖外部资源（无文件 I/O、网络）
-- 高度隔离，使用 mock 对象
-- 代码覆盖率目标：> 80%
-
-**组织方式**:
-```
-unit/
-├── common/           # 通用工具测试
-├── config/           # 配置模块测试
-├── error/            # 错误处理测试
-├── io/               # I/O 模块测试
-├── memory/           # 内存池测试
-├── processing/       # 处理模块测试
-├── statistics/       # 统计模块测试
-└── CMakeLists.txt
-```
-
-**命名约定**:
-- 文件名：`test_<module_name>.cpp`
-- 测试类：`<ModuleName>Test`
-- 测试用例：`TEST_F(<TestClass>, <TestName>)`
-
-**示例**:
-```cpp
-TEST_F(ConfigTest, LoadValidConfig) {
-    auto config = Config::load("config.yaml");
-    EXPECT_TRUE(config.isValid());
-}
-```
-
-**运行单元测试**:
-```bash
-./scripts/core/test --unit
-./scripts/core/test --unit --filter "*config*"
-```
-
----
-
-### 2. 集成测试 (Integration Tests)
-
-**目的**: 测试多个组件间的协作和交互
-
-**特点**:
-- 中等执行时间（1-10秒）
-- 可能涉及文件 I/O、多线程
-- 测试真实的组件集成
-- 代码覆盖率目标：关键路径 100%
-
-**适用场景**:
-- Pipeline 端到端处理流程
-- Reader → Processor → Writer 链路
-- 配置加载 → 初始化 → 执行
-- 多线程并发处理
-
-**示例**:
-```cpp
-TEST_F(PipelineIntegrationTest, ReadProcessWrite) {
-    Pipeline pipeline;
-    pipeline.setInput("input.fastq");
-    pipeline.setOutput("output.fastq");
-    pipeline.run();
-    
-    EXPECT_TRUE(compareFiles("output.fastq", "expected.fastq"));
-}
-```
-
-**运行集成测试**:
-```bash
-./scripts/core/test --integration
-```
-
----
-
-### 3. 端到端测试 (E2E Tests)
-
-**目的**: 从用户角度测试完整的应用场景
-
-**特点**:
-- 较长执行时间（10-60秒）
-- 测试真实的命令行接口
-- 使用真实数据文件
-- 验证输出格式和正确性
-
-**测试类型**:
-- CLI 命令测试（Shell 脚本）
-- 工作流测试（Python）
-- 回归测试
-- 性能基准测试
-
-**示例**:
-```bash
-# test_cli.sh
-./FastQTools filter --input sample.fastq --output filtered.fastq
-diff filtered.fastq expected.fastq
-```
-
-**运行 E2E 测试**:
-```bash
-./scripts/core/test --e2e
-./tests/e2e/test_cli.sh
-```
-
----
-
-## 测试工具库 (Test Utils)
-
-### FixtureLoader
-
-用于加载和管理测试数据：
-
-```cpp
-#include "fixture_loader.h"
-
-// 加载测试数据
-auto content = FixtureLoader::loadTextFile("data/sample.fastq");
-
-// 获取测试数据路径
-auto path = FixtureLoader::getFixturePath("sample.fastq");
-
-// 创建临时 FASTQ 文件
-auto temp = FixtureLoader::createTempFastq(1000, 100);
-```
-
-### TempDirectory
-
-RAII 风格的临时目录管理：
-
-```cpp
-{
-    TempDirectory temp("test_");
-    auto output = temp.path() / "output.fastq";
-    // 测试代码...
-} // 自动清理临时目录
-```
-
-### PerformanceTimer
-
-性能测试计时器：
-
-```cpp
-PerformanceTimer timer;
-timer.start();
-// 执行需要测量的代码
-timer.stop();
-EXPECT_LT(timer.elapsedMilliseconds(), 1000);
-```
-
-### TestHelpers
-
-通用测试辅助函数：
-
-```cpp
-// 生成测试数据
-auto fastq = TestHelpers::generateFastQRecords(1000, 100);
-
-// 创建临时文件
-auto temp = TestHelpers::createTempFile(fastq, ".fastq");
-
-// 比较文件
-EXPECT_TRUE(TestHelpers::compareFiles(output, expected));
-```
-
----
 
 ## 运行测试
 
-### 基本用法
-
 ```bash
-# 运行所有测试
+# 全部测试
 ./scripts/core/test
 
-# 运行特定类型的测试
-./scripts/core/test --unit
-./scripts/core/test --integration
-./scripts/core/test --e2e
+# 按类型
+./scripts/core/test --type unit
+./scripts/core/test --type integration
 
-# 过滤测试
+# 按名称过滤
 ./scripts/core/test --filter "*config*"
-./scripts/core/test --filter "*timer*" --verbose
 
-# 重复测试（稳定性测试）
-./scripts/core/test --repeat 5
-```
-
-### 覆盖率报告
-
-```bash
-# 生成覆盖率报告
+# 覆盖率
 ./scripts/core/test --coverage
 
-# 查看 HTML 报告
-open coverage/html/index.html  # macOS
-xdg-open coverage/html/index.html  # Linux
+# E2E（需要先构建可执行文件）
+./tests/e2e/test_cli.sh
+python3 ./tests/e2e/test_advanced_cli.py
 ```
 
-### 调试测试
+## 测试工具库
 
-```bash
-# 详细输出
-./scripts/core/test --verbose
+### FixtureLoader — 文件与目录操作
 
-# 使用 GDB 调试
-gdb --args build-clang-debug/test_common
+```cpp
+#include "fixture_loader.h"
+using namespace fq::test;
 
-# 使用 Valgrind 检测内存泄漏
-valgrind --leak-check=full build-clang-debug/test_common
+// 加载测试数据
+auto content = FixtureLoader::loadTextFile("tools/data/sample_10k.fastq");
+
+// 创建临时 FASTQ 文件
+auto temp = FixtureLoader::createTempFastq(1000, 100);
+
+// RAII 临时目录
+{
+    TempDirectory tmpDir("test_");
+    auto output = tmpDir.path() / "output.fastq";
+    // ...
+} // 自动清理
+
+// 文件比较
+EXPECT_TRUE(FixtureLoader::compareFiles(file1, file2));
 ```
 
----
+### TestDataGenerator — FASTQ 数据生成
+
+```cpp
+#include "test_helpers.h"
+using namespace fq::test;
+
+auto records = TestDataGenerator::generateFastQRecords(1000, 100);
+auto dna     = TestDataGenerator::generateRandomDNA(150);
+auto qual    = TestDataGenerator::generateRandomQuality(150, 20, 40);
+
+// 创建临时文件（自动注册清理）
+auto tmpFile = TestDataGenerator::createTempFile(records);
+```
+
+### FastQToolsTest — 测试基类
+
+```cpp
+#include "test_helpers.h"
+
+class MyTest : public fq::test::FastQToolsTest {
+protected:
+    // tempDir_     — TempDirectory（RAII 自动清理）
+    // testDataDir_ — tools/data/ 路径
+};
+```
+
+## CMake 集成
+
+`add_fq_test()` 函数自动完成以下配置：
+
+- 链接 `GTest::gtest_main`、`GTest::gmock`、`fq_lib`、`test_utils`
+- 设置 `include/` 和 `src/` 的 include 路径
+- 注册 CTest 用例（带 label 和 timeout）
+
+```cmake
+# 用法：add_fq_test(<name> <label> <timeout> <sources...>)
+add_fq_test(test_io "unit" 60 io/test_fastq_reader.cpp io/test_writer.cpp)
+```
+
+聚合目标：`make unit_tests` / `make integration_tests`。
 
 ## 编写测试指南
 
-### 何时写单元测试
+### 命名约定
 
-✅ **应该写**:
-- 新增公共 API 函数
-- 复杂的算法和逻辑
-- 边界条件和错误处理
-- 数据结构和容器操作
+| 类型     | 规则                        | 示例                           |
+|----------|-----------------------------|--------------------------------|
+| 文件名   | `test_<module>.cpp`         | `test_fastq_reader.cpp`        |
+| 测试类   | `<Module>Test`              | `FastqReaderTest`              |
+| 测试用例 | `<Object>_<Scenario>_<Expected>` | `LoadConfig_InvalidFile_Throws` |
 
-❌ **不需要写**:
-- 简单的 getter/setter
-- 纯粹的数据结构定义
-- 平台特定的代码（除非是关键功能）
-
-### 何时写集成测试
-
-✅ **应该写**:
-- 多模块协作的 Pipeline
-- 文件读写流程
-- 配置加载和应用
-- 并发处理逻辑
-
-### 何时写 E2E 测试
-
-✅ **应该写**:
-- 新增 CLI 命令
-- 工作流变更
-- 输出格式变更
-- 性能回归检查
-
----
-
-## 测试最佳实践
-
-### 1. 测试命名
-
-遵循 `测试对象_场景_期望结果` 格式：
-
-```cpp
-TEST_F(ConfigTest, LoadConfig_WithValidFile_Success)
-TEST_F(ConfigTest, LoadConfig_WithInvalidFile_ThrowsException)
-TEST_F(ConfigTest, LoadConfig_WithMissingFile_ReturnsDefault)
-```
-
-### 2. 使用 Arrange-Act-Assert 模式
+### Arrange-Act-Assert
 
 ```cpp
 TEST_F(ProcessorTest, FilterReads_ByQuality_RemovesLowQuality) {
     // Arrange
-    Processor processor;
-    processor.setMinQuality(20);
-    auto input = createTestData();
+    auto input = TestDataGenerator::generateFastQRecords(100);
     
     // Act
     auto output = processor.filter(input);
     
     // Assert
-    EXPECT_EQ(output.size(), expectedSize);
     EXPECT_TRUE(allQualityAbove(output, 20));
 }
 ```
-
-### 3. 独立性原则
-
-每个测试应该独立运行，不依赖其他测试的状态：
-
-```cpp
-class ProcessorTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        // 每个测试前重新初始化
-        processor_ = std::make_unique<Processor>();
-    }
-    
-    std::unique_ptr<Processor> processor_;
-};
-```
-
-### 4. 使用 Mock 对象
-
-对于依赖外部资源的代码，使用 mock：
-
-```cpp
-class MockReader : public Reader {
-public:
-    MOCK_METHOD(std::string, read, (), (override));
-};
-
-TEST_F(ProcessorTest, ProcessWithMockReader) {
-    MockReader reader;
-    EXPECT_CALL(reader, read())
-        .WillOnce(Return("@read1\nACGT\n+\nIIII\n"));
-    
-    Processor processor(&reader);
-    auto result = processor.process();
-    EXPECT_TRUE(result.success);
-}
-```
-
-### 5. 参数化测试
-
-对于相似的测试场景，使用参数化测试：
-
-```cpp
-class QualityFilterTest : public ::testing::TestWithParam<std::tuple<int, int>> {};
-
-TEST_P(QualityFilterTest, FilterByThreshold) {
-    auto [min_quality, expected_count] = GetParam();
-    
-    Processor processor;
-    processor.setMinQuality(min_quality);
-    auto result = processor.filter(test_data_);
-    
-    EXPECT_EQ(result.size(), expected_count);
-}
-
-INSTANTIATE_TEST_SUITE_P(
-    QualityThresholds,
-    QualityFilterTest,
-    ::testing::Values(
-        std::make_tuple(10, 1000),
-        std::make_tuple(20, 800),
-        std::make_tuple(30, 500)
-    )
-);
-```
-
----
-
-## 持续集成
-
-测试在 CI 管道中自动运行：
-
-```yaml
-# .github/workflows/ci.yml
-- name: Run tests
-  run: |
-    ./scripts/core/build --dev
-    ./scripts/core/test --coverage
-    
-- name: Upload coverage
-  uses: codecov/codecov-action@v3
-  with:
-    files: ./coverage/coverage.info
-```
-
----
-
-## 测试指标
 
 ### 覆盖率目标
 
 - **单元测试**: > 80% 行覆盖率
 - **集成测试**: 关键路径 100%
-- **E2E 测试**: 主要用例 100%
+- **E2E 测试**: 主要 CLI 用例 100%
 
-### 性能目标
-
-- 单元测试套件: < 10秒
-- 集成测试套件: < 30秒
-- E2E 测试套件: < 60秒
-
----
-
-## 故障排查
-
-### 测试失败
-
-1. 查看详细输出：`./scripts/core/test --verbose`
-2. 只运行失败的测试：`./scripts/core/test --filter "*FailingTest*"`
-3. 使用调试器：`gdb --args build-clang-debug/test_name`
-
-### 随机失败
-
-1. 重复运行：`./scripts/core/test --repeat 10`
-2. 检查并发问题
-3. 检查资源清理
-4. 添加更详细的断言信息
-
-### 内存泄漏
+## 调试
 
 ```bash
-# 使用 AddressSanitizer
-./scripts/core/build --sanitizer asan
-./scripts/core/test
+# 详细输出
+./scripts/core/test --verbose
 
-# 或使用 Valgrind
-valgrind --leak-check=full build-clang-debug/test_name
+# GDB 调试
+gdb --args build/clang-debug/test_common
+
+# ASan 构建
+./scripts/core/build --sanitizer asan && ./scripts/core/test
+
+# Valgrind
+valgrind --leak-check=full build/clang-debug/test_common
 ```
-
----
-
-## 参考资源
-
-- [Google Test 文档](https://google.github.io/googletest/)
-- [CMock 文档](https://github.com/google/googletest/blob/main/docs/gmock_for_dummies.md)
-- [测试驱动开发 (TDD)](https://en.wikipedia.org/wiki/Test-driven_development)

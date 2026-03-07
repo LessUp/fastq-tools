@@ -13,23 +13,23 @@
 
 ```bash
 # 一键构建（Clang + Release）
-./scripts/build.sh
+./scripts/core/build
 
 # 指定编译器和配置
-./scripts/build.sh gcc Debug
+./scripts/core/build --compiler gcc --type Debug
 
 # 启用 sanitizers
-./scripts/build.sh clang Debug --asan
+./scripts/core/build --sanitizer asan --dev
 ```
 
 ## 依赖管理
 
 ```bash
 # 安装依赖（首次配置）
-./scripts/install_deps.sh
+./scripts/core/install-deps
 
 # 重新构建（推荐：使用脚本统一管理构建目录）
-./scripts/build.sh clang Release
+./scripts/core/build
 ```
 
 > 说明：早期实验过 `mimalloc` 作为分配器，但目前构建和运行时已不再依赖它，所有配置文件均已移除相关要求。
@@ -38,24 +38,24 @@
 
 ```bash
 # 格式化代码
-./scripts/lint.sh format
+./scripts/core/lint format
 
 # 检查格式
-./scripts/lint.sh format-check
+./scripts/core/lint check
 
 # 静态分析
-./scripts/lint.sh
+./scripts/core/lint tidy
 ```
 
 ## 测试
 
 ```bash
 # 运行测试
-./scripts/test.sh
+./scripts/core/test
 
 # 覆盖率测试
-./scripts/build.sh gcc Debug --coverage
-./scripts/test.sh -c clang -t Coverage -C
+./scripts/core/build --coverage --dev
+./scripts/core/test --coverage
 ```
 ## 工具与调试
 
@@ -70,11 +70,14 @@ FastQTools 支持多种 LLVM/GCC Sanitizers，用于检测内存错误和未定�
 使用方法：
 
 ```bash
-# 启用 ASan 和 USan (推荐在 Debug 模式下组合使用)
-./scripts/build.sh clang Debug --asan --usan
+# 启用 ASan（推荐在 Debug 模式下使用）
+./scripts/core/build --sanitizer asan --dev
 
-# 启用 TSan (注意：TSan 不能与 ASan 同时启用)
-./scripts/build.sh clang Debug --tsan
+# 启用 TSan（注意：TSan 不能与 ASan 同时启用）
+./scripts/core/build --sanitizer tsan --dev
+
+# 启用 UBSan
+./scripts/core/build --sanitizer ubsan --dev
 ```
 
 运行编译后的程序（如单元测试）时，Sanitizers 会在检测到问题时自动输出错误报告并终止程序。
@@ -84,9 +87,9 @@ FastQTools 支持多种 LLVM/GCC Sanitizers，用于检测内存错误和未定�
 项目集成了 `clang-tidy` 进行静态代码检查：
 
 ```bash
-# 在构建脚本中启用静态分析
-./scripts/build.sh clang Debug --static
+# 运行 clang-tidy 静态分析
+./scripts/core/lint tidy
 
-# 或直接运行 lint 脚本
-./scripts/lint.sh lint
+# 运行所有检查（format + tidy + cppcheck）
+./scripts/core/lint all
 ```

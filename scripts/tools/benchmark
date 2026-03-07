@@ -7,7 +7,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 BENCHMARK_DIR="$PROJECT_ROOT/benchmark_results"
-TOOLS_DIR="$PROJECT_ROOT/tools/benchmark"
+TOOLS_DIR="$PROJECT_ROOT/tools/benchmark/scripts"
 
 # 默认配置
 BUILD_DIR="${BUILD_DIR:-$PROJECT_ROOT/build-clang-release}"

@@ -64,8 +64,10 @@ fastq-tools/
 ├── cmake/modules/            # 自定义 CMake 模块
 ├── tools/                    # 开发工具
 │   ├── benchmark/            # 性能基准测试（Google Benchmark）
-│   ├── fuzz/                 # 模糊测试
-│   └── data/                 # 测试数据
+│   │   ├── *_benchmark.cpp   # C++ 基准测试源码
+│   │   └── scripts/          # 分析脚本（报告/回归检测/徽章/数据生成）
+│   ├── fuzz/                 # 模糊测试（LibFuzzer）
+│   └── data/                 # 测试数据与生成脚本
 ├── docs/                     # 项目文档（含 deployment, migration 等）
 ├── changelog/                # 变更记录（每条独立 .md 文件）
 ├── CMakeLists.txt            # 根 CMake 配置

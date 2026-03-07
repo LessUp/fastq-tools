@@ -1,5 +1,5 @@
 #!/bin/bash
-# tools/benchmark/run_baseline.sh
+# tools/benchmark/scripts/run_baseline.sh
 # 性能基准脚本
 #
 # 对 FastQTools 的 filter 命令进行基准测试，记录吞吐量和耗时。
@@ -8,7 +8,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 FASTQTOOLS="${FASTQTOOLS:-$PROJECT_ROOT/build-clang-release/FastQTools}"
 DATA_DIR="$PROJECT_ROOT/tools/data"

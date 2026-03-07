@@ -98,13 +98,13 @@ FastQTools/
 
 - 代码与命名: 见 [编码规范](docs/dev/coding-standards.md)
 - 提交信息: 见 [Git 提交规范](docs/dev/git-guidelines.md)
-- Dev Container: 见 [Dev Container 团队规范](docs/dev/devcontainer-guidelines.md)
+- Dev Container: 见 [DevContainer 开发环境](docs/dev/devcontainer.md)
 - 脚本说明: 见 [scripts/README.md](scripts/README.md)
 
 ## 文档
 
 - [构建指南](docs/dev/build.md) - 系统要求和构建说明
-- [使用指南](docs/guide/usage.md) - 命令行用法和示例
+- [CLI 参考](docs/guide/cli-reference.md) - 命令行用法和示例
 - [架构设计](docs/dev/architecture.md) - 技术架构和设计原则
 - [编码规范](docs/dev/coding-standards.md) - 代码与文件命名约定
 - [Git 提交规范](docs/dev/git-guidelines.md) - 提交格式与示例
