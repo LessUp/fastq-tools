@@ -81,3 +81,18 @@
 - 按平台提供独立的快速开始步骤
 - 分平台网络代理配置说明
 - 新增 WSL2 volume 性能、Docker 未运行等故障排除条目
+
+### host-prepare-windows.ps1 — Windows 宿主机环境准备脚本（新增）
+
+- 自动检测 WSL2、Docker Desktop、VS Code、Git、VS Code 扩展等前置组件
+- 缺失组件通过 winget 自动安装（需管理员权限）
+- 检查 WSL 内部环境（git、SSH 密钥）
+- 输出 Docker Desktop 推荐配置（WSL2 后端、内存/CPU 分配）
+- 检查通过后给出完整的下一步操作指引
+
+### README.md — Windows 前置条件章节（新增）
+
+- 自动检查脚本使用说明
+- 手动安装清单（WSL2、Docker Desktop、VS Code、扩展、Git）
+- Docker Desktop 配置建议
+- WSL 内部准备步骤（git、SSH 密钥、项目克隆路径）

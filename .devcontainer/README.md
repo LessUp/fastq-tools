@@ -10,6 +10,66 @@
 | **远程 Linux** | ⭐⭐⭐ 推荐 | 通过 `start_devcontainer.sh` 或 VS Code Remote-SSH |
 | **Windows 原生** | ⚠️ 不推荐 | volume 性能极差，部分功能受限 |
 
+## Windows 前置条件
+
+> 远程 Linux 服务器用户可跳过此节，仅需 VS Code + Remote-SSH 扩展。
+
+### 自动检查（推荐）
+
+在 **PowerShell（管理员）** 中运行：
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.devcontainer\scripts\host-prepare-windows.ps1
+```
+
+脚本会自动检查以下组件并提示安装缺失项。
+
+### 手动安装清单
+
+| 序号 | 组件 | 用途 | 安装方式 |
+|------|------|------|----------|
+| 1 | **WSL2 + Ubuntu** | Linux 文件系统，运行构建脚本 | `wsl --install` |
+| 2 | **Docker Desktop** | 容器引擎（需启用 WSL2 后端） | [下载](https://www.docker.com/products/docker-desktop/) |
+| 3 | **VS Code** | IDE | [下载](https://code.visualstudio.com/) |
+| 4 | **VS Code 扩展** | 远程开发 | 见下方 |
+| 5 | **Git** | 版本控制（含 Git Bash） | `winget install Git.Git` |
+
+**必装 VS Code 扩展：**
+
+```powershell
+code --install-extension ms-vscode-remote.remote-wsl
+code --install-extension ms-vscode-remote.remote-containers
+code --install-extension ms-vscode-remote.remote-ssh
+```
+
+### Docker Desktop 配置
+
+安装后需在 **Settings** 中确认：
+
+- **General** → `Use the WSL 2 based engine` ✓
+- **Resources → WSL Integration** → `Enable integration with my default WSL distro` ✓
+- **Resources → Advanced**（建议）→ Memory ≥ 8 GB, CPUs ≥ 4
+
+### WSL 内部准备
+
+```bash
+# 安装基础工具
+sudo apt update && sudo apt install -y git curl
+
+# 生成 SSH 密钥（如果没有）
+ssh-keygen -t ed25519 -C "your_email@example.com"
+
+# 克隆项目到 WSL 原生文件系统（重要！勿用 /mnt/c/）
+mkdir -p ~/projects
+git clone <repo-url> ~/projects/fastq-tools
+cd ~/projects/fastq-tools
+
+# 准备环境配置
+cp docker/.env.example docker/.env
+# 按需编辑 docker/.env
+```
+
 ## 快速开始
 
 ### 方式一：WSL2 (推荐 Windows 路径)
@@ -68,10 +128,11 @@ code .
 .devcontainer/
 ├── devcontainer.json       # 主配置（使用 docker-compose）
 ├── scripts/
-│   ├── host-prepare.sh     # 宿主机准备脚本（initializeCommand，含平台检测）
-│   ├── container-setup.sh  # 容器内设置脚本（postXxxCommand，平台感知）
-│   ├── setup-sshd.sh       # SSHD 配置脚本
-│   └── start-sshd.sh       # SSHD 启动脚本
+│   ├── host-prepare.sh             # 宿主机准备脚本（initializeCommand，含平台检测）
+│   ├── host-prepare-windows.ps1    # Windows 环境检查/安装脚本（PowerShell）
+│   ├── container-setup.sh          # 容器内设置脚本（postXxxCommand，平台感知）
+│   ├── setup-sshd.sh               # SSHD 配置脚本
+│   └── start-sshd.sh               # SSHD 启动脚本
 └── README.md               # 本文件
 
 docker/
