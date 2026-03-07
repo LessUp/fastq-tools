@@ -15,7 +15,6 @@
 
 #pragma once
 
-#include "fqtools/cli/app_info.h"  // For WithID replacement if needed, or just remove WithID
 #include "fqtools/io/fastq_io.h"
 
 namespace fq::statistic {

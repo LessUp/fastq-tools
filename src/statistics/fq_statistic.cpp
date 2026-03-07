@@ -23,7 +23,6 @@
 #include <numeric>
 #include <vector>
 
-#include "spdlog/spdlog.h"
 #include "statistics/fq_statistic_worker.h"
 #include <tbb/global_control.h>
 #include <tbb/parallel_pipeline.h>

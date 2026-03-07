@@ -33,21 +33,20 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
         cxxopts::value<size_t>()->default_value("10"))("h,help", "Print usage");
 
     if (argc == 1) {
-        std::cout << options.help() << std::endl;
+        std::cout << options.help() << '\n';
         return 0;
     }
 
     auto result = options.parse(argc, argv);
 
     if (result.count("help")) {
-        std::cout << options.help() << std::endl;
+        std::cout << options.help() << '\n';
         return 0;
     }
 
     if (!result.count("input") || !result.count("output")) {
-        std::cerr << "Error: both --input and --output options are required for the stat command."
-                  << std::endl;
-        std::cerr << options.help() << std::endl;
+        std::cerr << "Error: both --input and --output options are required for the stat command.\n";
+        std::cerr << options.help() << '\n';
         return 1;
     }
 
@@ -71,7 +70,7 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
         // Call run via the interface pointer
         stater->run();
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << '\n';
         return 1;
     }
 

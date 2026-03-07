@@ -5,11 +5,23 @@
  * @details 一站式入口，聚合所有对外公共接口
  */
 
-#include "fqtools/cli/app_info.h"
+// 公共工具
 #include "fqtools/common/common.h"
+#include "fqtools/error/error.h"
+#include "fqtools/config/config.h"
+#include "fqtools/core/core.h"
+
+// I/O
+#include "fqtools/io/fastq_io.h"
+#include "fqtools/io/fastq_reader.h"
+#include "fqtools/io/fastq_writer.h"
+
+// 处理管道
 #include "fqtools/processing/processing_pipeline_interface.h"
 #include "fqtools/processing/read_mutator_interface.h"
 #include "fqtools/processing/read_predicate_interface.h"
-#include "fqtools/processing/mutators/quality_trimmer.h"
-#include "fqtools/processing/predicates/min_quality_predicate.h"
+#include "fqtools/processing/mutators.h"
+#include "fqtools/processing/predicates.h"
+
+// 统计
 #include "fqtools/statistics/statistic_calculator_interface.h"

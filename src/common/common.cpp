@@ -106,14 +106,16 @@ auto Logger::getCurrentTime() -> std::string {
                        tmBuf.tm_sec);
 }
 
+namespace {
+std::atomic<IDGenerator::ID> gIdCounter{1};
+}  // namespace
+
 auto IDGenerator::nextId() -> ID {
-    static std::atomic<ID> counter{1};
-    return counter.fetch_add(1, std::memory_order_relaxed);
+    return gIdCounter.fetch_add(1, std::memory_order_relaxed);
 }
 
 auto IDGenerator::reset() -> void {
-    static std::atomic<ID> counter{1};
-    counter.store(1, std::memory_order_relaxed);
+    gIdCounter.store(1, std::memory_order_relaxed);
 }
 
 void printSoftwareInfo() {

@@ -67,21 +67,20 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
         cxxopts::value<std::string>()->default_value("both"))("h,help", "Print usage");
 
     if (argc == 1) {
-        std::cout << options.help() << std::endl;
+        std::cout << options.help() << '\n';
         return 0;
     }
 
     auto result = options.parse(argc, argv);
 
     if (result.count("help")) {
-        std::cout << options.help() << std::endl;
+        std::cout << options.help() << '\n';
         return 0;
     }
 
     if (!result.count("input") || !result.count("output")) {
-        std::cerr << "Error: both --input and --output options are required for the filter command."
-                  << std::endl;
-        std::cerr << options.help() << std::endl;
+        std::cerr << "Error: both --input and --output options are required for the filter command.\n";
+        std::cerr << options.help() << '\n';
         return 1;
     }
 
@@ -148,7 +147,7 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     }
 
     auto stats = pipeline_->run();
-    std::cout << stats.toString() << std::endl;
+    std::cout << stats.toString() << '\n';
 
     return 0;
 }

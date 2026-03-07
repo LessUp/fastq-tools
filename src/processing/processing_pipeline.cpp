@@ -100,6 +100,8 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
     const bool hasPredicates = !predicates_.empty();
     const bool hasMutators = !mutators_.empty();
 
+    size_t modifiedCount = 0;
+
     for (size_t i = 0; i < totalInBatch; ++i) {
         auto& read = records[i];
 
@@ -114,11 +116,14 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
         }
 
         if (passed && hasMutators) {
+            const size_t originalLen = read.length();
             for (const auto& mutator : mutators_) {
                 mutator->process(read);
             }
             if (read.empty()) {
                 passed = false;
+            } else if (read.length() != originalLen) {
+                ++modifiedCount;
             }
         }
 
@@ -134,6 +139,7 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
     stats.totalReads += totalInBatch;
     stats.passedReads += passedCount;
     stats.filteredReads += (totalInBatch - passedCount);
+    stats.modifiedReads += modifiedCount;
     records.resize(passedCount);
 
     return true;
@@ -216,6 +222,7 @@ auto ProcessingPipeline::processWithTBB() -> ProcessingStatistics {
                         finalStats.totalReads += pair.second.totalReads;
                         finalStats.passedReads += pair.second.passedReads;
                         finalStats.filteredReads += pair.second.filteredReads;
+                        finalStats.modifiedReads += pair.second.modifiedReads;
                         finalStats.inputBytes += pair.second.inputBytes;
                         finalStats.outputBytes += (after - before);
                     }));
