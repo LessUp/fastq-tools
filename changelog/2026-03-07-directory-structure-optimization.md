@@ -38,6 +38,13 @@
 - 更新 `config/README.md` 移除已迁移的 deployment 条目
 - 更新 `scripts/core/README.md` 中 MIGRATION.md 引用路径
 
+### 迁移有价值的文档到 docs/
+- `.kiro/steering/` → `docs/specs/steering/`（项目产品/结构/技术概览）
+- `.kiro/specs/advanced-cpp-tooling/` → `docs/specs/advanced-cpp-tooling/`（高级工具链设计规范）
+- `.kiro/specs/benchmark-system/` → `docs/specs/benchmark-system/`（基准测试系统设计规范）
+- `.kiro/specs/memory-pool/` → `docs/specs/memory-pool/`（内存池设计规范）
+- `.qoder/repowiki/zh/content/` → `docs/wiki/`（项目知识库：API 参考、CLI 指南、架构设计、性能优化等）
+
 ## 根目录文件清单（优化后）
 
 保留在根目录的标准文件（GitHub 识别）：
