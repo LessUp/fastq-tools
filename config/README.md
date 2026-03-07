@@ -16,8 +16,6 @@ config/
 │   └── conanfile.py    # All third-party dependency declarations
 ├── coverage/           # Code coverage thresholds
 │   └── thresholds.json # Line/function coverage minimums
-├── deployment/         # Container deployment
-│   └── Dockerfile      # Multi-stage build (builder + runtime)
 ├── iwyu/               # Include-What-You-Use
 │   └── mappings.imp    # Private→public header mapping rules
 ├── sanitizers/         # Compiler sanitizer runtime options

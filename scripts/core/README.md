@@ -241,7 +241,7 @@ chmod +x scripts/core/*
 - **完整脚本文档**: `scripts/README.md`
 - **架构设计**: `scripts/ARCHITECTURE.md`
 - **测试文档**: `tests/README.md`
-- **迁移指南**: `MIGRATION.md`
+- **迁移指南**: `docs/migration.md`
 
 ---
 

@@ -40,49 +40,36 @@ FastQTools filter -i input.fq.gz -o filtered.fq.gz --min-quality 20 --min-length
 
 ```
 FastQTools/
-├── include/           # 公共 API 头文件
-├── src/              # 源代码实现
-├── config/           # 配置文件 (CMake、依赖管理、部署)
-├── third_party/      # 第三方依赖源码 (gzstream等)
-├── tools/            # 开发工具 (基准测试、构建、CI)
-├── examples/         # 使用示例
-├── scripts/          # 构建和测试脚本
-├── tests/            # 单元测试
-└── docs/            # 文档
+├── include/fqtools/   # 公共 API 头文件（对外接口）
+├── src/               # 源代码实现
+├── tests/             # 测试（unit / integration / e2e）
+├── config/            # 构建配置（Conan profiles、sanitizers、valgrind 等）
+├── scripts/           # 构建与工具脚本（core / lib / tools）
+├── docker/            # Docker 配置（dev / prod / deploy）
+├── tools/             # 开发工具（benchmark / fuzz / data）
+├── cmake/modules/     # 自定义 CMake 模块
+├── docs/              # 项目文档（部署、迁移、开发指南等）
+├── changelog/         # 变更记录（每条独立 .md 文件）
+└── examples/          # 使用示例
 ```
 
 ### 配置目录 (config/)
 
-包含所有配置文件，按用途组织：
-- `cmake/` - CMake 配置文件，包括预设和工具链
-- `dependencies/` - Conan 依赖管理配置
-- `deployment/` - 部署配置，包括 Dockerfile
-
-### 第三方依赖 (third_party/)
-
-集中管理项目使用的第三方依赖源码/头文件（仅在遵守原许可证前提下）：
-
-- **gzstream** (header-only)
-  - 位置：`third_party/gzstream/include/gzstream.h`
-  - 说明：用于 gzip 流式读写的头文件封装
-  - 维护原则：只纳入必要且难以通过包管理器获取的最小集合
+包含所有构建与分析配置，按用途组织：
+- `conan/` - Conan 编译器 profiles（profile-clang, profile-gcc）
+- `dependencies/` - Conan 依赖配置（conanfile.py）
+- `sanitizers/` - ASan/TSan/UBSan/MSan 运行时选项
+- `valgrind/` - Valgrind 抑制规则
+- `cppcheck/` - Cppcheck 静态分析配置
+- `coverage/` - 覆盖率阈值配置
+- `iwyu/` - Include-What-You-Use 映射
 
 ### 工具目录 (tools/)
 
-包含开发、构建、测试和部署相关的工具：
-- `benchmark/` - 性能基准测试工具
-- `build/` - 构建相关工具和脚本
-- `development/` - 开发工具（代码生成、质量验证、性能分析）
-- `ci/` - 持续集成工具
-- `deploy/` - 部署工具
-
-### 示例目录 (examples/)
-
-包含基本使用示例，帮助用户快速上手：
-- `basic_stats.sh` - 基本统计分析
-- `batch_processing.sh` - 批量处理多个文件
-- `paired_end_analysis.sh` - 双端数据处理
-- `custom_output.sh` - 自定义输出格式
+包含开发与测试相关的工具：
+- `benchmark/` - 性能基准测试（Google Benchmark）
+- `fuzz/` - 模糊测试
+- `data/` - 测试用 FASTQ 数据
 
 ## 构建与运行
 

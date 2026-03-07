@@ -44,17 +44,21 @@ fastq-tools/
 │   ├── e2e/                  # 端到端测试（Python/Shell）
 │   └── utils/                # 测试工具与 fixture
 ├── config/                   # 构建配置
-│   ├── dependencies/         # Conan 依赖配置
-│   ├── sanitizers/           # ASan/TSan/UBSan/MSan 配置
-│   ├── valgrind/             # Valgrind 配置
-│   └── cppcheck/             # 静态分析配置
+│   ├── conan/                # Conan 编译器 profiles（profile-clang, profile-gcc）
+│   ├── dependencies/         # Conan 依赖配置（conanfile.py）
+│   ├── sanitizers/           # ASan/TSan/UBSan/MSan 运行时选项
+│   ├── valgrind/             # Valgrind 抑制规则
+│   ├── cppcheck/             # Cppcheck 静态分析配置
+│   ├── coverage/             # 覆盖率阈值配置
+│   └── iwyu/                 # Include-What-You-Use 映射
 ├── scripts/                  # 构建与工具脚本
 │   ├── core/                 # 核心脚本（build, test, lint, install-deps）
 │   ├── lib/                  # 脚本公共函数库
 │   └── tools/                # 辅助工具脚本
-├── docker/                   # Docker 配置
+├── docker/                   # Docker 配置（统一存放所有 Docker 相关文件）
 │   ├── Dockerfile.dev        # 开发环境镜像
 │   ├── Dockerfile.prod       # 生产构建镜像
+│   ├── Dockerfile.deploy     # 部署镜像（多阶段构建）
 │   └── docker-compose.yml    # 多服务编排
 ├── .devcontainer/            # VS Code DevContainer 配置
 ├── cmake/modules/            # 自定义 CMake 模块
@@ -62,11 +66,11 @@ fastq-tools/
 │   ├── benchmark/            # 性能基准测试（Google Benchmark）
 │   ├── fuzz/                 # 模糊测试
 │   └── data/                 # 测试数据
-├── docs/                     # 项目文档
+├── docs/                     # 项目文档（含 deployment, migration 等）
 ├── changelog/                # 变更记录（每条独立 .md 文件）
 ├── CMakeLists.txt            # 根 CMake 配置
 ├── CMakePresets.json          # CMake 预设（gcc-debug/release, clang-debug/release, asan, tsan, coverage）
-├── conanfile.py              # Conan 依赖定义
+├── conanfile.py              # Conan 包定义（用于 conan create 分发）
 └── .clang-format / .clang-tidy  # 代码格式与静态检查规则
 ```
 
