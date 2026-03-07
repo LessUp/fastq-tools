@@ -124,7 +124,25 @@ main() {
     log_info "FastQTools DevContainer 启动"
     log_info "SSH 绑定: ${BIND}:${PORT}"
     log_info "数据挂载: ${DATA_PATH} -> /data"
-    
+
+    # 0. 前置检查
+    if ! docker info >/dev/null 2>&1; then
+        log_error "Docker 未运行或当前用户无权限访问 Docker"
+        log_error "请确认 Docker 已启动，或将当前用户加入 docker 组: sudo usermod -aG docker \$USER"
+        exit 1
+    fi
+
+    if [ ! -f "${REPO_ROOT}/docker/.env" ]; then
+        log_warn "未找到 docker/.env，将使用默认配置"
+        log_warn "可复制模板: cp ${REPO_ROOT}/docker/.env.example ${REPO_ROOT}/docker/.env"
+    fi
+
+    # 确保数据目录存在
+    if [ ! -d "${DATA_PATH}" ]; then
+        log_step "创建数据目录: ${DATA_PATH}"
+        mkdir -p "${DATA_PATH}"
+    fi
+
     # 1. 构建镜像
     if [ "${REBUILD}" -eq 1 ]; then
         log_step "强制重新构建镜像..."

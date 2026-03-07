@@ -123,19 +123,35 @@ start_sshd() {
     fi
 }
 
+# 检测宿主机平台（基于 remoteEnv 传入的环境变量）
+# 返回: "wsl" | "windows" | "linux"
+detect_host_platform() {
+    if [ -n "${WSL_DISTRO_NAME:-}" ]; then
+        echo "wsl"
+    elif [ -n "${MSYSTEM:-}" ]; then
+        echo "windows"
+    else
+        echo "linux"
+    fi
+}
+
 # 检查环境警告
 check_environment() {
-    # WSL 检查
-    if [ -z "${WSL_DISTRO_NAME:-}" ]; then
-        log_warn "建议使用 VS Code Remote - WSL 在 WSL2 中打开仓库，再执行 Reopen in Container"
-    fi
-    
-    # SSH agent 检查（仅当 /ssh-agent 挂载点存在时才警告）
-    if [ -e "/ssh-agent" ] && [ ! -S "/ssh-agent" ]; then
-        log_warn "SSH agent socket 存在但不可用。若需要访问私有仓库，请在 WSL 中执行："
-        log_warn "  eval \"\$(ssh-agent -s)\" && ssh-add"
-        log_warn "然后 Rebuild/Reopen Container"
-    fi
+    local platform
+    platform="$(detect_host_platform)"
+
+    case "$platform" in
+        wsl)
+            log_info "宿主机: WSL2 (${WSL_DISTRO_NAME})"
+            ;;
+        windows)
+            log_warn "宿主机: Windows 原生 (${MSYSTEM:-unknown})"
+            log_warn "volume 性能较差，建议改用 WSL2 作为开发宿主"
+            ;;
+        linux)
+            log_info "宿主机: 原生 Linux"
+            ;;
+    esac
 }
 
 # =============================================================================

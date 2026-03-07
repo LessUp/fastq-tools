@@ -1,46 +1,75 @@
-# Dockerfile for FastQTools
-# This Dockerfile creates a consistent build and runtime environment.
+# =============================================================================
+# FastQTools Deploy Image
+# =============================================================================
+# 独立部署镜像：GCC 15 构建 + 最小化运行时
+# 与 Dockerfile.prod 保持一致的工具链和依赖版本
+#
+# 用法：
+#   docker build -f docker/Dockerfile.deploy -t fastqtools:latest ..
+#   docker run --rm fastqtools:latest --help
+#   docker run --rm -v /data:/app/data fastqtools:latest stat -i /app/data/input.fq
+# =============================================================================
 
-# ---- Builder Stage ----
-# Uses Ubuntu 22.04 as the base for the build environment.
-FROM ubuntu:22.04 AS builder
+# -----------------------------------------------------------------------------
+# 构建阶段
+# -----------------------------------------------------------------------------
+FROM gcc:15.2-bookworm AS builder
 
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG ALL_PROXY
-ARG NO_PROXY
+ARG DEVCONTAINER_HTTP_PROXY
+ARG DEVCONTAINER_HTTPS_PROXY
+ARG DEVCONTAINER_ALL_PROXY
+ARG DEVCONTAINER_NO_PROXY
 
-ENV HTTP_PROXY=${HTTP_PROXY}
-ENV HTTPS_PROXY=${HTTPS_PROXY}
-ENV ALL_PROXY=${ALL_PROXY}
-ENV NO_PROXY=${NO_PROXY}
-ENV http_proxy=${HTTP_PROXY}
-ENV https_proxy=${HTTPS_PROXY}
-ENV all_proxy=${ALL_PROXY}
-ENV no_proxy=${NO_PROXY}
+ENV HTTP_PROXY=${DEVCONTAINER_HTTP_PROXY}
+ENV HTTPS_PROXY=${DEVCONTAINER_HTTPS_PROXY}
+ENV ALL_PROXY=${DEVCONTAINER_ALL_PROXY}
+ENV NO_PROXY=${DEVCONTAINER_NO_PROXY}
+ENV http_proxy=${DEVCONTAINER_HTTP_PROXY}
+ENV https_proxy=${DEVCONTAINER_HTTPS_PROXY}
+ENV all_proxy=${DEVCONTAINER_ALL_PROXY}
+ENV no_proxy=${DEVCONTAINER_NO_PROXY}
 
 RUN set -eux; \
-    if [ -n "${HTTP_PROXY:-}" ] || [ -n "${HTTPS_PROXY:-}" ]; then \
+    if [ -n "${DEVCONTAINER_HTTP_PROXY:-}" ] || [ -n "${DEVCONTAINER_HTTPS_PROXY:-}" ]; then \
         : > /etc/apt/apt.conf.d/99proxy; \
-        if [ -n "${HTTP_PROXY:-}" ]; then echo "Acquire::http::Proxy \"${HTTP_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
-        if [ -n "${HTTPS_PROXY:-}" ]; then echo "Acquire::https::Proxy \"${HTTPS_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
+        if [ -n "${DEVCONTAINER_HTTP_PROXY:-}" ]; then echo "Acquire::http::Proxy \"${DEVCONTAINER_HTTP_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
+        if [ -n "${DEVCONTAINER_HTTPS_PROXY:-}" ]; then echo "Acquire::https::Proxy \"${DEVCONTAINER_HTTPS_PROXY}\";" >> /etc/apt/apt.conf.d/99proxy; fi; \
     fi
 
-# Avoid interactive prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
+# APT 镜像源配置 (中国大陆用户可启用国内镜像加速)
+ARG USE_CHINA_MIRROR=0
+RUN if [ "${USE_CHINA_MIRROR}" = "1" ]; then \
+        sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
+        sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null || true; \
+    fi
 
-# 1. Install base dependencies and GCC
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# APT 重试配置 (处理镜像临时故障)
+RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80retries && \
+    echo 'Acquire::http::Timeout "30";' >> /etc/apt/apt.conf.d/80retries && \
+    echo 'Acquire::https::Timeout "30";' >> /etc/apt/apt.conf.d/80retries
+
+# 安装构建依赖（仅构建所需，不含交互工具）
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     build-essential \
+    ninja-build \
+    pkg-config \
+    git \
     wget \
+    ca-certificates \
     tar \
     xz-utils \
-    gnupg \
-    software-properties-common \
+    python3 \
     python3-pip \
-    ninja-build
+    ccache \
+    libdeflate-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    liblzma-dev \
+    libtbb-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN CMAKE_VERSION=4.2.1 && \
+# CMake 4.x
+RUN CMAKE_VERSION=4.0.2 && \
     ARCH="$(dpkg --print-architecture)" && \
     case "$ARCH" in \
         amd64) CMAKE_ARCH="x86_64" ;; \
@@ -55,44 +84,79 @@ RUN CMAKE_VERSION=4.2.1 && \
     ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack && \
     rm -f /tmp/cmake.tar.gz
 
-# 2. Install Clang 21 (clang, clang-tidy, clang-format, lld, llvm)
-RUN wget https://apt.llvm.org/llvm.sh && \
-    chmod +x llvm.sh && \
-    ./llvm.sh 21 && \
-    apt-get install -y clang-21 clang-tidy-21 clang-format-21 lld-21 llvm-21 && \
-    rm -f llvm.sh && \
-    rm -rf /var/lib/apt/lists/*
+# Conan 2.x
+RUN pip3 install --no-cache-dir --break-system-packages conan==2.24.0
 
-# 3. Install specific Conan version
-RUN pip3 install conan==2.24.0
+# 设置编译器
+ENV CC=gcc
+ENV CXX=g++
+ENV CONAN_HOME=/root/.conan2
+ENV CCACHE_DIR=/root/.ccache
+ENV PATH=/usr/lib/ccache:$PATH
 
-ENV CC=/usr/bin/gcc
-ENV CXX=/usr/bin/g++
-
-# 4. Copy project source code
-WORKDIR /app
+WORKDIR /workspace
 COPY . .
 
-# 5. Run Conan to install project dependencies
-# Uses the system's default GCC from Ubuntu 22.04 (build-essential)
-# and the installed Clang 21 for optional Clang builds.
-RUN conan profile detect --force && \
-    conan install config/dependencies/ --output-folder=build/conan-release --build=missing -s build_type=Release -s compiler.cppstd=20
+# 安装依赖并构建
+RUN conan profile detect --force
+RUN conan install config/dependencies/ --build=missing -s build_type=Release -of=build/gcc-release
 
-# 6. Configure and build the project with CMake
-RUN cmake -B build -S . \
+RUN cmake -B build/gcc-release -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_TOOLCHAIN_FILE=build/conan-release/conan_toolchain.cmake \
-    -G "Ninja"
-RUN cmake --build build
+    -DCMAKE_TOOLCHAIN_FILE=build/gcc-release/conan_toolchain.cmake \
+    -DCMAKE_C_COMPILER=gcc \
+    -DCMAKE_CXX_COMPILER=g++ \
+    -DENABLE_COVERAGE=OFF \
+    -DBUILD_TESTING=OFF
 
-# ---- Final Stage ----
-# Uses a slim base image for a smaller footprint.
-FROM ubuntu:22.04
+RUN ninja -C build/gcc-release
 
-# Copy the compiled executable from the builder stage
-COPY --from=builder /app/build/FastQTools /usr/local/bin/FastQTools
+# -----------------------------------------------------------------------------
+# 运行时阶段
+# -----------------------------------------------------------------------------
+FROM debian:bookworm-slim
 
-# Set the entrypoint for the container
-ENTRYPOINT ["/usr/local/bin/FastQTools"]
+# APT 镜像源配置（从构建阶段继承 USE_CHINA_MIRROR 参数）
+ARG USE_CHINA_MIRROR=0
+RUN if [ "${USE_CHINA_MIRROR}" = "1" ]; then \
+        sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
+        sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null || true; \
+    fi
+
+# APT 重试配置
+RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80retries
+
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
+    ca-certificates \
+    libtbb12 \
+    zlib1g \
+    libbz2-1.0 \
+    liblzma5 \
+    libdeflate0 \
+    libstdc++6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# 非 root 用户
+ARG USERNAME=fastqtools
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+RUN groupadd -g $USER_GID $USERNAME \
+    && useradd -m -s /bin/bash -u $USER_UID -g $USER_GID $USERNAME
+
+WORKDIR /app
+
+# 复制构建产物
+COPY --from=builder /workspace/build/gcc-release/FastQTools /usr/local/bin/
+RUN ln -sf /usr/local/bin/FastQTools /usr/local/bin/fastqtools
+
+# 数据目录
+RUN mkdir -p /app/data /app/output && \
+    chown -R $USERNAME:$USERNAME /app
+
+USER $USERNAME
+
+ENV PATH=/usr/local/bin:$PATH
+
+ENTRYPOINT ["fastqtools"]
 CMD ["--help"]

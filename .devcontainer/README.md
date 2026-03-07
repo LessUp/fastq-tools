@@ -2,23 +2,65 @@
 
 本目录包含 VS Code DevContainer 配置，提供一致的 C++ 开发环境。
 
+## 支持的开发环境
+
+| 环境 | 推荐度 | 说明 |
+|------|--------|------|
+| **WSL2** | ⭐⭐⭐ 推荐 | Windows 上的最佳路径，原生文件系统性能 |
+| **远程 Linux** | ⭐⭐⭐ 推荐 | 通过 `start_devcontainer.sh` 或 VS Code Remote-SSH |
+| **Windows 原生** | ⚠️ 不推荐 | volume 性能极差，部分功能受限 |
+
 ## 快速开始
 
-### VS Code 用户
-
-1. 安装 [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) 扩展
-2. 打开项目目录
-3. 按 `F1` → `Dev Containers: Reopen in Container`
-
-### 远程服务器（Windsurf/Cursor/Remote-SSH）
+### 方式一：WSL2 (推荐 Windows 路径)
 
 ```bash
-# 在服务器上启动容器
+# 1. 在 WSL 终端中克隆或打开项目（确保在 WSL 文件系统内，非 /mnt/c/）
+cd ~/projects/fastq-tools
+
+# 2. 准备环境变量
+cp docker/.env.example docker/.env
+# 编辑 docker/.env 按需修改
+
+# 3. VS Code 打开
+code .
+# 按 F1 → "Dev Containers: Reopen in Container"
+```
+
+### 方式二：远程 Linux 服务器
+
+```bash
+# 在服务器上:
+# 1. 准备环境变量
+cp docker/.env.example docker/.env
+vim docker/.env  # 设置 SSH_BIND=0.0.0.0 等
+
+# 2. 启动容器
 ./docker/start_devcontainer.sh --bind 0.0.0.0
 
-# 然后通过 SSH 连接
+# 在本地:
+# 3. SSH 连接
 ssh -p 2222 developer@<服务器IP>
+
+# 或使用 VS Code Remote-SSH → 连接后 Reopen in Container
 ```
+
+### 方式三：Windows 原生 (不推荐)
+
+```powershell
+# 需要 Docker Desktop + Git Bash
+# 性能差，强烈建议改用 WSL2
+
+# 在 Git Bash 中:
+cp docker/.env.example docker/.env
+code .
+# F1 → "Dev Containers: Reopen in Container"
+```
+
+> ⚠️ **Windows 原生注意事项**：
+> - volume 挂载性能极差（比 WSL2 慢 5-10 倍）
+> - `initializeCommand` 需要 Git Bash 中的 bash
+> - 建议改用 WSL2：`code --remote wsl+Ubuntu /path/to/fastq-tools`
 
 ## 文件说明
 
@@ -26,18 +68,22 @@ ssh -p 2222 developer@<服务器IP>
 .devcontainer/
 ├── devcontainer.json       # 主配置（使用 docker-compose）
 ├── scripts/
-│   ├── host-prepare.sh     # 宿主机准备脚本（initializeCommand）
-│   ├── container-setup.sh  # 容器内设置脚本（postXxxCommand）
+│   ├── host-prepare.sh     # 宿主机准备脚本（initializeCommand，含平台检测）
+│   ├── container-setup.sh  # 容器内设置脚本（postXxxCommand，平台感知）
 │   ├── setup-sshd.sh       # SSHD 配置脚本
 │   └── start-sshd.sh       # SSHD 启动脚本
 └── README.md               # 本文件
 
 docker/
-├── Dockerfile.dev          # 开发环境镜像
-├── docker-compose.yml      # Compose 配置
-├── start_devcontainer.sh   # 手动启动脚本
-├── .env                    # 环境变量
-└── .env.example            # 环境变量模板
+├── Dockerfile.dev          # 开发环境镜像（GCC 15 + Clang 21）
+├── Dockerfile.prod         # 生产构建镜像（GCC 15 + 最小运行时）
+├── Dockerfile.deploy       # 独立部署镜像（单文件构建）
+├── docker-compose.yml      # Compose 配置（dev/prod/test/build 服务）
+├── start_devcontainer.sh   # 手动启动脚本（远程服务器用）
+├── .env                    # 环境变量（用户配置，不入版本控制）
+├── .env.example            # 环境变量模板
+├── data/                   # prod 服务输入数据目录
+└── output/                 # prod 服务输出目录
 ```
 
 ## 配置选项
@@ -48,73 +94,93 @@ docker/
 |------|--------|------|
 | `USE_CHINA_MIRROR` | `0` | 启用国内镜像源 |
 | `FASTQTOOLS_SSH_PORT` | `2222` | SSH 端口 |
-| `FASTQTOOLS_SSH_BIND` | `127.0.0.1` | SSH 绑定地址 |
+| `FASTQTOOLS_SSH_BIND` | `127.0.0.1` | SSH 绑定地址（远程服务器设为 `0.0.0.0`） |
 | `FASTQTOOLS_HOST_DATA_PATH` | `/tmp/fastqtools-data` | dev 容器挂载到 `/data` 的宿主机路径 |
+| `DEVCONTAINER_HTTP_PROXY` | (空) | HTTP 代理 |
+| `DEVCONTAINER_HTTPS_PROXY` | (空) | HTTPS 代理 |
 
-### 宿主机文件
+### 宿主机文件同步
 
-devcontainer 会自动同步以下宿主机配置：
+devcontainer 会自动同步以下宿主机配置到容器内：
 
-- `~/.gitconfig` → 容器内 Git 配置
-- `~/.ssh/` → SSH 密钥（只读）
-- `~/.claude/` → Claude Code 配置
-- `~/.codex/` → OpenAI Codex 配置
+- **`~/.ssh/`** → SSH 密钥（只读挂载）
+- **`~/.gitconfig`** → Git 配置（通过暂存文件同步）
+- **`~/.claude/`** → Claude Code 配置
+- **`~/.codex/`** → OpenAI Codex 配置
+
+这些文件由 `host-prepare.sh`（initializeCommand）自动准备。
 
 ### 宿主机数据目录挂载
 
-dev 容器会把宿主机的数据目录挂载到容器内 `/data`。请在 `docker/.env` 中设置绝对路径（`~` 不会展开）：
+dev 容器会把宿主机的数据目录挂载到容器内 `/data`。
 
 ```bash
-# WSL
+# docker/.env 中设置绝对路径（~ 不会展开）
+
+# WSL2
 FASTQTOOLS_HOST_DATA_PATH=/home/<user>/data
 
 # 远程服务器
 FASTQTOOLS_HOST_DATA_PATH=/data
 ```
 
-如需在 `start_devcontainer.sh` 中临时覆盖，可使用 `--data-path` 或导出 `FASTQTOOLS_HOST_DATA_PATH`。
+`start_devcontainer.sh` 可用 `--data-path` 临时覆盖。
+
+### 网络代理配置
+
+代理配置因平台而异，编辑 `docker/.env`：
+
+```bash
+# WSL2 / Windows Docker Desktop — 使用 host.docker.internal 访问宿主机代理
+DEVCONTAINER_HTTP_PROXY=http://host.docker.internal:10808
+DEVCONTAINER_HTTPS_PROXY=http://host.docker.internal:10808
+
+# 远程 Linux 服务器 — host.docker.internal 默认不可用，直接用本机地址
+DEVCONTAINER_HTTP_PROXY=http://127.0.0.1:10808
+DEVCONTAINER_HTTPS_PROXY=http://127.0.0.1:10808
+```
 
 ## 故障排除
 
-### 构建失败：文件/目录类型错误
+### 构建失败：bind mount 文件/目录类型错误
 
-如果看到类似错误：
-```
-ERROR: ~/.fastqtools-host-gitconfig 是目录，会导致 devcontainer bind mount 失败
-```
-
-运行以下命令修复：
 ```bash
-# 删除错误的目录
+# 删除错误的占位文件/目录并重新准备
 rm -rf ~/.fastqtools-host-gitconfig ~/.fastqtools-host-claude ~/.fastqtools-host-codex
-
-# 重新运行准备脚本
 bash .devcontainer/scripts/host-prepare.sh
 ```
 
-### SSH 连接失败
+### SSH 连接失败（远程服务器）
 
-1. 检查 SSHD 是否运行：
-   ```bash
-   docker exec -it <container> pgrep -x sshd
-   ```
-
-2. 检查 authorized_keys：
-   ```bash
-   docker exec -it <container> cat /home/developer/.ssh_authorized_keys
-   ```
-
-3. 查看 SSHD 日志：
-   ```bash
-   docker exec -it <container> sudo cat /var/log/auth.log
-   ```
-
-### 网络代理
-
-如需使用代理，编辑 `docker/.env`：
 ```bash
-DEVCONTAINER_HTTP_PROXY=http://host.docker.internal:10808
-DEVCONTAINER_HTTPS_PROXY=http://host.docker.internal:10808
+# 1. 检查 SSHD 是否运行
+docker exec -it <container> pgrep -x sshd
+
+# 2. 检查 authorized_keys
+docker exec -it <container> cat /home/developer/.ssh_authorized_keys
+
+# 3. 查看 SSHD 日志
+docker exec -it <container> sudo cat /var/log/auth.log
+```
+
+### WSL2 volume 性能差
+
+确保项目在 **WSL 原生文件系统** 内（`/home/...`），**而非** Windows 挂载路径（`/mnt/c/...`）：
+
+```bash
+# ✅ 正确: WSL 原生路径
+cd ~/projects/fastq-tools
+
+# ❌ 错误: Windows 挂载路径（性能差 5-10 倍）
+cd /mnt/c/Users/.../fastq-tools
+```
+
+### Docker 未运行
+
+```bash
+# WSL2: Docker Desktop 需要先启动
+# 远程 Linux: 检查 dockerd 状态
+sudo systemctl status docker
 ```
 
 ## 开发工具
@@ -126,7 +192,3 @@ DEVCONTAINER_HTTPS_PROXY=http://host.docker.internal:10808
 - **调试**: GDB + LLDB + Valgrind
 - **分析**: clang-tidy + cppcheck + lcov
 - **AI**: Claude Code CLI + OpenAI Codex
-
-## 配置说明
-
-默认使用 `devcontainer.json`（docker-compose 模式），支持持久化缓存和完整的开发环境配置。
