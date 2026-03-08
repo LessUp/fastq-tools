@@ -12,7 +12,7 @@
 | 组件 | 统一版本 | 最低兼容 |
 |------|---------|---------|
 | **GCC** | 15.2 | 11.0 |
-| **Clang/LLVM** | 22 | 12.0 |
+| **Clang/LLVM** | 21 | 12.0 |
 | **CMake** | 4.x（Docker 内） | 3.28 |
 | **Conan** | 2.24.0 | 2.0 |
 | **Ninja** | 系统最新 | 1.10 |
@@ -166,16 +166,16 @@ strategy:
         preset: gcc-release
 
       - compiler: clang
-        version: "22"
+        version: "21"
         preset: clang-release
 
       # ===== Sanitizer 检测（必须通过） =====
       - compiler: clang
-        version: "22"
+        version: "21"
         preset: clang-asan
 
       - compiler: clang
-        version: "22"
+        version: "21"
         preset: clang-tsan
 
       # ===== 兼容性检查（允许失败） =====
