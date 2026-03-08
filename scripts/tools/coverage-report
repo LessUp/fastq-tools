@@ -154,6 +154,7 @@ LCOV_ARGS=(
     --directory "$BUILD_DIR"
     --output-file "$COVERAGE_INFO"
     --ignore-errors mismatch
+    --ignore-errors gcov
 )
 
 if [[ "$VERBOSE" == "false" ]]; then
@@ -181,6 +182,8 @@ FILTER_ARGS=(
     '*/_deps/*'
     --output-file "$COVERAGE_FILTERED"
     --ignore-errors unused
+    --ignore-errors mismatch
+    --ignore-errors gcov
 )
 
 if [[ "$VERBOSE" == "false" ]]; then
