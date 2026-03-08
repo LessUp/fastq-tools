@@ -14,7 +14,7 @@ concurrency:
 env:
   CONAN_VERSION: "2.24.0"
   CMAKE_VERSION: "4.0.2"
-  LLVM_VERSION: "21"
+  LLVM_VERSION: "20"
 
 jobs:
   # ===========================================================================
@@ -101,10 +101,16 @@ jobs:
           sudo ./llvm.sh ${{ env.LLVM_VERSION }}
           sudo apt-get install -y \
             clang-${{ env.LLVM_VERSION }} \
-            lld-${{ env.LLVM_VERSION }}
+            lld-${{ env.LLVM_VERSION }} \
+            libc++-${{ env.LLVM_VERSION }}-dev \
+            libc++abi-${{ env.LLVM_VERSION }}-dev
           sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-${{ env.LLVM_VERSION }}   100
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${{ env.LLVM_VERSION }} 100
           sudo update-alternatives --install /usr/bin/ld.lld  ld.lld  /usr/bin/ld.lld-${{ env.LLVM_VERSION }}  100
+
+          # 使用匹配版本的 libc++ 头文件，避免系统旧版头文件导致编译失败
+          sudo rm -rf /usr/include/c++/v1
+          sudo ln -sf /usr/lib/llvm-${{ env.LLVM_VERSION }}/include/c++/v1 /usr/include/c++/v1
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -126,8 +132,12 @@ jobs:
             CC_COMP=gcc
             CXX_COMP=g++
           fi
+          CONAN_EXTRA_ARGS=""
+          if [ "${{ matrix.compiler.name }}" = "clang" ]; then
+            CONAN_EXTRA_ARGS="-pr:h config/conan/profile-clang"
+          fi
           conan install config/dependencies/ --build=missing \
-            -s build_type=${{ matrix.build_type }} -of="${BUILD_DIR}"
+            -s build_type=${{ matrix.build_type }} -of="${BUILD_DIR}" ${CONAN_EXTRA_ARGS}
           cmake -B "${BUILD_DIR}" -G Ninja \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DCMAKE_TOOLCHAIN_FILE="${BUILD_DIR}/conan_toolchain.cmake" \

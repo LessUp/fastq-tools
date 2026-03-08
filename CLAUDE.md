@@ -1,7 +1,6 @@
-# AGENTS.md — FastQTools AI Agent Guide
+# CLAUDE.md — FastQTools Project Guide for Claude Code
 
-> 本文档为 AI 编码助手（Claude Code、Windsurf Cascade、Cursor、Copilot 等）提供项目上下文，
-> 帮助 Agent 快速理解代码库并生成高质量的代码变更。
+> 本文档为 Claude Code 提供项目上下文，帮助快速理解代码库并生成高质量的代码变更。
 
 ## 项目概览
 
@@ -17,7 +16,7 @@
 
 ## 工具链版本规范
 
-> 完整规范详见 [`docs/decisions/toolchain-policy.md`](docs/decisions/toolchain-policy.md)，以下为 Agent 必须遵守的关键约束。
+> 完整规范详见 [`docs/decisions/toolchain-policy.md`](docs/decisions/toolchain-policy.md)，以下为必须遵守的关键约束。
 
 ### 编译器版本
 
@@ -268,7 +267,7 @@ subject: 简短描述，不以句号结尾
 
 **每次修改都必须在 `changelog/` 目录下创建对应的变更记录文件。**
 
-## Agent 注意事项
+## 注意事项
 
 1. **构建环境**: 项目设计在 Linux/Docker 容器中构建运行（GCC 15 / Clang 21，开发与生产统一）。Windows 仅用于编辑代码，不直接编译。版本规范详见 `docs/decisions/toolchain-policy.md`。
 2. **测试优先**: 修改核心逻辑前先检查/更新相关测试。测试在 `tests/unit/` 中按模块组织。

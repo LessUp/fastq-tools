@@ -2,8 +2,9 @@
 
 ## 系统要求
 
-- **编译器**: GCC 11+ 或 Clang 19（推荐与 CI/Dev Container 保持一致）
-- **CMake**: 3.20+
+- **编译器**: GCC 15 / Clang 21（开发与生产统一）
+- **CMake**: 3.28+
+- **版本规范**: 详见 [`docs/decisions/toolchain-policy.md`](../decisions/toolchain-policy.md)
 - **并行库**: Intel oneTBB（必需，流水线实现依赖）
 - **压缩库**: zlib / bzip2 / xz
 - **内存**: 建议 4GB+ RAM

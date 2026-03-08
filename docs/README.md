@@ -36,6 +36,7 @@ docs/
 │   └── core.md                        # 核心工具（Config/Error/Logging）
 │
 ├── decisions/                         # 架构决策记录（ADR）
+│   ├── toolchain-policy.md            # 工具链版本规范（编译器、Docker、CMake）
 │   ├── optimization-decisions.md      # 优化决策与辩证分析
 │   └── project-assessment.md          # 项目评估报告
 │
@@ -91,8 +92,9 @@ docs/
 
 ### 架构决策
 
-1. [优化决策](decisions/optimization-decisions.md) — 优化需求、辩证分析、实施状态
-2. [项目评估](decisions/project-assessment.md) — 架构、性能、依赖、测试全面评估
+1. [工具链版本规范](decisions/toolchain-policy.md) — 编译器、Docker、CMake 版本选型与升级策略
+2. [优化决策](decisions/optimization-decisions.md) — 优化需求、辩证分析、实施状态
+3. [项目评估](decisions/project-assessment.md) — 架构、性能、依赖、测试全面评估
 
 ---
 
