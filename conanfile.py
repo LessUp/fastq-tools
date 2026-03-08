@@ -69,6 +69,6 @@ endif()
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["fq_lib", "fq_cli"]
+        self.cpp_info.libs = ["fq_cli", "fq_processing", "fq_statistics", "fq_modern_io", "fq_config", "fq_error", "fq_common"]
         self.cpp_info.set_property("cmake_file_name", "FastQTools")
         self.cpp_info.set_property("cmake_target_name", "FastQTools::FastQTools")

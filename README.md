@@ -6,10 +6,10 @@
 
 ```bash
 # 一键构建
-./scripts/build.sh
+./scripts/core/build
 
 # 查看帮助
-./build-clang-release/FastQTools --help
+./build/clang-release/FastQTools --help
 
 # 统计分析
 FastQTools stat -i input.fastq.gz -o output.stat.txt
@@ -32,7 +32,7 @@ FastQTools filter -i input.fq.gz -o filtered.fq.gz --min-quality 20 --min-length
 ## 依赖清单
 
 - **并发**: Intel oneTBB（流水线核心依赖）
-- **压缩**: zlib / bzip2 / xz
+- **压缩**: zlib-ng / libdeflate
 - **CLI & 日志**: cxxopts、spdlog、fmt、nlohmann-json
 - **包管理**: Conan（默认）
 
@@ -75,7 +75,7 @@ FastQTools/
 
 ### 环境要求
 - CMake ≥ 3.20
-- 支持 C++20 的编译器（GCC 11+ / Clang 19，推荐与 CI/Dev Container 保持一致）
+- 支持 C++20 的编译器（GCC 11+ / Clang 12+，推荐 GCC 15 / Clang 21）
 - Intel oneTBB 运行时（并发库）
 - Ninja（推荐）
 - Conan（依赖管理）
@@ -83,15 +83,17 @@ FastQTools/
 ### 快速构建
 ```bash
 # 一键构建 (Clang + Release)
-./scripts/build.sh
+./scripts/core/build
 
 # 指定配置
-./scripts/build.sh gcc Debug
+./scripts/core/build --compiler gcc --type Debug
 
-# 启用 sanitizers (ASAN, USAN, TSAN)
-./scripts/build.sh clang Debug --asan --usan
-# 或者单独启用 ThreadSanitizer
-./scripts/build.sh clang Debug --tsan
+# 启用 Sanitizers
+./scripts/core/build --sanitizer asan
+./scripts/core/build --sanitizer tsan
+
+# 覆盖率构建
+./scripts/core/build --coverage
 ```
 
 ## 开发指南

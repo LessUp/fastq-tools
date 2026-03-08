@@ -16,7 +16,7 @@ EXTRACT_STATIC         = YES
 #---------------------------------------------------------------------------
 # Input files related configuration options
 #---------------------------------------------------------------------------
-INPUT                  = src README.md
+INPUT                  = include src README.md
 RECURSIVE              = YES
 #---------------------------------------------------------------------------
 # Graphviz-related options

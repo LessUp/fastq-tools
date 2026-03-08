@@ -13,9 +13,9 @@ Thank you for considering contributing to FastQTools! To keep things simple (KIS
 1. Fork the repo and create a feature branch.
 2. Keep PRs small and focused. One change per PR.
 3. Ensure formatting/lint pass:
-   - `./scripts/format.sh`
-   - `./scripts/lint.sh`
-4. Run tests: `./scripts/test.sh` (or `ctest`).
+   - `./scripts/core/lint format`
+   - `./scripts/core/lint check`
+4. Run tests: `./scripts/core/test` (or `ctest`).
 5. Add/update documentation when behavior changes.
 
 ## Commit Messages
