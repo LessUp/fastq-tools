@@ -29,10 +29,29 @@ permissions:
 
 jobs:
   # ===========================================================================
+  # 质量门禁 — 确保 CI 检查已通过后才允许发布
+  # ===========================================================================
+  ci-gate:
+    name: CI Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Wait for CI workflows to complete
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          running-workflow-name: CI Quality Gate
+          allowed-conclusions: success
+
+  # ===========================================================================
   # 构建阶段 — 每个矩阵条目在 Docker 容器中编译
   # ===========================================================================
   build:
     name: Build ${{ matrix.target }}
+    needs: ci-gate
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

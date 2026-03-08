@@ -69,11 +69,11 @@ jobs:
 
       - name: Build project for code analysis
         run: |
-          ./scripts/build.sh clang Release
+          ./scripts/core/build -c clang -t Release
 
       - name: Run linting script
         run: |
-          ./scripts/lint.sh --build-dir build-clang-release
+          ./scripts/core/lint all -b build-clang-release
 
       - name: Install Node.js for commitlint
         uses: actions/setup-node@v4
@@ -166,19 +166,19 @@ jobs:
 
       - name: Build via script
         run: |
-          ./scripts/build.sh ${{ matrix.compiler.name }} ${{ matrix.build_type }}
+          ./scripts/core/build -c ${{ matrix.compiler.name }} -t ${{ matrix.build_type }}
 
       - name: Run tests via script
         if: matrix.build_type == 'Release'
         run: |
-          ./scripts/test.sh -c ${{ matrix.compiler.name }} -t ${{ matrix.build_type }} -j 2
+          ./scripts/core/test -c ${{ matrix.compiler.name }} -t ${{ matrix.build_type }} -j 2
 
       - name: Upload build artifacts
         if: matrix.build_type == 'Release'
         uses: actions/upload-artifact@v3
         with:
-          name: fastqtools-${{ matrix.compiler.name }}-${{ matrix.build_type,, }}
-          path: build-${{ matrix.compiler.name }}-${{ matrix.build_type,, }}/FastQTools
+          name: fastqtools-${{ matrix.compiler.name }}-release
+          path: build-${{ matrix.compiler.name }}-release/FastQTools
           retention-days: 7
 
   docker-build:
@@ -264,7 +264,7 @@ jobs:
 
       - name: Run coverage
         run: |
-          ./scripts/test.sh -c clang -t Coverage -C -j 2
+          ./scripts/core/test -c clang --coverage -j 2
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3
