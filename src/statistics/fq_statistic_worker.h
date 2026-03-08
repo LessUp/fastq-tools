@@ -13,14 +13,14 @@
 
 #pragma once
 
-#include "statistics/fq_statistic.h"
-
 #include "fqtools/statistics/statistic_interface.h"
 
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "statistics/fq_statistic.h"
 
 namespace fq::statistic {
 

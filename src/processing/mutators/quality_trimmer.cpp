@@ -68,8 +68,8 @@ void QualityTrimmer::process(fq::io::FastqRecord& read) {
     }
 }
 
-auto QualityTrimmer::trimFivePrime(std::string_view sequence, std::string_view quality) const
-    -> size_t {
+auto QualityTrimmer::trimFivePrime(std::string_view sequence,
+                                   std::string_view quality) const -> size_t {
     size_t len = std::min(sequence.size(), quality.size());
     size_t i = 0;
 
@@ -113,8 +113,8 @@ auto QualityTrimmer::trimFivePrime(std::string_view sequence, std::string_view q
     return len;  // Trim all
 }
 
-auto QualityTrimmer::trimThreePrime(std::string_view sequence, std::string_view quality) const
-    -> size_t {
+auto QualityTrimmer::trimThreePrime(std::string_view sequence,
+                                    std::string_view quality) const -> size_t {
     size_t len = std::min(sequence.size(), quality.size());
     // Scan from end
     size_t i = len;
@@ -240,8 +240,8 @@ void AdapterTrimmer::process(fq::io::FastqRecord& read) {
     }
 }
 
-auto AdapterTrimmer::findAdapter(std::string_view sequence, std::string_view adapter) const
-    -> size_t {
+auto AdapterTrimmer::findAdapter(std::string_view sequence,
+                                 std::string_view adapter) const -> size_t {
     // Very basic implementation: search for exact match or partial overlap at 3' end
     // Ideally use semi-global alignment or specialized library (e.g. ksw2)
     // For simplicity here: check suffix of seq vs prefix of adapter
@@ -280,8 +280,7 @@ auto AdapterTrimmer::findAdapter(std::string_view sequence, std::string_view ada
     return std::string::npos;
 }
 
-auto AdapterTrimmer::countMismatches(std::string_view seq1, std::string_view seq2) const
-    -> size_t {
+auto AdapterTrimmer::countMismatches(std::string_view seq1, std::string_view seq2) const -> size_t {
     size_t len = std::min(seq1.size(), seq2.size());
     // Adjust inputs to be same length if passed different views?
     // The usage above ensures we compare suffix of seq1 vs prefix of seq2 of same length.

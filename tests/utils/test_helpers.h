@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include <gtest/gtest.h>
-
 #include "fixture_loader.h"
+
+#include <gtest/gtest.h>
 
 namespace fq::test {
 

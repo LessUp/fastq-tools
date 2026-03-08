@@ -2,15 +2,15 @@
 
 #include "fqtools/error/error.h"
 
-#include <libdeflate.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 #include <algorithm>
 #include <cerrno>
 #include <cstring>
 #include <stdexcept>
 #include <vector>
+
+#include <fcntl.h>
+#include <libdeflate.h>
+#include <unistd.h>
 
 #ifdef __linux__
 #include <fcntl.h>  // posix_fadvise
@@ -32,10 +32,10 @@ struct FastqWriter::Impl {
     FastqWriterOptions options{};
     FastqWriterCompressionMode compression = FastqWriterCompressionMode::Auto;
     std::vector<char> buffer;
-    
+
     struct libdeflate_compressor* compressor = nullptr;
     std::vector<char> compressedBuffer;
-    
+
     std::uint64_t totalUncompressedBytes = 0;
     static constexpr size_t kBufferThreshold = 64 * 1024;
 
@@ -45,7 +45,7 @@ struct FastqWriter::Impl {
     explicit Impl(const std::string& p, const FastqWriterOptions& opt) : path(p), options(opt) {
         if (options.compression == FastqWriterCompressionMode::Auto) {
             compression = endsWithGzSuffix(path) ? FastqWriterCompressionMode::Gzip
-                                                : FastqWriterCompressionMode::None;
+                                                 : FastqWriterCompressionMode::None;
         } else {
             compression = options.compression;
         }
@@ -53,9 +53,9 @@ struct FastqWriter::Impl {
         // Open file with standard POSIX IO
         fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd < 0) {
-             throw fq::error::IOError(path, errno);
+            throw fq::error::IOError(path, errno);
         }
-        
+
         buffer.reserve(options.outputBufferBytes);
 
         if (compression == FastqWriterCompressionMode::Gzip) {
@@ -63,10 +63,9 @@ struct FastqWriter::Impl {
             compressor = libdeflate_alloc_compressor(6);
             if (!compressor) {
                 ::close(fd);
-                throw fq::error::FastQException(
-                    fq::error::ErrorCategory::Resource,
-                    fq::error::ErrorSeverity::Critical,
-                    "Failed to allocate libdeflate compressor");
+                throw fq::error::FastQException(fq::error::ErrorCategory::Resource,
+                                                fq::error::ErrorSeverity::Critical,
+                                                "Failed to allocate libdeflate compressor");
             }
 
             // Ensure compressed buffer is large enough for worst case
@@ -96,9 +95,11 @@ struct FastqWriter::Impl {
             size_t outSize = 0;
 
             if (compression == FastqWriterCompressionMode::Gzip) {
-                const size_t compressedSize = libdeflate_gzip_compress(
-                    compressor, buffer.data(), buffer.size(), compressedBuffer.data(),
-                    compressedBuffer.size());
+                const size_t compressedSize = libdeflate_gzip_compress(compressor,
+                                                                       buffer.data(),
+                                                                       buffer.size(),
+                                                                       compressedBuffer.data(),
+                                                                       compressedBuffer.size());
                 if (compressedSize == 0) {
                     throw fq::error::IOError(path, 0);
                 }
@@ -111,8 +112,7 @@ struct FastqWriter::Impl {
 
             size_t totalWritten = 0;
             while (totalWritten < outSize) {
-                const ssize_t written = ::write(
-                    fd, outPtr + totalWritten, outSize - totalWritten);
+                const ssize_t written = ::write(fd, outPtr + totalWritten, outSize - totalWritten);
                 if (written < 0) {
                     if (errno == EINTR) {
                         continue;
@@ -125,12 +125,11 @@ struct FastqWriter::Impl {
                 totalWritten += static_cast<size_t>(written);
             }
 
-             buffer.clear();
+            buffer.clear();
 
 #ifdef __linux__
             // 通知内核释放已写出的 page cache，减少大文件写出时的内存压力
-            ::posix_fadvise(fd, flushedOffset, static_cast<off_t>(outSize),
-                            POSIX_FADV_DONTNEED);
+            ::posix_fadvise(fd, flushedOffset, static_cast<off_t>(outSize), POSIX_FADV_DONTNEED);
             flushedOffset += static_cast<off_t>(outSize);
 #endif
         }

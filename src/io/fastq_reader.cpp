@@ -3,16 +3,17 @@
 #include "fqtools/error/error.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <cstddef>
 #include <cstring>
-#include <cerrno>
-#include <fcntl.h>
 #include <limits>
 #include <stdexcept>
-#include <unistd.h>
-#include <fmt/format.h>
 
+#include <fcntl.h>
+#include <unistd.h>
 #include <zlib.h>
+
+#include <fmt/format.h>
 
 #ifdef __linux__
 #include <fcntl.h>  // posix_fadvise
@@ -179,7 +180,8 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
                 }
 
                 batch.buffer().resize(kCurrentSize + toRead);
-                const auto kBytesRead = impl_->readSome(batch.buffer().data() + kCurrentSize, toRead);
+                const auto kBytesRead =
+                    impl_->readSome(batch.buffer().data() + kCurrentSize, toRead);
                 if (kBytesRead < 0) {
                     if (impl_->isGzip) {
                         int err = 0;
@@ -215,9 +217,10 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
             if (*ptr != '@') {
                 // Robustness check
                 // If we are here, we expect a record start.
-                // If EOF is reached, this loop should have terminated if we handle trailing newlines correctly.
-                // If we found junk, throw error.
-                throw fq::error::FormatError(fmt::format("Expected '@' at record start. Found '{}'", *ptr));
+                // If EOF is reached, this loop should have terminated if we handle trailing
+                // newlines correctly. If we found junk, throw error.
+                throw fq::error::FormatError(
+                    fmt::format("Expected '@' at record start. Found '{}'", *ptr));
             }
 
             const char* line1End = Impl::findEol(ptr, end);
@@ -233,10 +236,11 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
 
             const char* line3Start = line2End + 1;
             if (line3Start >= end || *line3Start != '+') {
-                 if (line3Start < end) {
-                      throw fq::error::FormatError(fmt::format("Expected '+' at line 3. Found '{}'", *line3Start));
-                 }
-                 break;
+                if (line3Start < end) {
+                    throw fq::error::FormatError(
+                        fmt::format("Expected '+' at line 3. Found '{}'", *line3Start));
+                }
+                break;
             }
             const char* line3End = Impl::findEol(line3Start, end);
             if (line3End == nullptr) {
@@ -299,9 +303,8 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
                 // 优化：预分配 remainder 容量避免反复分配
                 const size_t remainderLen = kTotal - kConsumed;
                 impl_->remainder.resize(remainderLen);
-                std::memcpy(impl_->remainder.data(),
-                            batch.buffer().data() + kConsumed,
-                            remainderLen);
+                std::memcpy(
+                    impl_->remainder.data(), batch.buffer().data() + kConsumed, remainderLen);
                 batch.buffer().resize(kConsumed);
             }
             return true;

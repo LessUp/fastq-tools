@@ -14,11 +14,11 @@
 #include <string>
 #include <vector>
 
-#include <fqtools/fq.h>
-#include <fqtools/logging.h>
 #include "commands/command_interface.h"
 #include "commands/filter_command.h"
 #include "commands/stat_command.h"
+#include <fqtools/fq.h>
+#include <fqtools/logging.h>
 
 namespace fq::cli {
 // Forward declare to avoid exposing cxxopts in headers

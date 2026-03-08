@@ -92,7 +92,7 @@ auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
 }
 
 auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
-                                                ProcessingStatistics& stats) -> bool {
+                                      ProcessingStatistics& stats) -> bool {
     stats.inputBytes += batch.buffer().size();
     auto& records = batch.records();
     const size_t totalInBatch = records.size();
@@ -175,8 +175,7 @@ auto ProcessingPipeline::processWithTBB() -> ProcessingStatistics {
             maxTokens = config_.maxInFlightBatches;
         }
         if (config_.memoryLimitBytes > 0 && config_.batchCapacityBytes > 0) {
-            const size_t cap =
-                (config_.memoryLimitBytes * 7 / 10) / config_.batchCapacityBytes;
+            const size_t cap = (config_.memoryLimitBytes * 7 / 10) / config_.batchCapacityBytes;
             if (cap > 0) {
                 maxTokens = std::min(maxTokens, cap);
             }
@@ -191,7 +190,8 @@ auto ProcessingPipeline::processWithTBB() -> ProcessingStatistics {
 
             tbb::make_filter<void, std::shared_ptr<fq::io::FastqBatch>>(
                 tbb::filter_mode::serial_in_order,
-                [reader, batchPool, this](tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
+                [reader, batchPool, this](
+                    tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
                     auto batch = batchPool->acquire();
                     if (reader->nextBatch(*batch, config_.batchSize)) {
                         return batch;
@@ -215,7 +215,7 @@ auto ProcessingPipeline::processWithTBB() -> ProcessingStatistics {
                     void>(
                     tbb::filter_mode::serial_in_order,
                     [&writer, &finalStats](const std::pair<std::shared_ptr<fq::io::FastqBatch>,
-                                                            ProcessingStatistics>& pair) {
+                                                           ProcessingStatistics>& pair) {
                         const auto before = writer.totalUncompressedBytes();
                         writer.write(*pair.first);
                         const auto after = writer.totalUncompressedBytes();

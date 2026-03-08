@@ -51,7 +51,7 @@ public:
     [[nodiscard]] auto elapsed() const -> std::chrono::nanoseconds;
 
 private:
-    std::string name_;                                       ///< 计时器的名称。
+    std::string name_;                                      ///< 计时器的名称。
     std::chrono::high_resolution_clock::time_point start_;  ///< 计时开始的时间点。
 };
 

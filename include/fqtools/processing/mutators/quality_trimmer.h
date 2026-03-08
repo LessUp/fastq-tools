@@ -1,12 +1,11 @@
 #pragma once
 
 #include "fqtools/io/fastq_io.h"
+#include "fqtools/processing/read_mutator_interface.h"
 
 #include <atomic>
 #include <string>
 #include <vector>
-
-#include "fqtools/processing/read_mutator_interface.h"
 
 namespace fq::processing {
 

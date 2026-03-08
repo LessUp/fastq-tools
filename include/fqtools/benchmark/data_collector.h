@@ -1,8 +1,8 @@
 #pragma once
 
-#include <fqtools/benchmark/types.h>
-
 #include <string>
+
+#include <fqtools/benchmark/types.h>
 
 namespace fq::benchmark {
 

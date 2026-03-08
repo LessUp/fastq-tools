@@ -1,11 +1,10 @@
 #pragma once
 
 #include "fqtools/io/fastq_io.h"
+#include "fqtools/processing/read_predicate_interface.h"
 
 #include <atomic>
 #include <string>
-
-#include "fqtools/processing/read_predicate_interface.h"
 
 namespace fq::processing {
 

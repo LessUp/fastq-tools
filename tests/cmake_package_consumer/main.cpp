@@ -1,7 +1,7 @@
+#include "fqtools/common/common.h"
+
 #include <iostream>
 #include <string>
-
-#include "fqtools/common/common.h"
 
 auto main() -> int {
     const std::string input = "  FastQTools  ";

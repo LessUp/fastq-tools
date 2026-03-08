@@ -66,14 +66,16 @@ auto FqStatisticResult::operator+=(const FqStatisticResult& other) -> FqStatisti
 
 // Helper function: 计算单个位置的错误率
 // qualSlot 指向该位置的 kMaxQual 个质量分数槽位（扁平化布局）
-[[nodiscard]] static auto calculateErrorPerPosition(const uint64_t* qualSlot, uint64_t readCount) -> double {
+[[nodiscard]] static auto calculateErrorPerPosition(const uint64_t* qualSlot,
+                                                    uint64_t readCount) -> double {
     if (readCount == 0) {
         return 0.0;
     }
 
     double errPerPos = 0.0;
     for (int i = 0; i < kMaxQual; ++i) {
-        errPerPos += static_cast<double>(qualSlot[i]) * std::pow(10.0, -0.1 * static_cast<double>(i));
+        errPerPos +=
+            static_cast<double>(qualSlot[i]) * std::pow(10.0, -0.1 * static_cast<double>(i));
     }
     return errPerPos / static_cast<double>(readCount);
 }
@@ -84,14 +86,12 @@ FastqStatisticCalculator::FastqStatisticCalculator(const StatisticOptions& optio
 }
 
 void FastqStatisticCalculator::run() {
-    fq::logging::info(
-        "Starting FASTQ statistics generation for '{}' using TBB pipeline (New IO).",
-        options_.inputFastqPath);
+    fq::logging::info("Starting FASTQ statistics generation for '{}' using TBB pipeline (New IO).",
+                      options_.inputFastqPath);
 
     FqStatisticResult finalResult;
 
-    const size_t threadCount =
-        std::max<size_t>(1, static_cast<size_t>(options_.threadCount));
+    const size_t threadCount = std::max<size_t>(1, static_cast<size_t>(options_.threadCount));
     tbb::global_control globalLimit(tbb::global_control::max_allowed_parallelism, threadCount);
 
     size_t maxLiveTokens = std::max(static_cast<size_t>(1), threadCount * 2);
@@ -99,8 +99,7 @@ void FastqStatisticCalculator::run() {
         maxLiveTokens = options_.maxInFlightBatches;
     }
     if (options_.memoryLimitBytes > 0 && options_.batchCapacityBytes > 0) {
-        const size_t cap =
-            (options_.memoryLimitBytes * 7 / 10) / options_.batchCapacityBytes;
+        const size_t cap = (options_.memoryLimitBytes * 7 / 10) / options_.batchCapacityBytes;
         if (cap > 0) {
             maxLiveTokens = std::min(maxLiveTokens, cap);
         }
@@ -125,7 +124,8 @@ void FastqStatisticCalculator::run() {
         // Stage 1: Input Filter (Serial)
         tbb::make_filter<void, std::shared_ptr<fq::io::FastqBatch>>(
             tbb::filter_mode::serial_in_order,
-            [reader, batchPool, this](tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
+            [reader, batchPool, this](
+                tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
                 auto batch = batchPool->acquire();
                 batch->buffer().reserve(options_.batchCapacityBytes);
                 batch->records().reserve(static_cast<size_t>(options_.batchSize));
@@ -168,8 +168,8 @@ void FastqStatisticCalculator::run() {
 void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
     std::ofstream writer(options_.outputStatPath);
     if (!writer) {
-        throw std::runtime_error(
-            "Failed to open output statistics file: " + options_.outputStatPath);
+        throw std::runtime_error("Failed to open output statistics file: " +
+                                 options_.outputStatPath);
     }
 
     writer << std::fixed << std::setprecision(2);
@@ -188,8 +188,7 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
     writer << "#Name\t" << fqName << "\n";
     writer << "#PhredQual\t" << 33 << "\n";
     writer << "#ReadNum\t" << result.readCount << "\n";
-    writer << "#MaxReadLength\t" << result.maxReadLength
-           << "\n";  // Changed from fixed ReadLength
+    writer << "#MaxReadLength\t" << result.maxReadLength << "\n";  // Changed from fixed ReadLength
     writer << "#BaseCount\t" << result.totalBases << "\n";
 
     constexpr int kQ20Threshold = 20;
@@ -240,8 +239,7 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
         const uint64_t* qSlot = result.qualityAt(i);
 
         writer << i + 1 << "\t";
-        writer << bSlot[0] << "\t" << bSlot[1] << "\t"
-               << bSlot[2] << "\t" << bSlot[3] << "\t"
+        writer << bSlot[0] << "\t" << bSlot[1] << "\t" << bSlot[2] << "\t" << bSlot[3] << "\t"
                << bSlot[4] << "\t";
 
         uint64_t sumQual = 0;
@@ -253,8 +251,7 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
         }
 
         if (countReadsAtPos > 0) {
-            writer << static_cast<double>(sumQual) / static_cast<double>(countReadsAtPos)
-                   << "\t";
+            writer << static_cast<double>(sumQual) / static_cast<double>(countReadsAtPos) << "\t";
             writer << calculateErrorPerPosition(qSlot, countReadsAtPos) << "\n";
         } else {
             writer << "0.0\t0.0\n";

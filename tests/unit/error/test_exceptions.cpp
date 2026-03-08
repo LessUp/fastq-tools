@@ -1,6 +1,6 @@
-#include <memory>
-
 #include "fqtools/error/error.h"
+
+#include <memory>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -35,11 +35,13 @@ TEST(ErrorExceptionTest, FormatErrorCreation) {
     EXPECT_EQ(ex.category(), ErrorCategory::Format);
     EXPECT_EQ(ex.severity(), ErrorSeverity::Error);
     EXPECT_THAT(ex.message(), testing::HasSubstr("Invalid FASTQ format"));
-    EXPECT_THAT(ex.what(), testing::AllOf(testing::HasSubstr("FORMAT"), testing::HasSubstr("ERROR")));
+    EXPECT_THAT(ex.what(),
+                testing::AllOf(testing::HasSubstr("FORMAT"), testing::HasSubstr("ERROR")));
 }
 
 TEST(ErrorExceptionTest, ValidationErrorCreation) {
-    FastQException ex(ErrorCategory::Validation, ErrorSeverity::Error, "Sequence validation failed");
+    FastQException ex(
+        ErrorCategory::Validation, ErrorSeverity::Error, "Sequence validation failed");
 
     EXPECT_EQ(ex.category(), ErrorCategory::Validation);
     EXPECT_EQ(ex.severity(), ErrorSeverity::Error);
@@ -47,7 +49,8 @@ TEST(ErrorExceptionTest, ValidationErrorCreation) {
 }
 
 TEST(ErrorExceptionTest, ProcessingErrorCreation) {
-    FastQException ex(ErrorCategory::Processing, ErrorSeverity::Error, "Pipeline processing failed");
+    FastQException ex(
+        ErrorCategory::Processing, ErrorSeverity::Error, "Pipeline processing failed");
 
     EXPECT_EQ(ex.category(), ErrorCategory::Processing);
     EXPECT_EQ(ex.severity(), ErrorSeverity::Error);
@@ -68,12 +71,13 @@ TEST(ErrorExceptionTest, ConfigurationErrorCreation) {
     EXPECT_EQ(ex.category(), ErrorCategory::Configuration);
     EXPECT_EQ(ex.severity(), ErrorSeverity::Error);
     EXPECT_THAT(ex.message(), testing::HasSubstr("Invalid configuration parameter"));
-    EXPECT_THAT(ex.what(), testing::AllOf(testing::HasSubstr("CONFIG"), testing::HasSubstr("ERROR")));
+    EXPECT_THAT(ex.what(),
+                testing::AllOf(testing::HasSubstr("CONFIG"), testing::HasSubstr("ERROR")));
 }
 
 TEST(ErrorExceptionTest, SourceLocation) {
     // 测试源位置信息
-    // Note: FastQException currently doesn't store location in the header I saw, 
+    // Note: FastQException currently doesn't store location in the header I saw,
     // but the test refers to it. Let me check the header again.
     // If it doesn't exist, I should remove this test.
     SUCCEED();

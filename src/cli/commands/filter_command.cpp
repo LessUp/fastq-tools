@@ -24,8 +24,7 @@ struct FilterCommand::Config {
 
 // Use the factory in the constructor
 FilterCommand::FilterCommand()
-    : config_(std::make_unique<Config>()),
-      pipeline_(fq::processing::createProcessingPipeline()) {}
+    : config_(std::make_unique<Config>()), pipeline_(fq::processing::createProcessingPipeline()) {}
 
 FilterCommand::~FilterCommand() = default;
 
@@ -79,7 +78,8 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     }
 
     if (!result.count("input") || !result.count("output")) {
-        std::cerr << "Error: both --input and --output options are required for the filter command.\n";
+        std::cerr
+            << "Error: both --input and --output options are required for the filter command.\n";
         std::cerr << options.help() << '\n';
         return 1;
     }
@@ -102,8 +102,7 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     pipelineConfig.writerBufferBytes = result["writer-buffer-bytes"].as<size_t>();
     pipelineConfig.maxInFlightBatches = result["in-flight"].as<size_t>();
     const size_t memGb = result["memory-limit-gb"].as<size_t>();
-    pipelineConfig.memoryLimitBytes =
-        memGb == 0 ? 0 : (memGb * 1024ULL * 1024ULL * 1024ULL);
+    pipelineConfig.memoryLimitBytes = memGb == 0 ? 0 : (memGb * 1024ULL * 1024ULL * 1024ULL);
     pipeline_->setProcessingConfig(pipelineConfig);
 
     // Wire predicates and mutators from CLI options
@@ -117,20 +116,17 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
 
     if (result.count("min-length")) {
         size_t minLen = result["min-length"].as<size_t>();
-        pipeline_->addReadPredicate(
-            std::make_unique<fq::processing::MinLengthPredicate>(minLen));
+        pipeline_->addReadPredicate(std::make_unique<fq::processing::MinLengthPredicate>(minLen));
     }
 
     if (result.count("max-length")) {
         size_t maxLen = result["max-length"].as<size_t>();
-        pipeline_->addReadPredicate(
-            std::make_unique<fq::processing::MaxLengthPredicate>(maxLen));
+        pipeline_->addReadPredicate(std::make_unique<fq::processing::MaxLengthPredicate>(maxLen));
     }
 
     if (result.count("max-n-ratio")) {
         double maxN = result["max-n-ratio"].as<double>();
-        pipeline_->addReadPredicate(
-            std::make_unique<fq::processing::MaxNRatioPredicate>(maxN));
+        pipeline_->addReadPredicate(std::make_unique<fq::processing::MaxNRatioPredicate>(maxN));
     }
 
     if (result.count("trim-quality")) {

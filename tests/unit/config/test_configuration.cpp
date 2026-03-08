@@ -1,8 +1,8 @@
-#include <filesystem>
-#include <fstream>
-
 #include "fqtools/config/config.h"
 #include "fqtools/error/error.h"
+
+#include <filesystem>
+#include <fstream>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

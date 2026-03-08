@@ -1,6 +1,6 @@
-#include "fqtools/io/fastq_reader.h"
-#include "fqtools/io/fastq_io.h"
 #include "fqtools/error/error.h"
+#include "fqtools/io/fastq_io.h"
+#include "fqtools/io/fastq_reader.h"
 
 #include <filesystem>
 #include <fstream>

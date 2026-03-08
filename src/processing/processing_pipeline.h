@@ -159,8 +159,8 @@ private:
      */
     auto processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats) -> bool;
 
-    std::string inputPath_;                                           ///< 输入文件路径
-    std::string outputPath_;                                          ///< 输出文件路径
+    std::string inputPath_;                                            ///< 输入文件路径
+    std::string outputPath_;                                           ///< 输出文件路径
     ProcessingConfig config_;                                          ///< 处理配置
     std::vector<std::unique_ptr<ReadMutatorInterface>> mutators_;      ///< 数据修改器列表
     std::vector<std::unique_ptr<ReadPredicateInterface>> predicates_;  ///< 数据过滤器列表

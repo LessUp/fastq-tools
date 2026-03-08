@@ -1,9 +1,10 @@
 #include "fqtools/config/config.h"
 
+#include <filesystem>
+#include <fstream>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <fstream>
-#include <filesystem>
 
 namespace fq::config {
 

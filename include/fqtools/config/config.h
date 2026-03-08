@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "fqtools/error/error.h"
+
 #include <cstdint>
 #include <filesystem>
 #include <format>
@@ -18,8 +20,6 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
-
-#include "fqtools/error/error.h"
 
 namespace fq::config {
 
@@ -69,12 +69,14 @@ public:
     [[nodiscard]] auto get(std::string_view key) const -> T {
         auto it = values_.find(std::string(key));
         if (it == values_.end()) {
-            throw fq::error::ConfigurationError(std::format("Configuration key '{}' not found", key));
+            throw fq::error::ConfigurationError(
+                std::format("Configuration key '{}' not found", key));
         }
         try {
             return std::get<T>(it->second);
         } catch (const std::bad_variant_access&) {
-            throw fq::error::ConfigurationError(std::format("Configuration key '{}' type mismatch", key));
+            throw fq::error::ConfigurationError(
+                std::format("Configuration key '{}' type mismatch", key));
         }
     }
 
@@ -116,11 +118,11 @@ public:
 private:
     std::unordered_map<std::string, ConfigValue> values_;
     std::unordered_map<char, std::string> shortToLong_ = {{'i', "input"},
-                                                         {'o', "output"},
-                                                         {'t', "threads"},
-                                                         {'m', "memoryLimitMb"},
-                                                         {'v', "verbose"},
-                                                         {'h', "help"}};
+                                                          {'o', "output"},
+                                                          {'t', "threads"},
+                                                          {'m', "memoryLimitMb"},
+                                                          {'v', "verbose"},
+                                                          {'h', "help"}};
     void validateKey(std::string_view key) const;
     void parseConfigStream(std::istream& stream);
     auto getLongNameForShort(char shortName) const -> std::string;

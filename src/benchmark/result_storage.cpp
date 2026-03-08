@@ -1,16 +1,16 @@
-#include <fqtools/benchmark/result_storage.h>
-#include <fqtools/benchmark/data_collector.h>
-
 #include <algorithm>
 #include <fstream>
 #include <stdexcept>
 
+#include <fqtools/benchmark/data_collector.h>
+#include <fqtools/benchmark/result_storage.h>
+
 namespace fq::benchmark {
 
 ResultStorage::ResultStorage(const std::filesystem::path& base_dir)
-    : base_dir_(base_dir)
-    , results_dir_(base_dir / "results")
-    , baselines_dir_(base_dir / "baselines") {
+    : base_dir_(base_dir),
+      results_dir_(base_dir / "results"),
+      baselines_dir_(base_dir / "baselines") {
     ensureDirectories();
 }
 
@@ -36,14 +36,13 @@ std::filesystem::path ResultStorage::saveResult(const BenchmarkReport& report) {
 
 BenchmarkReport ResultStorage::loadResult(const std::string& filename) {
     std::filesystem::path filepath = results_dir_ / filename;
-    
+
     std::ifstream ifs(filepath);
     if (!ifs) {
         throw std::runtime_error("Failed to open result file: " + filepath.string());
     }
 
-    std::string json((std::istreambuf_iterator<char>(ifs)),
-                     std::istreambuf_iterator<char>());
+    std::string json((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
     return DataCollector::fromJson(json);
 }
 
@@ -73,8 +72,8 @@ BenchmarkReport ResultStorage::getLatestResult() {
     return loadResult(results.back());
 }
 
-std::filesystem::path ResultStorage::saveBaseline(const BenchmarkReport& report, 
-                                                   const std::string& name) {
+std::filesystem::path ResultStorage::saveBaseline(const BenchmarkReport& report,
+                                                  const std::string& name) {
     std::filesystem::path filepath = baselines_dir_ / (name + ".json");
 
     std::string json = DataCollector::toJson(report);
@@ -90,14 +89,13 @@ std::filesystem::path ResultStorage::saveBaseline(const BenchmarkReport& report,
 
 BenchmarkReport ResultStorage::loadBaseline(const std::string& name) {
     std::filesystem::path filepath = baselines_dir_ / (name + ".json");
-    
+
     std::ifstream ifs(filepath);
     if (!ifs) {
         throw std::runtime_error("Baseline not found: " + name);
     }
 
-    std::string json((std::istreambuf_iterator<char>(ifs)),
-                     std::istreambuf_iterator<char>());
+    std::string json((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
     return DataCollector::fromJson(json);
 }
 

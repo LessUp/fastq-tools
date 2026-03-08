@@ -1,10 +1,10 @@
 #pragma once
 
-#include <fqtools/benchmark/types.h>
-
 #include <filesystem>
 #include <string>
 #include <vector>
+
+#include <fqtools/benchmark/types.h>
 
 namespace fq::benchmark {
 

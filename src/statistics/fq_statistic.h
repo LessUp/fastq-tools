@@ -26,8 +26,8 @@
 namespace fq::statistic {
 
 // 统计常量（供 FqStatisticResult 和 FqStatisticWorker 共用）
-constexpr int kMaxQual = 42;     ///< 最大质量分数值
-constexpr int kMaxBaseNum = 5;   ///< 最大碱基数量
+constexpr int kMaxQual = 42;    ///< 最大质量分数值
+constexpr int kMaxBaseNum = 5;  ///< 最大碱基数量
 
 /**
  * @brief FASTQ 统计信息结果结构体
@@ -35,9 +35,9 @@ constexpr int kMaxBaseNum = 5;   ///< 最大碱基数量
  *          位置质量分数分布和位置碱基分布等信息
  */
 struct FqStatisticResult {
-    uint64_t readCount = 0;                         ///< 总读取数量
-    uint64_t totalBases = 0;                        ///< 总碱基数
-    uint32_t maxReadLength = 0;                     ///< 最大读取长度
+    uint64_t readCount = 0;      ///< 总读取数量
+    uint64_t totalBases = 0;     ///< 总碱基数
+    uint32_t maxReadLength = 0;  ///< 最大读取长度
 
     /// 位置质量分数分布（扁平化一维布局：[pos * kMaxQual + qual]）
     std::vector<uint64_t> posQualityDist;

@@ -1,7 +1,7 @@
-#include <memory>
-
-#include "fqtools/error/error.h"
 #include "fqtools/common/common.h"
+#include "fqtools/error/error.h"
+
+#include <memory>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -24,10 +24,11 @@ TEST_F(ErrorHandlerTest, RegisterSingleHandler) {
     ErrorHandler handler;
 
     bool wasCalled = false;
-    ErrorHandler::HandlerFunc testHandler = [&wasCalled]([[maybe_unused]] const FastQException& ex) {
-        wasCalled = true;
-        return true;
-    };
+    ErrorHandler::HandlerFunc testHandler =
+        [&wasCalled]([[maybe_unused]] const FastQException& ex) {
+            wasCalled = true;
+            return true;
+        };
 
     handler.registerHandler(ErrorCategory::IO, testHandler);
 
@@ -42,10 +43,11 @@ TEST_F(ErrorHandlerTest, HandlerNotCalledForWrongCategory) {
     ErrorHandler handler;
 
     bool wasCalled = false;
-    ErrorHandler::HandlerFunc testHandler = [&wasCalled]([[maybe_unused]] const FastQException& ex) {
-        wasCalled = true;
-        return true;
-    };
+    ErrorHandler::HandlerFunc testHandler =
+        [&wasCalled]([[maybe_unused]] const FastQException& ex) {
+            wasCalled = true;
+            return true;
+        };
 
     handler.registerHandler(ErrorCategory::IO, testHandler);
 
@@ -203,10 +205,11 @@ TEST_F(ErrorHandlerTest, MultipleCategoriesIndependent) {
         return true;
     };
 
-    ErrorHandler::HandlerFunc formatHandler = [&formatCalled]([[maybe_unused]] const FastQException& ex) {
-        formatCalled = true;
-        return true;
-    };
+    ErrorHandler::HandlerFunc formatHandler =
+        [&formatCalled]([[maybe_unused]] const FastQException& ex) {
+            formatCalled = true;
+            return true;
+        };
 
     handler.registerHandler(ErrorCategory::IO, ioHandler);
     handler.registerHandler(ErrorCategory::Format, formatHandler);

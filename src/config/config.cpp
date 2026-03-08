@@ -11,6 +11,7 @@
 #include "fqtools/config/config.h"
 
 #include "fqtools/common/common.h"
+#include "fqtools/error/error.h"
 
 #include <algorithm>
 #include <cctype>
@@ -21,8 +22,6 @@
 #include <stdexcept>
 #include <type_traits>
 #include <unordered_map>
-
-#include "fqtools/error/error.h"
 
 extern char** environ;
 
@@ -200,7 +199,8 @@ void Configuration::parseConfigStream(std::istream& stream) {
 
         auto eqPos = trimmed.find('=');
         if (eqPos == std::string::npos) {
-            FQ_THROW_CONFIG_ERROR(std::format("Invalid configuration line {}: '{}'", lineNumber, trimmed));
+            FQ_THROW_CONFIG_ERROR(
+                std::format("Invalid configuration line {}: '{}'", lineNumber, trimmed));
         }
 
         auto key = fq::common::trim(trimmed.substr(0, eqPos));
@@ -211,10 +211,10 @@ void Configuration::parseConfigStream(std::istream& stream) {
 
 void Configuration::setFromString(const std::string& key, const std::string& value) {
     validateKey(key);
-    
+
     std::string processedValue = value;
     // 去除两端引号 (单引号 or 双引号)
-    if (processedValue.size() >= 2 && 
+    if (processedValue.size() >= 2 &&
         ((processedValue.front() == '"' && processedValue.back() == '"') ||
          (processedValue.front() == '\'' && processedValue.back() == '\''))) {
         processedValue = processedValue.substr(1, processedValue.size() - 2);
@@ -236,7 +236,8 @@ void Configuration::setFromString(const std::string& key, const std::string& val
                 set(key, i);
                 return;
             }
-        } catch (...) {}
+        } catch (...) {
+        }
 
         try {
             size_t pos;
@@ -245,7 +246,8 @@ void Configuration::setFromString(const std::string& key, const std::string& val
                 set(key, d);
                 return;
             }
-        } catch (...) {}
+        } catch (...) {
+        }
 
         // 最后作为字符串
         set(key, processedValue);

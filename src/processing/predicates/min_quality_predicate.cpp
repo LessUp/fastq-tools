@@ -25,8 +25,7 @@ auto MinQualityPredicate::evaluate(const fq::io::FastqRecord& read) const -> boo
     return false;
 }
 
-auto MinQualityPredicate::calculateAverageQuality(std::string_view qualityString) const
-    -> double {
+auto MinQualityPredicate::calculateAverageQuality(std::string_view qualityString) const -> double {
     if (qualityString.empty())
         return 0.0;
 

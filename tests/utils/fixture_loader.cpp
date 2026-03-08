@@ -54,8 +54,8 @@ bool FixtureLoader::fixtureExists(const std::string& filename) {
 
 std::filesystem::path FixtureLoader::createTempFastq(size_t records, size_t read_length) {
     auto temp_dir = std::filesystem::temp_directory_path();
-    auto temp_file = temp_dir / ("fastqtools_fixture_" +
-                                 std::to_string(std::random_device{}()) + ".fastq");
+    auto temp_file =
+        temp_dir / ("fastqtools_fixture_" + std::to_string(std::random_device{}()) + ".fastq");
 
     std::ofstream out(temp_file);
     if (!out.is_open()) {
@@ -129,8 +129,7 @@ double PerformanceTimer::elapsedMilliseconds() const {
 // TempDirectory 实现
 // ---------------------------------------------------------------------------
 
-TempDirectory::TempDirectory()
-    : TempDirectory("fastqtools_test_") {}
+TempDirectory::TempDirectory() : TempDirectory("fastqtools_test_") {}
 
 TempDirectory::TempDirectory(const std::string& prefix) {
     auto base = std::filesystem::temp_directory_path();
@@ -145,8 +144,7 @@ TempDirectory::~TempDirectory() {
     }
 }
 
-TempDirectory::TempDirectory(TempDirectory&& other) noexcept
-    : path_(std::move(other.path_)) {
+TempDirectory::TempDirectory(TempDirectory&& other) noexcept : path_(std::move(other.path_)) {
     other.path_.clear();
 }
 

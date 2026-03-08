@@ -7,9 +7,9 @@
 
 // 公共工具
 #include "fqtools/common/common.h"
-#include "fqtools/error/error.h"
 #include "fqtools/config/config.h"
 #include "fqtools/core/core.h"
+#include "fqtools/error/error.h"
 
 // I/O
 #include "fqtools/io/fastq_io.h"
@@ -17,11 +17,11 @@
 #include "fqtools/io/fastq_writer.h"
 
 // 处理管道
+#include "fqtools/processing/mutators.h"
+#include "fqtools/processing/predicates.h"
 #include "fqtools/processing/processing_pipeline_interface.h"
 #include "fqtools/processing/read_mutator_interface.h"
 #include "fqtools/processing/read_predicate_interface.h"
-#include "fqtools/processing/mutators.h"
-#include "fqtools/processing/predicates.h"
 
 // 统计
 #include "fqtools/statistics/statistic_calculator_interface.h"

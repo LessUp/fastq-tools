@@ -45,7 +45,8 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
     }
 
     if (!result.count("input") || !result.count("output")) {
-        std::cerr << "Error: both --input and --output options are required for the stat command.\n";
+        std::cerr
+            << "Error: both --input and --output options are required for the stat command.\n";
         std::cerr << options.help() << '\n';
         return 1;
     }

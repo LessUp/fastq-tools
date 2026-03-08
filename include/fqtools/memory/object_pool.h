@@ -50,9 +50,7 @@ public:
      * @param maxSize 池的最大容量，0 表示无限制
      * @param resetFunc 对象重置回调函数，获取对象时调用
      */
-    explicit ObjectPool(size_t initialSize = 0,
-                        size_t maxSize = 0,
-                        ResetFunc resetFunc = nullptr)
+    explicit ObjectPool(size_t initialSize = 0, size_t maxSize = 0, ResetFunc resetFunc = nullptr)
         : resetFunc_(std::move(resetFunc)), maxSize_(maxSize) {
         if (initialSize > 0) {
             reserve(initialSize);

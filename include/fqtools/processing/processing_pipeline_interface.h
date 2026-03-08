@@ -29,16 +29,16 @@ namespace fq::processing {
  * @details 记录 FastQ 数据处理过程中的各项统计指标，用于性能监控和结果分析
  */
 struct ProcessingStatistics {
-    uint64_t totalReads = 0;         ///< 总读取数
-    uint64_t passedReads = 0;        ///< 通过筛选的读取数
-    uint64_t filteredReads = 0;      ///< 被过滤的读取数
-    uint64_t modifiedReads = 0;      ///< 被修改的读取数
-    uint64_t errorReads = 0;         ///< 出错的读取数
-    uint64_t inputBytes = 0;         ///< 输入字节数（解压后的原始文本字节）
-    uint64_t outputBytes = 0;        ///< 输出字节数（写出前的原始文本字节）
-    uint64_t elapsedMs = 0;          ///< 处理时间（毫秒）
+    uint64_t totalReads = 0;        ///< 总读取数
+    uint64_t passedReads = 0;       ///< 通过筛选的读取数
+    uint64_t filteredReads = 0;     ///< 被过滤的读取数
+    uint64_t modifiedReads = 0;     ///< 被修改的读取数
+    uint64_t errorReads = 0;        ///< 出错的读取数
+    uint64_t inputBytes = 0;        ///< 输入字节数（解压后的原始文本字节）
+    uint64_t outputBytes = 0;       ///< 输出字节数（写出前的原始文本字节）
+    uint64_t elapsedMs = 0;         ///< 处理时间（毫秒）
     double processingTimeMs = 0.0;  ///< 处理时间（毫秒，浮点数，保留兼容）
-    double throughputMbps = 0.0;     ///< 吞吐量（MB/s）
+    double throughputMbps = 0.0;    ///< 吞吐量（MB/s）
 
     auto getPassRate() const -> double {
         return totalReads > 0 ? static_cast<double>(passedReads) / totalReads : 0.0;

@@ -9,6 +9,7 @@
  */
 
 #include "fqtools/error/error.h"
+
 #include "fqtools/logging.h"
 
 #include <cstring>
@@ -136,8 +137,8 @@ auto FastQException::severityString(ErrorSeverity sev) -> std::string_view {
  * @post 格式化后的消息存储在 whatMessage_ 中
  */
 void FastQException::formatWhatMessage() {
-    whatMessage_ = fmt::format(
-        "[{}:{}] {}", categoryString(category_), severityString(severity_), message_);
+    whatMessage_ =
+        fmt::format("[{}:{}] {}", categoryString(category_), severityString(severity_), message_);
 }
 
 void ErrorHandler::registerHandler(ErrorCategory category, HandlerFunc handler) {

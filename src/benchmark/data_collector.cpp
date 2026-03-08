@@ -1,5 +1,3 @@
-#include <fqtools/benchmark/data_collector.h>
-
 #include <array>
 #include <chrono>
 #include <cstdio>
@@ -10,9 +8,12 @@
 #include <sstream>
 #include <thread>
 
+#include <fqtools/benchmark/data_collector.h>
+
 #ifdef __linux__
-#include <sys/sysinfo.h>
 #include <unistd.h>
+
+#include <sys/sysinfo.h>
 #endif
 
 namespace fq::benchmark {
@@ -125,13 +126,11 @@ std::string DataCollector::getOsVersion() {
 
 std::string DataCollector::getCompilerVersion() {
 #if defined(__clang__)
-    return "clang " + std::to_string(__clang_major__) + "." +
-           std::to_string(__clang_minor__) + "." +
-           std::to_string(__clang_patchlevel__);
+    return "clang " + std::to_string(__clang_major__) + "." + std::to_string(__clang_minor__) +
+        "." + std::to_string(__clang_patchlevel__);
 #elif defined(__GNUC__)
-    return "gcc " + std::to_string(__GNUC__) + "." +
-           std::to_string(__GNUC_MINOR__) + "." +
-           std::to_string(__GNUC_PATCHLEVEL__);
+    return "gcc " + std::to_string(__GNUC__) + "." + std::to_string(__GNUC_MINOR__) + "." +
+        std::to_string(__GNUC_PATCHLEVEL__);
 #elif defined(_MSC_VER)
     return "msvc " + std::to_string(_MSC_VER);
 #else

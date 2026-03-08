@@ -2,10 +2,10 @@
 
 #include "fqtools/io/fastq_io.h"
 
-#include "statistics/fq_statistic.h"
-
 #include <array>
 #include <cstdint>
+
+#include "statistics/fq_statistic.h"
 
 namespace fq::statistic {
 

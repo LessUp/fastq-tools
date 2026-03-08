@@ -1,9 +1,10 @@
-#include "statistics/fq_statistic_worker.h"
-#include "statistics/fq_statistic.h"
 #include "fqtools/io/fastq_io.h"
 
-#include <gtest/gtest.h>
 #include <vector>
+
+#include "statistics/fq_statistic.h"
+#include "statistics/fq_statistic_worker.h"
+#include <gtest/gtest.h>
 
 namespace fq::statistic {
 
@@ -18,7 +19,7 @@ TEST(FqStatisticResultTest, OperatorPlusEquals) {
     FqStatisticResult res2;
     res2.readCount = 5;
     res2.totalBases = 500;
-    res2.maxReadLength = 120; // Longer reads
+    res2.maxReadLength = 120;  // Longer reads
     res2.posQualityDist.resize(120 * kMaxQual, 3);
     res2.posBaseDist.resize(120 * kMaxBaseNum, 4);
 
@@ -27,13 +28,13 @@ TEST(FqStatisticResultTest, OperatorPlusEquals) {
     EXPECT_EQ(res1.readCount, 15);
     EXPECT_EQ(res1.totalBases, 1500);
     EXPECT_EQ(res1.maxReadLength, 120);
-    
+
     // Check combined distributions for first 100 positions (flat layout: pos * stride + slot)
     for (int i = 0; i < 100; ++i) {
-        EXPECT_EQ(res1.qualityAt(i)[0], 4); // 1 + 3
-        EXPECT_EQ(res1.baseAt(i)[0], 6);    // 2 + 4
+        EXPECT_EQ(res1.qualityAt(i)[0], 4);  // 1 + 3
+        EXPECT_EQ(res1.baseAt(i)[0], 6);     // 2 + 4
     }
-    
+
     // Check distribution for positions 100-120 (only from res2)
     for (int i = 100; i < 120; ++i) {
         EXPECT_EQ(res1.qualityAt(i)[0], 3);
@@ -42,19 +43,19 @@ TEST(FqStatisticResultTest, OperatorPlusEquals) {
 }
 
 TEST(FqStatisticWorkerTest, CalculateStats) {
-    FqStatisticWorker worker(33); // Sanger offset
+    FqStatisticWorker worker(33);  // Sanger offset
     fq::io::FastqBatch batch;
-    
+
     fq::io::FastqRecord rec1;
     rec1.id = "read1";
-    rec1.seq = "ACGTN"; // length 5
-    rec1.qual = "!!#$!"; // Qualities: 0, 0, 2, 3, 0 (offset 33)
+    rec1.seq = "ACGTN";   // length 5
+    rec1.qual = "!!#$!";  // Qualities: 0, 0, 2, 3, 0 (offset 33)
     batch.records().push_back(rec1);
 
     fq::io::FastqRecord rec2;
     rec2.id = "read2";
-    rec2.seq = "AAAAA"; // length 5
-    rec2.qual = "IIIII"; // Quality: 40 (offset 33)
+    rec2.seq = "AAAAA";   // length 5
+    rec2.qual = "IIIII";  // Quality: 40 (offset 33)
     batch.records().push_back(rec2);
 
     auto result = worker.calculateStats(batch);
@@ -64,11 +65,11 @@ TEST(FqStatisticWorkerTest, CalculateStats) {
     EXPECT_EQ(result.maxReadLength, 5);
 
     // Check base distribution at pos 0: 1 A (from rec2), 1 A (from rec1) -> 2 A
-    EXPECT_EQ(result.baseAt(0)[0], 2); // A
-    
+    EXPECT_EQ(result.baseAt(0)[0], 2);  // A
+
     // Check N count at pos 4: 1 N (from rec1)
-    EXPECT_EQ(result.baseAt(4)[4], 1); // N
-    
+    EXPECT_EQ(result.baseAt(4)[4], 1);  // N
+
     // Check Quality distribution at pos 0: 1 '!' (0), 1 'I' (40)
     EXPECT_EQ(result.qualityAt(0)[0], 1);
     EXPECT_EQ(result.qualityAt(0)[40], 1);
@@ -82,4 +83,4 @@ TEST(FqStatisticWorkerTest, EmptyBatch) {
     EXPECT_TRUE(result.posQualityDist.empty());
 }
 
-} // namespace fq::statistic
+}  // namespace fq::statistic
