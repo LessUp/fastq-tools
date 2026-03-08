@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # 默认可执行文件路径
-FASTQTOOLS="${FASTQTOOLS:-$PROJECT_ROOT/build-clang-release/FastQTools}"
+FASTQTOOLS="${FASTQTOOLS:-$PROJECT_ROOT/build/clang-release/FastQTools}"
 
 # 测试数据目录
 DATA_DIR="$PROJECT_ROOT/tools/data"

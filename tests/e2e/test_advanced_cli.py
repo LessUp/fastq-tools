@@ -9,7 +9,7 @@ class TestFastQToolsCLI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Path to the executable
-        cls.fastqtools = os.environ.get("FASTQTOOLS", "./build-clang-release/FastQTools")
+        cls.fastqtools = os.environ.get("FASTQTOOLS", "./build/clang-release/FastQTools")
         cls.data_dir = os.path.join(os.getcwd(), "tools/data")
         cls.sample_fastq = os.path.join(cls.data_dir, "sample_10k_len100.fastq")
         
