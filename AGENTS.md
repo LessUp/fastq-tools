@@ -9,7 +9,7 @@
 
 - **语言**: C++23
 - **构建**: CMake 3.28+ / Ninja / Conan 2.x
-- **编译器**: GCC 15 + Clang 22 + libc++（开发/CI/生产统一）
+- **编译器**: GCC 15 + Clang 21 + libc++（开发/CI/生产统一）
 - **并发**: Intel TBB (`tbb::parallel_pipeline`)
 - **Docker**: `gcc:15.x-bookworm`（构建）/ `debian:bookworm-slim`（运行时）
 - **工具链规范**: 详见 [`docs/decisions/toolchain-policy.md`](docs/decisions/toolchain-policy.md)
@@ -39,7 +39,7 @@
 
 | 用途 | 镜像 | 说明 |
 |------|------|------|
-| **构建阶段（统一）** | `gcc:15.x-bookworm` | 开发、生产、部署全部使用同一基础镜像 |
+| **构建阶段（统一）** | `gcc:15.2-bookworm` | 开发、生产、部署全部使用同一基础镜像 |
 | **运行时** | `debian:bookworm-slim` | 最小化体积（~52MB），仅含必要运行时库 |
 
 ### 版本选型原则
@@ -270,7 +270,7 @@ subject: 简短描述，不以句号结尾
 
 ## Agent 注意事项
 
-1. **构建环境**: 项目设计在 Linux/Docker 容器中构建运行（GCC 15 / Clang 22，开发与生产统一）。Windows 仅用于编辑代码，不直接编译。版本规范详见 `docs/decisions/toolchain-policy.md`。
+1. **构建环境**: 项目设计在 Linux/Docker 容器中构建运行（GCC 15 / Clang 21，开发与生产统一）。Windows 仅用于编辑代码，不直接编译。版本规范详见 `docs/decisions/toolchain-policy.md`。
 2. **测试优先**: 修改核心逻辑前先检查/更新相关测试。测试在 `tests/unit/` 中按模块组织。
 3. **接口稳定**: `include/fqtools/` 下的公共接口是稳定 API，修改需谨慎。实现变更放在 `src/` 中。
 4. **不要猜测**: 使用搜索工具查找现有代码，不要假设函数签名或类接口。
