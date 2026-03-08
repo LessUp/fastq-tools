@@ -8,7 +8,6 @@
 // 公共工具
 #include "fqtools/common/common.h"
 #include "fqtools/config/config.h"
-#include "fqtools/core/core.h"
 #include "fqtools/error/error.h"
 
 // I/O
@@ -24,4 +23,5 @@
 #include "fqtools/processing/read_predicate_interface.h"
 
 // 统计
+#include "fqtools/statistics/statistic_calculator.h"
 #include "fqtools/statistics/statistic_calculator_interface.h"
