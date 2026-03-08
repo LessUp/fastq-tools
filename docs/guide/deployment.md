@@ -45,14 +45,14 @@ docker-compose -f docker/docker-compose.yml up -d prod
 
 ### 生产镜像 (`docker/Dockerfile.prod`)
 
-- **基础**：debian:12-slim
+- **基础**：debian:bookworm-slim
 - **大小**：~100MB
 - **内容**：FastQTools 二进制 + 运行时库
 - **用户**：非 root（fastqtools:1000）
 
 ### 开发镜像 (`docker/Dockerfile.dev`)
 
-- **基础**：gcc:14.2-bookworm
+- **基础**：gcc:15.2-bookworm
 - **大小**：~2GB
 - **内容**：完整开发工具链
 - **用户**：非 root（developer:1000）
@@ -111,7 +111,7 @@ volumes:
 
 ```bash
 # 健康检查
-docker exec fastqtools-prod fastqtools --help
+docker exec fastqtools-prod FastQTools --help
 
 # 查看日志
 docker logs fastqtools-prod

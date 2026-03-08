@@ -1,4 +1,4 @@
-# Code Quality Tools Guide
+# 代码质量工具指南
 
 本文档介绍 FastQTools 项目中使用的代码质量工具，包括安装、使用和输出解读。
 
@@ -30,26 +30,26 @@
 
 ### 安装
 
-Sanitizers 是编译器内置功能，无需额外安装。确保使用 GCC 11+ 或 Clang 12+。
+Sanitizers 是编译器内置功能，无需额外安装。确保使用 GCC 15 或 Clang 21。
 
 ### 使用
 
 ```bash
 # AddressSanitizer - 检测内存错误
 ./scripts/core/build --sanitizer asan --dev
-./scripts/core/test -b build-clang-debug
+./scripts/core/test -b build/clang-debug
 
 # ThreadSanitizer - 检测数据竞争
 ./scripts/core/build --sanitizer tsan --dev
-./scripts/core/test -b build-clang-debug
+./scripts/core/test -b build/clang-debug
 
 # UndefinedBehaviorSanitizer - 检测未定义行为
 ./scripts/core/build --sanitizer ubsan --dev
-./scripts/core/test -b build-clang-debug
+./scripts/core/test -b build/clang-debug
 
 # MemorySanitizer - 检测未初始化内存 (仅 Clang)
 ./scripts/core/build --sanitizer msan --dev -c clang
-./scripts/core/test -b build-clang-debug
+./scripts/core/test -b build/clang-debug
 ```
 
 ### 配置选项
@@ -103,7 +103,7 @@ brew install valgrind
 
 ```bash
 # 使用 Valgrind 运行测试
-./scripts/core/test -b build-clang-debug --valgrind
+./scripts/core/test -b build/clang-debug --valgrind
 
 # 手动运行 Memcheck
 ./scripts/tools/valgrind-memcheck
@@ -193,7 +193,7 @@ pip install gcovr
 ```bash
 # 构建并运行测试
 ./scripts/core/build --coverage --dev
-./scripts/core/test -b build-clang-debug
+./scripts/core/test -b build/clang-debug
 
 # 生成报告
 ./scripts/tools/coverage-report
@@ -248,7 +248,7 @@ pip install gcovr
 
 当 fuzzer 发现崩溃时:
 
-1. 崩溃输入保存在 `build-fuzz/fuzz_artifacts/`
+1. 崩溃输入保存在 `build/fuzz/fuzz_artifacts/`
 2. 使用崩溃输入重现问题: `./fuzzers/fastq_parser_fuzzer crash-xxx`
 3. 修复后将崩溃输入添加到语料库作为回归测试
 

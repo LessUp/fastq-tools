@@ -76,6 +76,7 @@ Testing/
 
 # ===== 自动生成的文档 =====
 docs/generated/
+site/
 
 # ===== 缓存 =====
 .cache/

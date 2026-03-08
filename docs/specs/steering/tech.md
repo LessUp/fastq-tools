@@ -1,31 +1,31 @@
-# FastQTools Tech Stack
+# FastQTools 技术栈
 
-## Language & Standards
+## 语言与标准
 
-- C++23 (required)
-- Compilers: GCC 11+ or Clang 19+ (Clang preferred for CI/dev)
+- C++23（必需）
+- 编译器：GCC 15 / Clang 21（开发与生产统一）
 
-## Build System
+## 构建系统
 
-- CMake 3.20+
-- Conan 2.x for dependency management
-- Ninja (recommended generator)
+- CMake 3.28+
+- Conan 2.x 依赖管理
+- Ninja（推荐生成器）
 
-## Dependencies
+## 依赖
 
-| Library | Purpose |
+| 库 | 用途 |
 |---------|---------|
-| Intel oneTBB | Parallel pipeline processing |
-| spdlog | Logging |
-| fmt | String formatting |
-| cxxopts | CLI argument parsing |
-| zlib/bzip2/xz | Compression support |
-| libdeflate | Optimized gzip decompression |
-| GoogleTest | Unit testing |
+| Intel oneTBB | 并行流水线处理 |
+| spdlog | 日志 |
+| fmt | 字符串格式化 |
+| cxxopts | 命令行参数解析 |
+| zlib-ng/bzip2/xz | 压缩支持 |
+| libdeflate | 高性能 gzip 解压 |
+| GoogleTest | 单元测试 |
 
-## Common Commands
+## 常用命令
 
-### Build
+### 构建
 
 ```bash
 # Default build (Clang + Release)
@@ -41,7 +41,7 @@
 ./scripts/core/build --sanitizer asan
 ```
 
-### Test
+### 测试
 
 ```bash
 # All tests
@@ -57,7 +57,7 @@
 ./scripts/core/test --filter "*config*"
 ```
 
-### Code Quality
+### 代码质量
 
 ```bash
 # Format code
@@ -79,7 +79,7 @@
 ./scripts/core/lint all
 ```
 
-### Sanitizers
+### Sanitizers（运行时检查）
 
 ```bash
 # AddressSanitizer (memory errors)
@@ -95,7 +95,7 @@
 ./scripts/core/build --sanitizer msan --dev -c clang
 ```
 
-### Valgrind
+### Valgrind（深度分析）
 
 ```bash
 # Run tests with Valgrind
@@ -108,7 +108,7 @@
 ./scripts/tools/valgrind-cachegrind
 ```
 
-### Coverage
+### 覆盖率
 
 ```bash
 # Build with coverage
@@ -122,7 +122,7 @@
 ./scripts/tools/coverage-report --xml
 ```
 
-### Fuzzing
+### 模糊测试
 
 ```bash
 # Build and run fuzzers
@@ -132,7 +132,7 @@
 ./scripts/tools/run-fuzzer parser -t 300
 ```
 
-### Dependencies
+### 依赖安装
 
 ```bash
 # Install dev dependencies
@@ -142,9 +142,9 @@
 ./scripts/core/install-deps --all
 ```
 
-## Build Directories
+## 构建目录
 
-- `build-clang-release/` - Clang Release builds
-- `build-clang-debug/` - Clang Debug builds
-- `build-gcc-release/` - GCC Release builds
-- `build-gcc-debug/` - GCC Debug builds
+- `build/clang-release/` - Clang Release builds
+- `build/clang-debug/` - Clang Debug builds
+- `build/gcc-release/` - GCC Release builds
+- `build/gcc-debug/` - GCC Debug builds

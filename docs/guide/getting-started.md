@@ -64,7 +64,7 @@
 ./scripts/core/build --help
 ```
 
-构建成功后，可执行文件位于 `build-clang-release/FastQTools`（或对应构建目录）。
+构建成功后，可执行文件位于 `build/clang-release/FastQTools`（或对应构建目录）。
 
 ---
 
@@ -72,7 +72,7 @@
 
 ```bash
 # 查看帮助
-./build-clang-release/FastQTools --help
+./build/clang-release/FastQTools --help
 
 # 运行测试
 ./scripts/core/test
@@ -126,14 +126,14 @@ FastQTools filter -i test_data.fastq -o filtered.fastq \
 
 ### 找不到可执行文件
 
-- 检查构建目录：`ls build-clang-release/FastQTools`
+- 检查构建目录：`ls build/clang-release/FastQTools`
 - 确认构建脚本成功完成（返回码为 0）
 
 ### 运行时缺少共享库
 
 ```bash
 # 检查缺少的库
-ldd build-clang-release/FastQTools
+ldd build/clang-release/FastQTools
 
 # 安装运行时依赖
 ./scripts/core/install-deps --runtime

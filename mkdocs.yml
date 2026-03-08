@@ -1,0 +1,226 @@
+# mkdocs.yml — FastQTools 文档站点配置（双语：中文默认 + 英文备选）
+site_name: FastQTools
+site_description: 现代化 FASTQ 文件处理工具集 — 高性能生物信息学质控工具
+site_url: https://lessup.github.io/fastq-tools/
+repo_url: https://github.com/LessUp/fastq-tools
+repo_name: LessUp/fastq-tools
+edit_uri: edit/master/docs/
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: 切换到暗色模式
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: 切换到亮色模式
+  font:
+    text: Noto Sans SC
+    code: JetBrains Mono
+  features:
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+exclude_docs: |
+  README.md
+
+# ---------------------------------------------------------------------------
+# i18n 双语配置
+#   - 后缀模式：index.md = 中文（默认），index.en.md = 英文
+#   - URL：/ = 中文，/en/ = 英文
+#   - 未翻译页面自动回退到中文
+# ---------------------------------------------------------------------------
+plugins:
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      languages:
+        - locale: zh
+          default: true
+          name: 中文
+          build: true
+          site_name: FastQTools 文档
+          site_description: 现代化 FASTQ 文件处理工具集 — 高性能生物信息学质控工具
+          theme:
+            language: zh
+          nav_translations:
+            Home: 首页
+            User Guide: 用户指南
+            Getting Started: 快速开始
+            CLI Reference: CLI 参考
+            Configuration: 配置管理
+            Deployment: 部署指南
+            Developer Guide: 开发者文档
+            Architecture: 架构设计
+            Core Design: 核心设计
+            Build Guide: 构建指南
+            Testing: 测试策略
+            Coding Standards: 编码规范
+            Git Workflow: Git 工作流
+            Quality Tools: 代码质量工具
+            Benchmark Guide: Benchmark 指南
+            Script Migration: 脚本迁移
+            API Reference: API 参考
+            Overview: 概览
+            IO Module: IO 模块
+            Processing Pipeline: 处理流水线
+            Statistics: 统计分析
+            Core Utilities: 核心工具
+            Decisions: 架构决策
+            Toolchain Policy: 工具链版本规范
+            Optimization Decisions: 优化决策
+            Project Assessment: 项目评估
+            Specifications: 功能规格
+            Steering: 总览
+            Product Spec: 产品规格
+            Technical Spec: 技术规格
+            Structure Spec: 结构规格
+            Advanced C++ Tooling: 高级 C++ 工具链
+            Requirements: 需求
+            Design: 设计
+            Tasks: 任务
+            Benchmark System: 基准测试系统
+            Memory Pool: 内存池
+            Benchmark Reports: Benchmark 报告
+            Archive: 归档
+            Docs Audit: 文档审计
+            Implementation Progress: 实现进度
+            Requirements Doc: 需求文档
+            Thinking Process: 思考过程
+        - locale: en
+          name: English
+          build: true
+          site_name: FastQTools Docs
+          site_description: Modern FASTQ file processing toolkit — High-performance bioinformatics QC tool
+          theme:
+            language: en
+            palette:
+              - media: "(prefers-color-scheme: light)"
+                scheme: default
+                primary: teal
+                accent: cyan
+                toggle:
+                  icon: material/brightness-7
+                  name: Switch to dark mode
+              - media: "(prefers-color-scheme: dark)"
+                scheme: slate
+                primary: teal
+                accent: cyan
+                toggle:
+                  icon: material/brightness-4
+                  name: Switch to light mode
+  - search:
+      lang:
+        - zh
+        - en
+  - minify:
+      minify_html: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/LessUp/fastq-tools
+
+copyright: Copyright &copy; 2025-2026 LessUp — MIT License
+
+nav:
+  - Home: index.md
+  - User Guide:
+      - Getting Started: guide/getting-started.md
+      - CLI Reference: guide/cli-reference.md
+      - Configuration: guide/configuration.md
+      - Deployment: guide/deployment.md
+  - Developer Guide:
+      - Architecture: dev/architecture.md
+      - Core Design: dev/design.md
+      - Build Guide: dev/build.md
+      - Testing: dev/testing.md
+      - Coding Standards: dev/coding-standards.md
+      - Git Workflow: dev/git-guidelines.md
+      - Quality Tools: dev/quality-tools.md
+      - Benchmark Guide: dev/benchmark-guide.md
+      - DevContainer: dev/devcontainer.md
+      - Script Migration: dev/migration.md
+  - API Reference:
+      - Overview: api/overview.md
+      - IO Module: api/io.md
+      - Processing Pipeline: api/processing.md
+      - Statistics: api/statistics.md
+      - Core Utilities: api/core.md
+  - Decisions:
+      - Toolchain Policy: decisions/toolchain-policy.md
+      - Optimization Decisions: decisions/optimization-decisions.md
+      - Project Assessment: decisions/project-assessment.md
+  - Specifications:
+      - Steering:
+          - Product Spec: specs/steering/product.md
+          - Technical Spec: specs/steering/tech.md
+          - Structure Spec: specs/steering/structure.md
+      - Advanced C++ Tooling:
+          - Requirements: specs/advanced-cpp-tooling/requirements.md
+          - Design: specs/advanced-cpp-tooling/design.md
+          - Tasks: specs/advanced-cpp-tooling/tasks.md
+      - Benchmark System:
+          - Requirements: specs/benchmark-system/requirements.md
+          - Design: specs/benchmark-system/design.md
+          - Tasks: specs/benchmark-system/tasks.md
+      - Memory Pool:
+          - Requirements: specs/memory-pool/requirements.md
+          - Design: specs/memory-pool/design.md
+          - Tasks: specs/memory-pool/tasks.md
+  - Benchmark Reports: benchmark-reports/latest.md
+  - Archive:
+      - Docs Audit: archive/audit-2025-12-29-docs-style.md
+      - Implementation Progress: archive/implementation-progress.md
+      - Requirements Doc: archive/requirements.md
+      - Thinking Process: archive/thinking-process.md

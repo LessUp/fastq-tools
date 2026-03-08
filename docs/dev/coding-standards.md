@@ -8,7 +8,7 @@
 ## 基本规则
 
 - **语言标准**: C++23
-- **编译器**: GCC 11+, Clang 12+
+- **编译器**: GCC 15 / Clang 21（开发与生产统一）
 - **格式化**: 使用 `.clang-format` 自动格式化（基于 LLVM 风格，4 空格缩进，列宽 100）
 
 ### 手动统一命令
@@ -30,7 +30,7 @@
 | 常量 | `kConstantName` | `constexpr int kMaxReads = 1000;` |
 | 命名空间 | `snake_case` | `namespace fq::utils` |
 
-> 文档采用 `kebab-case` 命名，脚本采用 `snake_case` 命名。
+> 文档和脚本均采用 `kebab-case` 命名（如 `install-deps`、`benchmark-io`）。
 
 ### 命名例外（仓库约定）
 
@@ -43,7 +43,7 @@
 
 以下为生成物目录/文件，默认不参与命名规范检查：
 
-- `build-*` / `cmake-build-*` / `_cmake_install_prefix/` / `_output/`
+- `build/` / `build-*` / `cmake-build-*` / `_cmake_install_prefix/` / `_output/`
 
 ## 代码组织
 
@@ -144,9 +144,9 @@ run_build "$compiler" "$build_type"
 
 ### 统一工具
 
-- `lint.sh`: 代码质量检查 (clang-tidy + clang-format)
-- `build.sh`: 构建管理
-- `test.sh`: 测试运行
+- `scripts/core/lint`: 代码质量检查 (clang-tidy + clang-format)
+- `scripts/core/build`: 构建管理
+- `scripts/core/test`: 测试运行
 
 ## 文档要求
 

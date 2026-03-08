@@ -262,7 +262,7 @@ pip install matplotlib
 基准测试在以下标准化环境中执行：
 
 - **操作系统**: Ubuntu 22.04 LTS
-- **编译器**: Clang 19 / GCC 11+
+- **编译器**: Clang 21 / GCC 15
 - **构建类型**: Release (-O3)
 - **CPU**: 多核 x86_64 处理器
 - **内存**: 16GB+ RAM
@@ -276,16 +276,6 @@ pip install matplotlib
 | Small | 10,000 | 150bp | ~2.5 MB |
 | Medium | 100,000 | 150bp | ~25 MB |
 | Large | 1,000,000 | 150bp | ~250 MB |
-
-### 测试指标
-
-| 指标 | 说明 | 单位 |
-|------|------|------|
-| `mean_time_ns` | 平均执行时间 | 纳秒 |
-| `std_dev_ns` | 标准差 | 纳秒 |
-| `throughput_mbps` | 数据吞吐量 | MB/s |
-| `throughput_reads_per_sec` | Reads 吞吐量 | reads/s |
-| `peak_memory_bytes` | 峰值内存 | bytes |
 
 ## 基准测试类别
 

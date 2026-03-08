@@ -1,77 +1,84 @@
-# FastQTools Project Structure
+# FastQTools 项目结构
 
-## Directory Layout
+## 目录布局
 
 ```
 FastQTools/
-├── include/fqtools/      # Public API headers (stable interfaces)
-├── src/                  # Implementation code
-│   ├── cli/              # CLI entry point and command dispatch
-│   │   └── commands/     # Subcommand implementations (stat, filter)
-│   ├── common/           # Shared utilities
-│   ├── config/           # Configuration handling
-│   ├── error/            # Error types and handling
-│   ├── io/               # FASTQ reading/writing
-│   ├── processing/       # Pipeline, mutators, predicates
-│   │   ├── mutators/     # Read modification (trimming)
-│   │   └── predicates/   # Filtering conditions
-│   └── statistics/       # Statistical calculations
-├── tests/                # Test suites
-│   ├── unit/             # Unit tests by module
-│   ├── integration/      # Integration tests
-│   └── e2e/              # End-to-end CLI tests
-├── scripts/              # Build and dev scripts
-│   ├── core/             # Essential scripts (build, test, lint)
-│   ├── tools/            # Specialized tools
-│   └── lib/              # Shared shell functions
-├── tools/                # Development tools
-│   ├── benchmark/        # Performance benchmarks
-│   └── data/             # Test data files
-├── docs/                 # Documentation
-│   ├── dev/              # Developer guides
-│   ├── user/             # User documentation
-│   └── optimization/     # Performance docs
-├── config/               # Configuration files
-│   ├── conan/            # Conan profiles
-│   └── deployment/       # Docker configs
-└── cmake/                # CMake modules
+├── include/fqtools/      # 公共 API 头文件（稳定接口）
+├── src/                  # 实现源码
+│   ├── cli/              # CLI 入口与命令分发
+│   │   └── commands/     # 子命令实现（stat, filter）
+│   ├── common/           # 公共工具
+│   ├── config/           # 配置管理
+│   ├── error/            # 错误类型与处理
+│   ├── io/               # FASTQ 读写
+│   ├── processing/       # 流水线、修剪器、过滤谓词
+│   │   ├── mutators/     # 读段修改（修剪）
+│   │   └── predicates/   # 过滤条件
+│   └── statistics/       # 统计计算
+├── tests/                # 测试套件
+│   ├── unit/             # 单元测试（按模块组织）
+│   ├── integration/      # 集成测试
+│   └── e2e/              # 端到端 CLI 测试
+├── scripts/              # 构建与开发脚本
+│   ├── core/             # 核心脚本（build, test, lint）
+│   ├── tools/            # 专用工具脚本
+│   └── lib/              # Shell 公共函数库
+├── tools/                # 开发工具
+│   ├── benchmark/        # 性能基准测试
+│   └── data/             # 测试数据文件
+├── docs/                 # 文档
+│   ├── guide/            # 用户指南
+│   ├── dev/              # 开发者文档
+│   ├── api/              # API 参考
+│   ├── decisions/        # 架构决策记录
+│   └── specs/            # 功能规格
+├── config/               # 配置文件
+│   ├── conan/            # Conan 编译器 profiles
+│   ├── dependencies/     # Conan 依赖配置
+│   ├── sanitizers/       # ASan/TSan/UBSan 运行时选项
+│   ├── valgrind/         # Valgrind 抑制规则
+│   ├── cppcheck/         # Cppcheck 配置
+│   ├── coverage/         # 覆盖率阈值配置
+│   └── iwyu/             # Include-What-You-Use 映射
+└── cmake/                # 自定义 CMake 模块
 ```
 
-## Key Files
+## 关键文件
 
-- `CMakeLists.txt` - Root build configuration
-- `conanfile.py` - Dependency specification
-- `.clang-format` - Code formatting rules
-- `.clang-tidy` - Static analysis config
+- `CMakeLists.txt` — 根构建配置
+- `conanfile.py` — 依赖定义
+- `.clang-format` — 代码格式化规则
+- `.clang-tidy` — 静态分析配置
 
-## Library Modules (CMake targets)
+## 库模块（CMake targets）
 
-- `fq_common` - Common utilities
-- `fq_error` - Error handling
-- `fq_config` - Configuration
-- `fq_modern_io` - I/O operations
-- `fq_processing` - Processing pipeline
-- `fq_statistics` - Statistics calculation
-- `fq_cli` - CLI commands
-- `fq_lib` - Aggregate interface library
+- `fq_common` — 公共工具
+- `fq_error` — 错误处理
+- `fq_config` — 配置管理
+- `fq_modern_io` — I/O 操作
+- `fq_processing` — 处理流水线
+- `fq_statistics` — 统计计算
+- `fq_cli` — CLI 命令
+- `fq_lib` — 聚合接口库
 
-## Naming Conventions
+## 命名约定
 
-| Element | Style | Example |
+| 元素 | 风格 | 示例 |
 |---------|-------|---------|
-| Source files | `snake_case` | `fastq_reader.cpp` |
-| Headers | `snake_case` | `processing_pipeline.h` |
-| Classes | `PascalCase` | `FastQReader` |
-| Functions | `camelCase` | `processBatch()` |
-| Member variables | `camelCase_` | `filePath_` |
-| Constants | `kPascalCase` | `kMaxReads` |
-| Namespaces | `snake_case` | `fq::utils` |
-| Docs | `kebab-case` | `coding-standards.md` |
-| Scripts | `snake_case` | `install_deps.sh` |
+| 源文件 | `snake_case` | `fastq_reader.cpp` |
+| 头文件 | `snake_case` | `processing_pipeline.h` |
+| 类/结构体 | `PascalCase` | `FastQReader` |
+| 函数/方法 | `camelCase` | `processBatch()` |
+| 成员变量 | `camelCase_` | `filePath_` |
+| 常量 | `kPascalCase` | `kMaxReads` |
+| 命名空间 | `snake_case` | `fq::utils` |
+| 文档 | `kebab-case` | `coding-standards.md` |
+| 脚本 | `kebab-case` | `install-deps` |
 
-## Architecture Layers
+## 架构层次
 
-1. CLI Layer → Argument parsing, command dispatch
-2. Command Layer → Business logic orchestration
-3. Core Library → Public interfaces (`include/fqtools/`)
-4. Implementation → Internal modules (`src/`)
+1. **CLI 层** → 参数解析、命令分发
+2. **命令层** → 业务逻辑编排
+3. **核心库层** → 公共接口（`include/fqtools/`）
+4. **实现层** → 内部模块（`src/`）

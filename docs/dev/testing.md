@@ -157,7 +157,7 @@ TestHelpers::cleanup();
 
 - 核心模块覆盖率
 - 未覆盖的分支和异常路径
-- 排除 `tests/`、`build-*` 目录
+- 排除 `tests/`、`build/`、`build-*` 目录
 
 ---
 

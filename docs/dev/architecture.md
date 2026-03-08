@@ -50,9 +50,9 @@ CLI 层 (src/cli/)
   - `fq.h`: 聚合头文件
 
 ### 4. 实现层
-- 流水线: `src/pipeline/`
-- 统计: `src/pipeline/statistics/`
-- 通用模块: `src/modules/`
+- 流水线与处理: `src/processing/`
+- 统计: `src/statistics/`
+- IO: `src/io/`
 
 ## 并发模型
 

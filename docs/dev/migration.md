@@ -20,46 +20,46 @@ FastQTools 进行了全面的脚本系统重构，提供了更清晰、更一致
 
 | 旧命令 | 新命令 | 说明 |
 |--------|--------|------|
-| `./scripts/build.sh` | `./scripts/build` | 默认构建 |
-| `./scripts/build.sh clang Release` | `./scripts/build` | 相同（默认就是 clang Release） |
-| `./scripts/build.sh gcc Debug` | `./scripts/build -c gcc -t Debug` | 指定编译器和类型 |
-| `./scripts/build.sh clang Debug --asan` | `./scripts/build -t Debug -s asan` | Sanitizer 支持 |
-| `./scripts/build.sh --coverage` | `./scripts/build --coverage` | 覆盖率构建 |
-| `./scripts/build-dev.sh` | `./scripts/build --dev` | 开发模式 |
-| `./scripts/build-dev.sh gcc debug` | `./scripts/build --dev -c gcc` | 开发模式 + gcc |
+| `./scripts/build.sh` | `./scripts/core/build` | 默认构建 |
+| `./scripts/build.sh clang Release` | `./scripts/core/build` | 相同（默认就是 clang Release） |
+| `./scripts/build.sh gcc Debug` | `./scripts/core/build -c gcc -t Debug` | 指定编译器和类型 |
+| `./scripts/build.sh clang Debug --asan` | `./scripts/core/build -t Debug -s asan` | Sanitizer 支持 |
+| `./scripts/build.sh --coverage` | `./scripts/core/build --coverage` | 覆盖率构建 |
+| `./scripts/build-dev.sh` | `./scripts/core/build --dev` | 开发模式 |
+| `./scripts/build-dev.sh gcc debug` | `./scripts/core/build --dev -c gcc` | 开发模式 + gcc |
 
 ### 测试脚本
 
 | 旧命令 | 新命令 | 说明 |
 |--------|--------|------|
-| `./scripts/test.sh` | `./scripts/test` | 运行所有测试 |
-| `./scripts/test.sh -c clang -t Debug` | `./scripts/test -c clang -t Debug` | 指定构建配置 |
-| `./scripts/test.sh -C` | `./scripts/test --coverage` | 覆盖率测试 |
-| `./scripts/test.sh -f "*timer*"` | `./scripts/test --filter "*timer*"` | 过滤测试 |
-| `./scripts/test.sh -v` | `./scripts/test --verbose` | 详细输出 |
-| `./scripts/test.sh -r 5` | `./scripts/test --repeat 5` | 重复测试 |
-| N/A | `./scripts/test --unit` | 只运行单元测试（新功能） |
-| N/A | `./scripts/test --integration` | 只运行集成测试（新功能） |
+| `./scripts/test.sh` | `./scripts/core/test` | 运行所有测试 |
+| `./scripts/test.sh -c clang -t Debug` | `./scripts/core/test -c clang -t Debug` | 指定构建配置 |
+| `./scripts/test.sh -C` | `./scripts/core/test --coverage` | 覆盖率测试 |
+| `./scripts/test.sh -f "*timer*"` | `./scripts/core/test --filter "*timer*"` | 过滤测试 |
+| `./scripts/test.sh -v` | `./scripts/core/test --verbose` | 详细输出 |
+| `./scripts/test.sh -r 5` | `./scripts/core/test --repeat 5` | 重复测试 |
+| N/A | `./scripts/core/test --unit` | 只运行单元测试（新功能） |
+| N/A | `./scripts/core/test --integration` | 只运行集成测试（新功能） |
 
 ### 代码质量脚本
 
 | 旧命令 | 新命令 | 说明 |
 |--------|--------|------|
-| `./scripts/lint.sh format` | `./scripts/lint format` | 格式化代码 |
-| `./scripts/lint.sh format-check` | `./scripts/lint check` | 检查格式 |
-| `./scripts/lint.sh lint` | `./scripts/lint tidy` | 静态分析 |
-| `./scripts/lint.sh lint-fix` | `./scripts/lint tidy-fix` | 自动修复 |
-| N/A | `./scripts/lint all` | 运行所有检查（新功能） |
+| `./scripts/lint.sh format` | `./scripts/core/lint format` | 格式化代码 |
+| `./scripts/lint.sh format-check` | `./scripts/core/lint check` | 检查格式 |
+| `./scripts/lint.sh lint` | `./scripts/core/lint tidy` | 静态分析 |
+| `./scripts/lint.sh lint-fix` | `./scripts/core/lint tidy-fix` | 自动修复 |
+| N/A | `./scripts/core/lint all` | 运行所有检查（新功能） |
 
 ### 依赖安装脚本
 
 | 旧命令 | 新命令 | 说明 |
 |--------|--------|------|
-| `./scripts/install_deps.sh` | `./scripts/install-deps` | 安装开发依赖 |
-| `./scripts/install_deps.sh --dev` | `./scripts/install-deps` | 相同 |
-| `./scripts/install_deps.sh --runtime` | `./scripts/install-deps --runtime` | 只安装运行时 |
-| `./scripts/install_runtime.sh` | `./scripts/install-deps --runtime` | 已合并 |
-| N/A | `./scripts/install-deps --dry-run` | 预览安装（新功能） |
+| `./scripts/install_deps.sh` | `./scripts/core/install-deps` | 安装开发依赖 |
+| `./scripts/install_deps.sh --dev` | `./scripts/core/install-deps` | 相同 |
+| `./scripts/install_deps.sh --runtime` | `./scripts/core/install-deps --runtime` | 只安装运行时 |
+| `./scripts/install_runtime.sh` | `./scripts/core/install-deps --runtime` | 已合并 |
+| N/A | `./scripts/core/install-deps --dry-run` | 预览安装（新功能） |
 
 ### 其他脚本
 
@@ -90,10 +90,10 @@ cp scripts/test.sh scripts/test.sh.backup
 新脚本需要可执行权限：
 
 ```bash
-chmod +x scripts/build
-chmod +x scripts/test
-chmod +x scripts/lint
-chmod +x scripts/install-deps
+chmod +x scripts/core/build
+chmod +x scripts/core/test
+chmod +x scripts/core/lint
+chmod +x scripts/core/install-deps
 ```
 
 ### 步骤 3: 测试新脚本
@@ -102,16 +102,16 @@ chmod +x scripts/install-deps
 
 ```bash
 # 测试构建
-./scripts/build --help
-./scripts/build --dev
+./scripts/core/build --help
+./scripts/core/build --dev
 
 # 测试测试脚本
-./scripts/test --help
-./scripts/test --unit
+./scripts/core/test --help
+./scripts/core/test --unit
 
 # 测试代码质量
-./scripts/lint --help
-./scripts/lint check
+./scripts/core/lint --help
+./scripts/core/lint check
 ```
 
 ### 步骤 4: 更新 CI/CD 配置
@@ -130,10 +130,10 @@ chmod +x scripts/install-deps
 **新配置**:
 ```yaml
 - name: Build
-  run: ./scripts/build
+  run: ./scripts/core/build
 
 - name: Test
-  run: ./scripts/test --coverage
+  run: ./scripts/core/test --coverage
 ```
 
 #### GitLab CI
@@ -153,11 +153,11 @@ test:
 ```yaml
 build:
   script:
-    - ./scripts/build -c gcc -t Debug
+    - ./scripts/core/build -c gcc -t Debug
     
 test:
   script:
-    - ./scripts/test -c gcc -t Debug
+    - ./scripts/core/test -c gcc -t Debug
 ```
 
 ### 步骤 5: 更新文档和脚本引用
@@ -177,19 +177,19 @@ grep -r "install_deps.sh" docs/
 
 1. **帮助信息**: 所有新脚本都支持 `--help`
    ```bash
-   ./scripts/build --help
+   ./scripts/core/build --help
    ```
 
 2. **开发模式**: 使用 `--dev` 快速开发
    ```bash
-   ./scripts/build --dev
+   ./scripts/core/build --dev
    ```
 
 3. **测试分层**: 可以单独运行不同层次的测试
    ```bash
-   ./scripts/test --unit        # 快速单元测试
-   ./scripts/test --integration # 集成测试
-   ./scripts/test --e2e         # 端到端测试
+   ./scripts/core/test --unit        # 快速单元测试
+   ./scripts/core/test --integration # 集成测试
+   ./scripts/core/test --e2e         # 端到端测试
    ```
 
 ---
@@ -203,7 +203,7 @@ grep -r "install_deps.sh" docs/
 ### Q2: 如果新脚本不工作怎么办？
 
 **A**: 
-1. 先查看详细输出：`./scripts/build --verbose`
+1. 先查看详细输出：`./scripts/core/build --verbose`
 2. 检查 `scripts/lib/common.sh` 是否存在
 3. 暂时可以回退到旧脚本
 4. 报告问题到 issue tracker
@@ -212,8 +212,8 @@ grep -r "install_deps.sh" docs/
 
 **A**: 两套脚本可以共存。新脚本名称去掉了 `.sh` 后缀：
 ```bash
-./scripts/build.sh    # 旧版本
-./scripts/build       # 新版本
+./scripts/build.sh        # 旧版本
+./scripts/core/build      # 新版本
 ```
 
 ### Q4: 自定义的构建配置如何迁移？
@@ -228,7 +228,7 @@ BUILD_DIR="my-custom-dir"
 
 **新方式**（命令行参数）:
 ```bash
-./scripts/build --build-dir my-custom-dir
+./scripts/core/build --build-dir my-custom-dir
 ```
 
 ### Q5: 性能有变化吗？
@@ -262,10 +262,10 @@ git pull origin main
 **解决方案**:
 ```bash
 chmod +x scripts/lib/common.sh
-chmod +x scripts/build
-chmod +x scripts/test
-chmod +x scripts/lint
-chmod +x scripts/install-deps
+chmod +x scripts/core/build
+chmod +x scripts/core/test
+chmod +x scripts/core/lint
+chmod +x scripts/core/install-deps
 ```
 
 ### 问题 3: 参数不兼容
@@ -274,7 +274,7 @@ chmod +x scripts/install-deps
 
 **解决方案**: 查看帮助信息了解新格式
 ```bash
-./scripts/build --help
+./scripts/core/build --help
 ```
 
 ---
@@ -320,10 +320,10 @@ cp scripts/build.sh.backup scripts/build.sh
 
 每个脚本都有详细的帮助信息：
 ```bash
-./scripts/build --help
-./scripts/test --help
-./scripts/lint --help
-./scripts/install-deps --help
+./scripts/core/build --help
+./scripts/core/test --help
+./scripts/core/lint --help
+./scripts/core/install-deps --help
 ```
 
 ### 社区支持

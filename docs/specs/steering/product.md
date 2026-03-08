@@ -1,22 +1,22 @@
-# FastQTools Product Overview
+# FastQTools 产品概览
 
-FastQTools is a high-performance C++ toolkit for processing FASTQ files in bioinformatics workflows.
+FastQTools 是一个面向生物信息学工作流的高性能 C++ FASTQ 文件处理工具集。
 
-## Core Commands
+## 核心命令
 
-- `stat` - Statistical analysis of FASTQ files (base/quality distribution)
-- `filter` - Read filtering and trimming (quality, length, N-ratio thresholds)
+- `stat` — FASTQ 文件统计分析（碱基/质量分布）
+- `filter` — 读段过滤与修剪（质量、长度、N 碱基比例阈值）
 
-## Key Capabilities
+## 关键能力
 
-- Parallel processing via Intel TBB pipeline
-- Compressed file support (gzip, bzip2, xz)
-- Library-level integration for embedding in other tools
+- 基于 Intel TBB 并行流水线的高吞吐处理
+- 压缩文件支持（gzip、bzip2、xz）
+- 库级别集成，可嵌入其他工具
 
-## Target Users
+## 目标用户
 
-Bioinformaticians and genomics researchers who need fast, reliable FASTQ quality control and preprocessing.
+需要快速、可靠的 FASTQ 质控与预处理的生物信息学研究者和基因组学工程师。
 
-## Project Status
+## 项目状态
 
-Active development, version 3.1.0, MIT licensed.
+活跃开发中，MIT 许可。

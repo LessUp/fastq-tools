@@ -1,4 +1,4 @@
-# 设计文档（清理 AI 生成任务项后）
+# 设计文档
 
 ## 1. 设计原则
 
@@ -49,7 +49,7 @@
 ## 5. 测试与质量
 
 ### 5.1 覆盖率
-- `scripts/test.sh -C`：生成 lcov 与 HTML。
+- `scripts/core/test --coverage`：生成 lcov 与 HTML。
 - CI：上传覆盖率 artifact。
 - 门禁阈值：保留为后续选项，避免“为了阈值刷覆盖率”。
 
