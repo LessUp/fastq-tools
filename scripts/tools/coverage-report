@@ -262,9 +262,9 @@ SUMMARY=$(lcov --summary "$COVERAGE_FILTERED" 2>&1)
 echo "$SUMMARY"
 
 # Parse coverage values
-LINE_COV=$(echo "$SUMMARY" | grep "lines" | grep -oE '[0-9]+\.[0-9]+%' | head -1 | tr -d '%')
-FUNC_COV=$(echo "$SUMMARY" | grep "functions" | grep -oE '[0-9]+\.[0-9]+%' | head -1 | tr -d '%')
-BRANCH_COV=$(echo "$SUMMARY" | grep "branches" | grep -oE '[0-9]+\.[0-9]+%' | head -1 | tr -d '%')
+LINE_COV=$(echo "$SUMMARY" | grep "lines" | grep -oE '[0-9]+\.[0-9]+%' | head -1 | tr -d '%' || true)
+FUNC_COV=$(echo "$SUMMARY" | grep "functions" | grep -oE '[0-9]+\.[0-9]+%' | head -1 | tr -d '%' || true)
+BRANCH_COV=$(echo "$SUMMARY" | grep "branches" | grep -oE '[0-9]+\.[0-9]+%' | head -1 | tr -d '%' || true)
 
 log_separator "-"
 
