@@ -106,7 +106,15 @@ jobs:
 
       - name: Build for analysis
         run: |
-          ./scripts/core/build -c gcc -t Debug
+          conan install config/dependencies/ --build=missing -of=build-gcc-debug -s build_type=Debug
+          cmake -B build-gcc-debug -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_TOOLCHAIN_FILE=build-gcc-debug/conan_toolchain.cmake \
+            -DCMAKE_C_COMPILER=gcc \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DBUILD_TESTING=ON \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          cmake --build build-gcc-debug
 
       - name: Run clang-tidy
         run: |
@@ -164,13 +172,21 @@ jobs:
 
       - name: Build with ASan
         run: |
-          ./scripts/core/build -c gcc -t Debug --sanitizer asan
+          conan install config/dependencies/ --build=missing -of=build-gcc-asan -s build_type=Debug
+          cmake -B build-gcc-asan -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_TOOLCHAIN_FILE=build-gcc-asan/conan_toolchain.cmake \
+            -DCMAKE_C_COMPILER=gcc \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DENABLE_ASAN=ON \
+            -DBUILD_TESTING=ON
+          cmake --build build-gcc-asan
 
       - name: Run tests with ASan
         env:
           ASAN_OPTIONS: "detect_leaks=1:halt_on_error=1:print_stats=1"
         run: |
-          ./scripts/core/test -b build-gcc-debug
+          ctest --test-dir build-gcc-asan --output-on-failure -j 2
 
   # ===========================================================================
   # Code Coverage
@@ -220,11 +236,19 @@ jobs:
 
       - name: Build with coverage
         run: |
-          ./scripts/core/build -c gcc --coverage
+          conan install config/dependencies/ --build=missing -of=build-gcc-coverage -s build_type=Debug
+          cmake -B build-gcc-coverage -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_TOOLCHAIN_FILE=build-gcc-coverage/conan_toolchain.cmake \
+            -DCMAKE_C_COMPILER=gcc \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DENABLE_COVERAGE=ON \
+            -DBUILD_TESTING=ON
+          cmake --build build-gcc-coverage
 
       - name: Run tests
         run: |
-          ./scripts/core/test -c gcc --coverage -j 2
+          ctest --test-dir build-gcc-coverage --output-on-failure -j 2
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

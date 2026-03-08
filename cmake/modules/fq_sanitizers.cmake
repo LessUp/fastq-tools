@@ -54,19 +54,19 @@ endif()
 # =============================================================================
 
 # Common flags for better error reporting
-set(FQ_SANITIZER_COMMON_FLAGS "-fno-omit-frame-pointer -fno-optimize-sibling-calls")
+set(FQ_SANITIZER_COMMON_FLAGS -fno-omit-frame-pointer -fno-optimize-sibling-calls)
 
 # AddressSanitizer flags
-set(FQ_ASAN_FLAGS "-fsanitize=address ${FQ_SANITIZER_COMMON_FLAGS}")
+set(FQ_ASAN_FLAGS -fsanitize=address ${FQ_SANITIZER_COMMON_FLAGS})
 
 # ThreadSanitizer flags
-set(FQ_TSAN_FLAGS "-fsanitize=thread ${FQ_SANITIZER_COMMON_FLAGS}")
+set(FQ_TSAN_FLAGS -fsanitize=thread ${FQ_SANITIZER_COMMON_FLAGS})
 
 # UndefinedBehaviorSanitizer flags
-set(FQ_UBSAN_FLAGS "-fsanitize=undefined -fno-sanitize-recover=all ${FQ_SANITIZER_COMMON_FLAGS}")
+set(FQ_UBSAN_FLAGS -fsanitize=undefined -fno-sanitize-recover=all ${FQ_SANITIZER_COMMON_FLAGS})
 
 # MemorySanitizer flags (Clang only)
-set(FQ_MSAN_FLAGS "-fsanitize=memory -fsanitize-memory-track-origins=2 ${FQ_SANITIZER_COMMON_FLAGS}")
+set(FQ_MSAN_FLAGS -fsanitize=memory -fsanitize-memory-track-origins=2 ${FQ_SANITIZER_COMMON_FLAGS})
 
 # =============================================================================
 # Function: fq_add_sanitizer_flags
