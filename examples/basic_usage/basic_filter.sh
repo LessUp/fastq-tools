@@ -72,10 +72,10 @@ if [[ -z "${FASTQTOOLS_BIN}" ]]; then
         FASTQTOOLS_BIN="FastQTools"
     else
         for candidate in \
-            "../../build-clang-release/FastQTools" \
-            "../../build-gcc-release/FastQTools" \
-            "../../build-clang-debug/FastQTools" \
-            "../../build-gcc-debug/FastQTools"; do
+            "../../build/gcc-release/FastQTools" \
+            "../../build/clang-release/FastQTools" \
+            "../../build/gcc-debug/FastQTools" \
+            "../../build/clang-debug/FastQTools"; do
             if [[ -x "$candidate" ]]; then
                 FASTQTOOLS_BIN="$candidate"
                 break
