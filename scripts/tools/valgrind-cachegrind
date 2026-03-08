@@ -95,7 +95,7 @@ fi
 
 # Find build directory
 if [[ -z "$BUILD_DIR" ]]; then
-    for dir in build-clang-release build-gcc-release build-clang-debug build-gcc-debug; do
+    for dir in build/clang-release build/gcc-release build/clang-debug build/gcc-debug; do
         if [[ -d "$dir" ]]; then
             BUILD_DIR="$dir"
             break

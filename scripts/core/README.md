@@ -86,7 +86,7 @@
 ./scripts/core/lint all                      # 运行所有检查
 
 # 高级用法
-./scripts/core/lint tidy -b build-clang-release
+./scripts/core/lint tidy -b build/clang-release
 ./scripts/core/lint format --verbose
 
 # 查看所有选项

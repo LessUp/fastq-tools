@@ -67,8 +67,6 @@ install_deps_alpine() {
         ccache \
         linux-headers \
         zlib-dev \
-        bzip2-dev \
-        xz-dev \
         tar
 }
 
@@ -92,8 +90,6 @@ install_deps_debian() {
         ccache \
         libdeflate-dev \
         zlib1g-dev \
-        libbz2-dev \
-        liblzma-dev \
         libtbb-dev
 }
 

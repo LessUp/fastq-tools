@@ -94,13 +94,13 @@ get_project_root() {
     echo "$(dirname "$script_dir")"
 }
 
-# 获取构建目录名称
+# 获取构建目录名称（与 CMakePresets.json binaryDir 一致）
 get_build_dir() {
     local compiler="${1:-clang}"
     local build_type="${2:-release}"
     local build_type_lower
     build_type_lower=$(echo "$build_type" | tr '[:upper:]' '[:lower:]')
-    echo "build-${compiler}-${build_type_lower}"
+    echo "build/${compiler}-${build_type_lower}"
 }
 
 # 检查命令是否存在

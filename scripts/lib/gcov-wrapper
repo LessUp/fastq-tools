@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
-if command -v llvm-cov-19 >/dev/null 2>&1; then
-  exec llvm-cov-19 gcov "$@"
+if command -v llvm-cov-21 >/dev/null 2>&1; then
+  exec llvm-cov-21 gcov "$@"
 elif command -v llvm-cov >/dev/null 2>&1; then
   exec llvm-cov gcov "$@"
 elif command -v gcov >/dev/null 2>&1; then

@@ -10,7 +10,7 @@ BENCHMARK_DIR="$PROJECT_ROOT/benchmark_results"
 TOOLS_DIR="$PROJECT_ROOT/tools/benchmark/scripts"
 
 # 默认配置
-BUILD_DIR="${BUILD_DIR:-$PROJECT_ROOT/build-clang-release}"
+BUILD_DIR="${BUILD_DIR:-$PROJECT_ROOT/build/clang-release}"
 CI_MODE=false
 VERBOSE=false
 

@@ -65,11 +65,9 @@ done
 if [ -z "$BUILD_DIR" ]; then
     # 按优先级查找构建产物
     for dir in \
-        "build/release" \
         "build/gcc-release" \
         "build/clang-release" \
-        "build-clang-release" \
-        "build-gcc-release" \
+        "build/release" \
         "build"; do
         if [ -f "$dir/FastQTools" ]; then
             BUILD_DIR="$dir"
@@ -102,7 +100,7 @@ if [ "$NO_BUILD" = "false" ]; then
 
     # 重新检测构建目录
     if [ -z "$BUILD_DIR" ]; then
-        for dir in "build/gcc-release" "build/release" "build-gcc-release"; do
+        for dir in "build/gcc-release" "build/release" "build/clang-release"; do
             if [ -f "$dir/FastQTools" ]; then
                 BUILD_DIR="$dir"
                 break
