@@ -46,8 +46,8 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt-get update -o Acquire::Retries=3
+          sudo apt-get install -y --fix-missing \
             build-essential \
             wget \
             ninja-build \
@@ -59,7 +59,7 @@ jobs:
 
           # CMake 4.x
           CMAKE_ARCH=x86_64
-          sudo wget -q "https://github.com/Kitware/CMake/releases/download/v${{ env.CMAKE_VERSION }}/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz
+          sudo wget -q --tries=3 --waitretry=5 "https://github.com/Kitware/CMake/releases/download/v${{ env.CMAKE_VERSION }}/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz
           sudo mkdir -p /opt
           sudo tar -C /opt -xzf /tmp/cmake.tar.gz
           sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake
@@ -92,7 +92,7 @@ jobs:
 
       - name: Run Valgrind Memcheck
         run: |
-          ./scripts/core/test -b build-gcc-debug --valgrind
+          ./scripts/core/test -b build/gcc-debug --valgrind
         continue-on-error: true
         id: valgrind
 
@@ -102,7 +102,7 @@ jobs:
         with:
           name: valgrind-memcheck-report
           path: |
-            build-gcc-debug/Testing/Temporary/MemoryChecker*.log
+            build/gcc-debug/Testing/Temporary/MemoryChecker*.log
           retention-days: 30
 
       - name: Check Valgrind result
@@ -129,8 +129,8 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt-get update -o Acquire::Retries=3
+          sudo apt-get install -y --fix-missing \
             build-essential \
             wget \
             ninja-build \
@@ -142,7 +142,7 @@ jobs:
 
           # CMake 4.x
           CMAKE_ARCH=x86_64
-          sudo wget -q "https://github.com/Kitware/CMake/releases/download/v${{ env.CMAKE_VERSION }}/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz
+          sudo wget -q --tries=3 --waitretry=5 "https://github.com/Kitware/CMake/releases/download/v${{ env.CMAKE_VERSION }}/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz
           sudo mkdir -p /opt
           sudo tar -C /opt -xzf /tmp/cmake.tar.gz
           sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake
@@ -176,7 +176,7 @@ jobs:
       - name: Run Valgrind Helgrind
         run: |
           # Run Helgrind on the test executable
-          TEST_EXEC=$(find build-gcc-debug -name "*_test" -o -name "*_tests" | head -1)
+          TEST_EXEC=$(find build/gcc-debug -name "*_test" -o -name "*_tests" | head -1)
           if [[ -n "$TEST_EXEC" ]]; then
             valgrind --tool=helgrind \
               --suppressions=config/valgrind/suppressions.supp \
