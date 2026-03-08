@@ -66,8 +66,8 @@ auto FqStatisticResult::operator+=(const FqStatisticResult& other) -> FqStatisti
 
 // Helper function: 计算单个位置的错误率
 // qualSlot 指向该位置的 kMaxQual 个质量分数槽位（扁平化布局）
-[[nodiscard]] static auto calculateErrorPerPosition(const uint64_t* qualSlot,
-                                                    uint64_t readCount) -> double {
+[[nodiscard]] static auto calculateErrorPerPosition(const uint64_t* qualSlot, uint64_t readCount)
+    -> double {
     if (readCount == 0) {
         return 0.0;
     }

@@ -14,11 +14,16 @@
 ### 1. 发布构建脚本修复
 
 - `scripts/ci/release-build.sh`
-  - 将 Debian Clang 安装从 **Clang 21** 升级并统一到 **Clang 22**
+  - 保持 Debian / Ubuntu Clang 发布链路与当前可安装的 **Clang 21** 对齐
   - 去除 `install_cmake()` 中的 `local ARCH`，保证 `/bin/sh` 兼容
   - Alpine 构建依赖中补充 `ca-certificates`
   - Alpine 安装 Conan 时移除不必要的 `--break-system-packages`
-  - 为 Debian `apt-get` 与 `wget` 下载增加重试/补装参数，降低网络抖动导致的失败概率
+  - Clang 构建显式使用 `config/conan/profile-clang`，避免 Conan 自动探测回落到 `libstdc++`
+  - 为 libc++ 头文件补充 `/usr/include/c++/v1` 链接，修复 `<format>` 头文件缺失
+  - 为 Debian / Ubuntu `apt-get` 与 `wget` 下载增加重试/补装参数，降低网络抖动导致的失败概率
+
+- `config/conan/profile-clang`
+  - 保持 `compiler.version=21`，但明确以 `libc++` 形式供发布脚本复用
 
 ### 2. 质量检查工作流修复
 
@@ -46,7 +51,7 @@
 
 ## 影响
 
-- 发布容器构建脚本与当前 **Clang 22 / CMake 4.0.2 / Conan 2.24.0** 工具链保持一致
+- 发布容器构建脚本与当前 **Clang 21 / CMake 4.0.2 / Conan 2.24.0** 工具链保持一致
 - Valgrind workflow 不再因构建目录名不匹配而直接失效
 - 质量工作流的 coverage 上传路径与实际产物一致
 - Benchmark / CI / Quality / Valgrind / Release 在外网下载阶段更稳健

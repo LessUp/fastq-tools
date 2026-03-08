@@ -94,7 +94,7 @@ int DataCollector::getCoreCount() {
 
 std::size_t DataCollector::getMemoryBytes() {
 #ifdef __linux__
-    struct sysinfo info {};
+    struct sysinfo info{};
     if (sysinfo(&info) == 0) {
         return static_cast<std::size_t>(info.totalram) * info.mem_unit;
     }

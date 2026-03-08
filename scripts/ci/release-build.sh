@@ -106,6 +106,9 @@ install_clang_debian() {
     update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-21   100
     update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
     update-alternatives --install /usr/bin/lld     lld     /usr/bin/lld-21     100
+
+    rm -rf /usr/include/c++/v1
+    ln -sf /usr/lib/llvm-21/include/c++/v1 /usr/include/c++/v1
 }
 
 install_clang_alpine() {
@@ -191,6 +194,10 @@ conan profile detect --force
 
 echo ">>> Conan 安装依赖..."
 CONAN_ARGS="--build=missing -s build_type=Release -of=${BUILD_DIR}"
+
+if [ "$COMPILER" = "clang" ] && [ -f "config/conan/profile-clang" ]; then
+    CONAN_ARGS="${CONAN_ARGS} -pr:h config/conan/profile-clang"
+fi
 
 if [ "$STATIC" = "true" ]; then
     CONAN_ARGS="${CONAN_ARGS} -o *:shared=False"
