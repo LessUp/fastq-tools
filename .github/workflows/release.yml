@@ -1,62 +1,177 @@
+# =============================================================================
+# FastQTools Multi-Platform Release
+# =============================================================================
+# 构建矩阵:
+#   gcc  × glibc × x86_64    — 最通用的 Linux 发行版
+#   gcc  × glibc × aarch64   — ARM 服务器 (AWS Graviton 等)
+#   gcc  × musl  × x86_64    — 静态链接，Alpine / 便携式
+#   gcc  × musl  × aarch64   — 静态链接，ARM Alpine / 便携式
+#   clang × glibc × x86_64   — Clang 替代构建
+#   clang × glibc × aarch64  — Clang ARM 替代构建
+#
+# 触发: push tag v* 或手动 workflow_dispatch
+# =============================================================================
+
 name: Release
 
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v3.1.0)"
+        required: true
 
 permissions:
   contents: write
 
-env:
-  CONAN_VERSION: 2.24.0
-
 jobs:
-  release:
+  # ===========================================================================
+  # 构建阶段 — 每个矩阵条目在 Docker 容器中编译
+  # ===========================================================================
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # --- x86_64 ---
+          - target:   linux-x86_64-gcc-glibc
+            platform: linux/amd64
+            image:    gcc:15.2-bookworm
+            compiler: gcc
+            static:   ""
+          - target:   linux-x86_64-clang-glibc
+            platform: linux/amd64
+            image:    gcc:15.2-bookworm
+            compiler: clang
+            static:   ""
+          - target:   linux-x86_64-musl-static
+            platform: linux/amd64
+            image:    alpine:3.21
+            compiler: gcc
+            static:   "--static"
+          # --- aarch64 ---
+          - target:   linux-aarch64-gcc-glibc
+            platform: linux/arm64
+            image:    gcc:15.2-bookworm
+            compiler: gcc
+            static:   ""
+          - target:   linux-aarch64-clang-glibc
+            platform: linux/arm64
+            image:    gcc:15.2-bookworm
+            compiler: clang
+            static:   ""
+          - target:   linux-aarch64-musl-static
+            platform: linux/arm64
+            image:    alpine:3.21
+            compiler: gcc
+            static:   "--static"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU (aarch64)
+        if: matrix.platform == 'linux/arm64'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Build in Docker container
+        run: |
+          docker run --rm \
+            --platform ${{ matrix.platform }} \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            ${{ matrix.image }} \
+            sh -c "chmod +x scripts/ci/release-build.sh && scripts/ci/release-build.sh ${{ matrix.compiler }} ${{ matrix.static }}"
+
+      - name: Package
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TARGET="${{ matrix.target }}"
+          PACKAGE_NAME="fastqtools-v${VERSION}-${TARGET}"
+          PACKAGE_DIR="dist/${PACKAGE_NAME}"
+
+          mkdir -p "${PACKAGE_DIR}/bin"
+          cp build/release/FastQTools "${PACKAGE_DIR}/bin/"
+          cp LICENSE "${PACKAGE_DIR}/" 2>/dev/null || true
+          cp README.md "${PACKAGE_DIR}/"
+          cp CHANGELOG.md "${PACKAGE_DIR}/" 2>/dev/null || true
+
+          # 压缩
+          (cd dist && tar -czf "${PACKAGE_NAME}.tar.gz" "${PACKAGE_NAME}")
+          rm -rf "${PACKAGE_DIR}"
+
+          echo ">>> 打包完成: dist/${PACKAGE_NAME}.tar.gz"
+          ls -lh "dist/${PACKAGE_NAME}.tar.gz"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: dist/*.tar.gz
+          retention-days: 7
+
+  # ===========================================================================
+  # 发布阶段 — 收集所有构建产物并创建 GitHub Release
+  # ===========================================================================
+  publish:
+    name: Publish Release
+    needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          python-version: "3.11"
+          path: dist/
+          merge-multiple: true
 
-      - name: Install system dependencies
+      - name: List release assets
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential wget ninja-build ccache tar xz-utils
+          echo ">>> Release assets:"
+          ls -lh dist/
+          echo ""
+          echo ">>> SHA256 checksums:"
+          (cd dist && sha256sum *.tar.gz) | tee dist/SHA256SUMS.txt
 
-          CMAKE_VERSION=4.2.1
-          CMAKE_ARCH=x86_64
-          sudo wget -q "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz
-          sudo mkdir -p /opt
-          sudo tar -C /opt -xzf /tmp/cmake.tar.gz
-          sudo ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake
-          sudo ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/ctest" /usr/local/bin/ctest
-          sudo ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
-          sudo rm -f /tmp/cmake.tar.gz
-
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 21
-          sudo apt-get install -y clang-21 clang-tidy-21 clang-format-21 llvm-21 lld-21
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
-          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-21 100
-          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-21 100
-
-      - name: Install Conan
-        run: |
-          pip install conan==${{ env.CONAN_VERSION }}
-          conan profile detect --force
-
-      - name: Build release package
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          ./scripts/tools/package-release "$VERSION"
-
-      - name: Publish GitHub Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.tar.gz
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: FastQTools ${{ steps.version.outputs.tag }}
+          files: |
+            dist/*.tar.gz
+            dist/SHA256SUMS.txt
           generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.tag, '-') }}

@@ -1,0 +1,250 @@
+#!/bin/sh
+# =============================================================================
+# FastQTools Release Build — 容器内构建脚本
+# =============================================================================
+# 在 Docker 容器内运行，自适应 Alpine (musl) / Debian (glibc) 环境
+#
+# 用法:
+#   release-build.sh <compiler> [--static]
+#
+# 参数:
+#   compiler    gcc | clang
+#   --static    静态链接（musl 构建时使用）
+#
+# 环境变量:
+#   CC / CXX    编译器路径（可选，默认由 compiler 参数决定）
+# =============================================================================
+set -eu
+
+# =============================================================================
+# 参数解析
+# =============================================================================
+COMPILER="${1:-gcc}"
+STATIC=false
+shift || true
+for arg in "$@"; do
+    case "$arg" in
+        --static) STATIC=true ;;
+    esac
+done
+
+CMAKE_VERSION="4.0.2"
+CONAN_VERSION="2.24.0"
+
+echo ">>> FastQTools Release Build"
+echo "    Compiler: ${COMPILER}"
+echo "    Static:   ${STATIC}"
+
+# =============================================================================
+# 检测操作系统
+# =============================================================================
+if [ -f /etc/alpine-release ]; then
+    OS_TYPE="alpine"
+    echo "    OS:       Alpine $(cat /etc/alpine-release) (musl)"
+elif [ -f /etc/debian_version ]; then
+    OS_TYPE="debian"
+    echo "    OS:       Debian $(cat /etc/debian_version) (glibc)"
+else
+    OS_TYPE="unknown"
+    echo "    OS:       unknown"
+fi
+echo "    Arch:     $(uname -m)"
+echo ""
+
+# =============================================================================
+# 安装构建依赖
+# =============================================================================
+install_deps_alpine() {
+    echo ">>> [Alpine] 安装构建依赖..."
+    apk add --no-cache \
+        build-base \
+        ninja \
+        pkgconf \
+        git \
+        wget \
+        python3 \
+        py3-pip \
+        ccache \
+        linux-headers \
+        zlib-dev \
+        bzip2-dev \
+        xz-dev \
+        tar
+}
+
+install_deps_debian() {
+    echo ">>> [Debian] 安装构建依赖..."
+    apt-get update -qq
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        ninja-build \
+        pkg-config \
+        git \
+        wget \
+        ca-certificates \
+        tar \
+        xz-utils \
+        python3 \
+        python3-pip \
+        ccache \
+        libdeflate-dev \
+        zlib1g-dev \
+        libbz2-dev \
+        liblzma-dev \
+        libtbb-dev
+}
+
+install_clang_debian() {
+    echo ">>> [Debian] 安装 Clang 21..."
+    wget -q https://apt.llvm.org/llvm.sh
+    chmod +x llvm.sh
+    ./llvm.sh 21
+    apt-get install -y --no-install-recommends \
+        clang-21 lld-21 libc++-21-dev libc++abi-21-dev
+    rm -f llvm.sh
+
+    update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-21   100
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
+    update-alternatives --install /usr/bin/lld     lld     /usr/bin/lld-21     100
+}
+
+install_clang_alpine() {
+    echo ">>> [Alpine] 安装 Clang..."
+    apk add --no-cache clang lld compiler-rt libc++-dev
+}
+
+# =============================================================================
+# 安装 CMake
+# =============================================================================
+install_cmake() {
+    echo ">>> 安装 CMake ${CMAKE_VERSION}..."
+    local ARCH
+    ARCH="$(uname -m)"
+    case "$ARCH" in
+        x86_64)  CMAKE_ARCH="x86_64" ;;
+        aarch64) CMAKE_ARCH="aarch64" ;;
+        *)       echo "不支持的架构: $ARCH"; exit 1 ;;
+    esac
+
+    wget -q "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz
+    mkdir -p /opt
+    tar -C /opt -xzf /tmp/cmake.tar.gz
+    ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake
+    ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/ctest" /usr/local/bin/ctest
+    ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
+    rm -f /tmp/cmake.tar.gz
+}
+
+# =============================================================================
+# 安装 Conan
+# =============================================================================
+install_conan() {
+    echo ">>> 安装 Conan ${CONAN_VERSION}..."
+    if [ "$OS_TYPE" = "alpine" ]; then
+        pip3 install --no-cache-dir --break-system-packages "conan==${CONAN_VERSION}"
+    else
+        pip3 install --no-cache-dir --break-system-packages "conan==${CONAN_VERSION}"
+    fi
+}
+
+# =============================================================================
+# 执行安装
+# =============================================================================
+case "$OS_TYPE" in
+    alpine)  install_deps_alpine ;;
+    debian)  install_deps_debian ;;
+    *)       echo "不支持的 OS"; exit 1 ;;
+esac
+
+if [ "$COMPILER" = "clang" ]; then
+    case "$OS_TYPE" in
+        alpine)  install_clang_alpine ;;
+        debian)  install_clang_debian ;;
+    esac
+fi
+
+install_cmake
+install_conan
+
+# =============================================================================
+# 配置编译器环境
+# =============================================================================
+if [ "$COMPILER" = "gcc" ]; then
+    export CC="${CC:-gcc}"
+    export CXX="${CXX:-g++}"
+elif [ "$COMPILER" = "clang" ]; then
+    export CC="${CC:-clang}"
+    export CXX="${CXX:-clang++}"
+fi
+
+echo ""
+echo ">>> 编译器: CC=${CC}, CXX=${CXX}"
+${CC} --version 2>&1 | head -1
+echo ""
+
+# =============================================================================
+# Conan 安装依赖
+# =============================================================================
+BUILD_DIR="build/release"
+
+echo ">>> Conan 配置..."
+conan profile detect --force
+
+echo ">>> Conan 安装依赖..."
+CONAN_ARGS="--build=missing -s build_type=Release -of=${BUILD_DIR}"
+
+if [ "$STATIC" = "true" ]; then
+    CONAN_ARGS="${CONAN_ARGS} -o *:shared=False"
+fi
+
+conan install config/dependencies/ ${CONAN_ARGS}
+
+# =============================================================================
+# CMake 配置
+# =============================================================================
+echo ">>> CMake 配置..."
+CMAKE_ARGS="-B ${BUILD_DIR} -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_TOOLCHAIN_FILE=${BUILD_DIR}/conan_toolchain.cmake \
+    -DCMAKE_C_COMPILER=${CC} \
+    -DCMAKE_CXX_COMPILER=${CXX} \
+    -DENABLE_COVERAGE=OFF \
+    -DBUILD_TESTING=OFF \
+    -DBUILD_BENCHMARKS=OFF"
+
+if [ "$STATIC" = "true" ]; then
+    CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_EXE_LINKER_FLAGS=-static"
+fi
+
+cmake ${CMAKE_ARGS}
+
+# =============================================================================
+# 构建
+# =============================================================================
+echo ">>> 构建..."
+ninja -C ${BUILD_DIR} -j "$(nproc)"
+
+# =============================================================================
+# 验证
+# =============================================================================
+BINARY="${BUILD_DIR}/FastQTools"
+if [ ! -f "$BINARY" ]; then
+    echo ">>> 错误: 构建产物 ${BINARY} 不存在"
+    exit 1
+fi
+
+echo ""
+echo ">>> 构建成功!"
+echo "    二进制: ${BINARY}"
+echo "    大小:   $(du -h "$BINARY" | cut -f1)"
+echo "    类型:   $(file "$BINARY")"
+
+# 对静态构建，验证没有动态链接
+if [ "$STATIC" = "true" ]; then
+    if ldd "$BINARY" 2>&1 | grep -q "not a dynamic executable\|statically linked"; then
+        echo "    链接:   静态 ✓"
+    else
+        echo "    链接:   警告 — 可能包含动态依赖:"
+        ldd "$BINARY" 2>&1 || true
+    fi
+fi
