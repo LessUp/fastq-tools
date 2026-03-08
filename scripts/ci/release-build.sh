@@ -62,6 +62,7 @@ install_deps_alpine() {
         pkgconf \
         git \
         wget \
+        ca-certificates \
         python3 \
         py3-pip \
         ccache \
@@ -72,8 +73,8 @@ install_deps_alpine() {
 
 install_deps_debian() {
     echo ">>> [Debian] 安装构建依赖..."
-    apt-get update -qq
-    apt-get install -y --no-install-recommends \
+    apt-get update -o Acquire::Retries=3 -qq
+    apt-get install -y --fix-missing --no-install-recommends \
         build-essential \
         ninja-build \
         pkg-config \
@@ -94,17 +95,17 @@ install_deps_debian() {
 }
 
 install_clang_debian() {
-    echo ">>> [Debian] 安装 Clang 22..."
-    wget -q https://apt.llvm.org/llvm.sh
+    echo ">>> [Debian] 安装 Clang 21..."
+    wget -q --tries=3 --waitretry=5 https://apt.llvm.org/llvm.sh
     chmod +x llvm.sh
-    ./llvm.sh 22
-    apt-get install -y --no-install-recommends \
-        clang-22 lld-22 libc++-22-dev libc++abi-22-dev
+    ./llvm.sh 21
+    apt-get install -y --fix-missing --no-install-recommends \
+        clang-21 lld-21 libc++-21-dev libc++abi-21-dev
     rm -f llvm.sh
 
-    update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-22   100
-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-22 100
-    update-alternatives --install /usr/bin/lld     lld     /usr/bin/lld-22     100
+    update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-21   100
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
+    update-alternatives --install /usr/bin/lld     lld     /usr/bin/lld-21     100
 }
 
 install_clang_alpine() {
@@ -117,7 +118,6 @@ install_clang_alpine() {
 # =============================================================================
 install_cmake() {
     echo ">>> 安装 CMake ${CMAKE_VERSION}..."
-    local ARCH
     ARCH="$(uname -m)"
     case "$ARCH" in
         x86_64)  CMAKE_ARCH="x86_64" ;;
@@ -125,7 +125,7 @@ install_cmake() {
         *)       echo "不支持的架构: $ARCH"; exit 1 ;;
     esac
 
-    wget -q "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz
+    wget -q --tries=3 --waitretry=5 "https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz
     mkdir -p /opt
     tar -C /opt -xzf /tmp/cmake.tar.gz
     ln -sf "/opt/cmake-${CMAKE_VERSION}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake
@@ -140,7 +140,7 @@ install_cmake() {
 install_conan() {
     echo ">>> 安装 Conan ${CONAN_VERSION}..."
     if [ "$OS_TYPE" = "alpine" ]; then
-        pip3 install --no-cache-dir --break-system-packages "conan==${CONAN_VERSION}"
+        pip3 install --no-cache-dir "conan==${CONAN_VERSION}"
     else
         pip3 install --no-cache-dir --break-system-packages "conan==${CONAN_VERSION}"
     fi
