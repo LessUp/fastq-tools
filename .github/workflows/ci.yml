@@ -56,11 +56,12 @@ jobs:
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 21
-          sudo apt-get install -y clang-21 clang-tidy-21 clang-format-21 lld-21 llvm-21
+          sudo apt-get install -y clang-21 clang-tidy-21 clang-format-21 lld-21 llvm-21 libc++-21-dev libc++abi-21-dev
           sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
           sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-21 100
           sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-21 100
+          sudo update-alternatives --install /usr/bin/ld.lld ld.lld /usr/bin/ld.lld-21 100
 
       - name: Install Conan
         run: |
@@ -150,9 +151,10 @@ jobs:
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 21
-          sudo apt-get install -y clang-21 clang-tidy-21 clang-format-21 lld-21
+          sudo apt-get install -y clang-21 clang-tidy-21 clang-format-21 lld-21 libc++-21-dev libc++abi-21-dev
           sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
+          sudo update-alternatives --install /usr/bin/ld.lld ld.lld /usr/bin/ld.lld-21 100
 
       - name: Set up Python for Conan
         uses: actions/setup-python@v4
@@ -246,11 +248,12 @@ jobs:
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 21
-          sudo apt-get install -y clang-21 clang-tidy-21 clang-format-21 llvm-21 lld-21
+          sudo apt-get install -y clang-21 clang-tidy-21 clang-format-21 llvm-21 lld-21 libc++-21-dev libc++abi-21-dev
           sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
           sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-21 100
           sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-21 100
+          sudo update-alternatives --install /usr/bin/ld.lld ld.lld /usr/bin/ld.lld-21 100
 
       - name: Set up Python for Conan
         uses: actions/setup-python@v4

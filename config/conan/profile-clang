@@ -13,3 +13,5 @@ os=Linux
 [conf]
 tools.build:compiler_executables={"c": "clang", "cpp": "clang++"}
 tools.build:cxxflags=["-Wno-character-conversion","-Wno-deprecated-declarations"]
+tools.build:exelinkflags=["-fuse-ld=lld"]
+tools.build:sharedlinkflags=["-fuse-ld=lld"]

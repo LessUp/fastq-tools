@@ -61,8 +61,7 @@ auto Logger::instance() -> Logger& {
 
 void Logger::log(Level level, std::string_view message) {
     if (level >= level_) {
-        std::cout << fmt::format(
-            "[{}] {}: {}\n", getLevelString(level), getCurrentTime(), message);
+        std::cout << fmt::format("[{}] {}: {}\n", getLevelString(level), getCurrentTime(), message);
     }
 }
 
