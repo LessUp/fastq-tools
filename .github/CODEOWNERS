@@ -1,3 +1,23 @@
 # See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-# Update the handles below to the actual maintainers.
-*	@lessup
+
+# 默认所有文件
+*                           @lessup
+
+# 公共 API（变更需审慎）
+/include/                   @lessup
+
+# 构建系统
+/CMakeLists.txt             @lessup
+/CMakePresets.json           @lessup
+/conanfile.py                @lessup
+/config/dependencies/        @lessup
+
+# CI/CD
+/.github/                   @lessup
+
+# Docker & DevContainer
+/docker/                    @lessup
+/.devcontainer/             @lessup
+
+# 脚本
+/scripts/                   @lessup

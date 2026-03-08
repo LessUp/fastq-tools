@@ -2,7 +2,7 @@ name: Performance Benchmark
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
   schedule:
@@ -16,74 +16,95 @@ on:
         default: 'false'
         type: boolean
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   BUILD_TYPE: Release
+  CONAN_VERSION: "2.24.0"
+  CMAKE_VERSION: "4.0.2"
 
 jobs:
   benchmark:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    
+
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-    
+
     - name: Install Python dependencies
       run: |
         pip install matplotlib
-    
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y \
           build-essential \
-          cmake \
+          wget \
           ninja-build \
+          ccache \
+          tar \
+          xz-utils \
           libtbb-dev \
           zlib1g-dev \
           libbz2-dev \
-          liblzma-dev
-    
+          liblzma-dev \
+          libdeflate-dev
+
+        # CMake 4.x
+        CMAKE_ARCH=x86_64
+        sudo wget -q "https://github.com/Kitware/CMake/releases/download/v${{ env.CMAKE_VERSION }}/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz
+        sudo mkdir -p /opt
+        sudo tar -C /opt -xzf /tmp/cmake.tar.gz
+        sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake
+        sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/ctest" /usr/local/bin/ctest
+        sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
+        sudo rm -f /tmp/cmake.tar.gz
+
     - name: Install Conan
       run: |
-        pip install conan
+        pip install conan==${{ env.CONAN_VERSION }}
         conan profile detect --force
-    
+
     - name: Cache Conan packages
       uses: actions/cache@v4
       with:
         path: ~/.conan2
-        key: ${{ runner.os }}-conan-${{ hashFiles('conanfile.py') }}
+        key: "${{ runner.os }}-conan-bench-${{ hashFiles('config/dependencies/**') }}"
         restore-keys: |
+          ${{ runner.os }}-conan-bench-
           ${{ runner.os }}-conan-
-    
+
     - name: Install dependencies
       run: |
-        conan install . --output-folder=build --build=missing -s build_type=${{ env.BUILD_TYPE }}
-    
+        conan install config/dependencies/ --output-folder=build --build=missing -s build_type=${{ env.BUILD_TYPE }}
+
     - name: Configure CMake
       run: |
         cmake -B build \
           -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
           -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
           -G Ninja
-    
+
     - name: Build benchmarks
       run: |
         cmake --build build --target benchmarks
-    
+
     - name: Generate test data
       run: |
         python3 tools/benchmark/scripts/gen_benchmark_data.py \
           --generate-dataset \
           --output-dir benchmark_results/data
-    
+
     - name: Run benchmarks
       run: |
         mkdir -p benchmark_results/results
@@ -92,14 +113,14 @@ jobs:
           --benchmark_out=benchmark_results/results/current.json \
           --benchmark_repetitions=3 \
           --benchmark_report_aggregates_only=true
-    
+
     - name: Download baseline (if exists)
       continue-on-error: true
       uses: actions/download-artifact@v4
       with:
         name: benchmark-baseline
         path: benchmark_results/baselines/
-    
+
     - name: Check for regressions
       if: github.event_name == 'pull_request'
       run: |
@@ -111,7 +132,7 @@ jobs:
         else
           echo "No baseline found, skipping regression check"
         fi
-    
+
     - name: Generate report
       run: |
         python3 tools/benchmark/scripts/report_generator.py \
@@ -119,7 +140,7 @@ jobs:
           --google-benchmark \
           --format markdown \
           --charts
-    
+
     - name: Upload benchmark results
       uses: actions/upload-artifact@v4
       with:
@@ -127,21 +148,21 @@ jobs:
         path: |
           benchmark_results/results/
           benchmark_results/reports/
-    
+
     - name: Save as baseline
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.save_baseline == 'true'
+      if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event.inputs.save_baseline == 'true'
       run: |
         mkdir -p benchmark_results/baselines
         cp benchmark_results/results/current.json benchmark_results/baselines/default.json
-    
+
     - name: Upload baseline
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event.inputs.save_baseline == 'true'
+      if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event.inputs.save_baseline == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: benchmark-baseline
         path: benchmark_results/baselines/default.json
         retention-days: 90
-    
+
     - name: Comment on PR
       if: github.event_name == 'pull_request'
       uses: actions/github-script@v7
@@ -149,23 +170,23 @@ jobs:
         script: |
           const fs = require('fs');
           const reportPath = 'benchmark_results/reports/latest.md';
-          
+
           if (fs.existsSync(reportPath)) {
             const report = fs.readFileSync(reportPath, 'utf8');
-            
+
             // 查找现有评论
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
-            const botComment = comments.find(c => 
+
+            const botComment = comments.find(c =>
               c.user.type === 'Bot' && c.body.includes('Performance Report')
             );
-            
-            const body = `## 📊 Performance Report\n\n${report}\n\n*Updated: ${new Date().toISOString()}*`;
-            
+
+            const body = `## Performance Report\n\n${report}\n\n*Updated: ${new Date().toISOString()}*`;
+
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,

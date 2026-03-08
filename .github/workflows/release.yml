@@ -50,7 +50,7 @@ jobs:
   # 构建阶段 — 每个矩阵条目在 Docker 容器中编译
   # ===========================================================================
   build:
-    name: Build ${{ matrix.target }}
+    name: "Build ${{ matrix.target }}"
     needs: ci-gate
     runs-on: ubuntu-latest
     strategy:
@@ -58,37 +58,37 @@ jobs:
       matrix:
         include:
           # --- x86_64 ---
-          - target:   linux-x86_64-gcc-glibc
+          - target: linux-x86_64-gcc-glibc
             platform: linux/amd64
-            image:    gcc:15.2-bookworm
+            image: gcc:15.2-bookworm
             compiler: gcc
-            static:   ""
-          - target:   linux-x86_64-clang-glibc
+            static: ""
+          - target: linux-x86_64-clang-glibc
             platform: linux/amd64
-            image:    gcc:15.2-bookworm
+            image: gcc:15.2-bookworm
             compiler: clang
-            static:   ""
-          - target:   linux-x86_64-musl-static
+            static: ""
+          - target: linux-x86_64-musl-static
             platform: linux/amd64
-            image:    alpine:3.21
+            image: alpine:3.21
             compiler: gcc
-            static:   "--static"
+            static: "--static"
           # --- aarch64 ---
-          - target:   linux-aarch64-gcc-glibc
+          - target: linux-aarch64-gcc-glibc
             platform: linux/arm64
-            image:    gcc:15.2-bookworm
+            image: gcc:15.2-bookworm
             compiler: gcc
-            static:   ""
-          - target:   linux-aarch64-clang-glibc
+            static: ""
+          - target: linux-aarch64-clang-glibc
             platform: linux/arm64
-            image:    gcc:15.2-bookworm
+            image: gcc:15.2-bookworm
             compiler: clang
-            static:   ""
-          - target:   linux-aarch64-musl-static
+            static: ""
+          - target: linux-aarch64-musl-static
             platform: linux/arm64
-            image:    alpine:3.21
+            image: alpine:3.21
             compiler: gcc
-            static:   "--static"
+            static: "--static"
 
     steps:
       - name: Checkout
@@ -144,7 +144,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.target }}
+          name: "${{ matrix.target }}"
           path: dist/*.tar.gz
           retention-days: 7
 
@@ -187,7 +187,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: FastQTools ${{ steps.version.outputs.tag }}
+          name: "FastQTools ${{ steps.version.outputs.tag }}"
           files: |
             dist/*.tar.gz
             dist/SHA256SUMS.txt
