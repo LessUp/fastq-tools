@@ -1,22 +1,28 @@
-# 2025-10-20 文档重组与教学友好化（阶段四）
+# 2025-10-20 文档清理与重组
 
-遵循 KISS 原则，面向教学与开源使用者，精简并重组 `docs/`，同时清理未被引用的遗留目录。
+> 本文件合并自 2 个同日同主题的独立 changelog 条目。
+
+## 背景
+
+`docs/` 目录存在重复文档、过时内容和碎片化结构，需要清理合并并建立三层文档体系。
 
 ## 变更
 
-- **[文档重组]** 建立三层结构并迁移：
-  - 用户（User）：`docs/user/installation.md`、`docs/user/quick_start.md`、`docs/user/usage.md`
-  - 开发（Dev）：`docs/dev/architecture.md`、`docs/dev/building.md`、`docs/dev/coding_standards.md`、`docs/dev/contributing.md`、`docs/dev/git_commit_guidelines.md`、`docs/dev/tbb_pipeline.md`、`docs/dev/build_system.md`、`docs/dev/api_design_standards.md`、`docs/dev/cpp20_modules_migration_plan.md`、`docs/dev/integration_test_framework.md`、`docs/dev/performance_benchmark_system.md`、`docs/dev/unified_exception_handling_strategy.md`
-  - 内部（Internal）：`docs/internal/`（如 `TASK_SUMMARY.md` 等）
-- **[新增]** `docs/README.md` 文档索引（教学导航）。
-- **[删除]** `src/common/`（改由 `src/modules/common/` 提供 `fq_common` 目标；该目录未被引用）。
+### 1. 文档清理与合并
+
+- 编辑 `docs/user/usage.md`、`quick_start.md`、`installation.md`：移除过时参数、统一系统要求
+- 编辑 `docs/dev/architecture.md`、`coding_standards.md`：统一为 C++20
+- 新增 `docs/dev/build.md`：合并 `build_system.md` 与 `building.md`
+- 新增 `docs/internal/annotation_tasks.md`：合并内部注释任务清单
+- 删除重复/过时文档：`build_system.md`、`building.md`、`tbb_pipeline.md`、`commenting_standards.md` 等
+
+### 2. 文档重组
+
+- 建立 User/Dev/Internal 三层结构
+- 新增 `docs/README.md` 文档索引
+- 删除 `src/common/`（未被引用，已由 `src/modules/common/` 替代）
 
 ## 影响
 
-- 不影响现有构建/测试/CI。
-- 文档导航清晰，便于教学与使用者快速上手。
-
-## 后续建议
-
-- 统一示例与教程的文档风格与最小代码片段，避免大段未验证的伪代码。
-- 若新增文档，请归入 `docs/user/` 或 `docs/dev/`，并更新 `docs/README.md` 索引。
+- 不影响构建/测试/CI
+- 文档导航更清晰，面向教学与开源使用者
