@@ -2,9 +2,9 @@ name: Performance Benchmark
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
   schedule:
     # 每周一 UTC 00:00 运行
     - cron: '0 0 * * 1'
@@ -150,13 +150,13 @@ jobs:
           benchmark_results/reports/
 
     - name: Save as baseline
-      if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event.inputs.save_baseline == 'true'
+      if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event.inputs.save_baseline == 'true'
       run: |
         mkdir -p benchmark_results/baselines
         cp benchmark_results/results/current.json benchmark_results/baselines/default.json
 
     - name: Upload baseline
-      if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event.inputs.save_baseline == 'true'
+      if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event.inputs.save_baseline == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: benchmark-baseline
