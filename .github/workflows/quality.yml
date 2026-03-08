@@ -49,7 +49,20 @@ jobs:
 
       - name: Check formatting
         run: |
-          ./scripts/core/lint format-check
+          FAILED=0
+          for f in $(find src include tests -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" \)); do
+            if ! clang-format --style=file:.clang-format --dry-run --Werror "$f" 2>/dev/null; then
+              echo "::error::格式问题: $f"
+              echo "--- diff for $f ---"
+              diff <(cat "$f") <(clang-format --style=file:.clang-format "$f") || true
+              echo "--- end diff ---"
+              FAILED=1
+            fi
+          done
+          if [ "$FAILED" -eq 1 ]; then
+            exit 1
+          fi
+          echo "代码格式检查通过 ✓"
 
   # ===========================================================================
   # Static Analysis (clang-tidy + cppcheck)

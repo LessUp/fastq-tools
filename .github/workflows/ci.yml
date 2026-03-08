@@ -99,6 +99,12 @@ jobs:
           wget -q https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh ${{ env.LLVM_VERSION }}
+
+          # 先移除系统默认 libc++（LLVM 19），避免与 LLVM 21 头文件冲突
+          sudo apt-get remove -y libc++-dev libc++abi-dev 2>/dev/null || true
+          sudo rm -rf /usr/include/c++/v1
+
+          # 安装 LLVM 21 的 libc++
           sudo apt-get install -y \
             clang-${{ env.LLVM_VERSION }} \
             lld-${{ env.LLVM_VERSION }} \
@@ -107,10 +113,6 @@ jobs:
           sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-${{ env.LLVM_VERSION }}   100
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${{ env.LLVM_VERSION }} 100
           sudo update-alternatives --install /usr/bin/ld.lld  ld.lld  /usr/bin/ld.lld-${{ env.LLVM_VERSION }}  100
-
-          # 强制使用 clang-21 的 libc++ 头文件，覆盖系统旧版
-          sudo rm -rf /usr/include/c++/v1
-          sudo ln -sf /usr/lib/llvm-${{ env.LLVM_VERSION }}/include/c++/v1 /usr/include/c++/v1
 
       - name: Setup Python
         uses: actions/setup-python@v5

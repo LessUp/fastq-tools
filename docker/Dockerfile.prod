@@ -145,6 +145,10 @@ WORKDIR /app
 COPY --from=build /workspace/build/gcc-release/FastQTools /usr/local/bin/
 RUN ln -sf /usr/local/bin/FastQTools /usr/local/bin/fastqtools
 
+# 复制 GCC 15 的 libstdc++（bookworm-slim 只有 GCC 12 的版本）
+COPY --from=build /usr/local/lib64/libstdc++.so.6* /usr/local/lib64/
+RUN ldconfig
+
 # 数据目录
 RUN mkdir -p /app/data /app/output && \
     chown -R $USERNAME:$USERNAME /app

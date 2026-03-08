@@ -104,7 +104,7 @@ run_format_check() {
     while IFS= read -r file; do
         if ! clang-format --style=file:"$STYLE_FILE" --dry-run --Werror "$file" 2>/dev/null; then
             log_error "格式问题: $file"
-            ((issues++))
+            ((++issues))
         fi
     done <<< "$files"
     
@@ -138,7 +138,7 @@ run_format() {
             log_debug "格式化: $file"
         fi
         clang-format --style=file:"$STYLE_FILE" -i "$file"
-        ((count++))
+        ((++count))
     done <<< "$files"
     
     log_success "已格式化 ${count} 个文件 ✓"
@@ -247,7 +247,7 @@ run_iwyu() {
     local count=0
     
     while IFS= read -r file; do
-        ((count++))
+        ((++count))
         if [[ "$VERBOSE" == "true" ]]; then
             log_debug "分析 [${count}]: $file"
         fi
@@ -320,14 +320,14 @@ run_tidy() {
     local count=0
     
     while IFS= read -r file; do
-        ((count++))
+        ((++count))
         if [[ "$VERBOSE" == "true" ]]; then
             log_debug "分析 [${count}]: $file"
         fi
         
         if ! clang-tidy "${tidy_args[@]}" "$file" 2>&1 | tee /tmp/tidy_output.txt; then
             if grep -q "warning:" /tmp/tidy_output.txt || grep -q "error:" /tmp/tidy_output.txt; then
-                ((issues++))
+                ((++issues))
             fi
         fi
     done <<< "$files"
