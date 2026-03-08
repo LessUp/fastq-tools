@@ -75,7 +75,7 @@ FastQTools/
 
 ### 环境要求
 - CMake ≥ 3.20
-- 支持 C++23 的编译器（GCC 11+ / Clang 12+，推荐 GCC 15 / Clang 22）
+- 支持 C++23 的编译器（GCC 11+ / Clang 12+，推荐 GCC 15 / Clang 21）
 - Intel oneTBB 运行时（并发库）
 - Ninja（推荐）
 - Conan（依赖管理）

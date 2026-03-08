@@ -34,7 +34,7 @@
 
 **开发依赖包含：**
 
-- GCC 15 / Clang 22 编译器
+- GCC 15 / Clang 21 编译器
 - CMake、Ninja 构建系统
 - Conan 2.x 包管理器
 - GDB、Valgrind 调试工具
