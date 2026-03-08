@@ -147,8 +147,6 @@ RUN wget -q https://apt.llvm.org/llvm.sh && \
 RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     libdeflate-dev \
     zlib1g-dev \
-    libbz2-dev \
-    liblzma-dev \
     libtbb-dev \
     && rm -rf /var/lib/apt/lists/*
 

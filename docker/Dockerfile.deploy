@@ -63,8 +63,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     ccache \
     libdeflate-dev \
     zlib1g-dev \
-    libbz2-dev \
-    liblzma-dev \
     libtbb-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -106,10 +104,16 @@ RUN cmake -B build/gcc-release -G Ninja \
     -DCMAKE_TOOLCHAIN_FILE=build/gcc-release/conan_toolchain.cmake \
     -DCMAKE_C_COMPILER=gcc \
     -DCMAKE_CXX_COMPILER=g++ \
+    -DCMAKE_EXE_LINKER_FLAGS="-static-libstdc++ -static-libgcc" \
     -DENABLE_COVERAGE=OFF \
     -DBUILD_TESTING=OFF
 
 RUN ninja -C build/gcc-release
+
+# 收集运行时所需的 GCC 15 共享库到已知路径
+RUN mkdir -p /runtime-libs && \
+    cp -L "$(gcc -print-file-name=libstdc++.so.6)" /runtime-libs/ && \
+    cp -L "$(gcc -print-file-name=libgcc_s.so.1)" /runtime-libs/
 
 # -----------------------------------------------------------------------------
 # 运行时阶段
@@ -130,10 +134,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     ca-certificates \
     libtbb12 \
     zlib1g \
-    libbz2-1.0 \
-    liblzma5 \
     libdeflate0 \
-    libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
 
 # 非 root 用户
@@ -145,6 +146,10 @@ RUN groupadd -g $USER_GID $USERNAME \
     && useradd -m -s /bin/bash -u $USER_UID -g $USER_GID $USERNAME
 
 WORKDIR /app
+
+# 复制 GCC 15 的 libstdc++ 和 libgcc_s（构建阶段使用 GCC 15，运行时需要匹配版本）
+COPY --from=builder /runtime-libs/ /usr/lib/x86_64-linux-gnu/
+RUN ldconfig
 
 # 复制构建产物
 COPY --from=builder /workspace/build/gcc-release/FastQTools /usr/local/bin/

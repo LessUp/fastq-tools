@@ -58,8 +58,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     ccache \
     libdeflate-dev \
     zlib1g-dev \
-    libbz2-dev \
-    liblzma-dev \
     libtbb-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -126,8 +124,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     ca-certificates \
     libtbb12 \
     zlib1g \
-    libbz2-1.0 \
-    liblzma5 \
     libdeflate0 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -141,7 +137,7 @@ RUN groupadd -g $USER_GID $USERNAME \
 
 WORKDIR /app
 
-# 复制构建产物
+# 复制构建产物（已静态链接 libstdc++/libgcc，无需复制运行时库）
 COPY --from=build /workspace/build/gcc-release/FastQTools /usr/local/bin/
 RUN ln -sf /usr/local/bin/FastQTools /usr/local/bin/fastqtools
 
