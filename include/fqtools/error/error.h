@@ -60,8 +60,8 @@ private:
     std::string message_;
     mutable std::string whatMessage_;
 
-    auto categoryString(ErrorCategory cat) const -> std::string_view;
-    auto severityString(ErrorSeverity sev) const -> std::string_view;
+    static auto categoryString(ErrorCategory cat) -> std::string_view;
+    static auto severityString(ErrorSeverity sev) -> std::string_view;
     void formatWhatMessage();
 };
 

@@ -35,9 +35,14 @@ jobs:
     name: Format Check
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Install clang-format
         run: |
@@ -47,22 +52,28 @@ jobs:
           sudo apt-get install -y clang-format-${{ env.LLVM_VERSION }}
           sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-${{ env.LLVM_VERSION }} 100
 
-      - name: Check formatting
+      - name: Auto-format all files
         run: |
-          FAILED=0
-          for f in $(find src include tests -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" \)); do
-            if ! clang-format --style=file:.clang-format --dry-run --Werror "$f" 2>/dev/null; then
-              echo "::error::格式问题: $f"
-              echo "--- diff for $f ---"
-              diff <(cat "$f") <(clang-format --style=file:.clang-format "$f") || true
-              echo "--- end diff ---"
-              FAILED=1
-            fi
-          done
-          if [ "$FAILED" -eq 1 ]; then
+          find src include tests -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" \) \
+            -exec clang-format --style=file:.clang-format -i {} +
+
+      - name: Check for formatting changes
+        run: |
+          if git diff --exit-code; then
+            echo "代码格式检查通过 ✓"
+          else
+            echo "::error::以上文件存在格式问题"
             exit 1
           fi
-          echo "代码格式检查通过 ✓"
+
+      - name: Auto-commit formatting fixes
+        if: failure() && github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "style: 自动格式化代码 (clang-format)" || true
+          git push || true
 
   # ===========================================================================
   # Static Analysis (clang-tidy + cppcheck)

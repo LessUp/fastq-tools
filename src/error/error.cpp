@@ -90,7 +90,7 @@ auto FastQException::isRecoverable() const noexcept -> bool {
  * @param cat 错误类别
  * @return 字符串视图
  */
-auto FastQException::categoryString(ErrorCategory cat) const -> std::string_view {
+auto FastQException::categoryString(ErrorCategory cat) -> std::string_view {
     switch (cat) {
         case ErrorCategory::IO:
             return "IO";
@@ -114,7 +114,7 @@ auto FastQException::categoryString(ErrorCategory cat) const -> std::string_view
  * @param sev 错误严重性
  * @return 字符串视图
  */
-auto FastQException::severityString(ErrorSeverity sev) const -> std::string_view {
+auto FastQException::severityString(ErrorSeverity sev) -> std::string_view {
     switch (sev) {
         case ErrorSeverity::Info:
             return "INFO";
@@ -150,8 +150,9 @@ auto ErrorHandler::handleError(const FastQException& error) -> bool {
     auto it = handlers_.find(error.category());
     if (it != handlers_.end()) {
         for (auto& handler : it->second) {
-            if (handler(error))
+            if (handler(error)) {
                 return true;
+            }
         }
     }
     fq::logging::error("Unhandled exception: {}", error.what());

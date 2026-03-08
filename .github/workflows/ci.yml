@@ -99,17 +99,9 @@ jobs:
           wget -q https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh ${{ env.LLVM_VERSION }}
-
-          # 先移除系统默认 libc++（LLVM 19），避免与 LLVM 21 头文件冲突
-          sudo apt-get remove -y libc++-dev libc++abi-dev 2>/dev/null || true
-          sudo rm -rf /usr/include/c++/v1
-
-          # 安装 LLVM 21 的 libc++
           sudo apt-get install -y \
             clang-${{ env.LLVM_VERSION }} \
-            lld-${{ env.LLVM_VERSION }} \
-            libc++-${{ env.LLVM_VERSION }}-dev \
-            libc++abi-${{ env.LLVM_VERSION }}-dev
+            lld-${{ env.LLVM_VERSION }}
           sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-${{ env.LLVM_VERSION }}   100
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${{ env.LLVM_VERSION }} 100
           sudo update-alternatives --install /usr/bin/ld.lld  ld.lld  /usr/bin/ld.lld-${{ env.LLVM_VERSION }}  100
@@ -126,11 +118,28 @@ jobs:
 
       - name: Build
         run: |
-          ./scripts/core/build -c ${{ matrix.compiler.name }} -t ${{ matrix.build_type }}
+          BUILD_DIR="build-${{ matrix.compiler.name }}-$(echo '${{ matrix.build_type }}' | tr 'A-Z' 'a-z')"
+          if [ "${{ matrix.compiler.name }}" = "clang" ]; then
+            CC_COMP=clang
+            CXX_COMP=clang++
+          else
+            CC_COMP=gcc
+            CXX_COMP=g++
+          fi
+          conan install config/dependencies/ --build=missing \
+            -s build_type=${{ matrix.build_type }} -of="${BUILD_DIR}"
+          cmake -B "${BUILD_DIR}" -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_TOOLCHAIN_FILE="${BUILD_DIR}/conan_toolchain.cmake" \
+            -DCMAKE_C_COMPILER="${CC_COMP}" \
+            -DCMAKE_CXX_COMPILER="${CXX_COMP}" \
+            -DBUILD_TESTING=ON
+          cmake --build "${BUILD_DIR}" -j $(nproc)
 
       - name: Run tests
         run: |
-          ./scripts/core/test -c ${{ matrix.compiler.name }} -t ${{ matrix.build_type }} -j 2
+          BUILD_DIR="build-${{ matrix.compiler.name }}-$(echo '${{ matrix.build_type }}' | tr 'A-Z' 'a-z')"
+          ctest --test-dir "${BUILD_DIR}" --output-on-failure -j 2
 
       - name: Upload build artifacts
         if: matrix.build_type == 'Release'

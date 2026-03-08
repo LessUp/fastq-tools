@@ -27,20 +27,21 @@ struct LogOptions {
 inline void init(const LogOptions& options = {}) {
     spdlog::level::level_enum level = spdlog::level::info;
 
-    if (options.level == "trace")
+    if (options.level == "trace") {
         level = spdlog::level::trace;
-    else if (options.level == "debug")
+    } else if (options.level == "debug") {
         level = spdlog::level::debug;
-    else if (options.level == "info")
+    } else if (options.level == "info") {
         level = spdlog::level::info;
-    else if (options.level == "warn" || options.level == "warning")
+    } else if (options.level == "warn" || options.level == "warning") {
         level = spdlog::level::warn;
-    else if (options.level == "error")
+    } else if (options.level == "error") {
         level = spdlog::level::err;
-    else if (options.level == "critical")
+    } else if (options.level == "critical") {
         level = spdlog::level::critical;
-    else if (options.level == "off")
+    } else if (options.level == "off") {
         level = spdlog::level::off;
+    }
 
     spdlog::set_level(level);
 
