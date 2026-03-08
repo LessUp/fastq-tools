@@ -105,6 +105,12 @@ RUN cmake -B build/gcc-release -G Ninja \
 
 RUN ninja -C build/gcc-release
 
+# 收集运行时所需的 GCC 15 共享库到已知路径
+# 尽管主程序使用 -static-libstdc++，TBB 等动态库仍需要运行时 libstdc++
+RUN mkdir -p /runtime-libs && \
+    cp -L "$(gcc -print-file-name=libstdc++.so.6)" /runtime-libs/ && \
+    cp -L "$(gcc -print-file-name=libgcc_s.so.1)" /runtime-libs/
+
 # -----------------------------------------------------------------------------
 # 生产阶段
 # -----------------------------------------------------------------------------
@@ -137,7 +143,11 @@ RUN groupadd -g $USER_GID $USERNAME \
 
 WORKDIR /app
 
-# 复制构建产物（已静态链接 libstdc++/libgcc，无需复制运行时库）
+# 复制 GCC 15 的 libstdc++ 和 libgcc_s（TBB 等动态库需要匹配版本）
+COPY --from=build /runtime-libs/ /usr/lib/x86_64-linux-gnu/
+RUN ldconfig
+
+# 复制构建产物
 COPY --from=build /workspace/build/gcc-release/FastQTools /usr/local/bin/
 RUN ln -sf /usr/local/bin/FastQTools /usr/local/bin/fastqtools
 
