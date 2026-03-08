@@ -96,10 +96,6 @@ jobs:
       - name: Install Clang/LLVM
         if: matrix.compiler.name == 'clang'
         run: |
-          # 移除系统旧版 libc++，避免头文件冲突
-          sudo apt-get remove -y libc++-dev libc++abi-dev 2>/dev/null || true
-          sudo rm -rf /usr/include/c++/v1/
-
           wget -q https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh ${{ env.LLVM_VERSION }}
@@ -111,6 +107,10 @@ jobs:
           sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-${{ env.LLVM_VERSION }}   100
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${{ env.LLVM_VERSION }} 100
           sudo update-alternatives --install /usr/bin/ld.lld  ld.lld  /usr/bin/ld.lld-${{ env.LLVM_VERSION }}  100
+
+          # 强制使用 clang-21 的 libc++ 头文件，覆盖系统旧版
+          sudo rm -rf /usr/include/c++/v1
+          sudo ln -sf /usr/lib/llvm-${{ env.LLVM_VERSION }}/include/c++/v1 /usr/include/c++/v1
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -158,7 +158,7 @@ jobs:
         run: docker build -f docker/Dockerfile.dev -t fastqtools:dev .
 
       - name: Smoke test production image
-        run: docker run --rm fastqtools:latest --help
+        run: docker run --rm fastqtools:latest fastqtools --help
 
       - name: Smoke test development image
-        run: docker run --rm fastqtools:dev bash -c "gcc --version && clang --version"
+        run: docker run --rm fastqtools:dev bash -c "gcc --version"

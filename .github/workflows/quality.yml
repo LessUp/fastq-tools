@@ -78,10 +78,6 @@ jobs:
           sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
           sudo rm -f /tmp/cmake.tar.gz
 
-          # 移除系统旧版 libc++，避免头文件冲突
-          sudo apt-get remove -y libc++-dev libc++abi-dev 2>/dev/null || true
-          sudo rm -rf /usr/include/c++/v1/
-
           # Clang/LLVM
           wget -q https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
@@ -96,6 +92,10 @@ jobs:
           sudo update-alternatives --install /usr/bin/clang++    clang++    /usr/bin/clang++-${{ env.LLVM_VERSION }}    100
           sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${{ env.LLVM_VERSION }} 100
           sudo update-alternatives --install /usr/bin/ld.lld     ld.lld     /usr/bin/ld.lld-${{ env.LLVM_VERSION }}     100
+
+          # 强制使用 clang-21 的 libc++ 头文件，覆盖系统旧版
+          sudo rm -rf /usr/include/c++/v1
+          sudo ln -sf /usr/lib/llvm-${{ env.LLVM_VERSION }}/include/c++/v1 /usr/include/c++/v1
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -155,10 +155,6 @@ jobs:
           sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
           sudo rm -f /tmp/cmake.tar.gz
 
-          # 移除系统旧版 libc++，避免头文件冲突
-          sudo apt-get remove -y libc++-dev libc++abi-dev 2>/dev/null || true
-          sudo rm -rf /usr/include/c++/v1/
-
           # Clang/LLVM
           wget -q https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
@@ -171,6 +167,10 @@ jobs:
           sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-${{ env.LLVM_VERSION }}   100
           sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${{ env.LLVM_VERSION }} 100
           sudo update-alternatives --install /usr/bin/ld.lld  ld.lld  /usr/bin/ld.lld-${{ env.LLVM_VERSION }}  100
+
+          # 强制使用 clang-21 的 libc++ 头文件，覆盖系统旧版
+          sudo rm -rf /usr/include/c++/v1
+          sudo ln -sf /usr/lib/llvm-${{ env.LLVM_VERSION }}/include/c++/v1 /usr/include/c++/v1
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -228,24 +228,6 @@ jobs:
           sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
           sudo rm -f /tmp/cmake.tar.gz
 
-          # 移除系统旧版 libc++，避免头文件冲突
-          sudo apt-get remove -y libc++-dev libc++abi-dev 2>/dev/null || true
-          sudo rm -rf /usr/include/c++/v1/
-
-          # Clang/LLVM
-          wget -q https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh ${{ env.LLVM_VERSION }}
-          sudo apt-get install -y \
-            clang-${{ env.LLVM_VERSION }} \
-            llvm-${{ env.LLVM_VERSION }} \
-            lld-${{ env.LLVM_VERSION }} \
-            libc++-${{ env.LLVM_VERSION }}-dev \
-            libc++abi-${{ env.LLVM_VERSION }}-dev
-          sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-${{ env.LLVM_VERSION }}   100
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${{ env.LLVM_VERSION }} 100
-          sudo update-alternatives --install /usr/bin/ld.lld  ld.lld  /usr/bin/ld.lld-${{ env.LLVM_VERSION }}  100
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -260,18 +242,18 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CONAN_HOME }}
-          key: "conan-${{ runner.os }}-clang-${{ hashFiles('config/dependencies/**') }}"
+          key: "conan-${{ runner.os }}-gcc-cov-${{ hashFiles('config/dependencies/**') }}"
           restore-keys: |
-            conan-${{ runner.os }}-clang-
+            conan-${{ runner.os }}-gcc-
             conan-${{ runner.os }}-
 
       - name: Build with coverage
         run: |
-          ./scripts/core/build -c clang --coverage
+          ./scripts/core/build -c gcc --coverage
 
       - name: Run tests
         run: |
-          ./scripts/core/test -c clang --coverage -j 2
+          ./scripts/core/test -c gcc --coverage -j 2
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
