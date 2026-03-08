@@ -1,46 +1,68 @@
-# Build directories
+# ===== 构建产物 =====
 build*/
 _output/
-build_verify/
+dist/
+install/
+install-*/
 
-# IDE and editor files
+# ===== IDE 与编辑器 =====
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# AI 工具配置
+# ===== AI 工具配置 =====
 .kiro/
 .qoder/
 .spec-workflow/
 .windsurf/
 cascade/
 
-# Git
+# ===== Git / CI =====
 .git/
+.github/
+.git-blame-ignore-revs
+.gitmessage.txt
 
-# Cache
+# ===== DevContainer（dev 镜像通过 volume 挂载，无需 COPY） =====
+.devcontainer/
+
+# ===== 缓存 =====
 .cache/
 .ccache/
 .conan2/
 __pycache__/
 *.pyc
 
-# Test artifacts
-benchmark_results/results/
+# ===== 测试与基准产物 =====
+benchmark_results/
 coverage/
+tools/fuzz/
 
-# Docker runtime data
+# ===== Docker 运行时数据 =====
 docker/data/
 docker/output/
 
-# Documentation (not needed for build)
+# ===== 文档与示例（构建不需要） =====
 docs/
 changelog/
+examples/
 *.md
-!README.md
-!CHANGELOG.md
 
-# Temporary files
+# ===== 项目元文件（构建不需要） =====
+.editorconfig
+.clang-format
+.clang-tidy
+commitlint.config.js
+Doxyfile
+AGENTS.md
+LICENSE
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+SECURITY.md
+
+# ===== 临时文件 =====
 *.tmp
 *.log
+*.bak
+*.sarif

@@ -15,6 +15,7 @@ cmake-build-*/
 /obj/
 /out/
 _output/
+dist/
 
 # ===== CMake 生成文件 =====
 CMakeFiles/
@@ -31,6 +32,11 @@ conan_toolchain.cmake
 
 # ===== vcpkg =====
 vcpkg_installed/
+
+# ===== Python =====
+__pycache__/
+*.pyc
+*.egg-info/
 
 # ===== IDE 与编辑器 =====
 .vscode/*
@@ -56,6 +62,7 @@ Thumbs.db
 *.log
 *.swp
 *.bak
+*.dSYM/
 
 # ===== 覆盖率与分析数据 =====
 coverage/
@@ -65,9 +72,14 @@ coverage/
 *.gcov
 *.profraw
 *.profdata
+Testing/
 
 # ===== 自动生成的文档 =====
 docs/generated/
+
+# ===== 缓存 =====
+.cache/
+.ccache/
 
 # ===== 工具与分析报告 =====
 clang-tidy-fixes.yml
