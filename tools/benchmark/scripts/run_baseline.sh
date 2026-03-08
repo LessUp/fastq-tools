@@ -10,7 +10,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
-FASTQTOOLS="${FASTQTOOLS:-$PROJECT_ROOT/build-clang-release/FastQTools}"
+FASTQTOOLS="${FASTQTOOLS:-$PROJECT_ROOT/build/clang-release/FastQTools}"
 DATA_DIR="$PROJECT_ROOT/tools/data"
 TMP_DIR=$(mktemp -d)
 trap "rm -rf $TMP_DIR" EXIT
