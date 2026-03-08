@@ -43,15 +43,15 @@ endif()
 # Coverage Flags
 # =============================================================================
 
-# GCC/Clang coverage flags
-set(FQ_COVERAGE_COMPILE_FLAGS "--coverage -fprofile-arcs -ftest-coverage")
-set(FQ_COVERAGE_LINK_FLAGS "--coverage")
+# GCC/Clang coverage flags (CMake list format)
+set(FQ_COVERAGE_COMPILE_FLAGS --coverage -fprofile-arcs -ftest-coverage)
+set(FQ_COVERAGE_LINK_FLAGS --coverage)
 
 # Additional flags for better coverage data
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # Clang-specific: use source-based coverage for more accurate data
-    set(FQ_COVERAGE_COMPILE_FLAGS "${FQ_COVERAGE_COMPILE_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
-    set(FQ_COVERAGE_LINK_FLAGS "${FQ_COVERAGE_LINK_FLAGS} -fprofile-instr-generate")
+    list(APPEND FQ_COVERAGE_COMPILE_FLAGS -fprofile-instr-generate -fcoverage-mapping)
+    list(APPEND FQ_COVERAGE_LINK_FLAGS -fprofile-instr-generate)
 endif()
 
 # =============================================================================
