@@ -18,6 +18,8 @@ class FastQTools(ConanFile):
         self.options["fmt"].header_only = True
         self.options["spdlog"].header_only = True
         self.options["spdlog"].use_std_fmt = False
+        # onetbb 要求 hwloc 以 shared 模式构建
+        self.options["hwloc"].shared = True
 
     def requirements(self):
         """

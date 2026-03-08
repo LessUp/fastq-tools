@@ -84,6 +84,9 @@ install_deps_debian() {
         ca-certificates \
         tar \
         xz-utils \
+        gnupg \
+        lsb-release \
+        software-properties-common \
         python3 \
         python3-pip \
         ccache \
