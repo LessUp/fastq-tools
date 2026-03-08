@@ -1,6 +1,7 @@
 #include "fixture_loader.h"
 
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <random>
 #include <sstream>
@@ -93,6 +94,72 @@ bool FixtureLoader::compareFiles(const std::filesystem::path& file1,
     return std::equal(std::istreambuf_iterator<char>(f1.rdbuf()),
                       std::istreambuf_iterator<char>(),
                       std::istreambuf_iterator<char>(f2.rdbuf()));
+}
+
+// ---------------------------------------------------------------------------
+// PerformanceTimer 实现
+// ---------------------------------------------------------------------------
+
+PerformanceTimer::PerformanceTimer() : running_(false) {}
+
+void PerformanceTimer::start() {
+    start_time_ = std::chrono::high_resolution_clock::now();
+    running_ = true;
+}
+
+void PerformanceTimer::stop() {
+    end_time_ = std::chrono::high_resolution_clock::now();
+    running_ = false;
+}
+
+void PerformanceTimer::reset() {
+    running_ = false;
+}
+
+double PerformanceTimer::elapsedSeconds() const {
+    auto end = running_ ? std::chrono::high_resolution_clock::now() : end_time_;
+    return std::chrono::duration<double>(end - start_time_).count();
+}
+
+double PerformanceTimer::elapsedMilliseconds() const {
+    return elapsedSeconds() * 1000.0;
+}
+
+// ---------------------------------------------------------------------------
+// TempDirectory 实现
+// ---------------------------------------------------------------------------
+
+TempDirectory::TempDirectory()
+    : TempDirectory("fastqtools_test_") {}
+
+TempDirectory::TempDirectory(const std::string& prefix) {
+    auto base = std::filesystem::temp_directory_path();
+    path_ = base / (prefix + std::to_string(std::random_device{}()));
+    std::filesystem::create_directories(path_);
+}
+
+TempDirectory::~TempDirectory() {
+    if (!path_.empty() && std::filesystem::exists(path_)) {
+        std::error_code ec;
+        std::filesystem::remove_all(path_, ec);
+    }
+}
+
+TempDirectory::TempDirectory(TempDirectory&& other) noexcept
+    : path_(std::move(other.path_)) {
+    other.path_.clear();
+}
+
+TempDirectory& TempDirectory::operator=(TempDirectory&& other) noexcept {
+    if (this != &other) {
+        if (!path_.empty() && std::filesystem::exists(path_)) {
+            std::error_code ec;
+            std::filesystem::remove_all(path_, ec);
+        }
+        path_ = std::move(other.path_);
+        other.path_.clear();
+    }
+    return *this;
 }
 
 }  // namespace fq::test

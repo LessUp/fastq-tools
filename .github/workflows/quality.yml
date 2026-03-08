@@ -78,24 +78,12 @@ jobs:
           sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
           sudo rm -f /tmp/cmake.tar.gz
 
-          # Clang/LLVM
+          # 仅安装 clang-tidy 分析工具（构建使用 GCC，避免 libc++ 冲突）
           wget -q https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh ${{ env.LLVM_VERSION }}
-          sudo apt-get install -y \
-            clang-${{ env.LLVM_VERSION }} \
-            clang-tidy-${{ env.LLVM_VERSION }} \
-            lld-${{ env.LLVM_VERSION }} \
-            libc++-${{ env.LLVM_VERSION }}-dev \
-            libc++abi-${{ env.LLVM_VERSION }}-dev
-          sudo update-alternatives --install /usr/bin/clang      clang      /usr/bin/clang-${{ env.LLVM_VERSION }}      100
-          sudo update-alternatives --install /usr/bin/clang++    clang++    /usr/bin/clang++-${{ env.LLVM_VERSION }}    100
+          sudo apt-get install -y clang-tidy-${{ env.LLVM_VERSION }}
           sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${{ env.LLVM_VERSION }} 100
-          sudo update-alternatives --install /usr/bin/ld.lld     ld.lld     /usr/bin/ld.lld-${{ env.LLVM_VERSION }}     100
-
-          # 强制使用 clang-21 的 libc++ 头文件，覆盖系统旧版
-          sudo rm -rf /usr/include/c++/v1
-          sudo ln -sf /usr/lib/llvm-${{ env.LLVM_VERSION }}/include/c++/v1 /usr/include/c++/v1
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -111,22 +99,22 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CONAN_HOME }}
-          key: "conan-${{ runner.os }}-clang-${{ hashFiles('config/dependencies/**') }}"
+          key: "conan-${{ runner.os }}-gcc-sa-${{ hashFiles('config/dependencies/**') }}"
           restore-keys: |
-            conan-${{ runner.os }}-clang-
+            conan-${{ runner.os }}-gcc-
             conan-${{ runner.os }}-
 
       - name: Build for analysis
         run: |
-          ./scripts/core/build -c clang -t Debug
+          ./scripts/core/build -c gcc -t Debug
 
       - name: Run clang-tidy
         run: |
-          ./scripts/core/lint tidy -b build-clang-debug
+          ./scripts/core/lint tidy -b build-gcc-debug
 
       - name: Run Cppcheck
         run: |
-          ./scripts/core/lint cppcheck -b build-clang-debug
+          ./scripts/core/lint cppcheck -b build-gcc-debug
 
   # ===========================================================================
   # AddressSanitizer Tests
@@ -155,23 +143,6 @@ jobs:
           sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
           sudo rm -f /tmp/cmake.tar.gz
 
-          # Clang/LLVM
-          wget -q https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh ${{ env.LLVM_VERSION }}
-          sudo apt-get install -y \
-            clang-${{ env.LLVM_VERSION }} \
-            lld-${{ env.LLVM_VERSION }} \
-            libc++-${{ env.LLVM_VERSION }}-dev \
-            libc++abi-${{ env.LLVM_VERSION }}-dev
-          sudo update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-${{ env.LLVM_VERSION }}   100
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${{ env.LLVM_VERSION }} 100
-          sudo update-alternatives --install /usr/bin/ld.lld  ld.lld  /usr/bin/ld.lld-${{ env.LLVM_VERSION }}  100
-
-          # 强制使用 clang-21 的 libc++ 头文件，覆盖系统旧版
-          sudo rm -rf /usr/include/c++/v1
-          sudo ln -sf /usr/lib/llvm-${{ env.LLVM_VERSION }}/include/c++/v1 /usr/include/c++/v1
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -186,20 +157,20 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CONAN_HOME }}
-          key: "conan-${{ runner.os }}-clang-${{ hashFiles('config/dependencies/**') }}"
+          key: "conan-${{ runner.os }}-gcc-asan-${{ hashFiles('config/dependencies/**') }}"
           restore-keys: |
-            conan-${{ runner.os }}-clang-
+            conan-${{ runner.os }}-gcc-
             conan-${{ runner.os }}-
 
       - name: Build with ASan
         run: |
-          ./scripts/core/build -c clang -t Debug --sanitizer asan
+          ./scripts/core/build -c gcc -t Debug --sanitizer asan
 
       - name: Run tests with ASan
         env:
           ASAN_OPTIONS: "detect_leaks=1:halt_on_error=1:print_stats=1"
         run: |
-          ./scripts/core/test -b build-clang-debug
+          ./scripts/core/test -b build-gcc-debug
 
   # ===========================================================================
   # Code Coverage
