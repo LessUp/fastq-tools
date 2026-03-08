@@ -8,33 +8,40 @@ Checks:          '-*,
                    -readability-function-cognitive-complexity,
                    -readability-identifier-length,
                    -readability-magic-numbers,
+                   -performance-enum-size,
+                   -performance-avoid-endl,
+                   -bugprone-easily-swappable-parameters,
+                   -bugprone-implicit-widening-of-multiplication-result,
+                   -modernize-use-trailing-return-type,
                    '
 HeaderFilterRegex: '^(.*[/\\])?(src|include|tests)/.*\.(h|hh|hpp|hxx|ipp|inl|c|cc|cpp|cxx)$'
 CheckOptions:
   - key:             readability-identifier-naming.ClassCase
-    value:           PascalCase
+    value:           CamelCase
   - key:             readability-identifier-naming.StructCase
-    value:           PascalCase
+    value:           CamelCase
   - key:             readability-identifier-naming.FunctionCase
-    value:           camelCase
+    value:           camelBack
   - key:             readability-identifier-naming.MethodCase
-    value:           camelCase
+    value:           camelBack
   - key:             readability-identifier-naming.VariableCase
-    value:           camelCase
+    value:           camelBack
   - key:             readability-identifier-naming.ParameterCase
-    value:           camelCase
+    value:           camelBack
   - key:             readability-identifier-naming.PrivateMemberCase
-    value:           camelCase
+    value:           camelBack
   - key:             readability-identifier-naming.PrivateMemberSuffix
     value:           _
   - key:             readability-identifier-naming.ProtectedMemberCase
-    value:           camelCase
+    value:           camelBack
   - key:             readability-identifier-naming.ProtectedMemberSuffix
     value:           _
   - key:             readability-identifier-naming.ConstantCase
-    value:           camelCase
+    value:           camelBack
   - key:             readability-identifier-naming.ConstantPrefix
     value:           k
+  - key:             readability-identifier-naming.EnumConstantCase
+    value:           CamelCase
   - key:             readability-identifier-naming.NamespaceCase
     value:           lower_case
   - key:             bugprone-assert-side-effect.AssertMacros

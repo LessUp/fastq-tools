@@ -37,15 +37,17 @@ auto split(std::string_view input, char delimiter) -> std::vector<std::string> {
 
 auto trim(std::string_view input) -> std::string {
     auto start = input.find_first_not_of(" \t\n\r");
-    if (start == std::string_view::npos)
+    if (start == std::string_view::npos) {
         return "";
+    }
     auto end = input.find_last_not_of(" \t\n\r");
     return std::string(input.substr(start, end - start + 1));
 }
 
 auto join(const std::vector<std::string>& parts, std::string_view delimiter) -> std::string {
-    if (parts.empty())
+    if (parts.empty()) {
         return "";
+    }
     std::ostringstream result;
     result << parts[0];
     for (size_t i = 1; i < parts.size(); ++i) {

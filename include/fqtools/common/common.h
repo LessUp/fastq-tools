@@ -165,8 +165,8 @@ public:
 private:
     Logger() = default;
     Level level_ = Level::Info;  ///< 当前的日志记录级别。
-    auto getLevelString(Level level) -> std::string_view;
-    auto getCurrentTime() -> std::string;
+    static auto getLevelString(Level level) -> std::string_view;
+    static auto getCurrentTime() -> std::string;
 };
 
 /**
