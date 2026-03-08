@@ -11,7 +11,7 @@ class FastQTools(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     
     # Sources are located in the same place as this recipe, copy them to the recipe
-    exports_sources = "CMakeLists.txt", "src/*", "app/*", "cmake/*"
+    exports_sources = "CMakeLists.txt", "src/*", "include/*", "cmake/*", "config/*", "tests/*", "tools/*"
 
     def configure(self):
         # 避免编译 fmt 库本体在新版本 GCC/Clang 下触发 consteval 相关编译失败，改为纯头文件模式

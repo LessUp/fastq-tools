@@ -14,7 +14,7 @@ class FastQToolsConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
-    exports_sources = "CMakeLists.txt", "src/*", "cmake/*", "third_party/*"
+    exports_sources = "CMakeLists.txt", "src/*", "include/*", "cmake/*", "config/*", "tests/*", "tools/*"
 
     def config_options(self):
         if self.settings.os == "Windows":

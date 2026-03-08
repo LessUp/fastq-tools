@@ -1,4 +1,5 @@
-# Conan Profile for Clang 21 + libc++
+# Conan Profile for Clang 21 + libc++ (本地开发)
+# CI 构建使用 libstdc++ 避免 libc++ 头文件冲突
 # Usage: conan install . -pr:h config/conan/profile-clang --build=missing
 
 [settings]
