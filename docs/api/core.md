@@ -8,7 +8,7 @@
 
 ### SequenceUtils
 
-DNA/RNA 序列处理工具类，使用 C++20 Concepts 约束模板参数。
+DNA/RNA 序列处理工具类，使用 C++23 Concepts 约束模板参数。
 
 ```cpp
 namespace fq::core {

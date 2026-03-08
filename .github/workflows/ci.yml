@@ -14,7 +14,7 @@ concurrency:
 env:
   CONAN_VERSION: "2.24.0"
   CMAKE_VERSION: "4.0.2"
-  LLVM_VERSION: "20"
+  LLVM_VERSION: "22"
 
 jobs:
   # ===========================================================================

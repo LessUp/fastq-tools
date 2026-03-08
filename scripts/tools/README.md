@@ -132,8 +132,8 @@
 在 Debian/Ubuntu 上安装指定版本的 LLVM 工具链（第三方脚本）。
 
 ```bash
-sudo ./scripts/tools/install-llvm 21        # 安装 LLVM 21
-sudo ./scripts/tools/install-llvm 21 all    # 安装所有包
+sudo ./scripts/tools/install-llvm 22        # 安装 LLVM 22
+sudo ./scripts/tools/install-llvm 22 all    # 安装所有包
 ```
 
 ---

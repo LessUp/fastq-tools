@@ -11,4 +11,4 @@ target_link_libraries(fq_error
         spdlog::spdlog
 )
 
-target_compile_features(fq_error PUBLIC cxx_std_20)
+target_compile_features(fq_error PUBLIC cxx_std_23)

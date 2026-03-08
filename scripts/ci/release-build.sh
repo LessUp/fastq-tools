@@ -94,17 +94,17 @@ install_deps_debian() {
 }
 
 install_clang_debian() {
-    echo ">>> [Debian] 安装 Clang 21..."
+    echo ">>> [Debian] 安装 Clang 22..."
     wget -q https://apt.llvm.org/llvm.sh
     chmod +x llvm.sh
-    ./llvm.sh 21
+    ./llvm.sh 22
     apt-get install -y --no-install-recommends \
-        clang-21 lld-21 libc++-21-dev libc++abi-21-dev
+        clang-22 lld-22 libc++-22-dev libc++abi-22-dev
     rm -f llvm.sh
 
-    update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-21   100
-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100
-    update-alternatives --install /usr/bin/lld     lld     /usr/bin/lld-21     100
+    update-alternatives --install /usr/bin/clang   clang   /usr/bin/clang-22   100
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-22 100
+    update-alternatives --install /usr/bin/lld     lld     /usr/bin/lld-22     100
 }
 
 install_clang_alpine() {

@@ -159,7 +159,7 @@ run_cppcheck() {
     
     local cppcheck_args=(
         --enable=warning,style,performance,portability
-        --std=c++20
+        --std=c++23
         --error-exitcode=1
         --inline-suppr
         --quiet

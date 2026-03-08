@@ -8,4 +8,4 @@ target_link_libraries(fq_config
         fq_error
 )
 
-target_compile_features(fq_config PUBLIC cxx_std_20)
+target_compile_features(fq_config PUBLIC cxx_std_23)

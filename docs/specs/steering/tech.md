@@ -2,7 +2,7 @@
 
 ## Language & Standards
 
-- C++20 (required)
+- C++23 (required)
 - Compilers: GCC 11+ or Clang 19+ (Clang preferred for CI/dev)
 
 ## Build System

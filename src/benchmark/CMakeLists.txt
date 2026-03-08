@@ -16,4 +16,4 @@ target_link_libraries(fq_benchmark
         nlohmann_json::nlohmann_json
 )
 
-target_compile_features(fq_benchmark PUBLIC cxx_std_20)
+target_compile_features(fq_benchmark PUBLIC cxx_std_23)

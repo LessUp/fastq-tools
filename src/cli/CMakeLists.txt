@@ -18,4 +18,4 @@ target_include_directories(fq_cli
 )
 
 # 确保cxxopts头文件路径正确传递
-target_compile_features(fq_cli PUBLIC cxx_std_20)
+target_compile_features(fq_cli PUBLIC cxx_std_23)

@@ -13,7 +13,7 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "installDir": "${sourceDir}/install/${presetName}",
             "cacheVariables": {
-                "CMAKE_CXX_STANDARD": "20",
+                "CMAKE_CXX_STANDARD": "23",
                 "CMAKE_CXX_STANDARD_REQUIRED": "ON",
                 "CMAKE_CXX_EXTENSIONS": "OFF",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
@@ -44,7 +44,7 @@
             "hidden": true,
             "inherits": "base",
             "displayName": "Clang Base",
-            "description": "Base configuration for Clang 20 compiler with libc++",
+            "description": "Base configuration for Clang 22 compiler with libc++",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
@@ -103,7 +103,7 @@
         {
             "name": "clang-debug",
             "displayName": "Clang Debug",
-            "description": "Debug build with Clang 20 + libc++ (recommended for development)",
+            "description": "Debug build with Clang 22 + libc++ (recommended for development)",
             "inherits": "conan-clang-base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
@@ -113,7 +113,7 @@
         {
             "name": "clang-release",
             "displayName": "Clang Release",
-            "description": "Release build with Clang 20 + libc++",
+            "description": "Release build with Clang 22 + libc++",
             "inherits": "conan-clang-base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",

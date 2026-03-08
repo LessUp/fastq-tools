@@ -26,7 +26,7 @@ FastQTools filter -i input.fq.gz -o filtered.fq.gz --min-quality 20 --min-length
 ## 技术特性
 
 - **高性能**: 基于 Intel TBB 的并行流水线处理
-- **现代化**: C++20 标准 + 现代 CMake 构建系统
+- **现代化**: C++23 标准 + 现代 CMake 构建系统
 - **模块化**: 清晰的接口设计，支持库级别集成
 
 ## 依赖清单
@@ -75,7 +75,7 @@ FastQTools/
 
 ### 环境要求
 - CMake ≥ 3.20
-- 支持 C++20 的编译器（GCC 11+ / Clang 12+，推荐 GCC 15 / Clang 21）
+- 支持 C++23 的编译器（GCC 11+ / Clang 12+，推荐 GCC 15 / Clang 22）
 - Intel oneTBB 运行时（并发库）
 - Ninja（推荐）
 - Conan（依赖管理）

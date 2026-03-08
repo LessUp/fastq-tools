@@ -14,4 +14,4 @@ target_link_libraries(fq_common
         spdlog::spdlog
 )
 
-target_compile_features(fq_common PUBLIC cxx_std_20)
+target_compile_features(fq_common PUBLIC cxx_std_23)

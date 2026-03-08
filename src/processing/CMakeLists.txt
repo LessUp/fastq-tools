@@ -27,4 +27,4 @@ target_link_libraries(fq_processing
         fmt::fmt
 )
 
-target_compile_features(fq_processing PUBLIC cxx_std_20)
+target_compile_features(fq_processing PUBLIC cxx_std_23)

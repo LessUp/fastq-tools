@@ -4,7 +4,7 @@ Thank you for considering contributing to FastQTools! To keep things simple (KIS
 
 ## Getting Started
 
-- Use recent CMake (>= 3.20) and a C++20 compiler (GCC 11+ / Clang 12+).
+- Use recent CMake (>= 3.28) and a C++23 compiler (GCC 11+ / Clang 12+).
 - Preferred build flow uses Conan toolchains.
 - Run a full build and tests locally before opening a PR.
 

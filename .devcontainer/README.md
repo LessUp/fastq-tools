@@ -150,7 +150,7 @@ code .
 └── README.md               # 本文件
 
 docker/
-├── Dockerfile.dev          # 开发环境镜像（GCC 15 + Clang 21）
+├── Dockerfile.dev          # 开发环境镜像（GCC 15 + Clang 22）
 ├── Dockerfile.prod         # 生产构建镜像（GCC 15 + 最小运行时）
 ├── Dockerfile.deploy       # 独立部署镜像（单文件构建）
 ├── docker-compose.yml      # Compose 配置（dev/prod/test/build 服务）
@@ -272,7 +272,7 @@ docker volume rm fastqtools_vscode_extensions
 
 | 类别 | 工具 |
 |------|------|
-| **编译器** | GCC 15 + Clang 21 |
+| **编译器** | GCC 15 + Clang 22 |
 | **构建** | CMake 4.x + Ninja + Conan 2.x |
 | **调试** | GDB + LLDB + Valgrind |
 | **分析** | clang-tidy + cppcheck + lcov |

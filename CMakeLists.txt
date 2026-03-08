@@ -21,25 +21,25 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # --- C++ Standard ---
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # --- Compiler Version Check ---
-# Enforce minimum compiler versions required for C++20 support.
+# Enforce minimum compiler versions required for C++23 support.
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "11.0")
         message(FATAL_ERROR "GCC version ${CMAKE_CXX_COMPILER_VERSION} is too old. "
-                            "FastQTools requires GCC 11.0 or newer for C++20 support.")
+                            "FastQTools requires GCC 11.0 or newer for C++23 support.")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "12.0")
         message(FATAL_ERROR "Clang version ${CMAKE_CXX_COMPILER_VERSION} is too old. "
-                            "FastQTools requires Clang 12.0 or newer for C++20 support.")
+                            "FastQTools requires Clang 12.0 or newer for C++23 support.")
     endif()
 else()
     message(WARNING "Compiler ${CMAKE_CXX_COMPILER_ID} is not officially supported. "
-                    "Your build may fail due to lack of C++20 support.")
+                    "Your build may fail due to lack of C++23 support.")
 endif()
 
 

@@ -22,4 +22,4 @@ target_link_libraries(fq_statistics
         TBB::tbb
 )
 
-target_compile_features(fq_statistics PUBLIC cxx_std_20)
+target_compile_features(fq_statistics PUBLIC cxx_std_23)

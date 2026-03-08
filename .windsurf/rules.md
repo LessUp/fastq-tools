@@ -24,7 +24,7 @@ description: FastQTools project rules for Cascade/Windsurf
 
 ## 代码风格（权威文档）
 - 以 `docs/dev/coding-standards.md` 为准。
-- C++20；clang-format/clang-tidy 配置来自 `.clang-format` / `.clang-tidy`。
+- C++23；clang-format/clang-tidy 配置来自 `.clang-format` / `.clang-tidy`。
 - 文件/目录：`snake_case`；文档：`kebab-case`；类：`PascalCase`；函数/变量：`camelCase`。
 - include 顺序：标准库 -> 第三方 -> 本项目。
 

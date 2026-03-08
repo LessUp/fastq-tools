@@ -6,9 +6,9 @@
 
 **FastQTools** 是一个现代化的 FASTQ 文件处理工具集，用于生物信息学领域的高通量测序数据质控。
 
-- **语言**: C++20
+- **语言**: C++23
 - **构建**: CMake 3.28+ / Ninja / Conan 2.x
-- **编译器**: GCC 15 + Clang 21 + libc++（开发/CI/生产统一）
+- **编译器**: GCC 15 + Clang 22 + libc++（开发/CI/生产统一）
 - **并发**: Intel TBB (`tbb::parallel_pipeline`)
 - **Docker**: `gcc:15.x-bookworm`（构建）/ `debian:bookworm-slim`（运行时）
 - **工具链规范**: 详见 [`docs/decisions/toolchain-policy.md`](docs/decisions/toolchain-policy.md)
@@ -23,8 +23,8 @@
 | 组件 | 统一版本 | 最低兼容 | CI 兼容性检查 |
 |------|---------|---------|---------|
 | **GCC** | 15.x | 11.0 | 14.x（allow-failure） |
-| **Clang/LLVM** | 21 | 12.0 | 19（allow-failure） |
-| **C++ 标准** | C++20 | C++20 | — |
+| **Clang/LLVM** | 22 | 12.0 | 19（allow-failure） |
+| **C++ 标准** | C++23 | C++23 | — |
 
 ### 构建工具版本
 
@@ -269,7 +269,7 @@ subject: 简短描述，不以句号结尾
 
 ## 注意事项
 
-1. **构建环境**: 项目设计在 Linux/Docker 容器中构建运行（GCC 15 / Clang 21，开发与生产统一）。Windows 仅用于编辑代码，不直接编译。版本规范详见 `docs/decisions/toolchain-policy.md`。
+1. **构建环境**: 项目设计在 Linux/Docker 容器中构建运行（GCC 15 / Clang 22，开发与生产统一）。Windows 仅用于编辑代码，不直接编译。版本规范详见 `docs/decisions/toolchain-policy.md`。
 2. **测试优先**: 修改核心逻辑前先检查/更新相关测试。测试在 `tests/unit/` 中按模块组织。
 3. **接口稳定**: `include/fqtools/` 下的公共接口是稳定 API，修改需谨慎。实现变更放在 `src/` 中。
 4. **不要猜测**: 使用搜索工具查找现有代码，不要假设函数签名或类接口。

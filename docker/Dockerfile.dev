@@ -1,9 +1,9 @@
 # =============================================================================
 # FastQTools Development Environment
 # =============================================================================
-# 支持双编译器工具链：GCC 15 + Clang 21
+# 支持双编译器工具链：GCC 15 + Clang 22
 # - GCC 15 + libstdc++：生产编译首选，最新 C++23 支持
-# - Clang 21 + libc++：开发调试首选，配合 LLVM 工具链
+# - Clang 22 + libc++：开发调试首选，配合 LLVM 工具链
 #
 # 使用方法：
 #   GCC 编译：   cmake --preset gcc-debug && cmake --build --preset gcc-debug
@@ -115,31 +115,31 @@ RUN CMAKE_VERSION=4.0.2 && \
     rm -f /tmp/cmake.tar.gz
 
 # =============================================================================
-# LLVM/Clang 21 工具链 (开发调试)
+# LLVM/Clang 22 工具链 (开发调试)
 # =============================================================================
 RUN wget -q https://apt.llvm.org/llvm.sh && \
     chmod +x llvm.sh && \
-    ./llvm.sh 21 && \
+    ./llvm.sh 22 && \
     apt-get update && \
     apt-get install -y --no-install-recommends --fix-missing \
-    clang-21 \
-    clangd-21 \
-    clang-tidy-21 \
-    clang-format-21 \
-    lld-21 \
-    lldb-21 \
-    llvm-21 \
-    libc++-21-dev \
-    libc++abi-21-dev \
+    clang-22 \
+    clangd-22 \
+    clang-tidy-22 \
+    clang-format-22 \
+    lld-22 \
+    lldb-22 \
+    llvm-22 \
+    libc++-22-dev \
+    libc++abi-22-dev \
     && rm -f llvm.sh && \
     rm -rf /var/lib/apt/lists/* \
-    && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100 \
-    && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-21 100 \
-    && update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-21 100 \
-    && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-21 100 \
-    && update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-21 100 \
-    && update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-21 100 \
-    && update-alternatives --install /usr/bin/lld lld /usr/bin/lld-21 100
+    && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-22 100 \
+    && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-22 100 \
+    && update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-22 100 \
+    && update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-22 100 \
+    && update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-22 100 \
+    && update-alternatives --install /usr/bin/lldb lldb /usr/bin/lldb-22 100 \
+    && update-alternatives --install /usr/bin/lld lld /usr/bin/lld-22 100
 
 # =============================================================================
 # 项目依赖库

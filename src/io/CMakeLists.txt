@@ -26,5 +26,5 @@ elseif(TARGET libdeflate::libdeflate_shared)
     target_link_libraries(fq_modern_io PRIVATE libdeflate::libdeflate_shared)
 endif()
 
-target_compile_features(fq_modern_io PUBLIC cxx_std_20)
+target_compile_features(fq_modern_io PUBLIC cxx_std_23)
 

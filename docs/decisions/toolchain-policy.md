@@ -12,11 +12,11 @@
 | 组件 | 统一版本 | 最低兼容 |
 |------|---------|---------|
 | **GCC** | 15.x | 11.0 |
-| **Clang/LLVM** | 21 | 12.0 |
+| **Clang/LLVM** | 22 | 12.0 |
 | **CMake** | 4.x（Docker 内） | 3.28 |
 | **Conan** | 2.24.0 | 2.0 |
 | **Ninja** | 系统最新 | 1.10 |
-| **C++ 标准** | C++20 | C++20 |
+| **C++ 标准** | C++23 | C++23 |
 
 ---
 
@@ -26,7 +26,7 @@
 
 | 层级 | 版本 | 说明 |
 |------|------|------|
-| **统一版本** | GCC 15.x | 开发、CI、生产全部使用，最新优化器和 C++20/23 支持 |
+| **统一版本** | GCC 15.x | 开发、CI、生产全部使用，最新优化器和 C++23 支持 |
 | **兼容下限** | GCC 11.0 | CMake 编译器检查，保证源码在较旧环境中可编译 |
 | **CI 兼容性检查** | GCC 14.x | `allow-failure`，作为向下兼容信号 |
 
@@ -34,7 +34,7 @@
 
 - 项目通过 Docker 分发预编译二进制，用户无需自行编译，编译器版本对用户透明
 - 统一版本消除"开发能编译、生产编译失败"的环境差异问题
-- GCC 15.2 是 bugfix 版本，C++20 支持已充分成熟
+- GCC 15.2 是 bugfix 版本，C++23 支持已充分成熟
 - 维护一套配置比维护两套的认知负担和出错概率显著更低
 - 实际上 Dockerfile.prod 和 Dockerfile.deploy 已经在使用 GCC 15.2，统一是让规范与现实一致
 
@@ -47,25 +47,25 @@
 
 | 层级 | 版本 | 说明 |
 |------|------|------|
-| **统一版本** | Clang 21 | 开发、CI、Sanitizer 全部使用，最新检查规则和工具链 |
+| **统一版本** | Clang 22 | 开发、CI、Sanitizer 全部使用，最新检查规则和工具链 |
 | **兼容下限** | Clang 12.0 | CMake 编译器检查，保证源码在较旧环境中可编译 |
 | **CI 兼容性检查** | Clang 19 | `allow-failure`，作为向下兼容信号 |
 
 **选型理由：**
 
 - Clang 的核心价值在于 Sanitizer（ASan/TSan/UBSan）和静态分析工具链
-- 统一到 Clang 21 确保 Sanitizer 检测结果与开发环境一致
+- 统一到 Clang 22 确保 Sanitizer 检测结果与开发环境一致
 - clang-tidy / clang-format 使用相同版本，避免规则差异
 
 **已知风险：**
 
-- Clang 21 通过 `llvm.sh` 安装的是 apt.llvm.org 的 nightly 分支
+- Clang 22 通过 `llvm.sh` 安装的是 apt.llvm.org 的稳定版
 - 不同时间 `docker build` 可能拉到不同 commit，影响构建可复现性
 - 缓解措施：CI 中缓存 Docker layer，或在 Dockerfile 中固定 apt snapshot 日期
 
 **升级策略：**
 
-- 跟随 LLVM trunk，无需等待稳定版
+- 跟随 LLVM 稳定版发布节奏，发布后 1 个月内评伋升级
 - 兼容下限：与 GCC 同步，每 2 年评估
 
 ---
@@ -148,14 +148,8 @@ fastqtools:<version>       ← 版本锁定，如 fastqtools:3.1.0
 
 | 项目 | 值 | 说明 |
 |------|---|------|
-| **当前标准** | C++20 | 所有代码必须符合 C++20 |
-| **未来规划** | C++23 | 待 GCC 15 + Clang 21 的 C++23 支持充分稳定后评估迁移 |
-
-**C++23 迁移条件（全部满足后启动）：**
-
-1. GCC 15 / Clang 21 的 C++23 特性覆盖达到可用水平
-2. Conan center 的主要依赖包支持 C++23 构建
-3. 项目有明确需要 C++23 特性的场景（如 `std::expected`、`std::print`）
+| **当前标准** | C++23 | 所有代码必须符合 C++23 |
+| **升级日期** | 2026-03-08 | 从 C++20 升级至 C++23，配合 GCC 15 + Clang 22 |
 
 ---
 
@@ -172,16 +166,16 @@ strategy:
         preset: gcc-release
 
       - compiler: clang
-        version: "21"
+        version: "22"
         preset: clang-release
 
       # ===== Sanitizer 检测（必须通过） =====
       - compiler: clang
-        version: "21"
+        version: "22"
         preset: clang-asan
 
       - compiler: clang
-        version: "21"
+        version: "22"
         preset: clang-tsan
 
       # ===== 兼容性检查（允许失败） =====
@@ -225,5 +219,5 @@ strategy:
 
 ---
 
-*最后更新：2026-03-08*
+*最后更新：2026-03-08（Clang 21→22、C++20→C++23 升级）*
 *下次评审：2026-07-01*
