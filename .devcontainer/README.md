@@ -1,6 +1,6 @@
 # FastQTools DevContainer
 
-本目录包含 VS Code DevContainer 配置，提供一致的 C++ 开发环境。
+本目录包含 DevContainer 配置，提供一致的 C++ 开发环境。支持 VS Code 和 JetBrains CLion。
 
 ## 支持的开发环境
 
@@ -105,7 +105,20 @@ ssh -p 2222 developer@<服务器IP>
 # 或使用 VS Code Remote-SSH → 连接后 Reopen in Container
 ```
 
-### 方式三：Windows 原生 (不推荐)
+### 方式三：JetBrains CLion
+
+CLion 对 devcontainer 的支持与 VS Code 有所不同，请使用专用配置：
+
+1. 打开项目目录
+2. 选择 `File` → `Remote Development` → `Dev Containers`
+3. 选择配置文件：`.devcontainer/devcontainer.clion.json`
+
+> **注意**：首次使用前，如需同步宿主机配置（Git、Claude、Codex），请手动运行：
+> ```bash
+> bash .devcontainer/scripts/host-prepare.sh
+> ```
+
+### 方式四：Windows 原生 (不推荐)
 
 ```powershell
 # 需要 Docker Desktop + Git Bash
@@ -126,7 +139,8 @@ code .
 
 ```
 .devcontainer/
-├── devcontainer.json       # 主配置（使用 docker-compose）
+├── devcontainer.json        # 主配置（使用 docker-compose，VS Code）
+├── devcontainer.clion.json  # CLion 专用配置（使用 Dockerfile）
 ├── scripts/
 │   ├── host-prepare.sh             # 宿主机准备脚本（initializeCommand，含平台检测）
 │   ├── host-prepare-windows.ps1    # Windows 环境检查/安装脚本（PowerShell）
@@ -244,12 +258,49 @@ cd /mnt/c/Users/.../fastq-tools
 sudo systemctl status docker
 ```
 
+### 扩展安装缓慢
+
+VS Code 扩展已配置持久化存储，重建容器后无需重新下载。如需清理：
+
+```bash
+docker volume rm fastqtools_vscode_extensions
+```
+
 ## 开发工具
 
 容器内预装：
 
-- **编译器**: GCC 15 + Clang 21
-- **构建**: CMake 4.x + Ninja + Conan 2.x
-- **调试**: GDB + LLDB + Valgrind
-- **分析**: clang-tidy + cppcheck + lcov
-- **AI**: Claude Code CLI + OpenAI Codex
+| 类别 | 工具 |
+|------|------|
+| **编译器** | GCC 15 + Clang 21 |
+| **构建** | CMake 4.x + Ninja + Conan 2.x |
+| **调试** | GDB + LLDB + Valgrind |
+| **分析** | clang-tidy + cppcheck + lcov |
+| **AI** | Claude Code CLI + OpenAI Codex |
+
+### 便捷命令
+
+容器内提供以下快捷构建命令：
+
+```bash
+# 构建
+./scripts/core/build                              # 默认: Clang Release
+./scripts/core/build --compiler gcc --type Debug   # GCC Debug
+./scripts/core/build --dev                         # 开发模式: Debug + 详细输出
+
+# 测试
+./scripts/core/test                                # 运行所有测试
+./scripts/core/test --filter "*timer*"              # 过滤特定测试
+./scripts/core/test --coverage                     # 覆盖率报告
+
+# 代码质量
+./scripts/core/lint                                # clang-format + clang-tidy 检查
+./scripts/core/lint --fix                          # 自动修复
+```
+
+## 切换配置
+
+- `devcontainer.json` — 使用 docker-compose，支持持久化缓存（VS Code）
+- `devcontainer.clion.json` — CLion 专用配置，解决路径解析兼容性问题
+
+切换方法：在 IDE 中选择对应的配置文件。

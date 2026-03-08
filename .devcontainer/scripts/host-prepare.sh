@@ -228,6 +228,16 @@ main() {
         fi
     fi
 
+    # -----------------------------------------------------------------
+    # 6. 检查 SSH agent
+    # -----------------------------------------------------------------
+    if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -S "${SSH_AUTH_SOCK}" ]; then
+        log_info "SSH agent 已检测到: ${SSH_AUTH_SOCK}"
+    else
+        log_warn "SSH agent 未运行。如需 Git SSH 认证，请先执行："
+        log_warn "  eval \"\$(ssh-agent -s)\" && ssh-add"
+    fi
+
     log_info "宿主机文件准备完成"
 }
 
