@@ -78,6 +78,10 @@ jobs:
           sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
           sudo rm -f /tmp/cmake.tar.gz
 
+          # 移除系统旧版 libc++，避免头文件冲突
+          sudo apt-get remove -y libc++-dev libc++abi-dev 2>/dev/null || true
+          sudo rm -rf /usr/include/c++/v1/
+
           # Clang/LLVM
           wget -q https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
@@ -151,6 +155,10 @@ jobs:
           sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
           sudo rm -f /tmp/cmake.tar.gz
 
+          # 移除系统旧版 libc++，避免头文件冲突
+          sudo apt-get remove -y libc++-dev libc++abi-dev 2>/dev/null || true
+          sudo rm -rf /usr/include/c++/v1/
+
           # Clang/LLVM
           wget -q https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
@@ -219,6 +227,10 @@ jobs:
           sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/ctest" /usr/local/bin/ctest
           sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
           sudo rm -f /tmp/cmake.tar.gz
+
+          # 移除系统旧版 libc++，避免头文件冲突
+          sudo apt-get remove -y libc++-dev libc++abi-dev 2>/dev/null || true
+          sudo rm -rf /usr/include/c++/v1/
 
           # Clang/LLVM
           wget -q https://apt.llvm.org/llvm.sh

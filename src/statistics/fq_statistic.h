@@ -25,6 +25,10 @@
 
 namespace fq::statistic {
 
+// 统计常量（供 FqStatisticResult 和 FqStatisticWorker 共用）
+constexpr int kMaxQual = 42;     ///< 最大质量分数值
+constexpr int kMaxBaseNum = 5;   ///< 最大碱基数量
+
 /**
  * @brief FASTQ 统计信息结果结构体
  * @details 存储 FASTQ 文件统计分析的结果数据，包括读取数量、长度分布、

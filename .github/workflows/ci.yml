@@ -96,6 +96,10 @@ jobs:
       - name: Install Clang/LLVM
         if: matrix.compiler.name == 'clang'
         run: |
+          # 移除系统旧版 libc++，避免头文件冲突
+          sudo apt-get remove -y libc++-dev libc++abi-dev 2>/dev/null || true
+          sudo rm -rf /usr/include/c++/v1/
+
           wget -q https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh ${{ env.LLVM_VERSION }}

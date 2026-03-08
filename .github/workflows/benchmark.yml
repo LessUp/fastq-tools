@@ -93,6 +93,7 @@ jobs:
         cmake -B build \
           -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
           -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+          -DBUILD_BENCHMARKS=ON \
           -G Ninja
 
     - name: Build benchmarks

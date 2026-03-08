@@ -13,6 +13,7 @@
 #include "fqtools/io/fastq_batch_pool.h"
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/logging.h"
+#include "statistics/fq_statistic_worker.h"
 
 #include <algorithm>
 #include <cmath>
@@ -23,7 +24,6 @@
 #include <numeric>
 #include <vector>
 
-#include "statistics/fq_statistic_worker.h"
 #include <tbb/global_control.h>
 #include <tbb/parallel_pipeline.h>
 

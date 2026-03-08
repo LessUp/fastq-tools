@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include "statistics/fq_statistic.h"
+
 #include "fqtools/statistics/statistic_interface.h"
 
 #include <cstdint>
@@ -21,10 +23,6 @@
 #include <vector>
 
 namespace fq::statistic {
-
-// Replaced macros with constexpr for type safety and scoping
-constexpr int kMaxQual = 42;     ///< 最大质量分数值
-constexpr int kMaxBaseNum = 5;  ///< 最大碱基数量
 
 /**
  * @brief FASTQ 统计信息工作器

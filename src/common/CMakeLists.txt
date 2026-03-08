@@ -11,6 +11,7 @@ target_include_directories(fq_common
 target_link_libraries(fq_common
     PUBLIC
         fmt::fmt
+        spdlog::spdlog
 )
 
 target_compile_features(fq_common PUBLIC cxx_std_20)
