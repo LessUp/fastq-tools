@@ -1,6 +1,10 @@
 # FastQTools
 
+[![CI](https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml)
+[![Deploy Docs](https://github.com/LessUp/fastq-tools/actions/workflows/pages.yml/badge.svg)](https://github.com/LessUp/fastq-tools/actions/workflows/pages.yml)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue?logo=github)](https://lessup.github.io/fastq-tools/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![C++](https://img.shields.io/badge/C++-23-blue.svg)
 
 English | [简体中文](README.zh-CN.md)
 

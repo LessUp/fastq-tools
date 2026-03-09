@@ -1,12 +1,16 @@
 # FastQTools
 
+[![CI](https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml)
+[![Deploy Docs](https://github.com/LessUp/fastq-tools/actions/workflows/pages.yml/badge.svg)](https://github.com/LessUp/fastq-tools/actions/workflows/pages.yml)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue?logo=github)](https://lessup.github.io/fastq-tools/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![C++](https://img.shields.io/badge/C++-23-blue.svg)
+
 [English](README.md) | 简体中文
 
-一个面向 FASTQ 文件的现代 C++ 高性能处理工具集，专注于生物信息学场景中的质控、过滤和统计分析。
-
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue?logo=github)](https://lessup.github.io/fastq-tools/)
-
 > **在线文档**: [https://lessup.github.io/fastq-tools/](https://lessup.github.io/fastq-tools/)
+
+一个面向 FASTQ 文件的现代 C++ 高性能处理工具集，专注于生物信息学场景中的质控、过滤和统计分析。
 
 ## 快速开始
 

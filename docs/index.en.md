@@ -7,9 +7,14 @@ hide:
 # FastQTools
 
 <div style="text-align: center; margin: 2rem 0;">
-<p style="font-size: 1.4rem; color: #555;">
-Modern FASTQ File Processing Toolkit — High-Performance Bioinformatics QC Tool
-</p>
+
+[![CI](https://img.shields.io/github/actions/workflow/status/LessUp/fastq-tools/ci.yml?label=CI&logo=github)](https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/github/actions/workflow/status/LessUp/fastq-tools/pages.yml?label=Docs&logo=github)](https://lessup.github.io/fastq-tools/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![C++23](https://img.shields.io/badge/C++-23-blue.svg)
+
+**Modern FASTQ File Processing Toolkit — High-Performance Bioinformatics QC Tool**
+
 </div>
 
 ---
@@ -81,6 +86,19 @@ FastQTools filter -i input.fq.gz -o filtered.fq.gz --min-quality 20 --min-length
 | **spdlog** | 1.17.0 | Logging framework |
 | **fmt** | 12.1.0 | Formatting library |
 | **nlohmann_json** | 3.11.3 | JSON processing |
+
+## Performance
+
+Benchmark results with 100K reads (150bp):
+
+| Operation | Throughput | Time |
+|-----------|------------|------|
+| FastQReader | 1696 MB/s | 18.8 ms |
+| FastQWriter | 1.76 M reads/s | 57.0 ms |
+| Filter Combined | 1.67 M reads/s | 60.5 ms |
+| Stat Full | 302 MB/s | 104.6 ms |
+
+[:octicons-graph-24: Full Benchmark Report](benchmark-reports/latest.md){ .md-button }
 
 ## Project Structure
 

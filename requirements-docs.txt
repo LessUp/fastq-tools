@@ -1,6 +1,6 @@
-# MkDocs 文档站点依赖
-mkdocs>=1.6.0
-mkdocs-material>=9.5.0
-mkdocs-minify-plugin>=0.8.0
-mkdocs-static-i18n>=1.2.0
-pymdown-extensions>=10.0
+# MkDocs 文档站点依赖（精确版本，保证 CI 可复现）
+mkdocs==1.6.1
+mkdocs-material==9.6.14
+mkdocs-minify-plugin==0.8.0
+mkdocs-static-i18n==1.2.3
+pymdown-extensions==10.14.3

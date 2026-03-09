@@ -1,6 +1,7 @@
 # mkdocs.yml — FastQTools 文档站点配置（双语：中文默认 + 英文备选）
 site_name: FastQTools
 site_description: 现代化 FASTQ 文件处理工具集 — 高性能生物信息学质控工具
+site_author: LessUp
 site_url: https://lessup.github.io/fastq-tools/
 repo_url: https://github.com/LessUp/fastq-tools
 repo_name: LessUp/fastq-tools
@@ -34,11 +35,15 @@ theme:
     - navigation.sections
     - navigation.expand
     - navigation.top
+    - navigation.instant
+    - navigation.instant.progress
     - search.suggest
     - search.highlight
+    - search.share
     - content.code.copy
     - content.code.annotate
     - content.action.edit
+    - content.tooltips
     - toc.follow
   icon:
     repo: fontawesome/brands/github
@@ -170,6 +175,8 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/LessUp/fastq-tools
+      name: FastQTools on GitHub
+  generator: false
 
 copyright: Copyright &copy; 2025-2026 LessUp — MIT License
 
