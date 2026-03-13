@@ -42,6 +42,7 @@ auto main(int argc, char* argv[]) -> int {
 
     std::string subcommand;
     bool foundSubcommand = false;
+    bool quietMode = false;
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -49,6 +50,7 @@ auto main(int argc, char* argv[]) -> int {
             logLevel = "debug";
         } else if (arg == "--quiet" || arg == "-q") {
             logLevel = "error";
+            quietMode = true;
         } else if (arg.starts_with("--log-level=")) {
             logLevel = arg.substr(12);
         } else if (arg == "--help" || arg == "-h") {
@@ -75,7 +77,9 @@ auto main(int argc, char* argv[]) -> int {
     fq::logging::setLevel(logLevel);
 
     // 打印项目 Logo
-    fq::common::printLogo();
+    if (!quietMode) {
+        fq::common::printLogo();
+    }
 
     // 启动主计时器
     fq::common::Timer mainTimer("FastQTools");

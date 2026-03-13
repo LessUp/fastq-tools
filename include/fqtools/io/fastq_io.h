@@ -18,7 +18,7 @@ struct FastqRecord {
     std::string_view comment;  // ID 后的注释
     std::string_view seq;      // 序列内容
     std::string_view qual;     // 质量值内容
-    std::string_view plus;     // + 行内容（通常为空或重复ID）
+    std::string_view plus;     // + 行原文（含前导 +）
 
     // 检查记录是否完整/有效
     [[nodiscard]] auto empty() const -> bool {

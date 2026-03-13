@@ -37,3 +37,26 @@ endfunction()
 add_subdirectory(utils)
 add_subdirectory(unit)
 add_subdirectory(integration)
+
+add_test(
+    NAME e2e_shell_cli
+    COMMAND bash ${CMAKE_SOURCE_DIR}/tests/e2e/test_cli.sh
+)
+set_tests_properties(e2e_shell_cli PROPERTIES
+    LABELS "e2e"
+    TIMEOUT 180
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    ENVIRONMENT "FASTQTOOLS=${CMAKE_BINARY_DIR}/FastQTools"
+)
+
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+add_test(
+    NAME e2e_python_cli
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/e2e/test_advanced_cli.py
+)
+set_tests_properties(e2e_python_cli PROPERTIES
+    LABELS "e2e"
+    TIMEOUT 180
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    ENVIRONMENT "FASTQTOOLS=${CMAKE_BINARY_DIR}/FastQTools"
+)

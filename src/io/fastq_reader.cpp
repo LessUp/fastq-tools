@@ -225,29 +225,47 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
 
             const char* line1End = Impl::findEol(ptr, end);
             if (line1End == nullptr) {
+                if (impl_->isEofReached) {
+                    throw fq::error::FormatError("Incomplete FASTQ record: missing header newline");
+                }
                 break;
             }
 
             const char* line2Start = line1End + 1;
             const char* line2End = Impl::findEol(line2Start, end);
             if (line2End == nullptr) {
+                if (impl_->isEofReached) {
+                    throw fq::error::FormatError("Incomplete FASTQ record: missing sequence line");
+                }
                 break;
             }
 
             const char* line3Start = line2End + 1;
-            if (line3Start >= end || *line3Start != '+') {
-                if (line3Start < end) {
-                    throw fq::error::FormatError(
-                        fmt::format("Expected '+' at line 3. Found '{}'", *line3Start));
+            if (line3Start >= end) {
+                if (impl_->isEofReached) {
+                    throw fq::error::FormatError("Incomplete FASTQ record: missing plus line");
                 }
                 break;
             }
+            if (*line3Start != '+') {
+                throw fq::error::FormatError(
+                    fmt::format("Expected '+' at line 3. Found '{}'", *line3Start));
+            }
             const char* line3End = Impl::findEol(line3Start, end);
             if (line3End == nullptr) {
+                if (impl_->isEofReached) {
+                    throw fq::error::FormatError("Incomplete FASTQ record: missing plus newline");
+                }
                 break;
             }
 
             const char* line4Start = line3End + 1;
+            if (line4Start >= end) {
+                if (impl_->isEofReached) {
+                    throw fq::error::FormatError("Incomplete FASTQ record: missing quality line");
+                }
+                break;
+            }
             const char* line4End = Impl::findEol(line4Start, end);
             if (line4End == nullptr) {
                 if (impl_->isEofReached) {
@@ -280,12 +298,27 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
             }
             rec.seq = std::string_view(line2Start, seqLen);
 
+            const auto kPlusLen = static_cast<size_t>(line3End - line3Start);
+            size_t plusLen = kPlusLen;
+            if (plusLen > 0 && line3Start[plusLen - 1] == '\r') {
+                --plusLen;
+            }
+            rec.plus = std::string_view(line3Start, plusLen);
+
             const auto kQualLen = static_cast<size_t>(line4End - line4Start);
             size_t qualLen = kQualLen;
             if (qualLen > 0 && line4Start[qualLen - 1] == '\r') {
                 --qualLen;
             }
             rec.qual = std::string_view(line4Start, qualLen);
+
+            if (!rec.validateLengths()) {
+                throw fq::error::FormatError(fmt::format(
+                    "Sequence and quality length mismatch for read '{}': {} vs {}",
+                    rec.id,
+                    rec.seq.size(),
+                    rec.qual.size()));
+            }
 
             batch.records().push_back(rec);
 

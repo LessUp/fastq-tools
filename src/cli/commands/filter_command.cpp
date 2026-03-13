@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <cxxopts.hpp>
+#include <spdlog/spdlog.h>
 
 #include <fqtools/fq.h>  // 公共 API Façade（包含 pipeline 接口、predicates、mutators）
 
@@ -143,7 +144,9 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     }
 
     auto stats = pipeline_->run();
-    std::cout << stats.toString() << '\n';
+    if (spdlog::get_level() < spdlog::level::err) {
+        std::cout << stats.toString() << '\n';
+    }
 
     return 0;
 }

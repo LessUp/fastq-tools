@@ -3,8 +3,7 @@
 
 #include <filesystem>
 #include <fstream>
-
-#include <zlib.h>
+#include <string>
 
 #include <gtest/gtest.h>
 
@@ -42,25 +41,38 @@ TEST_F(FastqWriterTest, WriteBasic) {
         rec2.seq = "AAAA";
         rec2.qual = "JJJJ";
         writer.write(rec2);
-    }  // Flush and close in dtor
+    }
 
-    // Since it's gzipped, we use zlib to read it back or just check if it's non-empty
-    EXPECT_TRUE(std::filesystem::exists(tmpFile_));
+    ASSERT_TRUE(std::filesystem::exists(tmpFile_));
     EXPECT_GT(std::filesystem::file_size(tmpFile_), 0);
 
-    // Briefly verify it's a valid gzip file by opening with gzopen
-    gzFile file = gzopen(tmpFile_.c_str(), "rb");
-    EXPECT_NE(file, nullptr);
+    std::ifstream in(tmpFile_);
+    ASSERT_TRUE(in.is_open());
+    const std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 
-    char buffer[1024];
-    int len = gzread(file, buffer, sizeof(buffer));
-    EXPECT_GT(len, 0);
-    std::string content(buffer, len);
-    EXPECT_NE(content.find("@read1"), std::string::npos);
-    EXPECT_NE(content.find("ACGT"), std::string::npos);
-    EXPECT_NE(content.find("@read2 desc"), std::string::npos);
+    EXPECT_NE(content.find("@read1\nACGT\n+\nIIII\n"), std::string::npos);
+    EXPECT_NE(content.find("@read2 desc\nAAAA\n+\nJJJJ\n"), std::string::npos);
+}
 
-    gzclose(file);
+TEST_F(FastqWriterTest, PreservesCustomPlusLineWhenWriting) {
+    {
+        FastqWriter writer(tmpFile_);
+        ASSERT_TRUE(writer.isOpen());
+
+        FastqRecord rec;
+        rec.id = "read1";
+        rec.comment = "desc";
+        rec.seq = "ACGT";
+        rec.plus = "+read1 desc";
+        rec.qual = "IIII";
+        writer.write(rec);
+    }
+
+    std::ifstream in(tmpFile_);
+    ASSERT_TRUE(in.is_open());
+    const std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+
+    EXPECT_NE(content.find("@read1 desc\nACGT\n+read1 desc\nIIII\n"), std::string::npos);
 }
 
 }  // namespace fq::io

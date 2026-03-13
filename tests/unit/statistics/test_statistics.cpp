@@ -75,6 +75,24 @@ TEST(FqStatisticWorkerTest, CalculateStats) {
     EXPECT_EQ(result.qualityAt(0)[40], 1);
 }
 
+TEST(FqStatisticWorkerTest, RespectsConfiguredQualityEncoding) {
+    fq::io::FastqBatch batch;
+
+    fq::io::FastqRecord rec;
+    rec.id = "read1";
+    rec.seq = "A";
+    rec.qual = "@";
+    batch.records().push_back(rec);
+
+    FqStatisticWorker worker33(33);
+    auto result33 = worker33.calculateStats(batch);
+    EXPECT_EQ(result33.qualityAt(0)[31], 1);
+
+    FqStatisticWorker worker64(64);
+    auto result64 = worker64.calculateStats(batch);
+    EXPECT_EQ(result64.qualityAt(0)[0], 1);
+}
+
 TEST(FqStatisticWorkerTest, EmptyBatch) {
     FqStatisticWorker worker;
     fq::io::FastqBatch batch;

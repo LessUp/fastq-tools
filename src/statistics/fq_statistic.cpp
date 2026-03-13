@@ -139,13 +139,11 @@ void FastqStatisticCalculator::run() {
             // Stage 2: Processing Filter (Parallel)
             tbb::make_filter<std::shared_ptr<fq::io::FastqBatch>, FqStatisticResult>(
                 tbb::filter_mode::parallel,
-                [](const std::shared_ptr<fq::io::FastqBatch>& batch) -> FqStatisticResult {
+                [this](const std::shared_ptr<fq::io::FastqBatch>& batch) -> FqStatisticResult {
                     if (!batch) {
                         return FqStatisticResult();
                     }
-                    // Assuming default qual offset 33 for now.
-                    // TODO: Auto-detect quality system in Reader and pass here.
-                    FqStatisticWorker worker(33);
+                    FqStatisticWorker worker(options_.qualityEncoding);
                     FqStatisticResult result;
                     // 预分配典型 Illumina read length (150bp) 的容量，
                     // 避免 ensureCapacity 在处理每条 read 时反复 resize
@@ -186,7 +184,7 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
     // QScoreType defaults to Sanger (33)
 
     writer << "#Name\t" << fqName << "\n";
-    writer << "#PhredQual\t" << 33 << "\n";
+    writer << "#PhredQual\t" << options_.qualityEncoding << "\n";
     writer << "#ReadNum\t" << result.readCount << "\n";
     writer << "#MaxReadLength\t" << result.maxReadLength << "\n";  // Changed from fixed ReadLength
     writer << "#BaseCount\t" << result.totalBases << "\n";

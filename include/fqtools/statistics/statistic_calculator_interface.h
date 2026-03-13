@@ -37,6 +37,7 @@ struct StatisticOptions {
     size_t batchCapacityBytes = 4 * 1024 * 1024;
     size_t memoryLimitBytes = 0;
     size_t maxInFlightBatches = 0;
+    int qualityEncoding = 33;
 };
 
 /**

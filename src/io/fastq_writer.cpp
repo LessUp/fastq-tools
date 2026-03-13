@@ -137,10 +137,11 @@ struct FastqWriter::Impl {
 
     /// 批量追加：先计算总大小，一次 resize，然后用 memcpy 拼接
     void appendRecord(const FastqRecord& rec) {
-        size_t needed = 1 + rec.id.size() + 1 +  // @ + ID + \n
-            rec.seq.size() + 1 +                 // Seq + \n
-            2 +                                  // +\n
-            rec.qual.size() + 1;                 // Qual + \n
+        const std::string_view plusLine = rec.plus.empty() ? std::string_view("+") : rec.plus;
+        size_t needed = 1 + rec.id.size() + 1 +   // @ + ID + \n
+            rec.seq.size() + 1 +                  // Seq + \n
+            plusLine.size() + 1 +                 // Plus + \n
+            rec.qual.size() + 1;                  // Qual + \n
 
         if (!rec.comment.empty()) {
             needed += 1 + rec.comment.size();  // Space + Comment
@@ -182,7 +183,8 @@ struct FastqWriter::Impl {
         dst += rec.seq.size();
         *dst++ = '\n';
 
-        *dst++ = '+';
+        std::memcpy(dst, plusLine.data(), plusLine.size());
+        dst += plusLine.size();
         *dst++ = '\n';
 
         std::memcpy(dst, rec.qual.data(), rec.qual.size());
