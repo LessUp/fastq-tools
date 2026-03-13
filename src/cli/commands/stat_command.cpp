@@ -30,10 +30,10 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
         cxxopts::value<size_t>()->default_value("0"))(
         "memory-limit-gb",
         "Memory limit (GB) for in-flight batches (0=unlimited)",
-        cxxopts::value<size_t>()->default_value("10"))(
-        "quality-encoding",
-        "Quality encoding offset (33 or 64)",
-        cxxopts::value<int>()->default_value("33"))("h,help", "Print usage");
+        cxxopts::value<size_t>()->default_value("10"))("quality-encoding",
+                                                       "Quality encoding offset (33 or 64)",
+                                                       cxxopts::value<int>()->default_value("33"))(
+        "h,help", "Print usage");
 
     if (argc == 1) {
         std::cout << options.help() << '\n';

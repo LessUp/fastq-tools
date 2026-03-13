@@ -2,11 +2,10 @@
 #include <fstream>
 #include <string>
 
-#include <fqtools/fq.h>
-
 #include "fixture_loader.h"
 #include "test_helpers.h"
 
+#include <fqtools/fq.h>
 #include <gtest/gtest.h>
 
 namespace fq::test {

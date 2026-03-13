@@ -4,9 +4,9 @@
 #include <iostream>
 
 #include <cxxopts.hpp>
-#include <spdlog/spdlog.h>
 
 #include <fqtools/fq.h>  // 公共 API Façade（包含 pipeline 接口、predicates、mutators）
+#include <spdlog/spdlog.h>
 
 namespace fq::cli::commands {
 

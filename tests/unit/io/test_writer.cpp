@@ -48,7 +48,8 @@ TEST_F(FastqWriterTest, WriteBasic) {
 
     std::ifstream in(tmpFile_);
     ASSERT_TRUE(in.is_open());
-    const std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    const std::string content((std::istreambuf_iterator<char>(in)),
+                              std::istreambuf_iterator<char>());
 
     EXPECT_NE(content.find("@read1\nACGT\n+\nIIII\n"), std::string::npos);
     EXPECT_NE(content.find("@read2 desc\nAAAA\n+\nJJJJ\n"), std::string::npos);
@@ -70,7 +71,8 @@ TEST_F(FastqWriterTest, PreservesCustomPlusLineWhenWriting) {
 
     std::ifstream in(tmpFile_);
     ASSERT_TRUE(in.is_open());
-    const std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    const std::string content((std::istreambuf_iterator<char>(in)),
+                              std::istreambuf_iterator<char>());
 
     EXPECT_NE(content.find("@read1 desc\nACGT\n+read1 desc\nIIII\n"), std::string::npos);
 }

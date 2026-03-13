@@ -313,11 +313,11 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
             rec.qual = std::string_view(line4Start, qualLen);
 
             if (!rec.validateLengths()) {
-                throw fq::error::FormatError(fmt::format(
-                    "Sequence and quality length mismatch for read '{}': {} vs {}",
-                    rec.id,
-                    rec.seq.size(),
-                    rec.qual.size()));
+                throw fq::error::FormatError(
+                    fmt::format("Sequence and quality length mismatch for read '{}': {} vs {}",
+                                rec.id,
+                                rec.seq.size(),
+                                rec.qual.size()));
             }
 
             batch.records().push_back(rec);
