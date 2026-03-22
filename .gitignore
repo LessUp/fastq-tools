@@ -8,6 +8,7 @@
 
 # ===== 构建与安装输出 =====
 build*/
+build_verify/
 install/
 install-*/
 cmake-build-*/
@@ -89,10 +90,9 @@ benchmark-*.json
 benchmark-*.csv
 
 # ===== Benchmark 结果 =====
-benchmark_results/results/*.json
-benchmark_results/reports/*.md
-benchmark_results/reports/charts/*.svg
-benchmark_results/reports/charts/*.png
-benchmark_results/data/*.fastq
-benchmark_results/data/*.fastq.gz
-!benchmark_results/baselines/*.json
+docs/benchmark-reports/results/*.json
+docs/benchmark-reports/charts/*.svg
+docs/benchmark-reports/charts/*.png
+docs/benchmark-reports/data/*.fastq
+docs/benchmark-reports/data/*.fastq.gz
+!docs/benchmark-reports/baselines/*.json

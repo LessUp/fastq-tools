@@ -6,7 +6,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-BENCHMARK_DIR="$PROJECT_ROOT/benchmark_results"
+BENCHMARK_DIR="$PROJECT_ROOT/docs/benchmark-reports"
 TOOLS_DIR="$PROJECT_ROOT/tools/benchmark/scripts"
 
 # 默认配置
@@ -28,6 +28,8 @@ Commands:
   compare     比较两个基准测试结果
   baseline    管理性能基线
   data        生成测试数据
+  compiler    GCC vs Clang 编译器对比基准
+  visualize   生成编译器对比可视化报告
 
 Options:
   --ci        CI 模式，输出适合 GitHub Actions 的格式
@@ -42,6 +44,8 @@ Examples:
   $(basename "$0") baseline save v1.0     # 保存当前结果为基线
   $(basename "$0") baseline list          # 列出所有基线
   $(basename "$0") data generate          # 生成测试数据
+  $(basename "$0") compiler --data-dir docs/benchmark-reports/data
+  $(basename "$0") visualize --format html
 EOF
 }
 
@@ -49,8 +53,9 @@ EOF
 ensure_dirs() {
     mkdir -p "$BENCHMARK_DIR/results"
     mkdir -p "$BENCHMARK_DIR/baselines"
-    mkdir -p "$BENCHMARK_DIR/reports/charts"
+    mkdir -p "$BENCHMARK_DIR/charts"
     mkdir -p "$BENCHMARK_DIR/data"
+    mkdir -p "$BENCHMARK_DIR/compiler"
 }
 
 # 检查构建
@@ -62,11 +67,116 @@ check_build() {
     fi
 }
 
+# 编译器对比基准
+cmd_compiler() {
+    local data_dir=""
+    local output_file=""
+    local compiler_args=""
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --data-dir)
+                data_dir="$2"
+                shift 2
+                ;;
+            --output|-o)
+                output_file="$2"
+                shift 2
+                ;;
+            --filter|--benchmark-filter)
+                compiler_args="$compiler_args --benchmark-filter $2"
+                shift 2
+                ;;
+            --repetitions)
+                compiler_args="$compiler_args --repetitions $2"
+                shift 2
+                ;;
+            --compiler)
+                compiler_args="$compiler_args --compiler $2"
+                shift 2
+                ;;
+            --skip-build)
+                compiler_args="$compiler_args --skip-build"
+                shift
+                ;;
+            --clean)
+                compiler_args="$compiler_args --clean"
+                shift
+                ;;
+            --no-time)
+                compiler_args="$compiler_args --no-time"
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+
+    ensure_dirs
+
+    if [[ -n "$data_dir" ]]; then
+        compiler_args="$compiler_args --data-dir $data_dir"
+    fi
+
+    if [[ -n "$output_file" ]]; then
+        compiler_args="$compiler_args --output $output_file"
+    fi
+
+    python3 "$PROJECT_ROOT/tools/benchmark/compiler_benchmark.py" $compiler_args
+}
+
+# 编译器可视化报告
+cmd_visualize() {
+    local input_file=""
+    local output_file=""
+    local format="markdown"
+    local visualize_args=""
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --input|-i)
+                input_file="$2"
+                shift 2
+                ;;
+            --output|-o)
+                output_file="$2"
+                shift 2
+                ;;
+            --format|-f)
+                format="$2"
+                shift 2
+                ;;
+            --no-charts)
+                visualize_args="$visualize_args --no-charts"
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+
+    ensure_dirs
+
+    if [[ -n "$input_file" ]]; then
+        visualize_args="$visualize_args --input $input_file"
+    fi
+
+    if [[ -n "$output_file" ]]; then
+        visualize_args="$visualize_args --output $output_file"
+    fi
+
+    visualize_args="$visualize_args --format $format"
+
+    python3 "$PROJECT_ROOT/tools/benchmark/visualization_report.py" $visualize_args
+}
+
 # 运行基准测试
 cmd_run() {
     local output_file=""
     local benchmark_args=""
-    
+
     while [[ $# -gt 0 ]]; do
         case $1 in
             --output|-o)
@@ -86,37 +196,36 @@ cmd_run() {
                 ;;
         esac
     done
-    
+
     check_build
     ensure_dirs
-    
-    # 生成输出文件名
+
     if [[ -z "$output_file" ]]; then
-        local timestamp=$(date +%Y-%m-%d_%H-%M-%S)
-        local commit=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+        local timestamp
+        timestamp=$(date +%Y-%m-%d_%H-%M-%S)
+        local commit
+        commit=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
         output_file="$BENCHMARK_DIR/results/${timestamp}_${commit}.json"
     fi
-    
+
     log_info "Running benchmarks..."
-    
-    # 查找并运行所有 benchmark 可执行文件
+
     local benchmark_exe="$BUILD_DIR/tools/benchmark/benchmark_fastq_io"
-    
+
     if [[ -x "$benchmark_exe" ]]; then
         log_info "Running: benchmark_fastq_io"
         "$benchmark_exe" \
             --benchmark_format=json \
             --benchmark_out="$output_file" \
             $benchmark_args
-        
+
         log_success "Results saved to: $output_file"
     else
         log_error "Benchmark executable not found: $benchmark_exe"
         log_info "Please build with: cmake --build $BUILD_DIR --target benchmarks"
         exit 1
     fi
-    
-    # CI 模式下检查回归
+
     if [[ "$CI_MODE" == "true" ]]; then
         local baseline="$BENCHMARK_DIR/baselines/default.json"
         if [[ -f "$baseline" ]]; then
@@ -132,7 +241,8 @@ cmd_run() {
 cmd_report() {
     local input_file=""
     local format="markdown"
-    
+    local charts=false
+
     while [[ $# -gt 0 ]]; do
         case $1 in
             --input|-i)
@@ -144,7 +254,7 @@ cmd_report() {
                 shift 2
                 ;;
             --charts)
-                local charts=true
+                charts=true
                 shift
                 ;;
             *)
@@ -152,10 +262,9 @@ cmd_report() {
                 ;;
         esac
     done
-    
+
     ensure_dirs
-    
-    # 如果没有指定输入，使用最新的结果
+
     if [[ -z "$input_file" ]]; then
         input_file=$(ls -t "$BENCHMARK_DIR/results"/*.json 2>/dev/null | head -1)
         if [[ -z "$input_file" ]]; then
@@ -163,17 +272,17 @@ cmd_report() {
             exit 1
         fi
     fi
-    
+
     log_info "Generating report from: $input_file"
-    
-    local report_args="--format $format --google-benchmark"
+
+    local report_args=(--format "$format" --google-benchmark)
     if [[ "$charts" == "true" ]]; then
-        report_args="$report_args --charts"
+        report_args+=(--charts)
     fi
-    
-    python3 "$TOOLS_DIR/report_generator.py" "$input_file" $report_args
-    
-    log_success "Report generated in: $BENCHMARK_DIR/reports/"
+
+    python3 "$TOOLS_DIR/report_generator.py" "$input_file" "${report_args[@]}"
+
+    log_success "Report generated in: $BENCHMARK_DIR/"
 }
 
 # 比较结果
@@ -182,11 +291,11 @@ cmd_compare() {
         log_error "Usage: $(basename "$0") compare <baseline> <current>"
         exit 1
     fi
-    
+
     local baseline="$1"
     local current="$2"
     shift 2
-    
+
     local compare_args=""
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -203,15 +312,15 @@ cmd_compare() {
                 ;;
         esac
     done
-    
+
     if [[ "$CI_MODE" == "true" ]]; then
         compare_args="$compare_args --ci"
     fi
-    
+
     if [[ "$VERBOSE" == "true" ]]; then
         compare_args="$compare_args --verbose"
     fi
-    
+
     python3 "$TOOLS_DIR/regression_detector.py" \
         "$baseline" "$current" \
         --google-benchmark $compare_args
@@ -221,15 +330,14 @@ cmd_compare() {
 cmd_baseline() {
     local subcmd="${1:-list}"
     shift || true
-    
+
     ensure_dirs
-    
+
     case $subcmd in
         save)
             local name="${1:-default}"
             local source="${2:-}"
-            
-            # 如果没有指定源文件，使用最新的结果
+
             if [[ -z "$source" ]]; then
                 source=$(ls -t "$BENCHMARK_DIR/results"/*.json 2>/dev/null | head -1)
                 if [[ -z "$source" ]]; then
@@ -237,31 +345,33 @@ cmd_baseline() {
                     exit 1
                 fi
             fi
-            
+
             local target="$BENCHMARK_DIR/baselines/${name}.json"
             cp "$source" "$target"
             log_success "Saved baseline: $name"
             log_info "Source: $source"
             ;;
-        
+
         list)
             log_info "Available baselines:"
             for f in "$BENCHMARK_DIR/baselines"/*.json; do
                 if [[ -f "$f" ]]; then
-                    local name=$(basename "$f" .json)
-                    local date=$(stat -c %y "$f" 2>/dev/null | cut -d' ' -f1 || stat -f %Sm "$f" 2>/dev/null)
+                    local name
+                    name=$(basename "$f" .json)
+                    local date
+                    date=$(stat -c %y "$f" 2>/dev/null | cut -d' ' -f1 || stat -f %Sm "$f" 2>/dev/null)
                     echo "  - $name ($date)"
                 fi
             done
             ;;
-        
+
         delete)
             local name="$1"
             if [[ -z "$name" ]]; then
                 log_error "Usage: $(basename "$0") baseline delete <name>"
                 exit 1
             fi
-            
+
             local target="$BENCHMARK_DIR/baselines/${name}.json"
             if [[ -f "$target" ]]; then
                 rm "$target"
@@ -271,7 +381,7 @@ cmd_baseline() {
                 exit 1
             fi
             ;;
-        
+
         *)
             log_error "Unknown baseline command: $subcmd"
             echo "Available commands: save, list, delete"
@@ -284,9 +394,9 @@ cmd_baseline() {
 cmd_data() {
     local subcmd="${1:-generate}"
     shift || true
-    
+
     ensure_dirs
-    
+
     case $subcmd in
         generate)
             log_info "Generating benchmark test data..."
@@ -295,7 +405,7 @@ cmd_data() {
                 --output-dir "$BENCHMARK_DIR/data"
             log_success "Test data generated in: $BENCHMARK_DIR/data/"
             ;;
-        
+
         validate)
             local file="$1"
             if [[ -z "$file" ]]; then
@@ -304,7 +414,7 @@ cmd_data() {
             fi
             python3 "$TOOLS_DIR/gen_benchmark_data.py" --validate "$file"
             ;;
-        
+
         *)
             log_error "Unknown data command: $subcmd"
             echo "Available commands: generate, validate"
@@ -315,7 +425,6 @@ cmd_data() {
 
 # 主入口
 main() {
-    # 解析全局选项
     while [[ $# -gt 0 ]]; do
         case $1 in
             --ci)
@@ -335,10 +444,10 @@ main() {
                 ;;
         esac
     done
-    
+
     local cmd="${1:-help}"
     shift || true
-    
+
     case $cmd in
         run)
             cmd_run "$@"
@@ -354,6 +463,12 @@ main() {
             ;;
         data)
             cmd_data "$@"
+            ;;
+        compiler)
+            cmd_compiler "$@"
+            ;;
+        visualize)
+            cmd_visualize "$@"
             ;;
         help|--help|-h)
             usage

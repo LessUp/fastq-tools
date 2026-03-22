@@ -40,7 +40,7 @@
 1. WHEN a benchmark completes, THE Benchmark_System SHALL store results in JSON format with timestamp, git commit hash, and system information
 2. THE Benchmark_System SHALL store the following metrics for each benchmark: name, iterations, mean time, standard deviation, min, max, throughput, and memory peak
 3. WHEN storing results, THE Benchmark_System SHALL include system metadata: CPU model, core count, memory size, OS version, and compiler version
-4. THE Benchmark_System SHALL maintain a history of benchmark results in a `benchmark_results/` directory
+4. THE Benchmark_System SHALL maintain a history of benchmark results in a `docs/benchmark-reports/` directory
 5. WHEN a new benchmark run completes, THE Benchmark_System SHALL append results to the historical data without overwriting previous results
 
 ### Requirement 3: 生成可视化性能报告

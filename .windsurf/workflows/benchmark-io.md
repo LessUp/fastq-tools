@@ -6,7 +6,7 @@ auto_execution_mode: 1
 
 ## 适用场景
 - 你修改了 I/O/压缩/解析相关代码，需要衡量性能影响
-- 需要生成 `benchmark_results/` 下的结果与报告
+- 需要生成 `docs/benchmark-reports/` 下的结果与报告
 
 ## 工作流步骤
 1. **安全前置**
@@ -28,15 +28,15 @@ auto_execution_mode: 1
    - `./scripts/benchmark data generate`
 
 5. **运行 benchmark（保存为 current.json）**
-   - `BUILD_DIR=build-clang-release ./scripts/benchmark run --output benchmark_results/results/current.json`
+   - `BUILD_DIR=build-clang-release ./scripts/benchmark run --output docs/benchmark-reports/results/current.json`
 
 6. **生成报告（Markdown + charts）**
-   - `./scripts/benchmark report --input benchmark_results/results/current.json --format markdown --charts`
+   - `./scripts/benchmark report --input docs/benchmark-reports/results/current.json --format markdown --charts`
 
 7. **（可选）回归检查**
    - 若已有基线：
-     - `./scripts/benchmark compare benchmark_results/baselines/default.json benchmark_results/results/current.json --ci`
+     - `./scripts/benchmark compare docs/benchmark-reports/baselines/default.json docs/benchmark-reports/results/current.json --ci`
 
 ## 产物
-- 结果：`benchmark_results/results/*.json`
-- 报告：`benchmark_results/reports/`
+- 结果：`docs/benchmark-reports/results/*.json`
+- 报告：`docs/benchmark-reports/`

@@ -4,7 +4,7 @@ FastQTools 的脚本系统提供统一、清晰的构建、测试和部署工具
 
 ## 📁 目录结构
 
-```
+```text
 scripts/
 ├── core/                    # ⭐ 核心脚本（日常开发）
 │   ├── build               # 统一构建脚本
@@ -123,6 +123,18 @@ scripts/
 ### benchmark-io - I/O 性能测试
 ```bash
 ./scripts/tools/benchmark-io
+```
+
+### benchmark - 统一基准测试 CLI
+```bash
+# 运行基准测试
+./scripts/benchmark run
+
+# 编译器对比基准
+./scripts/benchmark compiler
+
+# 生成编译器对比可视化报告
+./scripts/benchmark visualize --format html
 ```
 
 ### coverage-report - 覆盖率报告
@@ -330,7 +342,6 @@ chmod +x scripts/tools/*
 - **v2.1** (2026-02-24): 清理与优化
   - 删除所有重复的根目录 .sh 脚本
   - 迁移 benchmark/gcov_wrapper/llvm 到 tools/ 和 lib/
-  - 移除 deprecated/ 分层，旧脚本已完成迁移
   - 工具脚本统一复用 lib/common.sh
 
 - **v2.0** (2026-01-08): 重大架构重构
@@ -353,6 +364,6 @@ chmod +x scripts/tools/*
 
 ---
 
-**维护**: FastQTools 团队  
-**更新**: 2026-01-08  
+**维护**: FastQTools 团队
+**更新**: 2026-02-24
 **版本**: 2.1

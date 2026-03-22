@@ -8,7 +8,7 @@
 
 - [x] 1. 项目结构和基础设施
   - [x] 1.1 创建 benchmark 系统目录结构
-    - 创建 `benchmark_results/` 目录结构（results/, baselines/, reports/, data/）
+    - 创建 `docs/benchmark-reports/` 目录结构（results/, baselines/, charts/, data/）
     - 更新 `.gitignore` 排除临时结果文件
     - _Requirements: 2.4_
 
@@ -80,7 +80,7 @@
 - [x] 6. 结果存储和历史管理
   - [x] 6.1 实现结果文件命名和存储
     - 格式：`YYYY-MM-DD_HH-MM-SS_<commit>.json`
-    - 存储到 `benchmark_results/results/`
+    - 存储到 `docs/benchmark-reports/results/`
     - _Requirements: 2.4, 2.5_
 
   - [x] 6.2 实现基线管理功能

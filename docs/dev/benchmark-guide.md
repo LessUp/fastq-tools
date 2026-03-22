@@ -105,22 +105,66 @@ Examples:
   ./scripts/benchmark data validate test.fastq
 ```
 
+### `benchmark compiler`
+
+运行 GCC vs Clang 编译器对比基准。
+
+```bash
+./scripts/benchmark compiler [options]
+
+Options:
+  --data-dir         指定测试数据目录
+  --output, -o       指定输出 JSON 文件路径
+  --benchmark-filter 过滤要运行的测试（正则表达式）
+  --repetitions      重复次数
+  --compiler         指定编译器（可重复传入）
+  --skip-build       跳过构建步骤
+  --clean            清理构建目录后重建
+  --no-time          禁用最大内存统计
+
+Examples:
+  ./scripts/benchmark compiler
+  ./scripts/benchmark compiler --benchmark-filter "Reader"
+  ./scripts/benchmark compiler --output docs/benchmark-reports/compiler/custom.json
+```
+
+### `benchmark visualize`
+
+生成编译器对比可视化报告（Markdown/HTML）。
+
+```bash
+./scripts/benchmark visualize [options]
+
+Options:
+  --input, -i     输入 JSON 文件
+  --output, -o    输出报告路径
+  --format, -f    输出格式 (markdown, html, summary)
+  --no-charts     禁用图表生成
+
+Examples:
+  ./scripts/benchmark visualize
+  ./scripts/benchmark visualize --format html
+  ./scripts/benchmark visualize --input docs/benchmark-reports/compiler/latest.json
+```
+
 ## 目录结构
 
 ```
-benchmark_results/
-├── results/           # 历史测试结果
-│   └── YYYY-MM-DD_HH-MM-SS_<commit>.json
+docs/benchmark-reports/
 ├── baselines/         # 命名基线
 │   └── <name>.json
-├── reports/           # 生成的报告
-│   ├── latest.md
-│   └── charts/
-│       └── *.svg
-└── data/              # 测试数据
-    ├── small_10k.fastq
-    ├── medium_100k.fastq
-    └── large_1m.fastq
+├── data/              # 测试数据
+│   ├── small_10k.fastq
+│   ├── medium_100k.fastq
+│   └── large_1m.fastq
+├── results/           # 历史测试结果
+│   └── YYYY-MM-DD_HH-MM-SS_<commit>.json
+├── charts/            # 生成图表
+│   └── *.svg
+├── compiler/          # 编译器对比报告
+│   └── latest.md
+├── latest.md
+└── latest.json
 ```
 
 ## 添加新的基准测试

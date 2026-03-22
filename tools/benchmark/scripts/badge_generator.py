@@ -46,8 +46,12 @@ def generate_performance_badge(throughput_mbps: float) -> str:
         rating = "needs improvement"
     
     message = f"{throughput_mbps:.0f} MB/s ({rating})"
-    return generate_badge_markdown("performance", message, color, 
-                                   "docs/performance/benchmark-report.md")
+    return generate_badge_markdown(
+        "performance",
+        message,
+        color,
+        "docs/benchmark-reports/latest.md",
+    )
 
 
 def generate_badge_json(label: str, message: str, color: str = "blue") -> dict:
@@ -75,7 +79,7 @@ def main():
     
     if not args.input:
         # 尝试找到最新的结果
-        results_dir = Path("benchmark_results/results")
+        results_dir = Path("docs/benchmark-reports/results")
         if results_dir.exists():
             files = sorted(results_dir.glob("*.json"), reverse=True)
             if files:

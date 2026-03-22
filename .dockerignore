@@ -1,5 +1,6 @@
 # ===== 构建产物 =====
 build*/
+build_verify/
 _output/
 dist/
 install/
@@ -35,7 +36,7 @@ __pycache__/
 *.pyc
 
 # ===== 测试与基准产物 =====
-benchmark_results/
+docs/benchmark-reports/results/
 coverage/
 tools/fuzz/
 

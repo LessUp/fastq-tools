@@ -107,14 +107,14 @@ jobs:
       run: |
         python3 tools/benchmark/scripts/gen_benchmark_data.py \
           --generate-dataset \
-          --output-dir benchmark_results/data
+          --output-dir docs/benchmark-reports/data
 
     - name: Run benchmarks
       run: |
-        mkdir -p benchmark_results/results
+        mkdir -p docs/benchmark-reports/results
         ./build/tools/benchmark/benchmark_fastq_io \
           --benchmark_format=json \
-          --benchmark_out=benchmark_results/results/current.json \
+          --benchmark_out=docs/benchmark-reports/results/current.json \
           --benchmark_repetitions=3 \
           --benchmark_report_aggregates_only=true
 
@@ -123,15 +123,15 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: benchmark-baseline
-        path: benchmark_results/baselines/
+        path: docs/benchmark-reports/baselines/
 
     - name: Check for regressions
       if: github.event_name == 'pull_request'
       run: |
-        if [[ -f benchmark_results/baselines/default.json ]]; then
+        if [[ -f docs/benchmark-reports/baselines/default.json ]]; then
           python3 tools/benchmark/scripts/regression_detector.py \
-            benchmark_results/baselines/default.json \
-            benchmark_results/results/current.json \
+            docs/benchmark-reports/baselines/default.json \
+            docs/benchmark-reports/results/current.json \
             --google-benchmark --ci
         else
           echo "No baseline found, skipping regression check"
@@ -140,7 +140,7 @@ jobs:
     - name: Generate report
       run: |
         python3 tools/benchmark/scripts/report_generator.py \
-          benchmark_results/results/current.json \
+          docs/benchmark-reports/results/current.json \
           --google-benchmark \
           --format markdown \
           --charts
@@ -150,21 +150,23 @@ jobs:
       with:
         name: benchmark-results
         path: |
-          benchmark_results/results/
-          benchmark_results/reports/
+          docs/benchmark-reports/results/
+          docs/benchmark-reports/charts/
+          docs/benchmark-reports/latest.md
+          docs/benchmark-reports/latest.json
 
     - name: Save as baseline
       if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event.inputs.save_baseline == 'true'
       run: |
-        mkdir -p benchmark_results/baselines
-        cp benchmark_results/results/current.json benchmark_results/baselines/default.json
+        mkdir -p docs/benchmark-reports/baselines
+        cp docs/benchmark-reports/results/current.json docs/benchmark-reports/baselines/default.json
 
     - name: Upload baseline
       if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event.inputs.save_baseline == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: benchmark-baseline
-        path: benchmark_results/baselines/default.json
+        path: docs/benchmark-reports/baselines/default.json
         retention-days: 90
 
     - name: Comment on PR
@@ -173,12 +175,11 @@ jobs:
       with:
         script: |
           const fs = require('fs');
-          const reportPath = 'benchmark_results/reports/latest.md';
+          const reportPath = 'docs/benchmark-reports/latest.md';
 
           if (fs.existsSync(reportPath)) {
             const report = fs.readFileSync(reportPath, 'utf8');
 
-            // 查找现有评论
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,

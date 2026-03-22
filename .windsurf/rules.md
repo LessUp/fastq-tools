@@ -9,7 +9,7 @@ description: FastQTools project rules for Cascade/Windsurf
 - **测试**: `./scripts/core/test`
 - **代码质量**: `./scripts/core/lint`
 - **依赖安装**: `./scripts/core/install-deps`
-- **Benchmark 系统**: `./scripts/tools/benchmark`（基于 `tools/benchmark` + `benchmark_results/`）
+- **Benchmark 系统**: `./scripts/benchmark`（基于 `tools/benchmark` + `docs/benchmark-reports/`）
 
 ## 禁止/避免
 - 旧的 `.sh` 脚本已删除，所有功能已迁移至 `scripts/core/` 和 `scripts/tools/`。
@@ -33,7 +33,7 @@ description: FastQTools project rules for Cascade/Windsurf
 - 实现：`src/`
 - CLI：`src/cli/`
 - 测试：`tests/`
-- Benchmark：`tools/benchmark/` + `benchmark_results/`
+- Benchmark：`tools/benchmark/` + `docs/benchmark-reports/`
 
 ## 常用质量检查命令（建议优先级）
 - `./scripts/core/lint format-check`

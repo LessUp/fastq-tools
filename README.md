@@ -58,7 +58,7 @@ ctest --test-dir build/build/Release
 
 ## Project Structure
 
-```
+```text
 fastq-tools/
 ├── src/                # Source code
 │   ├── core/           # Core library (parser, filter, stats)

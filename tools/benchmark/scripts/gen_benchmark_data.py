@@ -181,7 +181,7 @@ Examples:
   %(prog)s -o test.fastq -n 50000 --min-len 80 --max-len 200 --n-ratio 0.05
   
   # Generate complete benchmark dataset
-  %(prog)s --generate-dataset --output-dir benchmark_results/data
+  %(prog)s --generate-dataset --output-dir docs/benchmark-reports/data
   
   # Validate a FASTQ file
   %(prog)s --validate test.fastq
@@ -200,7 +200,7 @@ Examples:
     
     parser.add_argument("--generate-dataset", action="store_true", 
                         help="Generate complete benchmark dataset")
-    parser.add_argument("--output-dir", type=Path, default=Path("benchmark_results/data"),
+    parser.add_argument("--output-dir", type=Path, default=Path("docs/benchmark-reports/data"),
                         help="Output directory for dataset")
     
     parser.add_argument("--validate", type=Path, help="Validate a FASTQ file")

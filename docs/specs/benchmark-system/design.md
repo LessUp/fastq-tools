@@ -41,14 +41,16 @@
 │                              ▼                                   │
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │                    Storage Layer                             ││
-│  │  benchmark_results/                                          ││
+│  │  docs/benchmark-reports/                                     ││
 │  │  ├── results/           # Historical results                 ││
 │  │  │   └── YYYY-MM-DD_HH-MM-SS_<commit>.json                  ││
 │  │  ├── baselines/         # Named baselines                    ││
 │  │  │   └── <name>.json                                         ││
-│  │  └── reports/           # Generated reports                  ││
-│  │      ├── latest.md                                           ││
-│  │      └── charts/                                             ││
+│  │  ├── charts/            # Generated charts                   ││
+│  │  ├── compiler/          # Compiler comparisons               ││
+│  │  │   └── latest.md                                           ││
+│  │  ├── latest.md                                            ││
+│  │  └── latest.json                                          ││
 │  └─────────────────────────────────────────────────────────────┘│
 │                              ▼                                   │
 │  ┌───────────────────────────────────────────────────────────┐  │
@@ -76,7 +78,7 @@ struct BenchmarkConfig {
     std::vector<size_t> readCounts = {10000, 100000, 1000000};  // small, medium, large
     std::vector<size_t> readLengths = {100, 150, 250};
     std::string inputFile;           // 用户提供的输入文件（可选）
-    std::string outputDir = "benchmark_results";
+    std::string outputDir = "docs/benchmark-reports";
     bool ciMode = false;
 };
 
@@ -303,24 +305,25 @@ Options:
 ### 目录结构
 
 ```
-benchmark_results/
-├── results/                          # 历史结果
-│   ├── 2026-01-09_10-30-00_abc123.json
-│   └── 2026-01-08_15-20-00_def456.json
+docs/benchmark-reports/
 ├── baselines/                        # 命名基线
 │   ├── release-1.0.json
 │   └── pre-optimization.json
-├── reports/                          # 生成的报告
-│   ├── latest.md
-│   ├── performance-summary.md        # README 嵌入用
-│   └── charts/
-│       ├── throughput-trend.svg
-│       ├── thread-scaling.svg
-│       └── memory-usage.svg
-└── data/                             # 测试数据
-    ├── small_10k.fastq
-    ├── medium_100k.fastq
-    └── large_1m.fastq
+├── charts/                           # 生成的报告图表
+│   ├── throughput-trend.svg
+│   ├── thread-scaling.svg
+│   └── memory-usage.svg
+├── compiler/                         # 编译器对比报告
+│   └── latest.md
+├── data/                             # 测试数据
+│   ├── small_10k.fastq
+│   ├── medium_100k.fastq
+│   └── large_1m.fastq
+├── results/                          # 历史结果
+│   ├── 2026-01-09_10-30-00_abc123.json
+│   └── 2026-01-08_15-20-00_def456.json
+├── latest.md
+└── latest.json
 ```
 
 ## Correctness Properties
@@ -347,7 +350,7 @@ benchmark_results/
 
 ### Property 4: Historical Data Preservation
 
-*For any* sequence of N benchmark runs, the benchmark_results/results/ directory SHALL contain exactly N distinct result files, each with a unique timestamp-based filename.
+*For any* sequence of N benchmark runs, the docs/benchmark-reports/results/ directory SHALL contain exactly N distinct result files, each with a unique timestamp-based filename.
 
 **Validates: Requirements 2.4, 2.5**
 
