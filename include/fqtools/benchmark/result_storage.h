@@ -13,8 +13,7 @@ namespace fq::benchmark {
  */
 class ResultStorage {
 public:
-    explicit ResultStorage(
-        const std::filesystem::path& base_dir = "docs/benchmark-reports");
+    explicit ResultStorage(const std::filesystem::path& base_dir = "docs/benchmark-reports");
 
     /**
      * @brief 保存基准测试报告
