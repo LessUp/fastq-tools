@@ -34,11 +34,27 @@ This guide helps you set up FastQTools and run your first command in minimal tim
 
 **Development dependencies include:**
 
-- GCC 15 / Clang 21 compilers
+- GCC 15 compiler
+- Clang development toolchain (the build script adapts Conan to the local installed version)
 - CMake, Ninja build system
 - Conan 2.x package manager
 - GDB, Valgrind debugging tools
 - lcov coverage tool
+
+> Note: the project targets GCC 15 / modern Clang, but local Clang development builds no longer require the machine to be pinned to exactly Clang 21.
+
+Build artifacts and test scripts use the `build/<preset>` directory layout.
+
+After a successful default build, the executable is typically at `build/clang-release/FastQTools`; with `--dev`, it is at `build/clang-debug/FastQTools`.
+
+If the executable is missing, check the matching build directory you actually used instead of assuming a single fixed path.
+
+For runtime library checks, use the executable path from the build you just produced.
+
+For example:
+```bash
+ldd build/clang-debug/FastQTools
+```
 
 **Runtime dependencies include:**
 

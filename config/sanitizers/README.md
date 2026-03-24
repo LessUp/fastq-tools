@@ -52,7 +52,7 @@ export MSAN_OPTIONS="halt_on_error=0:print_stats=1"
 ```bash
 # Build with ASan and run tests
 ./scripts/core/build --sanitizer asan --dev
-./scripts/core/test -b build-clang-debug
+./scripts/core/test -b build/clang-debug
 ```
 
 ## Important Notes

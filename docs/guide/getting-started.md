@@ -34,11 +34,14 @@
 
 **开发依赖包含：**
 
-- GCC 15 / Clang 21 编译器
+- GCC 15 编译器
+- Clang 开发工具链（脚本会按本机版本自动适配 Conan）
 - CMake、Ninja 构建系统
 - Conan 2.x 包管理器
 - GDB、Valgrind 调试工具
 - lcov 覆盖率工具
+
+> 说明：项目目标工具链以 GCC 15 / 现代 Clang 为主；本地 Clang 开发构建不再要求机器上必须固定为 Clang 21。
 
 **运行时依赖包含：**
 
@@ -64,7 +67,11 @@
 ./scripts/core/build --help
 ```
 
-构建成功后，可执行文件位于 `build/clang-release/FastQTools`（或对应构建目录）。
+构建产物与测试脚本统一使用 `build/<preset>` 目录结构。
+
+- 默认构建通常产出：`build/clang-release/FastQTools`
+- `--dev` 通常产出：`build/clang-debug/FastQTools`
+- 如果你使用了其他编译器或配置，请检查对应目录，而不是假定只有一个固定路径
 
 ---
 
@@ -76,6 +83,12 @@
 
 # 运行测试
 ./scripts/core/test
+```
+
+如果刚刚执行的是 `./scripts/core/build --dev`，请改用：
+
+```bash
+./build/clang-debug/FastQTools --help
 ```
 
 ---
@@ -126,14 +139,14 @@ FastQTools filter -i test_data.fastq -o filtered.fastq \
 
 ### 找不到可执行文件
 
-- 检查构建目录：`ls build/clang-release/FastQTools`
+- 检查与你实际构建配置匹配的目录，例如：`ls build/clang-debug/FastQTools`
 - 确认构建脚本成功完成（返回码为 0）
 
 ### 运行时缺少共享库
 
 ```bash
-# 检查缺少的库
-ldd build/clang-release/FastQTools
+# 检查缺少的库（请替换成你刚构建出的实际路径）
+ldd build/clang-debug/FastQTools
 
 # 安装运行时依赖
 ./scripts/core/install-deps --runtime

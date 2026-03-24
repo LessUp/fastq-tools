@@ -6,7 +6,7 @@
 
 ```bash
 # 构建 benchmark 目标
-cmake --build build-clang-release --target benchmarks
+cmake --build build/clang-release --target benchmarks
 
 # 运行基准测试
 ./scripts/benchmark run
@@ -306,7 +306,7 @@ pip install matplotlib
 基准测试在以下标准化环境中执行：
 
 - **操作系统**: Ubuntu 22.04 LTS
-- **编译器**: Clang 21 / GCC 15
+- **编译器**: 现代 Clang / GCC 15
 - **构建类型**: Release (-O3)
 - **CPU**: 多核 x86_64 处理器
 - **内存**: 16GB+ RAM

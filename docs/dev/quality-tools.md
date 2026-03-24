@@ -20,7 +20,7 @@
 
 ### 安装
 
-Sanitizers 是编译器内置功能，无需额外安装。确保使用 GCC 15 或 Clang 21。
+Sanitizers 是编译器内置功能，无需额外安装。建议使用 GCC 15 或现代 Clang；本地 Clang 构建可由脚本按已安装版本自动适配 Conan。
 
 ### 使用
 

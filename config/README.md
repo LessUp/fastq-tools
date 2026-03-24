@@ -7,7 +7,7 @@ This directory contains all configuration files for the FastQTools project, orga
 ```
 config/
 ├── conan/              # Conan compiler profiles
-│   ├── profile-clang   # Clang 21 + libc++（本地开发，CI 使用 libstdc++）
+│   ├── profile-clang   # Clang + libc++（脚本可按本机版本覆盖，CI 使用 libstdc++）
 │   └── profile-gcc     # GCC 15 + libstdc++
 ├── cppcheck/           # Cppcheck static analysis
 │   ├── cppcheck.cfg    # Project configuration (paths, defines, platform)

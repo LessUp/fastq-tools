@@ -88,8 +88,8 @@ std::cout << stats.toString() << std::endl;
 ### CMake 集成
 
 ```cmake
-find_package(FastQTools REQUIRED)
-target_link_libraries(my_app PRIVATE FastQTools::FastQTools)
+find_package(FastQTools CONFIG REQUIRED)
+target_link_libraries(my_app PRIVATE fq_common)
 ```
 
 ---
