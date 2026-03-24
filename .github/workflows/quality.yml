@@ -38,9 +38,6 @@ jobs:
     name: Format Check
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -69,14 +66,6 @@ jobs:
             exit 1
           fi
 
-      - name: Auto-commit formatting fixes
-        if: failure() && github.event_name == 'push'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -- src/ include/ tests/
-          git commit -m "style: 自动格式化代码 (clang-format)" || true
-          git push || true
 
   # ===========================================================================
   # Static Analysis (clang-tidy + cppcheck)
