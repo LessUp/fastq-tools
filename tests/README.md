@@ -26,7 +26,8 @@ tests/
 │   └── CMakeLists.txt
 └── cmake_package_consumer/   # CMake 包消费测试（独立构建验证）
     ├── CMakeLists.txt
-    └── main.cpp
+    ├── main.cpp
+    └── verify_consumer.cmake
 ```
 
 ## 运行测试
@@ -48,6 +49,9 @@ tests/
 # E2E（需要先构建可执行文件）
 ./tests/e2e/test_cli.sh
 python3 ./tests/e2e/test_advanced_cli.py
+
+# CMake 包消费验证（会先安装到临时前缀，再独立配置/构建 consumer）
+ctest --test-dir build/clang-debug -R cmake_package_consumer --output-on-failure
 ```
 
 ## 测试工具库

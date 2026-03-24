@@ -49,18 +49,21 @@ TEST(CommonModuleTest, StringUtils_JoinBasic) {
     EXPECT_EQ(join(parts, ","), "a,b,c");
 }
 
-// --- Logger Tests ---
-TEST(CommonModuleTest, Logger_SingletonInstance) {
-    auto& logger1 = Logger::instance();
-    auto& logger2 = Logger::instance();
-    EXPECT_EQ(&logger1, &logger2);
+// --- IDGenerator Tests ---
+TEST(CommonModuleTest, IDGenerator_IncrementsMonotonically) {
+    IDGenerator::reset();
+    const auto first = IDGenerator::nextId();
+    const auto second = IDGenerator::nextId();
+
+    EXPECT_EQ(first, 1);
+    EXPECT_EQ(second, 2);
 }
 
-TEST(CommonModuleTest, Logger_LogLevelChange) {
-    auto& logger = Logger::instance();
-    EXPECT_NO_THROW(logger.setLevel(Logger::Level::Debug));
-    EXPECT_NO_THROW(logger.info("Test message"));
-    EXPECT_NO_THROW(logger.setLevel(Logger::Level::Critical));
+TEST(CommonModuleTest, IDGenerator_ResetRestoresInitialValue) {
+    static_cast<void>(IDGenerator::nextId());
+    IDGenerator::reset();
+
+    EXPECT_EQ(IDGenerator::nextId(), 1);
 }
 
 }  // namespace fq::common

@@ -109,10 +109,28 @@ class TestFastQToolsCLI(unittest.TestCase):
         # Filter for max 99bp should result in 0 reads.
         output_fastq = os.path.join(self.test_dir, "empty.fastq")
         result = self.run_cmd(["filter", "--input", self.sample_fastq, "--output", output_fastq, "--max-length", "99"])
-        
+
         self.assertEqual(result.returncode, 0)
         self.assertTrue(os.path.exists(output_fastq))
         self.assertEqual(self._read_fastq_content(output_fastq), "")
+
+    def test_filter_trim_quality_trims_low_quality_ends(self):
+        input_fastq = os.path.join(self.test_dir, "trim_input.fastq")
+        output_fastq = os.path.join(self.test_dir, "trimmed.fastq")
+        with open(input_fastq, 'w') as f:
+            f.write("@read1\nACGT\n+\n!!II\n")
+
+        result = self.run_cmd([
+            "filter",
+            "--input", input_fastq,
+            "--output", output_fastq,
+            "--trim-quality", "20",
+        ])
+
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(os.path.exists(output_fastq))
+        content = self._read_fastq_content(output_fastq)
+        self.assertIn("\nGT\n+\nII\n", content)
 
 if __name__ == "__main__":
     unittest.main()

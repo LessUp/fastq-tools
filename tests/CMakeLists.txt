@@ -38,6 +38,25 @@ add_subdirectory(utils)
 add_subdirectory(unit)
 add_subdirectory(integration)
 
+set(FQTOOLS_CMAKE_CONSUMER_BINARY_DIR ${CMAKE_BINARY_DIR}/tests/cmake-package-consumer)
+set(FQTOOLS_CMAKE_CONSUMER_INSTALL_DIR ${CMAKE_BINARY_DIR}/tests/cmake-package-install)
+
+add_test(
+    NAME cmake_package_consumer
+    COMMAND
+        ${CMAKE_COMMAND}
+        -DFQTOOLS_SOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -DFQTOOLS_BINARY_DIR=${CMAKE_BINARY_DIR}
+        -DFQTOOLS_CONSUMER_BINARY_DIR=${FQTOOLS_CMAKE_CONSUMER_BINARY_DIR}
+        -DFQTOOLS_INSTALL_DIR=${FQTOOLS_CMAKE_CONSUMER_INSTALL_DIR}
+        -P ${CMAKE_SOURCE_DIR}/tests/cmake_package_consumer/verify_consumer.cmake
+)
+set_tests_properties(cmake_package_consumer PROPERTIES
+    LABELS "integration"
+    TIMEOUT 180
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
 add_test(
     NAME e2e_shell_cli
     COMMAND bash ${CMAKE_SOURCE_DIR}/tests/e2e/test_cli.sh

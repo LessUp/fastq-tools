@@ -6,7 +6,8 @@
 # - 全局帮助
 # - 子命令帮助
 # - filter 命令基本执行
-# - stat 命令基本执行（预期可能失败，作为回归基线）
+# - stat 命令基本执行
+# - trim-quality 行为回归
 
 set -e
 
@@ -90,28 +91,52 @@ else
     pass "--quiet mode suppresses banner"
 fi
 
-# Test 5: filter 命令基本执行（使用合成数据）
+# Test 5: filter 命令基本执行
+
 echo "Test 5: filter command execution"
 if [[ -f "$DATA_DIR/sample_10k_len100.fastq" ]]; then
     if $FASTQTOOLS -q filter --input "$DATA_DIR/sample_10k_len100.fastq" --output "$TMP_DIR/filtered.fastq" --threads 2 2>&1; then
         pass "filter command executes without error"
+        [[ -s "$TMP_DIR/filtered.fastq" ]] || fail "filter command did not produce output"
     else
-        warn "filter command returned non-zero (known issue, see stage0_baseline.md)"
+        fail "filter command returned non-zero"
     fi
 else
     warn "Skipping filter test: sample data not found"
 fi
 
-# Test 6: stat 命令基本执行（预期可能失败）
-echo "Test 6: stat command execution (expected to fail per baseline)"
+# Test 6: stat 命令基本执行
+
+echo "Test 6: stat command execution"
 if [[ -f "$DATA_DIR/sample_10k_len100.fastq" ]]; then
     if $FASTQTOOLS -q stat --input "$DATA_DIR/sample_10k_len100.fastq" --output "$TMP_DIR/stats.txt" --threads 2 2>&1; then
         pass "stat command executes without error"
+        grep -q $'^#ReadNum\t10000$' "$TMP_DIR/stats.txt" || fail "stat output missing read count"
     else
-        warn "stat command returned non-zero (known issue, see stage0_baseline.md)"
+        fail "stat command returned non-zero"
     fi
 else
     warn "Skipping stat test: sample data not found"
+fi
+
+# Test 7: trim-quality 实际裁剪生效
+
+echo "Test 7: trim-quality changes output"
+TRIM_INPUT="$TMP_DIR/trim-input.fastq"
+cat > "$TRIM_INPUT" <<'EOF'
+@trim-read
+ACGT
++
+!!II
+EOF
+if $FASTQTOOLS -q filter --input "$TRIM_INPUT" --output "$TMP_DIR/trimmed.fastq" --trim-quality 20 2>&1; then
+    if grep -q '^GT$' "$TMP_DIR/trimmed.fastq"; then
+        pass "trim-quality trims low-quality ends"
+    else
+        fail "trim-quality did not trim as expected"
+    fi
+else
+    fail "trim-quality command returned non-zero"
 fi
 
 echo ""
