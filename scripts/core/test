@@ -41,16 +41,20 @@ print_usage() {
     cat << 'EOF'
 基本选项:
   -c, --compiler NAME       编译器: gcc | clang (默认: clang)
-  -t, --type TYPE           构建类型: Debug | Release (默认: Debug)
-  -b, --build-dir DIR       构建目录 (默认: build-<compiler>-<type>)
+  -t, --build-type TYPE     构建类型: Debug | Release (默认: Debug)
+  -b, --build-dir DIR       构建目录 (默认: build/<compiler>-<type>)
   -j, --jobs N              并行测试数 (默认: 自动检测)
 
 测试选择:
+  --type TYPE               测试类型: all | unit | integration | e2e
   -f, --filter PATTERN      测试过滤器 (支持通配符)
   --unit                    只运行单元测试
   --integration             只运行集成测试
   --e2e                     只运行端到端测试
   -r, --repeat N            重复测试 N 次 (默认: 1)
+
+兼容说明:
+  --type 现在用于选择测试类型；构建类型请使用 --build-type 或 -t
 
 覆盖率:
   -C, --coverage            生成覆盖率报告 (lcov + HTML)
@@ -87,8 +91,21 @@ while [[ $# -gt 0 ]]; do
             COMPILER=$(normalize_compiler "$2") || exit 1
             shift 2
             ;;
-        -t|--type)
+        -t|--build-type)
             BUILD_TYPE=$(normalize_build_type "$2") || exit 1
+            shift 2
+            ;;
+        --type)
+            case "${2,,}" in
+                all|unit|integration|e2e)
+                    TEST_TYPE="${2,,}"
+                    ;;
+                *)
+                    log_error "未知测试类型: $2"
+                    log_info "支持的测试类型: all, unit, integration, e2e"
+                    exit 1
+                    ;;
+            esac
             shift 2
             ;;
         -b|--build-dir)

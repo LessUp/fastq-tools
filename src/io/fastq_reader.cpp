@@ -185,7 +185,7 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
                 if (kBytesRead < 0) {
                     if (impl_->isGzip) {
                         int err = 0;
-                        const char* msg = gzerror(impl_->gzfile, &err);
+                        (void)gzerror(impl_->gzfile, &err);
                         throw fq::error::IOError(impl_->path, err);
                     }
                     throw fq::error::IOError(impl_->path, errno);

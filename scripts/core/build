@@ -34,6 +34,7 @@ CLEAN=false
 JOBS=$(get_cpu_cores)
 
 BUILD_DIR_DEFAULTED=false
+CONAN_COMPILER_VERSION_OVERRIDE=""
 
 # =============================================================================
 # 帮助信息
@@ -53,6 +54,7 @@ print_usage() {
   -s, --sanitizer TYPE      启用 Sanitizer: asan | tsan | ubsan
   -C, --coverage            启用代码覆盖率
   --static-analysis         启用静态分析 (clang-tidy)
+  --conan-compiler-version VERSION  覆盖 Conan 使用的编译器版本
   --no-lto                  禁用链接时优化
   --clean                   构建前清理构建目录
   -p, --preset NAME         使用 CMake preset (覆盖其他选项)
@@ -113,6 +115,10 @@ while [[ $# -gt 0 ]]; do
         --static-analysis)
             STATIC_ANALYSIS=true
             shift
+            ;;
+        --conan-compiler-version)
+            CONAN_COMPILER_VERSION_OVERRIDE="$2"
+            shift 2
             ;;
         --no-lto)
             LTO=false
@@ -310,6 +316,23 @@ if command -v conan &>/dev/null; then
         fi
         if conan profile list 2>/dev/null | grep -Fxq default; then
             CONAN_ARGS+=(-pr:b default)
+        fi
+        if [[ -n "${CONAN_COMPILER_VERSION_OVERRIDE}" ]]; then
+            CONAN_ARGS+=(-s "compiler.version=${CONAN_COMPILER_VERSION_OVERRIDE}")
+        elif [[ "${COMPILER}" == "clang" ]]; then
+            LOCAL_CLANG_VERSION=$(clang -dumpversion 2>/dev/null | cut -d. -f1 || true)
+            if [[ -n "${LOCAL_CLANG_VERSION}" ]]; then
+                CONAN_ARGS+=(-s "compiler.version=${LOCAL_CLANG_VERSION}")
+            fi
+        elif [[ "${COMPILER}" == "gcc" ]]; then
+            LOCAL_GCC_VERSION=$(g++ -dumpfullversion -dumpversion 2>/dev/null | cut -d. -f1 || true)
+            if [[ -n "${LOCAL_GCC_VERSION}" ]]; then
+                CONAN_ARGS+=(-s "compiler.version=${LOCAL_GCC_VERSION}")
+            fi
+        fi
+
+        if [[ "$VERBOSE" == "true" && -n "${CONAN_COMPILER_VERSION_OVERRIDE}" ]]; then
+            log_debug "Conan 编译器版本覆盖: ${CONAN_COMPILER_VERSION_OVERRIDE}"
         fi
 
         if [[ "$VERBOSE" == "true" ]]; then
