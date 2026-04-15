@@ -10,147 +10,123 @@
 
 > **在线文档**: [https://lessup.github.io/fastq-tools/](https://lessup.github.io/fastq-tools/)
 
-一个面向 FASTQ 文件的现代 C++ 高性能处理工具集，专注于生物信息学场景中的质控、过滤和统计分析。
+**FastQTools** 是一个现代化的 C++23 FASTQ 文件处理工具集，专为生物信息学高通量测序数据质控设计。
+
+## 核心功能
+
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `stat` | FASTQ 文件统计分析 | `FastQTools stat -i input.fq.gz -o report.txt` |
+| `filter` | 读段过滤与质量修剪 | `FastQTools filter -i input.fq -o output.fq --min-quality 20` |
+
+## 技术特性
+
+- **高性能** — 基于 Intel TBB 的 `parallel_pipeline` 并行流水线处理
+- **现代 C++** — C++23 标准，CMake 4.0+，Conan 2.x 依赖管理
+- **零拷贝 I/O** — `FastqRecord` 使用 `string_view` 实现高效内存访问
+- **全面质控** — Sanitizers、Valgrind、模糊测试、覆盖率全覆盖
+- **模块化设计** — 清晰的接口-实现分离，支持库级别集成
 
 ## 快速开始
 
 ```bash
-# 一键构建
+# 克隆仓库
+git clone https://github.com/LessUp/fastq-tools.git
+cd fastq-tools
+
+# 一键构建（需要 Conan）
 ./scripts/core/build
 
 # 查看帮助
-./build/clang-release/FastQTools --help
+./build/gcc-release/FastQTools --help
 
 # 统计分析
-FastQTools stat -i input.fastq.gz -o output.stat.txt
+./build/gcc-release/FastQTools stat -i input.fastq.gz -o output.stat.txt
 
 # 过滤处理
-FastQTools filter -i input.fq.gz -o filtered.fq.gz --min-quality 20 --min-length 50
+./build/gcc-release/FastQTools filter -i input.fq.gz -o filtered.fq.gz \
+    --min-quality 20 --min-length 50
 ```
 
-## 核心功能
+## 依赖
 
-- **`stat` 命令**: FASTQ 文件统计分析，输出碱基/质量分布等统计结果
-- **`filter` 命令**: FASTQ 读段过滤与剪切，支持质量、长度、N 比例等条件
-
-## 技术特性
-
-- **高性能**: 基于 Intel TBB 的并行流水线处理
-- **现代化**: C++23 标准 + 现代 CMake 构建系统
-- **模块化**: 清晰的接口设计，支持库级别集成
-
-## 依赖清单
-
-- **并发**: Intel oneTBB（流水线核心依赖）
-- **压缩**: zlib-ng / libdeflate
-- **CLI & 日志**: cxxopts、spdlog、fmt、nlohmann-json
-- **包管理**: Conan（默认）
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Intel oneTBB | 2022.3.0 | 并行流水线 |
+| zlib-ng | 2.3.2 | gzip 压缩/解压 |
+| libdeflate | 1.25 | 高性能 deflate |
+| cxxopts | 3.1.1 | 命令行解析 |
+| spdlog | 1.17.0 | 日志框架 |
+| fmt | 12.1.0 | 格式化库 |
+| nlohmann_json | 3.11.3 | JSON 处理 |
 
 ## 项目结构
 
 ```
-FastQTools/
-├── include/fqtools/   # 公共 API 头文件（对外接口）
-├── src/               # 源代码实现
-├── tests/             # 测试（unit / integration / e2e）
-├── config/            # 构建配置（Conan profiles、sanitizers、valgrind 等）
-├── scripts/           # 构建与工具脚本（core / lib / tools）
-├── docker/            # Docker 配置（dev / prod / deploy）
-├── tools/             # 开发工具（benchmark / fuzz / data）
-├── cmake/modules/     # 自定义 CMake 模块
-├── docs/              # 项目文档（部署、迁移、开发指南等）
-├── changelog/         # 变更记录（每条独立 .md 文件）
-└── examples/          # 使用示例
+fastq-tools/
+├── include/fqtools/     # 公共 API 头文件
+├── src/                 # 源代码实现
+│   ├── cli/             # 命令行入口
+│   ├── io/              # FASTQ I/O
+│   ├── processing/      # 处理流水线
+│   └── statistics/      # 统计计算
+├── tests/               # 测试（unit / integration / e2e）
+├── config/              # 构建配置
+├── scripts/             # 构建与工具脚本
+├── docker/              # Docker 配置
+├── tools/               # 开发工具（benchmark / fuzz）
+├── docs/                # 项目文档
+└── changelog/           # 变更记录
 ```
 
-### 配置目录 (config/)
+## 构建
 
-包含所有构建与分析配置，按用途组织：
-- `conan/` - Conan 编译器 profiles（profile-clang, profile-gcc）
-- `dependencies/` - Conan 依赖配置（conanfile.py）
-- `sanitizers/` - ASan/TSan/UBSan/MSan 运行时选项
-- `valgrind/` - Valgrind 抑制规则
-- `cppcheck/` - Cppcheck 静态分析配置
-- `coverage/` - 覆盖率阈值配置
-- `iwyu/` - Include-What-You-Use 映射
-
-### 工具目录 (tools/)
-
-包含开发与测试相关的工具：
-- `benchmark/` - 性能基准测试（Google Benchmark）
-- `fuzz/` - 模糊测试
-- `data/` - 测试用 FASTQ 数据
-
-## 构建与运行
-
-### 环境要求
-- CMake ≥ 3.20
-- 支持 C++23 的编译器（最低 GCC 11+ / Clang 12+，推荐 GCC 15；Clang 开发构建可由脚本按本机版本自动适配 Conan）
-- Intel oneTBB 运行时（并发库）
-- Ninja（推荐）
-- Conan（依赖管理）
-
-### 快速构建
 ```bash
-# 一键构建 (Clang + Release)
-./scripts/core/build
+# 安装 Conan（如未安装）
+pip install conan==2.24.0
+conan profile detect --force
 
-# 指定配置
-./scripts/core/build --compiler gcc --type Debug
+# 构建
+./scripts/core/build --compiler gcc --type Release
 
-# 启用 Sanitizers
-./scripts/core/build --sanitizer asan
-./scripts/core/build --sanitizer tsan
-
-# 覆盖率构建
-./scripts/core/build --coverage
+# 运行测试
+./scripts/core/test --build-dir build/gcc-release
 ```
 
-## 开发指南
+## 开发环境
 
-- 代码与命名: 见 [编码规范](docs/dev/coding-standards.md)
-- 提交信息: 见 [Git 提交规范](docs/dev/git-guidelines.md)
-- Dev Container: 见 [DevContainer 开发环境](docs/dev/devcontainer.md)
-- 脚本说明: 见 [scripts/README.md](scripts/README.md)
+推荐使用 DevContainer 进行开发：
+
+```bash
+# VS Code: Ctrl+Shift+P → "Reopen in Container"
+# 或使用 Docker Compose
+docker compose -f docker/docker-compose.yml up dev
+```
+
+## 性能
+
+基于 100K reads (150bp) 的基准测试：
+
+| 操作 | 吞吐量 |
+|------|--------|
+| FastQReader | 1696 MB/s |
+| FastQWriter | 1.76 M reads/s |
+| Filter Combined | 1.67 M reads/s |
+
+详细报告：[docs/benchmark-reports/latest.md](docs/benchmark-reports/latest.md)
 
 ## 文档
 
-- [构建指南](docs/dev/build.md) - 系统要求和构建说明
-- [CLI 参考](docs/guide/cli-reference.md) - 命令行用法和示例
-- [架构设计](docs/dev/architecture.md) - 技术架构和设计原则
-- [编码规范](docs/dev/coding-standards.md) - 代码与文件命名约定
-- [Git 提交规范](docs/dev/git-guidelines.md) - 提交格式与示例
-- [性能报告](docs/dev/benchmark-guide.md) - 性能基准测试与报告
- 
- <!-- BENCHMARK_START -->
- ## 性能
- 
- FastQTools 针对高吞吐量场景进行了优化。运行 `./scripts/benchmark run` 获取最新性能数据。
- 
- ### 最新基准测试结果（100K reads, 150bp）
- 
- | Operation | Throughput | Time |
- |-----------|------------|------|
- | FastQReader Medium | 1696.50 MB/s | 18.8 ms |
- | FastQWriter Medium | 1.76 M reads/s | 57.0 ms |
- | Filter Combined (100K) | 1.67 M reads/s | 60.5 ms |
- | Stat Full (100K) | 301.91 MB/s | 104.6 ms |
- 
- - **详细报告**: [docs/benchmark-reports/latest.md](docs/benchmark-reports/latest.md)
- - **原始数据**: [docs/benchmark-reports/latest.json](docs/benchmark-reports/latest.json)
- 
- ```bash
- # 运行基准测试
- ./scripts/benchmark run
- 
- # 生成性能报告
- ./scripts/benchmark report
- 
- # 检测性能回归
- ./scripts/benchmark compare baseline.json current.json
- ```
- <!-- BENCHMARK_END -->
- 
- ## 许可证
+- [用户指南](docs/guide/getting-started.md) — 快速入门
+- [CLI 参考](docs/guide/cli-reference.md) — 命令行用法
+- [API 参考](docs/api/overview.md) — 编程接口
+- [开发者指南](docs/dev/architecture.md) — 架构设计
+- [编码规范](docs/dev/coding-standards.md) — 代码规范
 
-MIT License - 详见 [LICENSE](LICENSE) 文件
+## 许可证
+
+[MIT License](LICENSE)
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request。请参阅 [贡献指南](CONTRIBUTING.md)。

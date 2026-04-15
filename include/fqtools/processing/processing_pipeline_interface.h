@@ -40,15 +40,15 @@ struct ProcessingStatistics {
     double processingTimeMs = 0.0;  ///< 处理时间（毫秒，浮点数，保留兼容）
     double throughputMbps = 0.0;    ///< 吞吐量（MB/s）
 
-    auto getPassRate() const -> double {
+    [[nodiscard]] auto getPassRate() const -> double {
         return totalReads > 0 ? static_cast<double>(passedReads) / totalReads : 0.0;
     }
 
-    auto getFilterRate() const -> double {
+    [[nodiscard]] auto getFilterRate() const -> double {
         return totalReads > 0 ? static_cast<double>(filteredReads) / totalReads : 0.0;
     }
 
-    auto toString() const -> std::string;
+    [[nodiscard]] auto toString() const -> std::string;
 };
 
 /**

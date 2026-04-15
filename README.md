@@ -8,69 +8,121 @@
 
 English | [简体中文](README.zh-CN.md)
 
-> **Online Docs**: [https://lessup.github.io/fastq-tools/](https://lessup.github.io/fastq-tools/)
+> **在线文档**: [https://lessup.github.io/fastq-tools/](https://lessup.github.io/fastq-tools/)
 
-A modern C++ high-performance FASTQ file processing toolkit for bioinformatics QC, filtering, and statistical analysis.
+**FastQTools** 是一个现代化的 C++23 FASTQ 文件处理工具集，专为生物信息学高通量测序数据质控设计。
 
-## Quick Start
+## 核心功能
+
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `stat` | FASTQ 文件统计分析 | `FastQTools stat -i input.fq.gz -o report.txt` |
+| `filter` | 读段过滤与质量修剪 | `FastQTools filter -i input.fq -o output.fq --min-quality 20` |
+
+## 技术特性
+
+- **高性能** — 基于 Intel TBB 的 `parallel_pipeline` 并行流水线处理
+- **现代 C++** — C++23 标准，CMake 4.0+，Conan 2.x 依赖管理
+- **零拷贝 I/O** — `FastqRecord` 使用 `string_view` 实现高效内存访问
+- **全面质控** — Sanitizers、Valgrind、模糊测试、覆盖率全覆盖
+- **模块化设计** — 清晰的接口-实现分离，支持库级别集成
+
+## 快速开始
 
 ```bash
-# One-click build
+# 克隆仓库
+git clone https://github.com/LessUp/fastq-tools.git
+cd fastq-tools
+
+# 一键构建（需要 Conan）
 ./scripts/core/build
 
-# View help
-./build/release/bin/fqtools --help
+# 查看帮助
+./build/gcc-release/FastQTools --help
 
-# Quality control
-./build/release/bin/fqtools qc -i input.fastq -o report.json
+# 统计分析
+./build/gcc-release/FastQTools stat -i input.fastq.gz -o output.stat.txt
 
-# Filtering
-./build/release/bin/fqtools filter -i input.fastq -o output.fastq -q 20 -l 50
+# 过滤处理
+./build/gcc-release/FastQTools filter -i input.fq.gz -o filtered.fq.gz \
+    --min-quality 20 --min-length 50
 ```
 
-## Features
+## 依赖
 
-- **Quality Control** — Per-base/per-read quality statistics, GC content, length distribution
-- **Read Filtering** — Quality threshold, length range, N-ratio, complexity filtering
-- **Statistics** — Comprehensive FASTQ metrics with JSON/HTML reports
-- **High Performance** — Multi-threaded I/O, SIMD-accelerated quality parsing
-- **Modern C++** — C++23, CMake 3.20+, Conan 2.x dependencies
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Intel oneTBB | 2022.3.0 | 并行流水线 |
+| zlib-ng | 2.3.2 | gzip 压缩/解压 |
+| libdeflate | 1.25 | 高性能 deflate |
+| cxxopts | 3.1.1 | 命令行解析 |
+| spdlog | 1.17.0 | 日志框架 |
+| fmt | 12.1.0 | 格式化库 |
+| nlohmann_json | 3.11.3 | JSON 处理 |
 
-## Tech Stack
+## 项目结构
 
-- C++23, CMake 3.20+, Conan 2.x
-- Google Test, Google Benchmark
-- zlib (compressed FASTQ support)
+```
+fastq-tools/
+├── include/fqtools/     # 公共 API 头文件
+├── src/                 # 源代码实现
+│   ├── cli/             # 命令行入口
+│   ├── io/              # FASTQ I/O
+│   ├── processing/      # 处理流水线
+│   └── statistics/      # 统计计算
+├── tests/               # 测试（unit / integration / e2e）
+├── config/              # 构建配置
+├── scripts/             # 构建与工具脚本
+├── docker/              # Docker 配置
+├── tools/               # 开发工具（benchmark / fuzz）
+├── docs/                # 项目文档
+└── changelog/           # 变更记录
+```
 
-## Build
+## 构建
 
 ```bash
-# Install dependencies
-conan install . --build=missing -of=build
+# 安装 Conan（如未安装）
+pip install conan==2.24.0
+conan profile detect --force
 
-# Build
-cmake --preset release
-cmake --build build/build/Release -j$(nproc)
+# 构建
+./scripts/core/build --compiler gcc --type Release
 
-# Run tests
-ctest --test-dir build/build/Release
+# 运行测试
+./scripts/core/test --build-dir build/gcc-release
 ```
 
-## Project Structure
+## 开发环境
 
-```text
-fastq-tools/
-├── src/                # Source code
-│   ├── core/           # Core library (parser, filter, stats)
-│   ├── cli/            # CLI entry point
-│   └── io/             # I/O layer (buffered, compressed)
-├── include/            # Public headers
-├── tests/              # Unit & integration tests
-├── benchmarks/         # Performance benchmarks
-├── scripts/            # Build & utility scripts
-└── docs/               # Documentation
+推荐使用 DevContainer 进行开发：
+
+```bash
+# VS Code: Ctrl+Shift+P → "Reopen in Container"
+# 或使用 Docker Compose
+docker compose -f docker/docker-compose.yml up dev
 ```
 
-## License
+## 性能
 
-MIT License
+基于 100K reads (150bp) 的基准测试：
+
+| 操作 | 吞吐量 |
+|------|--------|
+| FastQReader | 1696 MB/s |
+| FastQWriter | 1.76 M reads/s |
+| Filter Combined | 1.67 M reads/s |
+
+## 文档
+
+- [用户指南](docs/guide/getting-started.md) — 快速入门
+- [API 参考](docs/api/overview.md) — 编程接口
+- [开发者指南](docs/dev/architecture.md) — 架构设计
+
+## 许可证
+
+[MIT License](LICENSE)
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request。请参阅 [贡献指南](CONTRIBUTING.md)。

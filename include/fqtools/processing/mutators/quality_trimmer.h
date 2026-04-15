@@ -20,8 +20,8 @@ public:
 
     void process(fq::io::FastqRecord& read) override;
 
-    auto getName() const -> std::string;
-    auto getDescription() const -> std::string;
+    [[nodiscard]] auto getName() const -> std::string;
+    [[nodiscard]] auto getDescription() const -> std::string;
     void reset();
 
 private:
@@ -47,8 +47,8 @@ public:
 
     void process(fq::io::FastqRecord& read) override;
 
-    auto getName() const -> std::string;
-    auto getDescription() const -> std::string;
+    [[nodiscard]] auto getName() const -> std::string;
+    [[nodiscard]] auto getDescription() const -> std::string;
     void reset();
 
 private:
@@ -68,8 +68,8 @@ public:
 
     void process(fq::io::FastqRecord& read) override;
 
-    auto getName() const -> std::string;
-    auto getDescription() const -> std::string;
+    [[nodiscard]] auto getName() const -> std::string;
+    [[nodiscard]] auto getDescription() const -> std::string;
     void reset();
 
 private:

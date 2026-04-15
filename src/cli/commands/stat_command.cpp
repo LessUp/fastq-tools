@@ -4,6 +4,7 @@
 
 #include <cxxopts.hpp>
 
+#include <fqtools/logging.h>
 #include <fqtools/statistics/statistic_calculator.h>
 
 namespace fq::cli::commands {
@@ -48,9 +49,9 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
     }
 
     if (!result.count("input") || !result.count("output")) {
-        std::cerr
-            << "Error: both --input and --output options are required for the stat command.\n";
-        std::cerr << options.help() << '\n';
+        fq::logging::error(
+            "Error: both --input and --output options are required for the stat command.");
+        std::cout << options.help() << '\n';
         return 1;
     }
 
@@ -75,7 +76,7 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
         // Call run via the interface pointer
         stater->run();
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << '\n';
+        fq::logging::error("Error: {}", e.what());
         return 1;
     }
 

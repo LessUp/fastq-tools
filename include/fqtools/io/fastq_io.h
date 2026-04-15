@@ -54,7 +54,6 @@ public:
     void clear() {
         buffer_.clear();
         records_.clear();
-        remainderOffset_ = 0;
     }
 
     // 记录访问
@@ -111,7 +110,6 @@ public:
 private:
     std::vector<char> buffer_;
     std::vector<FastqRecord> records_;
-    size_t remainderOffset_ = 0;
 };
 
 }  // namespace fq::io

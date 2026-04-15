@@ -13,9 +13,9 @@ public:
     explicit MinQualityPredicate(double minQuality, int qualityEncoding = 33);
     auto evaluate(const fq::io::FastqRecord& read) const -> bool override;
 
-    auto getName() const -> std::string;
-    auto getDescription() const -> std::string;
-    auto getStatistics() const -> std::string;
+    [[nodiscard]] auto getName() const -> std::string;
+    [[nodiscard]] auto getDescription() const -> std::string;
+    [[nodiscard]] auto getStatistics() const -> std::string;
 
 private:
     double minQuality_;
@@ -32,9 +32,9 @@ public:
     explicit MinLengthPredicate(size_t minLength);
     auto evaluate(const fq::io::FastqRecord& read) const -> bool override;
 
-    auto getName() const -> std::string;
-    auto getDescription() const -> std::string;
-    auto getStatistics() const -> std::string;
+    [[nodiscard]] auto getName() const -> std::string;
+    [[nodiscard]] auto getDescription() const -> std::string;
+    [[nodiscard]] auto getStatistics() const -> std::string;
 
 private:
     size_t minLength_;
@@ -47,9 +47,9 @@ public:
     explicit MaxLengthPredicate(size_t maxLength);
     auto evaluate(const fq::io::FastqRecord& read) const -> bool override;
 
-    auto getName() const -> std::string;
-    auto getDescription() const -> std::string;
-    auto getStatistics() const -> std::string;
+    [[nodiscard]] auto getName() const -> std::string;
+    [[nodiscard]] auto getDescription() const -> std::string;
+    [[nodiscard]] auto getStatistics() const -> std::string;
 
 private:
     size_t maxLength_;
@@ -62,9 +62,9 @@ public:
     explicit MaxNRatioPredicate(double maxNRatio);
     auto evaluate(const fq::io::FastqRecord& read) const -> bool override;
 
-    auto getName() const -> std::string;
-    auto getDescription() const -> std::string;
-    auto getStatistics() const -> std::string;
+    [[nodiscard]] auto getName() const -> std::string;
+    [[nodiscard]] auto getDescription() const -> std::string;
+    [[nodiscard]] auto getStatistics() const -> std::string;
 
 private:
     double maxNRatio_;

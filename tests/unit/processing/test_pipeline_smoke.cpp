@@ -114,8 +114,8 @@ TEST(PipelineSmokeTest, AdapterTrimmerLeavesReadUntouchedWhenNoAdapterFound) {
 }
 
 TEST(PipelineSmokeTest, LengthTrimmerFromStartKeepsSuffix) {
-    fq::processing::LengthTrimmer trimmer(
-        3, fq::processing::LengthTrimmer::TrimStrategy::FromStart);
+    fq::processing::LengthTrimmer trimmer(3,
+                                          fq::processing::LengthTrimmer::TrimStrategy::FromStart);
 
     fq::io::FastqRecord read{"read1", {}, "ACGT", "IIII", "+"};
     trimmer.process(read);
@@ -125,8 +125,7 @@ TEST(PipelineSmokeTest, LengthTrimmerFromStartKeepsSuffix) {
 }
 
 TEST(PipelineSmokeTest, LengthTrimmerFromEndKeepsPrefix) {
-    fq::processing::LengthTrimmer trimmer(
-        3, fq::processing::LengthTrimmer::TrimStrategy::FromEnd);
+    fq::processing::LengthTrimmer trimmer(3, fq::processing::LengthTrimmer::TrimStrategy::FromEnd);
 
     fq::io::FastqRecord read{"read1", {}, "ACGT", "IIII", "+"};
     trimmer.process(read);

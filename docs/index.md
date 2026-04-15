@@ -37,7 +37,7 @@ hide:
 
     ---
 
-    FASTQ 读段过滤与剪切，支持质量、长度、N 比例等多维条件
+    FASTQ 读段过滤与修剪，支持质量、长度、N 比例等多维条件
 
     ```bash
     FastQTools filter -i input.fq.gz -o filtered.fq.gz \
@@ -63,7 +63,7 @@ hide:
 ./scripts/core/build
 
 # 查看帮助
-./build/clang-release/FastQTools --help
+./build/gcc-release/FastQTools --help
 
 # 统计分析
 FastQTools stat -i input.fastq.gz -o output.stat.txt
@@ -107,14 +107,12 @@ FastQTools/
 ├── include/fqtools/   # 公共 API 头文件（对外接口）
 ├── src/               # 源代码实现
 ├── tests/             # 测试（unit / integration / e2e）
-├── config/            # 构建配置（Conan profiles、sanitizers、valgrind 等）
-├── scripts/           # 构建与工具脚本（core / lib / tools）
-├── docker/            # Docker 配置（dev / prod / deploy）
-├── tools/             # 开发工具（benchmark / fuzz / data）
-├── cmake/modules/     # 自定义 CMake 模块
+├── config/            # 构建配置
+├── scripts/           # 构建与工具脚本
+├── docker/            # Docker 配置
+├── tools/             # 开发工具
 ├── docs/              # 项目文档
-├── changelog/         # 变更记录
-└── examples/          # 使用示例
+└── changelog/         # 变更记录
 ```
 
 ---

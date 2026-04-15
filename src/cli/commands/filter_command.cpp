@@ -6,6 +6,7 @@
 #include <cxxopts.hpp>
 
 #include <fqtools/fq.h>  // 公共 API Façade（包含 pipeline 接口、predicates、mutators）
+#include <fqtools/logging.h>
 #include <spdlog/spdlog.h>
 
 namespace fq::cli::commands {
@@ -79,9 +80,9 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     }
 
     if (!result.count("input") || !result.count("output")) {
-        std::cerr
-            << "Error: both --input and --output options are required for the filter command.\n";
-        std::cerr << options.help() << '\n';
+        fq::logging::error(
+            "Error: both --input and --output options are required for the filter command.");
+        std::cout << options.help() << '\n';
         return 1;
     }
 
