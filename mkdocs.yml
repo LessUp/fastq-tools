@@ -71,7 +71,7 @@ theme:
       primary: green
       accent: lime
       toggle:
-        icon: material/emerald
+        icon: material/diamond
         name: 宝石绿 / Emerald
 
   # 字体配置
