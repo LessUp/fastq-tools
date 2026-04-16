@@ -41,8 +41,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Install clang-format
         run: |
@@ -202,7 +200,9 @@ jobs:
         env:
           ASAN_OPTIONS: "detect_leaks=1:halt_on_error=1:print_stats=1"
         run: |
-          ctest --test-dir build-gcc-asan --output-on-failure -j 2
+          # Skip cmake_package_consumer test in ASan build (consumer doesn't get ASan flags)
+          ctest --test-dir build-gcc-asan --output-on-failure -j 2 \
+            --exclude-regex "cmake_package_consumer"
 
   # ===========================================================================
   # Code Coverage
@@ -264,7 +264,9 @@ jobs:
 
       - name: Run tests
         run: |
-          ctest --test-dir build-gcc-coverage --output-on-failure -j 2
+          # Skip cmake_package_consumer test in coverage build (consumer doesn't get coverage flags)
+          ctest --test-dir build-gcc-coverage --output-on-failure -j 2 \
+            --exclude-regex "cmake_package_consumer"
 
       - name: Generate coverage report
         run: |

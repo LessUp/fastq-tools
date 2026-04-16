@@ -29,3 +29,6 @@ pygments==2.18.0
 
 # 其他工具
 jinja2==3.1.4
+
+# Plotly 图表支持
+mkdocs-plotly-plugin==0.1.3
