@@ -1,22 +1,58 @@
 # CLAUDE.md — FastQTools Project Guide for Claude Code
 
-> 本文档为 Claude Code 提供项目上下文，帮助快速理解代码库并生成高质量的代码变更。
+> 本文档为 Claude Code 提供项目上下文,帮助快速理解代码库并生成高质量的代码变更。
 
 ## 项目概览
 
-**FastQTools** 是一个现代化的 FASTQ 文件处理工具集，用于生物信息学领域的高通量测序数据质控。
+**FastQTools** 是一个现代化的 FASTQ 文件处理工具集,用于生物信息学领域的高通量测序数据质控。
 
 - **语言**: C++23
 - **构建**: CMake 3.28+ / Ninja / Conan 2.x
 - **编译器**: GCC 15 + Clang 21 + libc++（开发/CI/生产统一）
 - **并发**: Intel TBB (`tbb::parallel_pipeline`)
 - **Docker**: `gcc:15.x-bookworm`（构建）/ `debian:bookworm-slim`（运行时）
-- **工具链规范**: 详见 [`docs/decisions/toolchain-policy.md`](docs/decisions/toolchain-policy.md)
+- **工具链规范**: 详见 [`specs/rfc/0002-toolchain-policy.md`](specs/rfc/0002-toolchain-policy.md)
 - **许可**: MIT
+
+## 项目哲学：规范驱动开发 (Spec-Driven Development)
+
+本项目严格遵循**规范驱动开发（Spec-Driven Development, SDD）**范式。`/specs` 目录下的规范文档是代码实现的唯一事实来源（Single Source of Truth）。
+
+### AI 工作流指令
+
+当你（AI）被要求开发功能或修复 Bug 时，**必须严格按以下工作流执行**：
+
+#### Step 1: 审查规范 (Review Specs)
+- 在编写任何代码之前，首先阅读 `/specs` 目录下相关的产品文档、RFC 和 API 定义
+- 如果用户指令与现有 Spec 冲突，应立即停止编码，指出冲突点，询问用户是否需要先更新 Spec
+
+#### Step 2: 规范优先 (Spec-First Update)
+- 如果是新功能或需要改变接口/结构，**必须首先提议修改或创建相应的 Spec 文档**
+- 等待用户确认 Spec 修改后，才能进入代码编写阶段
+
+#### Step 3: 代码实现 (Implementation)
+- 编写代码时，必须 100% 遵守 Spec 中的定义（变量命名、API 路径、数据类型、状态码等）
+- 不要擅自添加 Spec 中未定义的功能（No Gold-Plating）
+
+#### Step 4: 测试验证 (Test against Spec)
+- 根据 `/specs` 中的验收标准编写单元测试和集成测试
+- 确保测试用例覆盖 Spec 中描述的所有边界情况
+
+### 目录说明
+- `/specs/product/`：产品功能定义与验收标准
+- `/specs/rfc/`：技术设计文档（架构决策、实现方案）
+- `/specs/api/`：API 接口规范
+- `/specs/db/`：数据模型与配置规范
+- `/specs/testing/`：测试策略与约定
+
+### 代码生成规则
+- 任何 API 变更必须同步修改 `/specs/api/` 下的文档
+- 遇到不确定的技术细节，查阅 `/specs/rfc/` 下的架构约定
+- 任何修改都必须记录在 `changelog/` 目录中
 
 ## 工具链版本规范
 
-> 完整规范详见 [`docs/decisions/toolchain-policy.md`](docs/decisions/toolchain-policy.md)，以下为必须遵守的关键约束。
+> 完整规范详见 [`specs/rfc/0002-toolchain-policy.md`](specs/rfc/0002-toolchain-policy.md)，以下为必须遵守的关键约束。
 
 ### 编译器版本
 
