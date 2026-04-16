@@ -205,12 +205,12 @@ plugins:
       categories:
         - categories
         - tags
-        
-  # 图片优化
-  - optimize:
-      optimize_png: true
-      optimize_jpg: true
-      optimize_svg: true
+
+  # 图片优化 - 暂时禁用
+  # - optimize:
+  #     optimize_png: true
+  #     optimize_jpg: true
+  #     optimize_svg: true
 
 # -----------------------------------------------------------------------------
 # 扩展配置 / Extensions
