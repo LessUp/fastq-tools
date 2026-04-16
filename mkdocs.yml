@@ -480,6 +480,15 @@ copyright: >
 # 验证配置 / Validation
 # -----------------------------------------------------------------------------
 validation:
-  omitted_files: warn
+  omitted_files: info
   absolute_links: warn
   unrecognized_links: warn
+  nav:
+    omitted_files: info
+    not_found: warn
+    absolute_links: warn
+  links:
+    not_found: warn
+    absolute_links: warn
+    unrecognized_links: info
+    anchors: info
