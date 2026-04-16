@@ -1,66 +1,129 @@
-# FastQTools
+<h1 align="center">FastQTools</h1>
 
-[![CI](https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml)
-[![Deploy Docs](https://github.com/LessUp/fastq-tools/actions/workflows/pages.yml/badge.svg)](https://github.com/LessUp/fastq-tools/actions/workflows/pages.yml)
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue?logo=github)](https://lessup.github.io/fastq-tools/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![C++](https://img.shields.io/badge/C++-23-blue.svg)
+<p align="center">
+  <b>现代化 FASTQ 文件处理工具集 — 高性能生物信息学质控工具</b>
+</p>
 
-[English](README.md) | 简体中文
+<p align="center">
+  <a href="https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml">
+    <img src="https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml/badge.svg" alt="CI">
+  </a>
+  <a href="https://github.com/LessUp/fastq-tools/actions/workflows/pages.yml">
+    <img src="https://github.com/LessUp/fastq-tools/actions/workflows/pages.yml/badge.svg" alt="Docs">
+  </a>
+  <a href="https://lessup.github.io/fastq-tools/">
+    <img src="https://img.shields.io/badge/docs-GitHub%20Pages-blue?logo=github" alt="Documentation">
+  </a>
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
+  </a>
+  <img src="https://img.shields.io/badge/C++-23-blue.svg" alt="C++23">
+  <img src="https://img.shields.io/badge/version-3.1.0-green.svg" alt="Version">
+</p>
 
-> **在线文档**: [https://lessup.github.io/fastq-tools/](https://lessup.github.io/fastq-tools/)
+<p align="center">
+  <a href="README.md">简体中文</a> | <a href="README.en.md">English</a>
+</p>
 
-**FastQTools** 是一个现代化的 C++23 FASTQ 文件处理工具集，专为生物信息学高通量测序数据质控设计。
+<p align="center">
+  <a href="https://lessup.github.io/fastq-tools/" style="font-size: 1.1em;">
+    📚 <b>在线文档</b>
+  </a>
+</p>
 
-## 核心功能
+---
 
-| 命令 | 功能 | 示例 |
-|------|------|------|
-| `stat` | FASTQ 文件统计分析 | `FastQTools stat -i input.fq.gz -o report.txt` |
-| `filter` | 读段过滤与质量修剪 | `FastQTools filter -i input.fq -o output.fq --min-quality 20` |
+## ✨ 核心功能
 
-## 技术特性
+<table>
+<tr>
+<td width="50%">
 
-- **高性能** — 基于 Intel TBB 的 `parallel_pipeline` 并行流水线处理
-- **现代 C++** — C++23 标准，CMake 4.0+，Conan 2.x 依赖管理
-- **零拷贝 I/O** — `FastqRecord` 使用 `string_view` 实现高效内存访问
-- **全面质控** — Sanitizers、Valgrind、模糊测试、覆盖率全覆盖
-- **模块化设计** — 清晰的接口-实现分离，支持库级别集成
+### 📊 `stat` — 统计分析
 
-## 快速开始
+FASTQ 文件全面统计分析，输出：
+- 读段总数、长度分布
+- 碱基组成（A/T/C/G/N 比例）
+- GC 含量、Q20/Q30 百分比
 
 ```bash
-# 克隆仓库
+FastQTools stat -i input.fastq.gz -o report.txt
+```
+
+</td>
+<td width="50%">
+
+### 🔍 `filter` — 过滤与修剪
+
+读段过滤与质量修剪：
+- 质量阈值过滤
+- 长度范围筛选
+- N 碱基比例控制
+- 质量修剪（两端/5'/3'端）
+
+```bash
+FastQTools filter -i input.fq.gz -o output.fq.gz \
+  --min-quality 20 --min-length 50
+```
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🚀 快速开始
+
+```bash
+# 1. 克隆仓库
 git clone https://github.com/LessUp/fastq-tools.git
 cd fastq-tools
 
-# 一键构建（需要 Conan）
+# 2. 安装依赖
+./scripts/core/install-deps
+
+# 3. 一键构建
 ./scripts/core/build
 
-# 查看帮助
-./build/gcc-release/FastQTools --help
+# 4. 查看帮助
+./build/clang-release/FastQTools --help
 
-# 统计分析
-./build/gcc-release/FastQTools stat -i input.fastq.gz -o output.stat.txt
-
-# 过滤处理
-./build/gcc-release/FastQTools filter -i input.fq.gz -o filtered.fq.gz \
-    --min-quality 20 --min-length 50
+# 5. 运行测试
+./scripts/core/test
 ```
 
-## 依赖
+---
 
-| 依赖 | 版本 | 用途 |
-|------|------|------|
-| Intel oneTBB | 2022.3.0 | 并行流水线 |
-| zlib-ng | 2.3.2 | gzip 压缩/解压 |
-| libdeflate | 1.25 | 高性能 deflate |
-| cxxopts | 3.1.1 | 命令行解析 |
-| spdlog | 1.17.0 | 日志框架 |
-| fmt | 12.1.0 | 格式化库 |
-| nlohmann_json | 3.11.3 | JSON 处理 |
+## 📊 性能指标
 
-## 项目结构
+基于 100K reads (150bp) 的基准测试：
+
+| 操作 | 吞吐量 | 性能等级 |
+|-----------------|---------------|-----------|
+| FastQReader | 1696 MB/s | 🟢 极速 |
+| FastQWriter | 1.76 M reads/s | 🟢 极速 |
+| Filter Combined | 1.67 M reads/s | 🟢 极速 |
+| Stat Full | 302 MB/s | 🟡 高速 |
+
+> 测试环境：AMD Ryzen 9 5900X, 32GB DDR4, NVMe SSD
+
+---
+
+## 🛠️ 技术栈
+
+| 类别 | 技术 | 版本 |
+|----------------|-------------------|----------------|
+| **语言** | C++ | 23 |
+| **并行计算** | Intel oneTBB | 2022.3.0 |
+| **构建系统** | CMake | 3.28+ |
+| **包管理** | Conan | 2.x |
+| **压缩** | libdeflate/zlib-ng | 1.25/2.3.2 |
+| **日志** | spdlog | 1.17.0 |
+| **CLI 解析** | cxxopts | 3.1.1 |
+
+---
+
+## 📁 项目结构
 
 ```
 fastq-tools/
@@ -70,63 +133,43 @@ fastq-tools/
 │   ├── io/              # FASTQ I/O
 │   ├── processing/      # 处理流水线
 │   └── statistics/      # 统计计算
-├── tests/               # 测试（unit / integration / e2e）
-├── config/              # 构建配置
-├── scripts/             # 构建与工具脚本
+├── tests/               # 测试（单元/集成/端到端）
+├── docs/                # 文档（中英双语）
+├── changelog/           # 变更记录
+├── scripts/             # 构建脚本
 ├── docker/              # Docker 配置
-├── tools/               # 开发工具（benchmark / fuzz）
-├── docs/                # 项目文档
-└── changelog/           # 变更记录
+└── tools/               # 开发工具（基准测试/模糊测试）
 ```
 
-## 构建
+---
 
-```bash
-# 安装 Conan（如未安装）
-pip install conan==2.24.0
-conan profile detect --force
+## 📖 文档导航
 
-# 构建
-./scripts/core/build --compiler gcc --type Release
+| 文档 | 中文 | English |
+|------|------|---------|
+| 快速入门 | [docs/guide/getting-started.md](docs/guide/getting-started.md) | [docs/guide/getting-started.en.md](docs/guide/getting-started.en.md) |
+| CLI 参考 | [docs/guide/cli-reference.md](docs/guide/cli-reference.md) | [docs/guide/cli-reference.en.md](docs/guide/cli-reference.en.md) |
+| 架构设计 | [docs/dev/architecture.md](docs/dev/architecture.md) | [docs/dev/architecture.en.md](docs/dev/architecture.en.md) |
+| API 参考 | [docs/api/overview.md](docs/api/overview.md) | [docs/api/overview.en.md](docs/api/overview.en.md) |
 
-# 运行测试
-./scripts/core/test --build-dir build/gcc-release
-```
+**完整文档**: [https://lessup.github.io/fastq-tools/](https://lessup.github.io/fastq-tools/)
 
-## 开发环境
+---
 
-推荐使用 DevContainer 进行开发：
+## 🤝 贡献
 
-```bash
-# VS Code: Ctrl+Shift+P → "Reopen in Container"
-# 或使用 Docker Compose
-docker compose -f docker/docker-compose.yml up dev
-```
+欢迎提交 Issue 和 Pull Request！
 
-## 性能
+请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解贡献指南。
 
-基于 100K reads (150bp) 的基准测试：
+---
 
-| 操作 | 吞吐量 |
-|------|--------|
-| FastQReader | 1696 MB/s |
-| FastQWriter | 1.76 M reads/s |
-| Filter Combined | 1.67 M reads/s |
+## 📜 许可证
 
-详细报告：[docs/benchmark-reports/latest.md](docs/benchmark-reports/latest.md)
+[MIT License](LICENSE) © 2025-2026 LessUp
 
-## 文档
+---
 
-- [用户指南](docs/guide/getting-started.md) — 快速入门
-- [CLI 参考](docs/guide/cli-reference.md) — 命令行用法
-- [API 参考](docs/api/overview.md) — 编程接口
-- [开发者指南](docs/dev/architecture.md) — 架构设计
-- [编码规范](docs/dev/coding-standards.md) — 代码规范
-
-## 许可证
-
-[MIT License](LICENSE)
-
-## 贡献
-
-欢迎提交 Issue 和 Pull Request。请参阅 [贡献指南](CONTRIBUTING.md)。
+<p align="center">
+  <sub>Built with ❤️ by the LessUp team</sub>
+</p>

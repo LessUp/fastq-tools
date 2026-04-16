@@ -10,78 +10,96 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- 代码质量优化：添加 `[[nodiscard]]` 属性、移除未使用成员变量、统一日志输出
+- 🌐 **Internationalization**: Complete bilingual documentation (Chinese & English) for all user-facing docs
+- 📚 **Documentation**: Professional restructuring of docs/ directory with comprehensive bilingual support
+- 📝 **Changelog**: New standardized changelog template and professional archiving system
+- ✨ **Code Quality**: Enhanced `[[nodiscard]]` attributes across public APIs
 
 ### Changed
-- 文档全面优化重构
+- 📖 **README**: International professional optimization with better visual presentation
+- 🔧 **Docs Structure**: Reorganized navigation in mkdocs.yml for bilingual support
+- 🎨 **Code Style**: Unified logging framework usage across CLI commands
+
+### Fixed
+- 🐛 **Build**: Minor documentation workflow optimizations
 
 ---
 
-## [3.1.0] - 2025-08-01
+## [3.1.0] - 2026-04-16
+
+### Release Highlights / 发布亮点
+
+This release marks the first stable version with complete bilingual documentation support and professional project presentation.
+
+本次发布标志着首个稳定版本，提供完整的双语文档支持和专业的项目展示。
 
 ### Added
 
-**核心功能**
-- `stat` 命令：FASTQ 文件统计分析，输出碱基组成、质量分布、GC 含量等
-- `filter` 命令：读段过滤与质量修剪，支持质量阈值、长度范围、N 比例等条件
+**Core Features / 核心功能**
+- ✅ `stat` command: FASTQ file statistical analysis with base composition, quality distribution, GC content
+- ✅ `filter` command: Read filtering and quality trimming with multi-dimensional criteria support
 
-**性能优化**
-- 基于 Intel TBB 的 `parallel_pipeline` 并行流水线处理
-- `FastqRecord` 使用 `string_view` 实现零拷贝 I/O
-- libdeflate 高性能压缩/解压支持
+**Performance / 性能优化**
+- Intel TBB `parallel_pipeline` based parallel processing
+- `FastqRecord` zero-copy I/O using `string_view`
+- libdeflate high-performance compression/decompression
 
-**开发工具**
-- 完整的单元测试、集成测试、端到端测试覆盖
-- Google Benchmark 性能基准测试
-- LibFuzzer 模糊测试支持
-- ASan/TSan/UBSan Sanitizers 集成
-- Valgrind 内存检查配置
+**Development Tools / 开发工具**
+- Comprehensive unit/integration/e2e test coverage
+- Google Benchmark performance testing
+- LibFuzzer fuzzing support
+- ASan/TSan/UBSan sanitizers integration
+- Valgrind memory checking configuration
 
-**构建系统**
-- CMake 4.0+ 现代 CMake 配置
-- Conan 2.x 依赖管理
-- GCC 15 / Clang 21 编译器支持
-- CMake Presets 多配置支持
+**Build System / 构建系统**
+- CMake 3.28+ modern configuration
+- Conan 2.x dependency management
+- GCC 15 / Clang 21 compiler support
+- CMake Presets multi-configuration support
 
-**Docker 支持**
-- 开发环境镜像 (gcc:15.2-bookworm)
-- 生产部署镜像 (debian:bookworm-slim)
-- VS Code DevContainer 配置
+**Docker Support / Docker 支持**
+- Development environment image (gcc:15.2-bookworm)
+- Production deployment image (debian:bookworm-slim)
+- VS Code DevContainer configuration
 
 ### Changed
 
-- 从 C++20 升级到 C++23 标准
-- 实现接口-实现分离的模块化架构
-- 统一的错误处理和日志系统
-- MongoDB 风格命名规范
+- Language standard upgraded from C++20 to C++23
+- Implemented interface-implementation separation modular architecture
+- Unified error handling and logging system
+- MongoDB-style naming conventions
 
 ---
 
 ## [3.0.0] - 2025-07-31
 
 ### Added
-- 初始核心功能实现
-- CMake 构建系统
-- Conan 依赖管理
+- Initial core functionality implementation
+- CMake build system
+- Conan dependency management
 
 ### Changed
-- 从 C++20 模块回归传统头文件结构
-- 模块化代码架构
+- Reverted from C++20 modules to traditional header file structure
+- Modular code architecture
 
 ---
 
 ## [2.0.0] - 2024-07-29
 
 ### Added
-- 初始版本发布
-- FastQ 文件统计分析功能
-- 多线程处理支持
-- 压缩文件格式支持
-- 命令行界面
+- Initial release
+- FastQ file statistical analysis functionality
+- Multi-threaded processing support
+- Compressed file format support
+- Command-line interface
 
 ---
 
-## 变更记录
+## Change Log Index / 变更记录索引
 
-- **详细变更**：见 [`changelog/`](changelog/) 目录
-- **年度汇总**：见 [`changelog/2025-summary.md`](changelog/2025-summary.md)、[`changelog/2026-summary.md`](changelog/2026-summary.md)
+| 年份 / Year | 汇总 / Summary | 详情 / Details |
+|-------------|----------------|----------------|
+| 2026 | [Summary / 汇总](changelog/2026-summary.md) | [Archive / 归档](changelog/archive/2026/) |
+| 2025 | [Summary / 汇总](changelog/2025-summary.md) | [Archive / 归档](changelog/archive/2025/) |
+
+**Template / 模板**: [TEMPLATE.md](changelog/TEMPLATE.md)

@@ -44,6 +44,14 @@ jobs:
           cache: pip
           cache-dependency-path: requirements-docs.txt
 
+      - name: Cache MkDocs plugins
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mkdocs
+          key: mkdocs-plugins-${{ hashFiles('requirements-docs.txt') }}
+          restore-keys: |
+            mkdocs-plugins-
+
       - name: Install dependencies
         run: pip install -r requirements-docs.txt
 

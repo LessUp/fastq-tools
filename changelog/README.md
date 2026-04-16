@@ -1,85 +1,105 @@
-# Changelog 目录
+# Changelog Directory / 变更记录目录
 
+This directory manages change records for the FastQTools project.
 本目录管理 FastQTools 项目的变更记录。
 
 ---
 
-## 目录结构
+## Directory Structure / 目录结构
 
 ```
 changelog/
-├── README.md                    # 本文件
-├── 2025-summary.md              # 2025 年度汇总
-├── 2026-summary.md              # 2026 年度汇总
-├── YYYY-MM-DD-<slug>.md         # 当前月份的变更记录
-└── archive/                     # 历史变更归档
-    ├── 2025/                    # 2025 年详细变更（50 个文件）
-    └── 2026/                    # 2026 年详细变更（26 个文件）
+├── README.md                    # This file / 本文件
+├── TEMPLATE.md                  # Standard template / 标准模板
+├── CHANGELOG.md                 # Main changelog (root) / 主变更日志（根目录）
+├── 2025-summary.md              # 2025 Annual summary / 2025 年度汇总
+├── 2026-summary.md              # 2026 Annual summary / 2026 年度汇总
+├── YYYY-MM-DD-<slug>.md         # Current month changes / 当前月份变更
+└── archive/                     # Historical archive / 历史归档
+    ├── 2025/                    # 2025 detailed changes (50 files) / 2025 详细变更
+    └── 2026/                    # 2026 detailed changes / 2026 详细变更
 ```
 
 ---
 
-## 使用指南
+## Usage Guide / 使用指南
 
-### 查看变更
+### Viewing Changes / 查看变更
 
-- **年度汇总**：阅读 `YYYY-summary.md` 了解年度主要变更
-- **详细记录**：查看 `archive/YYYY/` 目录中的具体文件
-- **最新变更**：根目录的 `YYYY-MM-DD-*.md` 文件
+- **Annual Summary / 年度汇总**: Read `YYYY-summary.md` for annual major changes
+- **Detailed Records / 详细记录**: View files in `archive/YYYY/` directory
+- **Latest Changes / 最新变更**: Files `YYYY-MM-DD-*.md` in root directory
 
-### 主 CHANGELOG
+### Main Changelog / 主变更日志
 
+Root directory [`CHANGELOG.md`](../CHANGELOG.md) organized by version number, used for release notes.
 根目录 [`CHANGELOG.md`](../CHANGELOG.md) 按版本号组织，用于发布说明。
 
 ---
 
-## 编写规范
+## Writing Standards / 编写规范
 
-### 文件命名
+### File Naming / 文件命名
 
 ```
 YYYY-MM-DD-<slug>.md
 ```
 
-- **日期**：变更日期，格式 `YYYY-MM-DD`
-- **slug**：简短描述，kebab-case（全小写，连字符分隔）
+- **Date / 日期**: Change date, format `YYYY-MM-DD`
+- **slug**: Brief description, kebab-case (lowercase, hyphen-separated)
 
-### 示例
+### Examples / 示例
 
 ```
-2026-04-16-code-quality-fixes.md    ✅ 正确
+2026-04-16-code-quality-fixes.md    ✅ Correct / 正确
 2026-04-16-CodeQualityFixes.md      ❌ PascalCase
 2026-04-16-CODE-QUALITY-FIXES.md    ❌ SCREAMING_CASE
 ```
 
-### 内容模板
+### Content Template / 内容模板
+
+Use [`TEMPLATE.md`](TEMPLATE.md) as the standard format.
+使用 [`TEMPLATE.md`](TEMPLATE.md) 作为标准格式。
 
 ```markdown
-# YYYY-MM-DD 简短标题
+# YYYY-MM-DD Change Title / 简短标题
 
-## 概述
-（变更的简要描述）
+## Overview / 概述
+(Brief description of change / 变更的简要描述)
 
-## 变更详情
-（具体改了什么）
+## Details / 变更详情
+(Specific changes made / 具体改了什么)
 
-## 影响范围
-（对使用者/开发者的影响）
+## Impact / 影响范围
+(Impact on users/developers / 对使用者/开发者的影响)
+
+## Verification / 验证
+- [ ] Tests pass / 测试通过
+- [ ] Documentation updated / 文档已更新
 ```
 
 ---
 
-## 归档规则
+## Archiving Rules / 归档规则
 
-1. **当前月份**的变更保留在根目录
-2. **每月月初**将上月变更移入 `archive/YYYY/`
-3. **年度汇总**在每年年初更新
+1. **Current month** changes are kept in root directory
+2. **Beginning of each month**: Move previous month's changes to `archive/YYYY/`
+3. **Annual summary**: Update at the beginning of each year
 
 ---
 
-## 变更统计
+## Change Statistics / 变更统计
 
-| 年份 | 变更数量 | 主要主题 |
-|------|----------|----------|
-| 2025 | 50 | 架构设计、核心功能、命名规范 |
-| 2026 | 28 | 工具链升级、DevContainer、性能优化 |
+| Year / 年份 | Count / 数量 | Main Topics / 主要主题 |
+|-------------|--------------|------------------------|
+| 2025 | 50 | Architecture design, core functionality, naming conventions / 架构设计、核心功能、命名规范 |
+| 2026 | 29+ | Toolchain upgrade, DevContainer, performance optimization, documentation / 工具链升级、DevContainer、性能优化、文档完善 |
+
+---
+
+## Quick Links / 快速链接
+
+- [Template / 模板](TEMPLATE.md)
+- [Main Changelog / 主变更日志](../CHANGELOG.md)
+- [2025 Summary / 2025 汇总](2025-summary.md)
+- [2026 Summary / 2026 汇总](2026-summary.md)
