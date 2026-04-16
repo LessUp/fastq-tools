@@ -1,0 +1,556 @@
+/* =============================================================================
+   动画效果库 - FastQTools 终极动画
+   Animation Library for FastQTools
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   淡入动画 / Fade In
+   ----------------------------------------------------------------------------- */
+@keyframes fq-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fq-fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fq-fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fq-fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fq-fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   缩放动画 / Scale
+   ----------------------------------------------------------------------------- */
+@keyframes fq-zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fq-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   发光动画 / Glow
+   ----------------------------------------------------------------------------- */
+@keyframes fq-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(0, 191, 165, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 191, 165, 0.8), 
+                0 0 40px rgba(0, 229, 255, 0.4);
+  }
+}
+
+@keyframes fq-glow-text {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(0, 191, 165, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(0, 191, 165, 0.8),
+                 0 0 40px rgba(0, 229, 255, 0.6);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   滑入动画 / Slide
+   ----------------------------------------------------------------------------- */
+@keyframes fq-slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fq-slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   旋转动画 / Rotate
+   ----------------------------------------------------------------------------- */
+@keyframes fq-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fq-spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* -----------------------------------------------------------------------------
+   弹跳动画 / Bounce
+   ----------------------------------------------------------------------------- */
+@keyframes fq-bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes fq-bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   闪烁动画 / Flash
+   ----------------------------------------------------------------------------- */
+@keyframes fq-flash {
+  0%, 50%, 100% {
+    opacity: 1;
+  }
+  25%, 75% {
+    opacity: 0;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   震动动画 / Shake
+   ----------------------------------------------------------------------------- */
+@keyframes fq-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   脉冲边框 / Pulse Border
+   ----------------------------------------------------------------------------- */
+@keyframes fq-pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 191, 165, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 191, 165, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 191, 165, 0);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   渐变背景流动 / Gradient Flow
+   ----------------------------------------------------------------------------- */
+@keyframes fq-gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   扫描线效果 / Scan Line
+   ----------------------------------------------------------------------------- */
+@keyframes fq-scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   类型机效果 / Typewriter
+   ----------------------------------------------------------------------------- */
+@keyframes fq-typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes fq-blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: var(--fq-primary); }
+}
+
+/* -----------------------------------------------------------------------------
+   波纹效果 / Ripple
+   ----------------------------------------------------------------------------- */
+@keyframes fq-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   浮动效果 / Float
+   ----------------------------------------------------------------------------- */
+@keyframes fq-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   摇摆效果 / Wobble
+   ----------------------------------------------------------------------------- */
+@keyframes fq-wobble {
+  0% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-25%) rotate(-5deg);
+  }
+  30% {
+    transform: translateX(20%) rotate(3deg);
+  }
+  45% {
+    transform: translateX(-15%) rotate(-3deg);
+  }
+  60% {
+    transform: translateX(10%) rotate(2deg);
+  }
+  75% {
+    transform: translateX(-5%) rotate(-1deg);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   果冻效果 / Jelly
+   ----------------------------------------------------------------------------- */
+@keyframes fq-jelly {
+  0%, 100% {
+    transform: scale(1, 1);
+  }
+  25% {
+    transform: scale(0.9, 1.1);
+  }
+  50% {
+    transform: scale(1.1, 0.9);
+  }
+  75% {
+    transform: scale(0.95, 1.05);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   心跳效果 / Heartbeat
+   ----------------------------------------------------------------------------- */
+@keyframes fq-heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.3);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.3);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   翻转效果 / Flip
+   ----------------------------------------------------------------------------- */
+@keyframes fq-flip {
+  0% {
+    transform: perspective(400px) rotateY(0);
+  }
+  100% {
+    transform: perspective(400px) rotateY(360deg);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   滚动指示器 / Scroll Indicator
+   ----------------------------------------------------------------------------- */
+@keyframes fq-scroll-indicator {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   进度条动画 / Progress Bar
+   ----------------------------------------------------------------------------- */
+@keyframes fq-progress {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: var(--progress, 100%);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   骨架屏闪光 / Skeleton Shimmer
+   ----------------------------------------------------------------------------- */
+@keyframes fq-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   页面加载动画 / Page Load
+   ----------------------------------------------------------------------------- */
+@keyframes fq-page-load {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   悬停效果类 / Hover Effect Classes
+   ----------------------------------------------------------------------------- */
+
+/* 提升效果 */
+.fq-hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.fq-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* 缩放效果 */
+.fq-hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.fq-hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* 发光效果 */
+.fq-hover-glow {
+  transition: box-shadow 0.3s ease;
+}
+
+.fq-hover-glow:hover {
+  box-shadow: 0 0 20px rgba(0, 191, 165, 0.5);
+}
+
+/* 边框效果 */
+.fq-hover-border {
+  position: relative;
+}
+
+.fq-hover-border::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--fq-primary), var(--fq-accent));
+  transition: width 0.3s ease;
+}
+
+.fq-hover-border:hover::after {
+  width: 100%;
+}
+
+/* -----------------------------------------------------------------------------
+   动画应用类 / Animation Utility Classes
+   ----------------------------------------------------------------------------- */
+
+/* 基础动画配置 */
+.fq-animate {
+  animation-duration: 0.6s;
+  animation-fill-mode: both;
+}
+
+.fq-animate-slow {
+  animation-duration: 1s;
+}
+
+.fq-animate-fast {
+  animation-duration: 0.3s;
+}
+
+.fq-animate-infinite {
+  animation-iteration-count: infinite;
+}
+
+.fq-animate-delay-1 { animation-delay: 0.1s; }
+.fq-animate-delay-2 { animation-delay: 0.2s; }
+.fq-animate-delay-3 { animation-delay: 0.3s; }
+.fq-animate-delay-4 { animation-delay: 0.4s; }
+.fq-animate-delay-5 { animation-delay: 0.5s; }
+
+/* 具体动画 */
+.fq-fadeIn { animation-name: fq-fadeIn; }
+.fq-fadeInUp { animation-name: fq-fadeInUp; }
+.fq-fadeInDown { animation-name: fq-fadeInDown; }
+.fq-fadeInLeft { animation-name: fq-fadeInLeft; }
+.fq-fadeInRight { animation-name: fq-fadeInRight; }
+
+.fq-zoomIn { animation-name: fq-zoomIn; }
+.fq-bounce { animation-name: fq-bounce; }
+.fq-bounceIn { animation-name: fq-bounceIn; }
+.fq-pulse { animation-name: fq-pulse; }
+.fq-shake { animation-name: fq-shake; }
+.fq-flash { animation-name: fq-flash; }
+.fq-float { animation-name: fq-float; }
+.fq-jelly { animation-name: fq-jelly; }
+.fq-wobble { animation-name: fq-wobble; }
+.fq-glow { animation-name: fq-glow; }
+.fq-glow-text { animation-name: fq-glow-text; }
+.fq-heartbeat { animation-name: fq-heartbeat; }
+.fq-flip { animation-name: fq-flip; }
+
+/* -----------------------------------------------------------------------------
+   滚动触发动画 / Scroll-Triggered Animations
+   ----------------------------------------------------------------------------- */
+.fq-scroll-animate {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fq-scroll-animate.fq-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* -----------------------------------------------------------------------------
+   页面过渡动画 / Page Transition
+   ----------------------------------------------------------------------------- */
+body {
+  animation: fq-page-load 0.5s ease-out;
+}
+
+/* -----------------------------------------------------------------------------
+   性能优化 / Performance
+   ----------------------------------------------------------------------------- */
+.fq-animate,
+.fq-hover-lift,
+.fq-hover-scale,
+.fq-hover-glow,
+.fq-hover-border {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* 减少动画偏好 / Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

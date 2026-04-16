@@ -1,0 +1,479 @@
+/* =============================================================================
+   代码块终极样式 - FastQTools 专业代码展示
+   Ultimate Code Block Styles for FastQTools
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   基础代码块样式 / Base Code Block
+   ----------------------------------------------------------------------------- */
+.md-typeset pre {
+  position: relative;
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  margin: 1.5em 0;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -1px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* 代码块头部 / Code Block Header */
+.md-typeset pre::before {
+  content: attr(data-lang);
+  display: block;
+  background: linear-gradient(90deg, 
+    rgba(0, 191, 165, 0.1) 0%, 
+    rgba(0, 191, 165, 0.05) 100%);
+  color: #64ffda;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(0, 191, 165, 0.1);
+}
+
+/* 代码块窗口按钮 / Window Buttons */
+.md-typeset pre::after {
+  content: '';
+  position: absolute;
+  top: 0.6rem;
+  right: 1rem;
+  width: 12px;
+  height: 12px;
+  background: #ff5f56;
+  border-radius: 50%;
+  box-shadow: 
+    20px 0 0 #ffbd2e,
+    40px 0 0 #27c93f;
+}
+
+.md-typeset pre > code {
+  display: block;
+  padding: 1rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  background: transparent !important;
+}
+
+/* -----------------------------------------------------------------------------
+   代码高亮主题 - 赛博朋克风 / Cyberpunk Theme
+   ----------------------------------------------------------------------------- */
+/* 关键字 */
+.codehilite .k,
+.codehilite .kc,
+.codehilite .kd,
+.codehilite .kn,
+.codehilite .kp,
+.codehilite .kr,
+.codehilite .kt {
+  color: #ff79c6;
+  font-weight: 600;
+}
+
+/* 字符串 */
+.codehilite .s,
+.codehilite .sb,
+.codehilite .sc,
+.codehilite .sd,
+.codehilite .s2,
+.codehilite .se,
+.codehilite .sh,
+.codehilite .si,
+.codehilite .sx,
+.codehilite .sr,
+.codehilite .s1,
+.codehilite .ss {
+  color: #f1fa8c;
+}
+
+/* 数字 */
+.codehilite .m,
+.codehilite .mf,
+.codehilite .mh,
+.codehilite .mi,
+.codehilite .mo,
+.codehilite .il {
+  color: #bd93f9;
+}
+
+/* 注释 */
+.codehilite .c,
+.codehilite .cm,
+.codehilite .cp,
+.codehilite .c1,
+.codehilite .cs {
+  color: #6272a4;
+  font-style: italic;
+}
+
+/* 函数 */
+.codehilite .nf,
+.codehilite .nb,
+.codehilite .nc,
+.codehilite .nd,
+.codehilite .ne,
+.codehilite .ni,
+.codehilite .nl,
+.codehilite .nn,
+.codehilite .nt {
+  color: #50fa7b;
+}
+
+/* 变量 */
+.codehilite .nv,
+.codehilite .vc,
+.codehilite .vg,
+.codehilite .vi,
+.codehilite .na {
+  color: #8be9fd;
+}
+
+/* 操作符 */
+.codehilite .o,
+.codehilite .ow {
+  color: #ff79c6;
+}
+
+/* -----------------------------------------------------------------------------
+   行内代码 / Inline Code
+   ----------------------------------------------------------------------------- */
+.md-typeset code:not(pre code) {
+  background: linear-gradient(135deg, 
+    rgba(0, 191, 165, 0.15) 0%, 
+    rgba(0, 229, 255, 0.15) 100%);
+  color: #64ffda;
+  padding: 0.2em 0.5em;
+  border-radius: 6px;
+  font-size: 0.875em;
+  font-weight: 500;
+  border: 1px solid rgba(0, 191, 165, 0.2);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* -----------------------------------------------------------------------------
+   代码语言特定样式 / Language-Specific Styles
+   ----------------------------------------------------------------------------- */
+
+/* C++ */
+[data-lang="cpp"] .codehilite .k,
+[data-lang="c++"] .codehilite .k {
+  color: #ff79c6;
+}
+
+[data-lang="cpp"] .codehilite .nf,
+[data-lang="c++"] .codehilite .nf {
+  color: #50fa7b;
+}
+
+/* Python */
+[data-lang="python"] .codehilite .k,
+[data-lang="py"] .codehilite .k {
+  color: #ff79c6;
+}
+
+[data-lang="python"] .codehilite .nn,
+[data-lang="py"] .codehilite .nn {
+  color: #8be9fd;
+}
+
+/* Bash/Shell */
+[data-lang="bash"] .codehilite .k,
+[data-lang="sh"] .codehilite .k,
+[data-lang="shell"] .codehilite .k,
+[data-lang="zsh"] .codehilite .k {
+  color: #ff79c6;
+}
+
+[data-lang="bash"] .codehilite .s1,
+[data-lang="sh"] .codehilite .s1,
+[data-lang="shell"] .codehilite .s1,
+[data-lang="zsh"] .codehilite .s1 {
+  color: #f1fa8c;
+}
+
+/* YAML */
+[data-lang="yaml"] .codehilite .k,
+[data-lang="yml"] .codehilite .k {
+  color: #ff79c6;
+}
+
+/* JSON */
+[data-lang="json"] .codehilite .s2 {
+  color: #f1fa8c;
+}
+
+[data-lang="json"] .codehilite .kc {
+  color: #bd93f9;
+}
+
+/* Markdown */
+[data-lang="markdown"] .codehilite .k,
+[data-lang="md"] .codehilite .k {
+  color: #ff79c6;
+}
+
+[data-lang="markdown"] .codehilite .s,
+[data-lang="md"] .codehilite .s {
+  color: #f1fa8c;
+}
+
+/* CMake */
+[data-lang="cmake"] .codehilite .k {
+  color: #ff79c6;
+}
+
+/* Dockerfile */
+[data-lang="dockerfile"] .codehilite .k {
+  color: #ff79c6;
+}
+
+[data-lang="dockerfile"] .codehilite .nc {
+  color: #8be9fd;
+}
+
+/* -----------------------------------------------------------------------------
+   代码复制按钮 / Copy Button
+   ----------------------------------------------------------------------------- */
+.md-clipboard {
+  position: absolute;
+  top: 0.6rem;
+  right: 4rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8892b0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.md-clipboard::before {
+  content: 'copy';
+  font-family: 'Material Icons';
+  font-size: 1rem;
+}
+
+.md-clipboard:hover {
+  background: rgba(0, 191, 165, 0.1);
+  border-color: rgba(0, 191, 165, 0.3);
+  color: #64ffda;
+}
+
+.md-clipboard:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 191, 165, 0.3);
+}
+
+.md-clipboard.md-clipboard--active {
+  background: rgba(0, 200, 83, 0.2);
+  border-color: rgba(0, 200, 83, 0.4);
+  color: #00c853;
+}
+
+.md-clipboard.md-clipboard--active::before {
+  content: 'check';
+}
+
+/* -----------------------------------------------------------------------------
+   行号样式 / Line Numbers
+   ----------------------------------------------------------------------------- */
+.md-typeset .linenos {
+  background: rgba(0, 0, 0, 0.3);
+  color: #495670;
+  padding: 1rem 0.75rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  user-select: none;
+  text-align: right;
+}
+
+/* 高亮行 / Highlighted Lines */
+.md-typeset .hll {
+  background: rgba(0, 191, 165, 0.15);
+  border-left: 3px solid #00bfa5;
+  margin-left: -1rem;
+  padding-left: calc(1rem - 3px);
+  display: block;
+}
+
+/* -----------------------------------------------------------------------------
+   代码分组 / Code Groups
+   ----------------------------------------------------------------------------- */
+.md-typeset .tabbed-set.tabbed-alternate {
+  background: transparent;
+  border: none;
+}
+
+.md-typeset .tabbed-set.tabbed-alternate > .tabbed-labels {
+  background: linear-gradient(90deg, 
+    rgba(0, 191, 165, 0.1) 0%, 
+    transparent 100%);
+  border-bottom: 1px solid rgba(0, 191, 165, 0.2);
+  padding: 0 0.5rem;
+}
+
+.md-typeset .tabbed-set.tabbed-alternate > .tabbed-labels > label {
+  color: #8892b0;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.2s ease;
+}
+
+.md-typeset .tabbed-set.tabbed-alternate > .tabbed-labels > label:hover {
+  color: #e6f1ff;
+  background: rgba(0, 191, 165, 0.05);
+}
+
+.md-typeset .tabbed-set.tabbed-alternate > .tabbed-labels > label.md-tabbed__label--active {
+  color: #64ffda;
+  border-bottom-color: #00bfa5;
+  background: rgba(0, 191, 165, 0.1);
+}
+
+.md-typeset .tabbed-set.tabbed-alternate > .tabbed-content {
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 0 0 12px 12px;
+  padding: 1rem;
+}
+
+/* -----------------------------------------------------------------------------
+   终端样式 / Terminal Style
+   ----------------------------------------------------------------------------- */
+.md-typeset .terminal,
+.md-typeset [data-lang="terminal"],
+.md-typeset [data-lang="console"] {
+  background: #0a0a0a;
+}
+
+.md-typeset .terminal::before,
+.md-typeset [data-lang="terminal"]::before,
+.md-typeset [data-lang="console"]::before {
+  content: 'Terminal';
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    transparent 100%);
+  color: #e6f1ff;
+}
+
+.md-typeset .terminal .gp,
+.md-typeset [data-lang="terminal"] .gp,
+.md-typeset [data-lang="console"] .gp {
+  color: #50fa7b;
+  font-weight: 600;
+}
+
+.md-typeset .terminal .go,
+.md-typeset [data-lang="terminal"] .go,
+.md-typeset [data-lang="console"] .go {
+  color: #6272a4;
+}
+
+/* -----------------------------------------------------------------------------
+   Diff 样式 / Diff Styles
+   ----------------------------------------------------------------------------- */
+.md-typeset [data-lang="diff"] .gd,
+.md-typeset .codehilite .gd {
+  background: rgba(255, 23, 68, 0.2);
+  color: #ff1744;
+}
+
+.md-typeset [data-lang="diff"] .gi,
+.md-typeset .codehilite .gi {
+  background: rgba(0, 200, 83, 0.2);
+  color: #00c853;
+}
+
+/* -----------------------------------------------------------------------------
+   命令输出 / Command Output
+   ----------------------------------------------------------------------------- */
+.md-typeset .command-output {
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: #e6f1ff;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.md-typeset .command-output .prompt {
+  color: #50fa7b;
+  font-weight: 600;
+}
+
+.md-typeset .command-output .output {
+  color: #8892b0;
+}
+
+/* -----------------------------------------------------------------------------
+   代码注释提示 / Code Callouts
+   ----------------------------------------------------------------------------- */
+.fq-code-callout {
+  position: relative;
+  background: rgba(0, 191, 165, 0.1);
+  border-left: 4px solid #00bfa5;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.85rem;
+}
+
+.fq-code-callout-icon {
+  color: #64ffda;
+  margin-right: 0.5rem;
+}
+
+/* -----------------------------------------------------------------------------
+   文件名标签 / Filename Labels
+   ----------------------------------------------------------------------------- */
+.md-typeset .filename {
+  display: inline-block;
+  background: linear-gradient(135deg, 
+    rgba(0, 191, 165, 0.2) 0%, 
+    rgba(0, 229, 255, 0.2) 100%);
+  color: #64ffda;
+  padding: 0.3em 0.8em;
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  border: 1px solid rgba(0, 191, 165, 0.3);
+}
+
+/* -----------------------------------------------------------------------------
+   响应式优化 / Responsive
+   ----------------------------------------------------------------------------- */
+@media screen and (max-width: 768px) {
+  .md-typeset pre::after {
+    display: none;
+  }
+  
+  .md-typeset pre::before {
+    padding-right: 3rem;
+  }
+  
+  .md-clipboard {
+    right: 0.5rem;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  
+  .md-typeset pre > code {
+    font-size: 0.8rem;
+  }
+}

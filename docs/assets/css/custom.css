@@ -1,0 +1,591 @@
+/* =============================================================================
+   FastQTools 自定义样式 - 终极美丽版
+   Ultimate Custom CSS for FastQTools Documentation
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   CSS 变量定义 / CSS Variables
+   ----------------------------------------------------------------------------- */
+:root {
+  /* 主色调 - 科技感青绿色 */
+  --fq-primary: #00bfa5;
+  --fq-primary-light: #64ffda;
+  --fq-primary-dark: #008e76;
+  --fq-secondary: #00695c;
+  
+  /* 强调色 */
+  --fq-accent: #00e5ff;
+  --fq-accent-light: #80ffff;
+  --fq-accent-dark: #00b2cc;
+  
+  /* 功能色 */
+  --fq-success: #00c853;
+  --fq-warning: #ffd600;
+  --fq-error: #ff1744;
+  --fq-info: #2979ff;
+  
+  /* 背景色 */
+  --fq-bg-gradient-start: #0a192f;
+  --fq-bg-gradient-end: #112240;
+  
+  /* 文字 */
+  --fq-text-primary: #e6f1ff;
+  --fq-text-secondary: #8892b0;
+  --fq-text-muted: #495670;
+  
+  /* 间距 */
+  --fq-spacing-xs: 0.25rem;
+  --fq-spacing-sm: 0.5rem;
+  --fq-spacing-md: 1rem;
+  --fq-spacing-lg: 1.5rem;
+  --fq-spacing-xl: 2rem;
+  
+  /* 圆角 */
+  --fq-radius-sm: 4px;
+  --fq-radius-md: 8px;
+  --fq-radius-lg: 12px;
+  --fq-radius-xl: 16px;
+  
+  /* 阴影 */
+  --fq-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --fq-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --fq-shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.2);
+  --fq-shadow-glow: 0 0 20px rgba(0, 191, 165, 0.3);
+  
+  /* 过渡 */
+  --fq-transition-fast: 150ms ease;
+  --fq-transition-normal: 300ms ease;
+  --fq-transition-slow: 500ms ease;
+}
+
+/* -----------------------------------------------------------------------------
+   全局样式 / Global Styles
+   ----------------------------------------------------------------------------- */
+.md-typeset {
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.md-typeset h1 {
+  font-weight: 700;
+  font-size: 2.2em;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--fq-primary) 0%, var(--fq-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.md-typeset h2 {
+  font-weight: 600;
+  font-size: 1.6em;
+  border-bottom: 2px solid var(--md-primary-fg-color--transparent);
+  padding-bottom: 0.3em;
+  margin-top: 1.5em;
+}
+
+.md-typeset h3 {
+  font-weight: 600;
+  font-size: 1.3em;
+  color: var(--fq-primary);
+}
+
+/* -----------------------------------------------------------------------------
+   自定义首屏 Hero / Hero Section
+   ----------------------------------------------------------------------------- */
+.md-header {
+  backdrop-filter: blur(12px) saturate(180%);
+  background: rgba(10, 25, 47, 0.85) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.md-header__title {
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* 导航栏激活状态 */
+.md-tabs__item--active .md-tabs__link {
+  background: linear-gradient(135deg, var(--fq-primary) 0%, var(--fq-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 600;
+}
+
+/* -----------------------------------------------------------------------------
+   侧边栏美化 / Sidebar Beautification
+   ----------------------------------------------------------------------------- */
+.md-sidebar {
+  background: linear-gradient(180deg, 
+    var(--fq-bg-gradient-start) 0%, 
+    var(--fq-bg-gradient-end) 100%);
+}
+
+.md-sidebar__scrollwrap {
+  scrollbar-width: thin;
+  scrollbar-color: var(--fq-primary) transparent;
+}
+
+.md-sidebar__scrollwrap::-webkit-scrollbar {
+  width: 4px;
+}
+
+.md-sidebar__scrollwrap::-webkit-scrollbar-thumb {
+  background: var(--fq-primary);
+  border-radius: 2px;
+}
+
+.md-nav__link {
+  border-radius: var(--fq-radius-sm);
+  transition: var(--fq-transition-fast);
+}
+
+.md-nav__link:hover {
+  background: rgba(0, 191, 165, 0.1);
+  color: var(--fq-primary-light);
+}
+
+.md-nav__link--active {
+  background: linear-gradient(90deg, 
+    rgba(0, 191, 165, 0.2) 0%, 
+    transparent 100%);
+  border-left: 3px solid var(--fq-primary);
+  padding-left: 0.6rem !important;
+  color: var(--fq-primary-light);
+  font-weight: 600;
+}
+
+/* -----------------------------------------------------------------------------
+   内容卡片样式 / Content Cards
+   ----------------------------------------------------------------------------- */
+.md-typeset .admonition {
+  border-radius: var(--fq-radius-md);
+  border-left-width: 4px;
+  box-shadow: var(--fq-shadow-md);
+  transition: var(--fq-transition-normal);
+}
+
+.md-typeset .admonition:hover {
+  box-shadow: var(--fq-shadow-lg);
+  transform: translateY(-2px);
+}
+
+.md-typeset .admonition.note {
+  border-left-color: var(--fq-info);
+  background: linear-gradient(135deg, 
+    rgba(41, 121, 255, 0.1) 0%, 
+    rgba(41, 121, 255, 0.05) 100%);
+}
+
+.md-typeset .admonition.tip {
+  border-left-color: var(--fq-success);
+  background: linear-gradient(135deg, 
+    rgba(0, 200, 83, 0.1) 0%, 
+    rgba(0, 200, 83, 0.05) 100%);
+}
+
+.md-typeset .admonition.warning {
+  border-left-color: var(--fq-warning);
+  background: linear-gradient(135deg, 
+    rgba(255, 214, 0, 0.1) 0%, 
+    rgba(255, 214, 0, 0.05) 100%);
+}
+
+.md-typeset .admonition.danger {
+  border-left-color: var(--fq-error);
+  background: linear-gradient(135deg, 
+    rgba(255, 23, 68, 0.1) 0%, 
+    rgba(255, 23, 68, 0.05) 100%);
+}
+
+/* -----------------------------------------------------------------------------
+   代码块美化 / Code Blocks
+   ----------------------------------------------------------------------------- */
+.md-typeset pre {
+  border-radius: var(--fq-radius-md);
+  box-shadow: var(--fq-shadow-md);
+  background: #1e1e3f !important;
+}
+
+.md-typeset code {
+  border-radius: var(--fq-radius-sm);
+  padding: 0.2em 0.4em;
+  font-size: 0.9em;
+  background: rgba(0, 191, 165, 0.1);
+  color: var(--fq-primary-light);
+}
+
+.md-typeset pre > code {
+  background: transparent;
+  padding: 0;
+}
+
+/* 代码行号 */
+.md-typeset .linenos {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 代码复制按钮 */
+.md-clipboard {
+  color: var(--fq-text-secondary);
+  transition: var(--fq-transition-fast);
+}
+
+.md-clipboard:hover {
+  color: var(--fq-primary);
+}
+
+.md-clipboard:focus,
+.md-clipboard:active {
+  color: var(--fq-success);
+}
+
+/* -----------------------------------------------------------------------------
+   表格美化 / Tables
+   ----------------------------------------------------------------------------- */
+.md-typeset table {
+  border-radius: var(--fq-radius-md);
+  overflow: hidden;
+  box-shadow: var(--fq-shadow-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.md-typeset table th {
+  background: linear-gradient(135deg, 
+    var(--fq-primary-dark) 0%, 
+    var(--fq-secondary) 100%);
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.85em;
+}
+
+.md-typeset table tr:nth-child(even) {
+  background: rgba(0, 191, 165, 0.03);
+}
+
+.md-typeset table tr:hover {
+  background: rgba(0, 191, 165, 0.08);
+}
+
+.md-typeset table td {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* -----------------------------------------------------------------------------
+   按钮样式 / Buttons
+   ----------------------------------------------------------------------------- */
+.md-typeset .md-button {
+  border-radius: var(--fq-radius-md);
+  padding: 0.65em 1.5em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.85em;
+  transition: var(--fq-transition-normal);
+  border: 2px solid transparent;
+}
+
+.md-typeset .md-button--primary {
+  background: linear-gradient(135deg, var(--fq-primary) 0%, var(--fq-accent) 100%);
+  box-shadow: var(--fq-shadow-glow);
+}
+
+.md-typeset .md-button--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 191, 165, 0.4);
+}
+
+.md-typeset .md-button:not(.md-button--primary) {
+  border-color: var(--fq-primary);
+  color: var(--fq-primary);
+}
+
+.md-typeset .md-button:not(.md-button--primary):hover {
+  background: rgba(0, 191, 165, 0.1);
+  border-color: var(--fq-primary-light);
+  color: var(--fq-primary-light);
+}
+
+/* -----------------------------------------------------------------------------
+   标签页样式 / Tabs
+   ----------------------------------------------------------------------------- */
+.md-typeset .tabbed-set {
+  border-radius: var(--fq-radius-md);
+  background: var(--fq-bg-gradient-end);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.md-typeset .tabbed-labels {
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.md-typeset .tabbed-labels > label {
+  font-weight: 500;
+  color: var(--fq-text-secondary);
+  padding: 0.75em 1.25em;
+  transition: var(--fq-transition-fast);
+}
+
+.md-typeset .tabbed-labels > label:hover {
+  color: var(--fq-text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.md-typeset .tabbed-labels > label.md-tabbed__label--active {
+  color: var(--fq-primary);
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    rgba(0, 191, 165, 0.1) 100%);
+  border-bottom: 2px solid var(--fq-primary);
+}
+
+/* -----------------------------------------------------------------------------
+   进度条 / Progress Bar
+   ----------------------------------------------------------------------------- */
+.md-typeset .progress-label {
+  font-weight: 600;
+  color: var(--fq-text-primary);
+}
+
+.md-typeset progress {
+  border-radius: var(--fq-radius-sm);
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.md-typeset progress::-webkit-progress-bar {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--fq-radius-sm);
+}
+
+.md-typeset progress::-webkit-progress-value {
+  background: linear-gradient(90deg, var(--fq-primary) 0%, var(--fq-accent) 100%);
+  border-radius: var(--fq-radius-sm);
+}
+
+/* -----------------------------------------------------------------------------
+   搜索框美化 / Search
+   ----------------------------------------------------------------------------- */
+.md-search__input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--fq-radius-md);
+  backdrop-filter: blur(10px);
+  transition: var(--fq-transition-normal);
+}
+
+.md-search__input:hover,
+.md-search__input:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--fq-primary);
+  box-shadow: var(--fq-shadow-glow);
+}
+
+.md-search-result mark {
+  background: rgba(0, 191, 165, 0.3);
+  color: var(--fq-primary-light);
+}
+
+/* -----------------------------------------------------------------------------
+   页脚美化 / Footer
+   ----------------------------------------------------------------------------- */
+.md-footer {
+  background: linear-gradient(180deg, 
+    var(--fq-bg-gradient-end) 0%, 
+    var(--fq-bg-gradient-start) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.md-footer-meta {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.md-footer__link {
+  transition: var(--fq-transition-fast);
+}
+
+.md-footer__link:hover {
+  color: var(--fq-primary);
+}
+
+/* -----------------------------------------------------------------------------
+   返回顶部按钮 / Back to Top
+   ----------------------------------------------------------------------------- */
+.md-top {
+  background: linear-gradient(135deg, var(--fq-primary) 0%, var(--fq-accent) 100%);
+  box-shadow: var(--fq-shadow-glow);
+  transition: var(--fq-transition-normal);
+}
+
+.md-top:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 191, 165, 0.4);
+}
+
+/* -----------------------------------------------------------------------------
+   Mermaid 图表 / Mermaid Diagrams
+   ----------------------------------------------------------------------------- */
+.mermaid {
+  background: var(--fq-bg-gradient-end);
+  border-radius: var(--fq-radius-md);
+  padding: var(--fq-spacing-md);
+}
+
+/* -----------------------------------------------------------------------------
+   数学公式 / Math Formulas
+   ----------------------------------------------------------------------------- */
+.arithmatex {
+  font-size: 1.1em;
+}
+
+/* -----------------------------------------------------------------------------
+   滚动条美化 / Scrollbar
+   ----------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--fq-bg-gradient-start);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--fq-primary-dark);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fq-primary);
+}
+
+/* -----------------------------------------------------------------------------
+   网格卡片 / Grid Cards (Homepage)
+   ----------------------------------------------------------------------------- */
+.md-typeset .grid.cards {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.md-typeset .grid.cards > * {
+  background: linear-gradient(135deg, 
+    rgba(0, 191, 165, 0.05) 0%, 
+    rgba(0, 229, 255, 0.05) 100%);
+  border: 1px solid rgba(0, 191, 165, 0.1);
+  border-radius: var(--fq-radius-lg);
+  padding: 1.5rem;
+  transition: var(--fq-transition-normal);
+}
+
+.md-typeset .grid.cards > *:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--fq-shadow-glow);
+  border-color: var(--fq-primary);
+}
+
+.md-typeset .grid.cards h3 {
+  margin-top: 0;
+  color: var(--fq-primary-light);
+}
+
+/* -----------------------------------------------------------------------------
+   暗色模式特定样式 / Dark Mode Specific
+   ----------------------------------------------------------------------------- */
+[data-md-color-scheme="slate"] {
+  --md-default-fg-color: #e6f1ff;
+  --md-default-bg-color: #0a192f;
+  --md-code-bg-color: #1e1e3f;
+  --md-code-fg-color: #e6f1ff;
+}
+
+/* -----------------------------------------------------------------------------
+   打印样式 / Print Styles
+   ----------------------------------------------------------------------------- */
+@media print {
+  .md-header,
+  .md-footer,
+  .md-sidebar,
+  .md-tabs,
+  .md-search,
+  .md-top {
+    display: none !important;
+  }
+  
+  .md-main__inner {
+    margin-top: 0;
+  }
+  
+  .md-content {
+    margin-left: 0;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   响应式优化 / Responsive
+   ----------------------------------------------------------------------------- */
+@media screen and (max-width: 76.1875em) {
+  .md-typeset h1 {
+    font-size: 1.8em;
+  }
+  
+  .md-typeset h2 {
+    font-size: 1.4em;
+  }
+  
+  .md-typeset .grid.cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   动画关键帧 / Animations
+   ----------------------------------------------------------------------------- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--fq-primary);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--fq-primary), 0 0 40px var(--fq-accent);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   特殊效果类 / Utility Classes
+   ----------------------------------------------------------------------------- */
+.fq-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.fq-fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.fq-gradient-text {
+  background: linear-gradient(135deg, var(--fq-primary) 0%, var(--fq-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.fq-highlight {
+  background: linear-gradient(120deg, rgba(0, 191, 165, 0.2) 0%, rgba(0, 229, 255, 0.2) 100%);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+}
