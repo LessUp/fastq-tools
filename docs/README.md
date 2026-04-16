@@ -1,91 +1,89 @@
-# FastQTools 文档中心
+# Documentation
 
-> 本目录包含 FastQTools 项目的所有文档资源，按受众和用途组织。
+This directory contains development and user documentation for FastQTools.
 
----
+> **Note**: Specification documents have been moved to `/specs` at the project root. See [specs/README.md](../../specs/README.md) for the new structure.
 
-## 目录结构
+## Directory Structure
 
 ```
 docs/
-├── index.md                           # 文档首页
-├── README.md                          # 本文件
-│
-├── guide/                             # 用户指南
-│   ├── getting-started.md             # 快速开始
-│   ├── cli-reference.md               # CLI 参考
-│   ├── configuration.md               # 配置管理
-│   └── deployment.md                  # 部署指南
-│
-├── dev/                               # 开发者文档
-│   ├── architecture.md                # 架构设计
-│   ├── design.md                      # 核心设计
-│   ├── build.md                       # 构建指南
-│   ├── testing.md                     # 测试策略
-│   ├── coding-standards.md            # 编码规范
-│   ├── git-guidelines.md              # Git 规范
-│   ├── quality-tools.md               # 质量工具
-│   ├── benchmark-guide.md             # 性能基准
-│   ├── devcontainer.md                # DevContainer
-│   └── migration.md                   # 迁移指南
-│
-├── api/                               # API 参考
-│   ├── overview.md                    # API 概览
-│   ├── io.md                          # IO 模块
-│   ├── processing.md                  # 处理流水线
-│   ├── statistics.md                  # 统计分析
-│   └── core.md                        # 核心工具
-│
-├── decisions/                         # 架构决策记录
-│   └── toolchain-policy.md            # 工具链规范
-│
-├── specs/                             # 功能规格
-│   └── ...
-│
-├── benchmark-reports/                 # 基准测试报告
-│   └── ...
-│
-└── archive/                           # 归档文档
-    └── ...
+├── guide/                # User guides and tutorials
+│   ├── getting-started.md       # Quick start guide
+│   ├── cli-reference.md         # CLI command reference
+│   ├── configuration.md         # Configuration guide
+│   └── deployment.md            # Deployment guide
+├── dev/                  # Developer documentation
+│   ├── architecture.md          # Architecture overview
+│   ├── design.md                # Design principles
+│   ├── build.md                 # Build instructions
+│   ├── testing.md               # Testing guide
+│   ├── coding-standards.md      # Coding conventions
+│   ├── quality-tools.md         # Quality tooling guide
+│   ├── devcontainer.md          # DevContainer setup
+│   ├── migration.md             # Migration guides
+│   └── benchmark-guide.md       # Benchmark guide
+├── api/                  # API reference (detailed)
+│   ├── overview.md              # API overview
+│   ├── core.md                  # Core module API
+│   ├── io.md                    # I/O module API
+│   ├── processing.md            # Processing module API
+│   └── statistics.md            # Statistics module API
+├── performance/          # Performance reports
+│   └── benchmark-report.md      # Latest benchmark report
+├── benchmark-reports/    # Historical benchmark data
+│   ├── latest.md                # Latest summary
+│   └── *.json                   # Historical results
+├── archive/              # Archived documents
+│   └── 2026-04-17-migrated-to-specs/  # Old specs and decisions
+└── assets/               # Static assets
+    ├── css/                     # Custom stylesheets
+    └── javascripts/             # Custom scripts
 ```
 
----
+## Document Types
 
-## 快速导航
+### User Guides (`guide/`)
 
-### 新用户入门
+Target audience: **End users** of FastQTools CLI.
 
-1. [快速开始](guide/getting-started.md) — 安装、构建、运行
-2. [CLI 参考](guide/cli-reference.md) — stat / filter 用法
-3. [部署指南](guide/deployment.md) — Docker 与生产环境
+- Getting started tutorials
+- CLI command reference
+- Configuration examples
+- Deployment instructions
 
-### 开发者指南
+### Developer Docs (`dev/`)
 
-1. [架构设计](dev/architecture.md) — 分层架构、技术栈
-2. [构建指南](dev/build.md) — 编译器、CMake、Conan
-3. [测试策略](dev/testing.md) — 单元测试、集成测试
-4. [编码规范](dev/coding-standards.md) — 命名、格式
-5. [Git 规范](dev/git-guidelines.md) — 提交规范
-6. [质量工具](dev/quality-tools.md) — Sanitizers、Valgrind
+Target audience: **Contributors** to FastQTools.
 
-### API 参考
+- Architecture and design decisions
+- Build and test instructions
+- Coding standards
+- Development workflow
 
-1. [API 概览](api/overview.md) — 模块架构
-2. [IO 模块](api/io.md) — FastqReader / FastqWriter
-3. [处理流水线](api/processing.md) — Pipeline / Predicate / Mutator
-4. [统计分析](api/statistics.md) — StatisticCalculator
-5. [核心工具](api/core.md) — Configuration / Error / Logging
+### API Reference (`api/`)
 
----
+Target audience: **Developers** integrating FastQTools library.
 
-## 文档维护
+- Detailed function signatures
+- Usage examples
+- Parameter descriptions
+- Return value specifications
 
-### 命名约定
+> For interface specifications (the Single Source of Truth), see `/specs/api/` instead.
 
-- 文档文件：`kebab-case.md`
-- 目录名：`lowercase`
+### Performance Reports (`performance/`, `benchmark-reports/`)
 
-### 语言
+Target audience: **Maintainers** monitoring performance.
 
-- 主要使用中文
-- 提供英文版本时命名为 `*.en.md`
+- Latest benchmark results
+- Historical performance data
+- Regression analysis
+
+## Related Documents
+
+- **[Specifications](../../specs/)**: Product requirements, RFCs, API specs
+- **[AGENTS.md](../../AGENTS.md)**: Agent workflow guide
+- **[CLAUDE.md](../../CLAUDE.md)**: AI assistant guide
+- **[CONTRIBUTING.md](../../CONTRIBUTING.md)**: Contribution guidelines
+- **[README.md](../../README.md)**: Project overview
