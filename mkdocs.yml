@@ -173,7 +173,6 @@ plugins:
         - zh
         - en
       separator: '[\s\-\.]+'
-      min_search_length: 2
       
   # 代码压缩
   - minify:
