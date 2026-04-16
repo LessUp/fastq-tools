@@ -151,21 +151,22 @@ extra_javascript:
 # 插件配置 - 全部开启 / Plugins
 # -----------------------------------------------------------------------------
 plugins:
-  # i18n 国际化
-  - i18n:
-      default_language: zh
-      languages:
-        zh:
-          name: 中文 (Chinese)
-          site_name: FastQTools
-          build: true
-          default: true
-        en:
-          name: English
-          site_name: FastQTools
-          build: true
-      material_alternate: true
-      
+  # i18n 国际化 - 暂时禁用
+  # - i18n:
+  #     docs_structure: suffix
+  #     default_language: zh
+  #     languages:
+  #       zh:
+  #         name: 中文 (Chinese)
+  #         site_name: FastQTools
+  #         build: true
+  #         default: true
+  #       en:
+  #         name: English
+  #         site_name: FastQTools
+  #         build: true
+  #     material_alternate: true
+
   # 搜索增强
   - search:
       lang:
