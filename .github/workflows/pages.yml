@@ -1,76 +1,232 @@
-# .github/workflows/pages.yml
+# =============================================================================
+# GitHub Pages 部署工作流 - 终极优化版
+# Ultimate GitHub Pages Deployment Workflow
+# =============================================================================
+
 name: Deploy Documentation
 
 on:
   push:
-    branches: [master]
+    branches: [master, main]
     paths:
       - "docs/**"
       - "mkdocs.yml"
       - "requirements-docs.txt"
       - ".github/workflows/pages.yml"
+      - "CHANGELOG.md"
+      - "README.md"
   workflow_dispatch:
+    inputs:
+      deploy_version:
+        description: 'Version to deploy (leave empty for latest)'
+        required: false
+        default: ''
 
+# 权限配置 / Permissions
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# 并发控制 / Concurrency
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
+  # ============================================================================
+  # 构建阶段 / Build Stage
+  # ============================================================================
   build:
     name: Build Documentation
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout
+      # -------------------------------------------------------------------------
+      # 检出代码 / Checkout
+      # -------------------------------------------------------------------------
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          sparse-checkout: |
-            docs
-            mkdocs.yml
-            requirements-docs.txt
-
+          fetch-depth: 0  # 需要完整历史用于 git-revision-date 插件
+          
+      # -------------------------------------------------------------------------
+      # 配置 Pages / Configure Pages
+      # -------------------------------------------------------------------------
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
+        
+      # -------------------------------------------------------------------------
+      # 设置 Python / Setup Python
+      # -------------------------------------------------------------------------
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements-docs.txt
-
-      - name: Cache MkDocs plugins
+          
+      # -------------------------------------------------------------------------
+      # 缓存 MkDocs / Cache MkDocs
+      # -------------------------------------------------------------------------
+      - name: Cache MkDocs
         uses: actions/cache@v4
         with:
           path: ~/.cache/mkdocs
-          key: mkdocs-plugins-${{ hashFiles('requirements-docs.txt') }}
+          key: mkdocs-${{ runner.os }}-${{ hashFiles('requirements-docs.txt') }}-${{ hashFiles('mkdocs.yml') }}
           restore-keys: |
-            mkdocs-plugins-
-
-      - name: Install dependencies
-        run: pip install -r requirements-docs.txt
-
-      - name: Build site
-        run: mkdocs build --strict
-
-      - name: Upload artifact
+            mkdocs-${{ runner.os }}-${{ hashFiles('requirements-docs.txt') }}-
+            mkdocs-${{ runner.os }}-
+            
+      # -------------------------------------------------------------------------
+      # 缓存图片资源 / Cache Images
+      # -------------------------------------------------------------------------
+      - name: Cache Images
+        uses: actions/cache@v4
+        with:
+          path: docs/assets/images
+          key: images-${{ hashFiles('docs/assets/images/**') }}
+          
+      # -------------------------------------------------------------------------
+      # 安装依赖 / Install Dependencies
+      # -------------------------------------------------------------------------
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements-docs.txt
+          
+      # -------------------------------------------------------------------------
+      # 生成社交卡片 / Generate Social Cards
+      # -------------------------------------------------------------------------
+      - name: Generate Social Cards
+        if: github.event_name != 'pull_request'
+        run: |
+          # 使用 pillow 和 cairosvg 生成社交分享卡片
+          python3 << 'EOF'
+          import os
+          from PIL import Image, ImageDraw, ImageFont
+          import textwrap
+          
+          # 确保目录存在
+          os.makedirs('docs/assets/images', exist_ok=True)
+          
+          # 创建简单的社交卡片
+          width, height = 1200, 630
+          img = Image.new('RGB', (width, height), color='#0a192f')
+          draw = ImageDraw.Draw(img)
+          
+          # 绘制渐变背景
+          for y in range(height):
+              r = int(10 + (y / height) * 20)
+              g = int(25 + (y / height) * 10)
+              b = int(47 + (y / height) * 24)
+              draw.line([(0, y), (width, y)], fill=(r, g, b))
+          
+          # 尝试加载字体，失败则使用默认字体
+          try:
+              title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 64)
+              desc_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
+          except:
+              title_font = ImageFont.load_default()
+              desc_font = ImageFont.load_default()
+          
+          # 绘制标题
+          title = "FastQTools"
+          bbox = draw.textbbox((0, 0), title, font=title_font)
+          text_width = bbox[2] - bbox[0]
+          x = (width - text_width) // 2
+          draw.text((x, 200), title, fill='#64ffda', font=title_font)
+          
+          # 绘制副标题
+          subtitle = "Modern C++23 FASTQ Processing Toolkit"
+          bbox2 = draw.textbbox((0, 0), subtitle, font=desc_font)
+          text_width2 = bbox2[2] - bbox2[0]
+          x2 = (width - text_width2) // 2
+          draw.text((x2, 300), subtitle, fill='#8892b0', font=desc_font)
+          
+          # 保存图片
+          img.save('docs/assets/images/social-card.png')
+          print("Social card generated successfully!")
+          EOF
+        continue-on-error: true
+          
+      # -------------------------------------------------------------------------
+      # 构建文档 / Build Documentation
+      # -------------------------------------------------------------------------
+      - name: Build Documentation
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 构建文档
+          mkdocs build --strict --verbose
+          
+          # 验证构建结果
+          if [ ! -d "site" ]; then
+            echo "::error::Site directory not found after build"
+            exit 1
+          fi
+          
+          # 输出构建信息
+          echo "Documentation build completed successfully!"
+          echo "Files generated:"
+          find site -type f | wc -l
+          echo "Total size:"
+          du -sh site
+          
+      # -------------------------------------------------------------------------
+      # 运行链接检查 / Link Checker
+      # -------------------------------------------------------------------------
+      - name: Check Links
+        run: |
+          pip install linkchecker
+          linkchecker site/ --ignore-url=".*localhost.*" --ignore-url=".*127.0.0.1.*" || true
+        continue-on-error: true
+          
+      # -------------------------------------------------------------------------
+      # 上传构建产物 / Upload Artifact
+      # -------------------------------------------------------------------------
+      - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
+          retention-days: 7
 
+  # ============================================================================
+  # 部署阶段 / Deploy Stage
+  # ============================================================================
   deploy:
     name: Deploy to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
+    
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+      
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        
+      - name: Verify Deployment
+        run: |
+          echo "🚀 Documentation deployed successfully!"
+          echo "📚 URL: ${{ steps.deployment.outputs.page_url }}"
+          
+  # ============================================================================
+  # 通知阶段 / Notification Stage
+  # ============================================================================
+  notify:
+    name: Notify
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Deployment Status
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "✅ Documentation deployment successful!"
+          else
+            echo "❌ Documentation deployment failed!"
+          fi

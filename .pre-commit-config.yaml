@@ -1,0 +1,73 @@
+# FastQTools Pre-commit Configuration
+# 使用方法: pip install pre-commit && pre-commit install
+
+repos:
+  # ==================== 代码格式化 ====================
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v19.0.0
+    hooks:
+      - id: clang-format
+        types_or: [c++, c]
+        files: \.(cpp|h|hpp|c|cc|cxx)$
+
+  # ==================== 提交信息规范 ====================
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.0.0
+    hooks:
+      - id: commitlint
+        stages: [commit-msg]
+        additional_dependencies: ['@commitlint/config-conventional']
+
+  # ==================== 通用检查 ====================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # 禁止提交包含合并冲突标记的文件
+      - id: check-merge-conflict
+      # 检查 JSON 语法
+      - id: check-json
+      # 检查 YAML 语法
+      - id: check-yaml
+      # 检查是否有大文件 (默认 500KB)
+      - id: check-added-large-files
+        args: ['--maxkb=1024']
+      # 确保文件以换行符结尾
+      - id: end-of-file-fixer
+        types_or: [c++, c, python, yaml, json]
+      # 移除尾随空白
+      - id: trailing-whitespace
+        types_or: [c++, c, python, yaml, json, markdown]
+      # 检查 TOML 语法
+      - id: check-toml
+
+  # ==================== Python 检查 ====================
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3.12
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+
+  # ==================== Shell 检查 ====================
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.5
+    hooks:
+      - id: shellcheck
+        args: ['-e', 'SC1091']  # 忽略 "Not following" 警告
+
+# ==================== 全局配置 ====================
+default_language_version:
+  python: python3.12
+
+ci:
+  autofix_prs: true
+  autofix_commit_msg: 'style: auto-fix pre-commit issues'
+  autoupdate_branch: ''
+  autoupdate_commit_msg: 'chore: pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: [shellcheck]  # CI 中跳过 shellcheck（需要额外安装）
