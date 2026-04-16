@@ -1,3 +1,14 @@
+/**
+ * @file fastq_reader.h
+ * @brief FASTQ 文件读取器接口
+ * @details 提供高性能的 FASTQ 文件读取功能，支持 gzip 压缩文件自动解压。
+ *
+ * @author LessUp
+ * @date 2023-10-05
+ * @version 1.0
+ * @copyright (c) 2023 LessUp. All rights reserved.
+ */
+
 #pragma once
 
 #include <cstddef>
@@ -8,15 +19,52 @@
 
 namespace fq::io {
 
+/**
+ * @brief FASTQ 读取器配置选项
+ * @details 用于配置 FastqReader 的行为参数
+ */
 struct FastqReaderOptions {
-    size_t readChunkBytes = 1 * 1024 * 1024;
-    size_t zlibBufferBytes = 128 * 1024;
-    size_t maxBufferBytes = 0;
+    size_t readChunkBytes = 1 * 1024 * 1024;  ///< 单次读取的字节数（默认 1MB）
+    size_t zlibBufferBytes = 128 * 1024;      ///< zlib 解压缓冲区大小（字节）
+    size_t maxBufferBytes = 0;                ///< 最大缓冲区大小（0 表示无限制）
 };
 
+/**
+ * @brief FASTQ 文件读取器
+ * @details 高性能 FASTQ 文件读取器，支持以下特性：
+ *   - 自动 gzip 解压（根据文件扩展名 .gz）
+ *   - 批量读取优化
+ *   - 零拷贝记录访问（FastqRecord 指向 Batch 内存）
+ *   - 可配置的缓冲区大小
+ *   - 移动语义支持
+ *
+ * @note 该类不可拷贝，仅支持移动
+ *
+ * @example
+ * @code
+ * fq::io::FastqReader reader("input.fq.gz");
+ * fq::io::FastqBatch batch;
+ * while (reader.nextBatch(batch)) {
+ *     for (const auto& record : batch) {
+ *         // 处理记录
+ *     }
+ *     batch.clear();
+ * }
+ * @endcode
+ */
 class FastqReader {
 public:
+    /**
+     * @brief 构造读取器（默认选项）
+     * @param path 输入文件路径（支持 .gz 扩展名自动解压）
+     */
     explicit FastqReader(const std::string& path);
+
+    /**
+     * @brief 构造读取器（自定义选项）
+     * @param path 输入文件路径
+     * @param options 读取器配置选项
+     */
     FastqReader(const std::string& path, const FastqReaderOptions& options);
     ~FastqReader();
 
@@ -28,12 +76,24 @@ public:
     FastqReader(FastqReader&&) noexcept;
     FastqReader& operator=(FastqReader&&) noexcept;
 
+    /**
+     * @brief 读取下一批 FASTQ 记录
+     * @param batch 输出批次（会被清空后填充）
+     * @return 是否成功读取到数据（false 表示文件结束或错误）
+     */
     [[nodiscard]] auto nextBatch(FastqBatch& batch) -> bool;
 
+    /**
+     * @brief 读取下一批 FASTQ 记录（限制记录数）
+     * @param batch 输出批次（会被清空后填充）
+     * @param maxRecords 最大读取记录数
+     * @return 是否成功读取到数据
+     */
     [[nodiscard]] auto nextBatch(FastqBatch& batch, size_t maxRecords) -> bool;
 
     /**
      * @brief 检查文件是否成功打开
+     * @return 文件打开状态
      */
     [[nodiscard]] auto isOpen() const -> bool;
 

@@ -1,11 +1,10 @@
 /**
  * @file statistic_interface.h
- * @brief Defines the i_statistic interface for statistic operations.
+ * @brief 统计计算接口定义
+ * @details 定义用于 FASTQ 数据统计分析的接口。
  *
- * This file contains the declaration of the i_statistic interface, which is used
- * for defining various statistical operations on fastq data. The interface provides
- * an abstract method for processing batches of fastq information by computing
- * specific statistics.
+ * 统计接口（StatisticInterface）用于实现各种统计分析，
+ * 例如：碱基组成分布、质量分数分布、GC 含量等。
  *
  * @author LessUp
  * @date 2023-10-05
@@ -19,32 +18,43 @@
 
 namespace fq::statistic {
 
-// Forward declaration
+// 前向声明
 struct FqStatisticResult;
 
 /**
- * @brief Abstract interface for statistic computation.
+ * @brief 统计计算接口
+ * @details 抽象基类，用于定义统计分析操作。
  *
- * The IStatistic class provides an interface for implementing various
- * statistical analyses over batches of fastq data. Users must implement
- * the stat() method to define the specific statistics to be computed.
+ * 实现自定义统计：
+ * @code
+ * class MyStatistic : public StatisticInterface {
+ * public:
+ *     auto calculateStats(const Batch& batch) -> Result override {
+ *         Result result;
+ *         // 计算统计信息
+ *         return result;
+ *     }
+ * };
+ * @endcode
  *
- * @note Users should extend this interface to perform custom statistical
- *       analysis relevant to their use case.
+ * @note 所有统计实现必须重写 calculateStats() 方法
  */
 class StatisticInterface {
 public:
-    using Batch = fq::io::FastqBatch;
-    using Result = FqStatisticResult;
+    using Batch = fq::io::FastqBatch;   ///< 批次类型别名
+    using Result = FqStatisticResult;   ///< 结果类型别名
+
     virtual ~StatisticInterface() = default;
+
     /**
-     * @brief Compute statistics for a given batch of fastq data.
-     * @param batch The batch of fastq information to process.
-     * @return The computed statistics.
+     * @brief 计算批次统计信息
+     * @param batch 待统计的 FASTQ 数据批次
+     * @return 统计结果
      */
     virtual auto calculateStats(const Batch& batch) -> Result = 0;
 };
 
+/// @brief StatisticInterface 的类型别名（兼容旧代码）
 using IStatistic = StatisticInterface;
 
 }  // namespace fq::statistic
