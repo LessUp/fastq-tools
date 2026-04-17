@@ -90,9 +90,9 @@ benchmark-*.json
 benchmark-*.csv
 
 # ===== Benchmark 结果 =====
-docs/benchmark-reports/results/*.json
-docs/benchmark-reports/charts/*.svg
-docs/benchmark-reports/charts/*.png
-docs/benchmark-reports/data/*.fastq
-docs/benchmark-reports/data/*.fastq.gz
-!docs/benchmark-reports/baselines/*.json
+docs/performance/benchmark-reports/results/*.json
+docs/performance/benchmark-reports/charts/*.svg
+docs/performance/benchmark-reports/charts/*.png
+docs/performance/benchmark-reports/data/*.fastq
+docs/performance/benchmark-reports/data/*.fastq.gz
+!docs/performance/benchmark-reports/baselines/*.json
