@@ -144,7 +144,7 @@ extra_css:
 extra_javascript:
   - assets/javascripts/custom.js
   - assets/javascripts/analytics.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  # polyfill.io 已移除，现代浏览器原生支持 ES6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 # -----------------------------------------------------------------------------
@@ -328,9 +328,9 @@ extra:
             using our <a href="...">feedback form</a>.
             
   # 版权声明
-  copyright: 
+  copyright:
     text: Copyright &copy; 2025-2026 LessUp
-    link: /license/
+    link: https://github.com/LessUp/fastq-tools/blob/master/LICENSE
     
   # 生成器隐藏
   generator: false
@@ -347,16 +347,16 @@ nav:
   # ==========================================
   - 中文:
       - 首页: index.md
-      
+
       - 用户指南:
-          - guide/index.md
+          - 概览: guide/index.md
           - 快速入门: guide/getting-started.md
           - CLI 参考: guide/cli-reference.md
           - 配置管理: guide/configuration.md
           - 部署指南: guide/deployment.md
-          
+
       - 开发者指南:
-          - dev/index.md
+          - 概览: dev/index.md
           - 架构设计: dev/architecture.md
           - 核心设计: dev/design.md
           - 构建指南: dev/build.md
@@ -367,68 +367,41 @@ nav:
           - Benchmark 指南: dev/benchmark-guide.md
           - DevContainer: dev/devcontainer.md
           - 脚本迁移: dev/migration.md
-          
+
       - API 参考:
-          - api/index.md
-          - 概览: api/overview.md
+          - 概览: api/index.md
+          - API 概览: api/overview.md
           - IO 模块: api/io.md
           - 处理流水线: api/processing.md
           - 统计分析: api/statistics.md
           - 核心工具: api/core.md
-          
-      - 决策记录:
-          - decisions/index.md
-          - 工具链策略: decisions/toolchain-policy.md
-          - 优化决策: decisions/optimization-decisions.md
-          - 项目评估: decisions/project-assessment.md
-          
-      - 规格说明:
-          - specs/index.md
-          - 总体规划:
-              - specs/steering/index.md
-              - 产品规格: specs/steering/product.md
-              - 技术规格: specs/steering/tech.md
-              - 结构规格: specs/steering/structure.md
-          - 高级 C++ 工具链:
-              - specs/advanced-cpp-tooling/index.md
-              - 需求: specs/advanced-cpp-tooling/requirements.md
-              - 设计: specs/advanced-cpp-tooling/design.md
-              - 任务: specs/advanced-cpp-tooling/tasks.md
-          - Benchmark 系统:
-              - specs/benchmark-system/index.md
-              - 需求: specs/benchmark-system/requirements.md
-              - 设计: specs/benchmark-system/design.md
-              - 任务: specs/benchmark-system/tasks.md
-          - 内存池:
-              - specs/memory-pool/index.md
-              - 需求: specs/memory-pool/requirements.md
-              - 设计: specs/memory-pool/design.md
-              - 任务: specs/memory-pool/tasks.md
-              
+
       - 基准测试报告: performance/benchmark-reports/latest.md
-      
+
+      - 贡献指南: contributing.md
+      - 更新日志: changelog.md
+
       - 归档:
-          - archive/index.md
-          - 文档审计: archive/audit-2025-12-29-docs-style.md
-          - 实现进度: archive/implementation-progress.md
-          - 需求文档: archive/requirements.md
-          - 思考过程: archive/thinking-process.md
+          - 概览: archive/index.md
+          - 迁移说明: archive/2026-04-17-migrated-to-specs/migration-notice.md
+          - 文档审计: archive/2025-12-29-audit/audit-2025-12-29-docs-style.md
+          - 实现进度: archive/2025-12-29-audit/implementation-progress.md
 
   # ==========================================
   # English Docs
   # ==========================================
   - English:
       - Home: index.en.md
-      
+
       - User Guide:
-          - guide/index.en.md
+          - Overview: guide/index.en.md
           - Getting Started: guide/getting-started.en.md
           - CLI Reference: guide/cli-reference.en.md
           - Configuration: guide/configuration.en.md
           - Deployment: guide/deployment.en.md
-          
+
       - Developer Guide:
-          - dev/index.en.md
+          - Overview: dev/index.en.md
           - Architecture: dev/architecture.en.md
           - Core Design: dev/design.en.md
           - Build Guide: dev/build.en.md
@@ -439,35 +412,24 @@ nav:
           - Benchmark Guide: dev/benchmark-guide.en.md
           - DevContainer: dev/devcontainer.en.md
           - Script Migration: dev/migration.en.md
-          
+
       - API Reference:
-          - api/index.en.md
-          - Overview: api/overview.en.md
+          - Overview: api/index.en.md
+          - API Overview: api/overview.en.md
           - IO Module: api/io.en.md
           - Processing Pipeline: api/processing.en.md
           - Statistics: api/statistics.en.md
           - Core Utilities: api/core.en.md
-          
-      - Decisions:
-          - decisions/index.en.md
-          - Toolchain Policy: decisions/toolchain-policy.md
-          - Optimization Decisions: decisions/optimization-decisions.md
-          - Project Assessment: decisions/project-assessment.md
-          
-      - Specifications:
-          - specs/index.en.md
-          - Steering:
-              - Product Spec: specs/steering/product.md
-              - Technical Spec: specs/steering/tech.md
-              - Structure Spec: specs/steering/structure.md
-              
+
       - Benchmark Reports: performance/benchmark-reports/latest.md
-      
+
+      - Contributing Guide: contributing.en.md
+      - Changelog: changelog.en.md
+
       - Archive:
-          - archive/index.en.md
-          - Docs Audit: archive/audit-2025-12-29-docs-style.md
-          - Implementation Progress: archive/implementation-progress.md
-          - Thinking Process: archive/thinking-process.md
+          - Overview: archive/index.en.md
+          - Migration Notice: archive/2026-04-17-migrated-to-specs/migration-notice.en.md
+          - Docs Audit: archive/2025-12-29-audit/audit-2025-12-29-docs-style.md
 
 # -----------------------------------------------------------------------------
 # 版权信息 / Copyright

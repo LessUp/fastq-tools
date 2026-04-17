@@ -72,8 +72,8 @@ FastQTools stat -i input.fastq.gz -o output.stat.txt
 FastQTools filter -i input.fq.gz -o filtered.fq.gz --min-quality 20 --min-length 50
 ```
 
-[:octicons-arrow-right-24: Getting Started Guide](guide/getting-started.md){ .md-button .md-button--primary }
-[:octicons-book-24: API Reference](api/overview.md){ .md-button }
+[:octicons-arrow-right-24: Getting Started Guide](guide/getting-started.en.md){ .md-button .md-button--primary }
+[:octicons-book-24: API Reference](api/overview.en.md){ .md-button }
 
 ## Dependencies
 
