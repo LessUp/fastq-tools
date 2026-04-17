@@ -10,10 +10,10 @@
 
 ```bash
 # 构建生产镜像
-./scripts/tools/deploy --env production --action build
+./scripts/tools/release/deploy --env production --action build
 
 # 运行
-./scripts/tools/deploy --env production --action run
+./scripts/tools/release/deploy --env production --action run
 
 # 或使用 docker-compose
 docker-compose -f docker/docker-compose.yml up -d prod
@@ -23,7 +23,7 @@ docker-compose -f docker/docker-compose.yml up -d prod
 
 ```bash
 # 运行开发容器
-./scripts/tools/deploy --env development --action run
+./scripts/tools/release/deploy --env development --action run
 
 # 或使用 VS Code DevContainer
 # Ctrl+Shift+P → "Reopen in Container"
@@ -33,10 +33,10 @@ docker-compose -f docker/docker-compose.yml up -d prod
 
 ```bash
 # 构建 + 测试
-./scripts/tools/deploy --env test --action run
+./scripts/tools/release/deploy --env test --action run
 
 # 推送到镜像仓库
-./scripts/tools/deploy --action push --registry your-registry.com/fastqtools --tag v3.1.0
+./scripts/tools/release/deploy --action push --registry your-registry.com/fastqtools --tag v3.1.0
 ```
 
 ---

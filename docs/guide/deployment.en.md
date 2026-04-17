@@ -10,10 +10,10 @@ This document covers deployment options for FastQTools in Docker and production 
 
 ```bash
 # Build production image
-./scripts/tools/deploy --env production --action build
+./scripts/tools/release/deploy --env production --action build
 
 # Run
-./scripts/tools/deploy --env production --action run
+./scripts/tools/release/deploy --env production --action run
 
 # Or use docker-compose
 docker-compose -f docker/docker-compose.yml up -d prod
@@ -23,7 +23,7 @@ docker-compose -f docker/docker-compose.yml up -d prod
 
 ```bash
 # Run development container
-./scripts/tools/deploy --env development --action run
+./scripts/tools/release/deploy --env development --action run
 
 # Or use VS Code DevContainer
 # Ctrl+Shift+P → "Reopen in Container"
@@ -33,10 +33,10 @@ docker-compose -f docker/docker-compose.yml up -d prod
 
 ```bash
 # Build + Test
-./scripts/tools/deploy --env test --action run
+./scripts/tools/release/deploy --env test --action run
 
 # Push to registry
-./scripts/tools/deploy --action push --registry your-registry.com/fastqtools --tag v3.1.0
+./scripts/tools/release/deploy --action push --registry your-registry.com/fastqtools --tag v3.1.0
 ```
 
 ---

@@ -405,7 +405,7 @@ nav:
               - 设计: specs/memory-pool/design.md
               - 任务: specs/memory-pool/tasks.md
               
-      - 基准测试报告: benchmark-reports/latest.md
+      - 基准测试报告: performance/benchmark-reports/latest.md
       
       - 归档:
           - archive/index.md
@@ -461,7 +461,7 @@ nav:
               - Technical Spec: specs/steering/tech.md
               - Structure Spec: specs/steering/structure.md
               
-      - Benchmark Reports: benchmark-reports/latest.md
+      - Benchmark Reports: performance/benchmark-reports/latest.md
       
       - Archive:
           - archive/index.en.md

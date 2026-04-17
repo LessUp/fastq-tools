@@ -68,17 +68,17 @@
 
 ## 性能趋势
 
-性能趋势图表位于 `docs/benchmark-reports/charts/` 目录。
+性能趋势图表位于 `docs/performance/benchmark-reports/charts/` 目录。
 
 ## 编译器对比报告
 
 编译器对比报告用于比较 GCC 与 Clang 的基准性能，输出位置：
 
-- `docs/benchmark-reports/compiler/latest.json`
-- `docs/benchmark-reports/compiler/latest.md`
-- `docs/benchmark-reports/compiler/latest.html`
+- `docs/performance/benchmark-reports/compiler/latest.json`
+- `docs/performance/benchmark-reports/compiler/latest.md`
+- `docs/performance/benchmark-reports/compiler/latest.html`
 
-图表位于：`docs/benchmark-reports/compiler/charts/`。
+图表位于：`docs/performance/benchmark-reports/compiler/charts/`。
 
 ## 运行基准测试
 
@@ -119,8 +119,8 @@
 
 # 运行新测试并比较
 ./scripts/benchmark run
-./scripts/benchmark compare docs/benchmark-reports/baselines/v1.0.json \
-  docs/benchmark-reports/results/latest.json
+./scripts/benchmark compare docs/performance/benchmark-reports/baselines/v1.0.json \
+  docs/performance/benchmark-reports/results/latest.json
 ```
 
 ## 性能优化建议

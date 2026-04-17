@@ -125,7 +125,7 @@ Options:
 Examples:
   ./scripts/benchmark compiler
   ./scripts/benchmark compiler --benchmark-filter "Reader"
-  ./scripts/benchmark compiler --output docs/benchmark-reports/compiler/custom.json
+  ./scripts/benchmark compiler --output docs/performance/benchmark-reports/compiler/custom.json
 ```
 
 ### `benchmark visualize`
@@ -144,13 +144,13 @@ Options:
 Examples:
   ./scripts/benchmark visualize
   ./scripts/benchmark visualize --format html
-  ./scripts/benchmark visualize --input docs/benchmark-reports/compiler/latest.json
+  ./scripts/benchmark visualize --input docs/performance/benchmark-reports/compiler/latest.json
 ```
 
 ## Directory Structure
 
 ```
-docs/benchmark-reports/
+docs/performance/benchmark-reports/
 ├── baselines/         # Named baselines
 │   └── <name>.json
 ├── data/              # Test data

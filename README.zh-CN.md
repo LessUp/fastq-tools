@@ -23,7 +23,7 @@
 </p>
 
 <p align="center">
-  <a href="README.zh-CN.md">简体中文</a> | <a href="README.md">English</a>
+  <a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a>
 </p>
 
 <p align="center">
@@ -160,10 +160,8 @@ fastq-tools/
 ## 🤝 贡献 / Contributing
 
 欢迎提交 Issue 和 Pull Request！
-欢迎提交 Issue 和 Pull Request！
 
 请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解贡献指南。
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ---
 
