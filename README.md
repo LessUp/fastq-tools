@@ -37,7 +37,7 @@
 
 FastQTools is a **high-performance toolkit for processing FASTQ files** (sequencing data) built with **modern C++23**. It provides:
 
-- ⚡ **Extreme Performance**: Up to **1.7 billion reads/second** with parallel TBB pipelines
+- ⚡ **Extreme Performance**: Up to **1.7M reads/second** with parallel TBB pipelines
 - 🚀 **Zero-Copy I/O**: `std::string_view`-based record handling for minimal memory overhead
 - 🔧 **Production Ready**: Comprehensive sanitizers, fuzzing, and CI/CD validation
 - 📦 **Developer Friendly**: CMake + Conan build system, clean API, and Docker support

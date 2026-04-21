@@ -10,18 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- 🌐 **Internationalization**: Complete bilingual documentation (Chinese & English) for all user-facing docs
-- 📚 **Documentation**: Professional restructuring of docs/ directory with comprehensive bilingual support
-- 📝 **Changelog**: New standardized changelog template and professional archiving system
-- ✨ **Code Quality**: Enhanced `[[nodiscard]]` attributes across public APIs
+- GitHub Release v3.1.0 with bilingual release notes
 
 ### Changed
-- 📖 **README**: International professional optimization with better visual presentation
-- 🔧 **Docs Structure**: Reorganized navigation in mkdocs.yml for bilingual support
-- 🎨 **Code Style**: Unified logging framework usage across CLI commands
+- Optimized GitHub repository description for better visibility
+- Updated GitHub topics: added `sequence-analysis`, `ngs-qc`, `fastq-processor`
+- Restructured v3.1.0 release notes: English first, Chinese second format
+- Verified all workflows are necessary and well-designed
 
 ### Fixed
-- 🐛 **Build**: Minor documentation workflow optimizations
+- Fixed performance claims in README (1.7M reads/s instead of 1.7 billion)
+- Fixed mkdocs.yml: removed non-existent custom_icons path
+- Created missing migration notice documents for archive section
 
 ---
 
@@ -36,8 +36,8 @@ This release marks the first stable version with complete bilingual documentatio
 ### Added
 
 **Core Features / 核心功能**
-- ✅ `stat` command: FASTQ file statistical analysis with base composition, quality distribution, GC content
-- ✅ `filter` command: Read filtering and quality trimming with multi-dimensional criteria support
+- `stat` command: FASTQ file statistical analysis with base composition, quality distribution, GC content
+- `filter` command: Read filtering and quality trimming with multi-dimensional criteria support
 
 **Performance / 性能优化**
 - Intel TBB `parallel_pipeline` based parallel processing
@@ -97,9 +97,9 @@ This release marks the first stable version with complete bilingual documentatio
 
 ## Change Log Index / 变更记录索引
 
-| 年份 / Year | 汇总 / Summary | 详情 / Details |
-|-------------|----------------|----------------|
-| 2026 | [Summary / 汇总](changelog/2026-summary.md) | [Archive / 归档](changelog/archive/2026/) |
-| 2025 | [Summary / 汇总](changelog/2025-summary.md) | [Archive / 归档](changelog/archive/2025/) |
+| Year | Summary | Details |
+|------|---------|---------|
+| 2026 | [Summary](changelog/2026-summary.md) | [Archive](changelog/archive/2026/) |
+| 2025 | [Summary](changelog/2025-summary.md) | [Archive](changelog/archive/2025/) |
 
-**Template / 模板**: [TEMPLATE.md](changelog/TEMPLATE.md)
+**Template**: [TEMPLATE.md](changelog/TEMPLATE.md)
