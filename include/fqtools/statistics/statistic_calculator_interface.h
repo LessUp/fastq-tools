@@ -28,17 +28,17 @@ namespace fq::statistic {
  * @details 定义统计计算任务的所有配置参数。
  */
 struct StatisticOptions {
-    std::string inputFastqPath;   ///< 输入 FASTQ 文件路径
-    std::string outputStatPath;   ///< 输出统计结果路径（JSON）
-    uint32_t batchSize = 50000;   ///< 每批次处理的记录数
+    std::string inputFastqPath;  ///< 输入 FASTQ 文件路径
+    std::string outputStatPath;  ///< 输出统计结果路径（JSON）
+    uint32_t batchSize = 50000;  ///< 每批次处理的记录数
 
-    uint32_t threadCount = 4;     ///< 并行线程数
+    uint32_t threadCount = 4;                     ///< 并行线程数
     size_t readChunkBytes = 1 * 1024 * 1024;      ///< 读取块大小（字节）
     size_t zlibBufferBytes = 128 * 1024;          ///< zlib 缓冲区大小（字节）
     size_t batchCapacityBytes = 4 * 1024 * 1024;  ///< 批次容量（字节）
-    size_t memoryLimitBytes = 0;  ///< 内存限制（0 表示无限制）
-    size_t maxInFlightBatches = 0;  ///< 最大并行批次（0 表示自动）
-    int qualityEncoding = 33;     ///< 质量编码偏移量（Phred+33）
+    size_t memoryLimitBytes = 0;                  ///< 内存限制（0 表示无限制）
+    size_t maxInFlightBatches = 0;                ///< 最大并行批次（0 表示自动）
+    int qualityEncoding = 33;                     ///< 质量编码偏移量（Phred+33）
 };
 
 /**

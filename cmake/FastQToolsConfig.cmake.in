@@ -11,6 +11,16 @@ find_dependency(libdeflate CONFIG)
 
 find_dependency(ZLIB)
 
+# Conan 提供的是 fmt::fmt-header-only，需要创建别名 fmt::fmt
+if(TARGET fmt::fmt-header-only AND NOT TARGET fmt::fmt)
+    add_library(fmt::fmt ALIAS fmt::fmt-header-only)
+endif()
+
+# Conan 提供的是 spdlog::spdlog_header_only，需要创建别名 spdlog::spdlog
+if(TARGET spdlog::spdlog_header_only AND NOT TARGET spdlog::spdlog)
+    add_library(spdlog::spdlog ALIAS spdlog::spdlog_header_only)
+endif()
+
 include("${CMAKE_CURRENT_LIST_DIR}/FastQToolsTargets.cmake")
 
 check_required_components(FastQTools)

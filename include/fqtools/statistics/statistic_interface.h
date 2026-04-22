@@ -41,8 +41,8 @@ struct FqStatisticResult;
  */
 class StatisticInterface {
 public:
-    using Batch = fq::io::FastqBatch;   ///< 批次类型别名
-    using Result = FqStatisticResult;   ///< 结果类型别名
+    using Batch = fq::io::FastqBatch;  ///< 批次类型别名
+    using Result = FqStatisticResult;  ///< 结果类型别名
 
     virtual ~StatisticInterface() = default;
 

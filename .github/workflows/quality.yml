@@ -270,7 +270,7 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          bash ./scripts/tools/coverage-report -b build-gcc-coverage -o coverage_report --xml
+          bash ./scripts/tools/analysis/coverage-report -b build-gcc-coverage -o coverage_report --xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

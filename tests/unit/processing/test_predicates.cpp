@@ -7,10 +7,10 @@
 #include "fqtools/io/fastq_io.h"
 #include "fqtools/processing/predicates.h"
 
-#include <gtest/gtest.h>
-
 #include <thread>
 #include <vector>
+
+#include <gtest/gtest.h>
 
 using namespace fq::processing;
 using namespace fq::io;
