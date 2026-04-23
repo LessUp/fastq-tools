@@ -94,13 +94,138 @@ get_project_root() {
     echo "$(dirname "$script_dir")"
 }
 
+# 标准化 Sanitizer 名称
+normalize_sanitizer() {
+    local sanitizer="${1:-}"
+
+    case "${sanitizer,,}" in
+        "")
+            echo ""
+            ;;
+        asan|address)
+            echo "asan"
+            ;;
+        tsan|thread)
+            echo "tsan"
+            ;;
+        ubsan|undefined)
+            echo "ubsan"
+            ;;
+        msan|memory)
+            echo "msan"
+            ;;
+        *)
+            log_error "Unknown sanitizer: ${sanitizer}"
+            return 1
+            ;;
+    esac
+}
+
+# 根据脚本选项推导默认的 CMake preset（若存在）
+get_default_cmake_preset() {
+    local compiler="${1:-clang}"
+    local build_type="${2:-Release}"
+    local sanitizer="${3:-}"
+    local coverage="${4:-false}"
+
+    if [[ "${coverage}" == "true" ]]; then
+        if [[ "${compiler}" == "gcc" ]]; then
+            echo "coverage"
+            return 0
+        fi
+        return 1
+    fi
+
+    if [[ -n "${sanitizer}" ]]; then
+        if [[ "${compiler}" == "clang" ]]; then
+            case "${sanitizer}" in
+                asan|tsan|ubsan|msan)
+                    echo "clang-${sanitizer}"
+                    return 0
+                    ;;
+            esac
+        fi
+        return 1
+    fi
+
+    case "${build_type}" in
+        Debug|Release|RelWithDebInfo)
+            echo "${compiler}-$(echo "${build_type}" | tr '[:upper:]' '[:lower:]')"
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 # 获取构建目录名称（与 CMakePresets.json binaryDir 一致）
 get_build_dir() {
     local compiler="${1:-clang}"
-    local build_type="${2:-release}"
+    local build_type="${2:-Release}"
+    local sanitizer="${3:-}"
+    local coverage="${4:-false}"
+    local preset="${5:-}"
     local build_type_lower
+
+    if [[ -n "${preset}" ]]; then
+        echo "build/${preset}"
+        return 0
+    fi
+
+    if [[ "${coverage}" == "true" ]]; then
+        echo "build/coverage"
+        return 0
+    fi
+
+    if [[ -n "${sanitizer}" ]]; then
+        echo "build/${compiler}-${sanitizer}"
+        return 0
+    fi
+
     build_type_lower=$(echo "$build_type" | tr '[:upper:]' '[:lower:]')
     echo "build/${compiler}-${build_type_lower}"
+}
+
+# 查找可用的编译数据库目录
+find_compile_commands_dir() {
+    local preferred_dir="${1:-}"
+    local candidate=""
+    local candidates=(
+        build/clang-debug
+        build/clang-release
+        build/clang-asan
+        build/clang-tsan
+        build/clang-ubsan
+        build/clang-msan
+        build/gcc-debug
+        build/gcc-release
+        build/gcc-relwithdebinfo
+        build/coverage
+    )
+
+    if [[ -n "${preferred_dir}" && -f "${preferred_dir}/compile_commands.json" ]]; then
+        echo "${preferred_dir}"
+        return 0
+    fi
+
+    for candidate in "${candidates[@]}"; do
+        if [[ -f "${candidate}/compile_commands.json" ]]; then
+            echo "${candidate}"
+            return 0
+        fi
+    done
+
+    if [[ -d build ]]; then
+        while IFS= read -r candidate; do
+            if [[ -n "${candidate}" ]]; then
+                echo "${candidate}"
+                return 0
+            fi
+        done < <(find build -mindepth 1 -maxdepth 2 -type f -name "compile_commands.json" -printf '%h\n' 2>/dev/null | sort)
+    fi
+
+    return 1
 }
 
 # 检查命令是否存在
@@ -446,10 +571,10 @@ get_tool_version() {
 # 导出所有公共函数供子 shell 使用
 export -f log_info log_success log_warning log_error log_debug
 export -f log_separator log_section
-export -f get_project_root get_build_dir
+export -f get_project_root get_build_dir get_default_cmake_preset find_compile_commands_dir
 export -f require_command require_commands
 export -f ensure_directory safe_remove_dir check_executable
-export -f get_cpu_cores normalize_build_type normalize_compiler
+export -f get_cpu_cores normalize_build_type normalize_compiler normalize_sanitizer
 export -f show_step start_timer end_timer
 export -f detect_os detect_distro confirm version_ge
 export -f check_tool check_tools_list get_tool_version

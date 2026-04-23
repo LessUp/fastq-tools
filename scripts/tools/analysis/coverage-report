@@ -1,17 +1,17 @@
 #!/bin/bash
-# scripts/tools/coverage-report
+# scripts/tools/analysis/coverage-report
 #
 # Generate code coverage report for FastQTools
 #
 # Usage:
-#   ./scripts/tools/coverage-report                    # Default: build/clang-debug
-#   ./scripts/tools/coverage-report -b build/gcc-debug  # Specific build dir
-#   ./scripts/tools/coverage-report --xml              # Generate Cobertura XML
+#   ./scripts/tools/analysis/coverage-report                    # Default: build/clang-debug
+#   ./scripts/tools/analysis/coverage-report -b build/gcc-debug  # Specific build dir
+#   ./scripts/tools/analysis/coverage-report --xml              # Generate Cobertura XML
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/../lib/common.sh"
+source "${SCRIPT_DIR}/../../lib/common.sh"
 
 # =============================================================================
 # Configuration

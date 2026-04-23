@@ -1,11 +1,11 @@
 #!/bin/bash
 # =============================================================================
-# scripts/tools/package-release
+# scripts/tools/release/package-release
 # =============================================================================
 # 创建 FastQTools 可分发包
 #
 # 用法:
-#   ./scripts/tools/package-release [选项]
+#   ./scripts/tools/release/package-release [选项]
 #
 # 选项:
 #   -v, --version VERSION   版本号 (默认: dev)
@@ -17,10 +17,10 @@
 #
 # 示例:
 #   # 本地构建并打包
-#   ./scripts/tools/package-release -v 3.1.0
+#   ./scripts/tools/release/package-release -v 3.1.0
 #
 #   # 指定构建目录（CI 场景）
-#   ./scripts/tools/package-release -v 3.1.0 -t linux-aarch64-musl-static -b build/release --no-build
+#   ./scripts/tools/release/package-release -v 3.1.0 -t linux-aarch64-musl-static -b build/release --no-build
 #
 # 产物命名:
 #   fastqtools-v{VERSION}-{TARGET}.tar.gz

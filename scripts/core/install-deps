@@ -1,12 +1,12 @@
 #!/bin/bash
-# scripts/install-deps
+# scripts/core/install-deps
 # 
 # FastQTools 依赖安装脚本 - 统一管理开发和运行时依赖
 # 
 # 使用示例:
-#   ./scripts/install-deps                   # 安装开发依赖
-#   ./scripts/install-deps --runtime         # 仅运行时依赖
-#   ./scripts/install-deps --all             # 所有依赖
+#   ./scripts/core/install-deps              # 安装开发依赖
+#   ./scripts/core/install-deps --runtime    # 仅运行时依赖
+#   ./scripts/core/install-deps --all        # 所有依赖
 
 set -euo pipefail
 
@@ -41,10 +41,10 @@ print_usage() {
   -h, --help                显示此帮助信息
 
 示例:
-  ./scripts/install-deps                    # 开发环境完整安装
-  ./scripts/install-deps --runtime          # 生产环境最小安装
-  ./scripts/install-deps --all --verbose    # 安装所有依赖并显示详细信息
-  ./scripts/install-deps --dry-run          # 预览将要安装的包
+  ./scripts/core/install-deps               # 开发环境完整安装
+  ./scripts/core/install-deps --runtime     # 生产环境最小安装
+  ./scripts/core/install-deps --all --verbose # 安装所有依赖并显示详细信息
+  ./scripts/core/install-deps --dry-run     # 预览将要安装的包
 EOF
 }
 
@@ -366,9 +366,9 @@ if [[ "$DRY_RUN" == "false" ]]; then
         dev|all)
             log_info "开发环境已就绪"
             log_info "下一步:"
-            log_info "  1. 构建项目: ./scripts/build"
-            log_info "  2. 运行测试: ./scripts/test"
-            log_info "  3. 检查代码: ./scripts/lint check"
+            log_info "  1. 构建项目: ./scripts/core/build"
+            log_info "  2. 运行测试: ./scripts/core/test"
+            log_info "  3. 检查代码: ./scripts/core/lint check"
             ;;
     esac
 else

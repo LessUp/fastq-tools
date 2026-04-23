@@ -1,15 +1,15 @@
 #!/bin/bash
-# scripts/build
+# scripts/core/build
 # 
 # FastQTools 统一构建脚本 - 支持开发和生产环境
 # 
 # 使用示例:
-#   ./scripts/build                           # 默认: clang Release
-#   ./scripts/build --compiler gcc --type Debug
-#   ./scripts/build --dev                     # 开发模式: Debug + 详细输出
-#   ./scripts/build --sanitizer asan         # AddressSanitizer 构建
-#   ./scripts/build --coverage               # 覆盖率构建
-#   ./scripts/build --preset clang-release   # 使用 CMake preset
+#   ./scripts/core/build                           # 默认: clang Release
+#   ./scripts/core/build --compiler gcc --type Debug
+#   ./scripts/core/build --dev                     # 开发模式: Debug + 详细输出
+#   ./scripts/core/build --sanitizer asan          # AddressSanitizer 构建
+#   ./scripts/core/build --coverage                # 覆盖率构建
+#   ./scripts/core/build --preset clang-release    # 使用 CMake preset
 
 set -euo pipefail
 
@@ -35,6 +35,10 @@ JOBS=$(get_cpu_cores)
 
 BUILD_DIR_DEFAULTED=false
 CONAN_COMPILER_VERSION_OVERRIDE=""
+COMPILER_EXPLICIT=false
+BUILD_TYPE_EXPLICIT=false
+ACTIVE_PRESET=""
+USE_CMAKE_PRESET=false
 
 # =============================================================================
 # 帮助信息
@@ -48,7 +52,7 @@ print_usage() {
   -t, --type TYPE           构建类型: Debug | Release | RelWithDebInfo | Coverage (默认: Release)
   -d, --dev                 开发模式 (等同于 --type Debug --verbose)
   -j, --jobs N              并行编译任务数 (默认: 自动检测)
-  -b, --build-dir DIR       自定义构建目录 (默认: build-<compiler>-<type>)
+  -b, --build-dir DIR       自定义构建目录 (默认: 与 preset/构建模式一致)
   
 高级选项:
   -s, --sanitizer TYPE      启用 Sanitizer: asan | tsan | ubsan
@@ -67,12 +71,12 @@ print_usage() {
   -h, --help                显示此帮助信息
 
 示例:
-  ./scripts/build                                    # 标准 Release 构建
-  ./scripts/build --dev                              # 快速开发构建
-  ./scripts/build -c gcc -t Debug -v                 # GCC Debug 详细输出
-  ./scripts/build --sanitizer asan                   # AddressSanitizer 构建
-  ./scripts/build --coverage                         # 覆盖率构建
-  ./scripts/build --preset clang-release --clean     # 使用 preset 并清理
+  ./scripts/core/build                               # 标准 Release 构建
+  ./scripts/core/build --dev                         # 快速开发构建
+  ./scripts/core/build -c gcc -t Debug -v            # GCC Debug 详细输出
+  ./scripts/core/build --sanitizer asan              # AddressSanitizer 构建
+  ./scripts/core/build --coverage                    # 覆盖率构建
+  ./scripts/core/build --preset clang-release --clean # 使用 preset 并清理
 EOF
 }
 
@@ -83,15 +87,18 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         -c|--compiler)
             COMPILER=$(normalize_compiler "$2") || exit 1
+            COMPILER_EXPLICIT=true
             shift 2
             ;;
         -t|--type)
             BUILD_TYPE=$(normalize_build_type "$2") || exit 1
+            BUILD_TYPE_EXPLICIT=true
             shift 2
             ;;
         -d|--dev)
             DEV_MODE=true
             BUILD_TYPE="Debug"
+            BUILD_TYPE_EXPLICIT=true
             VERBOSE=true
             shift
             ;;
@@ -104,12 +111,13 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -s|--sanitizer)
-            SANITIZER="$2"
+            SANITIZER=$(normalize_sanitizer "$2") || exit 1
             shift 2
             ;;
         -C|--coverage)
             COVERAGE=true
-            BUILD_TYPE="Coverage"
+            BUILD_TYPE="Debug"
+            BUILD_TYPE_EXPLICIT=true
             shift
             ;;
         --static-analysis)
@@ -152,6 +160,92 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+if [[ "$BUILD_TYPE" == "Coverage" ]]; then
+    COVERAGE=true
+    BUILD_TYPE="Debug"
+fi
+
+if [[ "$COVERAGE" == "true" && "$COMPILER_EXPLICIT" == "false" ]]; then
+    COMPILER="gcc"
+fi
+
+if [[ -n "$SANITIZER" && "$BUILD_TYPE_EXPLICIT" == "false" ]]; then
+    BUILD_TYPE="Debug"
+fi
+
+if [[ -n "$PRESET" && -n "$BUILD_DIR" ]]; then
+    log_error "--preset 不能与 --build-dir 同时使用"
+    exit 1
+fi
+
+case "$PRESET" in
+    gcc-debug)
+        COMPILER="gcc"
+        BUILD_TYPE="Debug"
+        SANITIZER=""
+        COVERAGE=false
+        ;;
+    gcc-release)
+        COMPILER="gcc"
+        BUILD_TYPE="Release"
+        SANITIZER=""
+        COVERAGE=false
+        ;;
+    gcc-relwithdebinfo)
+        COMPILER="gcc"
+        BUILD_TYPE="RelWithDebInfo"
+        SANITIZER=""
+        COVERAGE=false
+        ;;
+    clang-debug)
+        COMPILER="clang"
+        BUILD_TYPE="Debug"
+        SANITIZER=""
+        COVERAGE=false
+        ;;
+    clang-release)
+        COMPILER="clang"
+        BUILD_TYPE="Release"
+        SANITIZER=""
+        COVERAGE=false
+        ;;
+    clang-asan)
+        COMPILER="clang"
+        BUILD_TYPE="Debug"
+        SANITIZER="asan"
+        COVERAGE=false
+        ;;
+    clang-tsan)
+        COMPILER="clang"
+        BUILD_TYPE="Debug"
+        SANITIZER="tsan"
+        COVERAGE=false
+        ;;
+    clang-ubsan)
+        COMPILER="clang"
+        BUILD_TYPE="Debug"
+        SANITIZER="ubsan"
+        COVERAGE=false
+        ;;
+    clang-msan)
+        COMPILER="clang"
+        BUILD_TYPE="Debug"
+        SANITIZER="msan"
+        COVERAGE=false
+        ;;
+    coverage)
+        COMPILER="gcc"
+        BUILD_TYPE="Debug"
+        SANITIZER=""
+        COVERAGE=true
+        ;;
+    "")
+        ;;
+    *)
+        log_warning "未知 preset: ${PRESET}，将按名称映射构建目录并继续"
+        ;;
+esac
+
 # =============================================================================
 # 环境检查
 # =============================================================================
@@ -166,7 +260,7 @@ log_section "FastQTools 构建系统"
 show_step 1 4 "检查构建环境"
 require_commands cmake ninja || {
     log_error "缺少必需的构建工具"
-    log_info "请运行: ./scripts/install-deps --dev"
+    log_info "请运行: ./scripts/core/install-deps --dev"
     exit 1
 }
 
@@ -180,17 +274,23 @@ fi
 # 配置构建目录
 # =============================================================================
 if [[ -z "$BUILD_DIR" ]]; then
-    if [[ -n "$PRESET" ]]; then
-        BUILD_DIR="build/${PRESET}"
-        BUILD_DIR_DEFAULTED=true
-    else
-        BUILD_DIR=$(get_build_dir "$COMPILER" "$BUILD_TYPE")
-        BUILD_DIR_DEFAULTED=true
+    ACTIVE_PRESET="$PRESET"
+    if [[ -z "$ACTIVE_PRESET" ]]; then
+        ACTIVE_PRESET=$(get_default_cmake_preset "$COMPILER" "$BUILD_TYPE" "$SANITIZER" "$COVERAGE" 2>/dev/null || true)
     fi
+    BUILD_DIR=$(get_build_dir "$COMPILER" "$BUILD_TYPE" "$SANITIZER" "$COVERAGE" "$ACTIVE_PRESET")
+    BUILD_DIR_DEFAULTED=true
+else
+    ACTIVE_PRESET="$PRESET"
+fi
+
+if [[ -n "$ACTIVE_PRESET" && "$BUILD_DIR_DEFAULTED" == "true" ]]; then
+    USE_CMAKE_PRESET=true
 fi
 
 log_info "项目根目录: ${PROJECT_ROOT}"
 log_info "构建目录: ${BUILD_DIR}"
+[[ -n "$ACTIVE_PRESET" ]] && log_info "CMake preset: ${ACTIVE_PRESET}"
 log_info "编译器: ${COMPILER}"
 log_info "构建类型: ${BUILD_TYPE}"
 [[ -n "$SANITIZER" ]] && log_info "Sanitizer: ${SANITIZER}"
@@ -211,13 +311,19 @@ ensure_directory "$BUILD_DIR"
 # =============================================================================
 # 构建 CMake 参数
 # =============================================================================
-CMAKE_ARGS=(
-    -S .
-    -B "$BUILD_DIR"
-    -G Ninja
-    -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
-    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-)
+CMAKE_ARGS=()
+
+if [[ "$USE_CMAKE_PRESET" == "true" ]]; then
+    CMAKE_ARGS=(--preset "$ACTIVE_PRESET")
+else
+    CMAKE_ARGS=(
+        -S .
+        -B "$BUILD_DIR"
+        -G Ninja
+        -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    )
+fi
 
 # 编译器设置
 C_COMPILER_BIN="${COMPILER}"
@@ -228,24 +334,26 @@ elif [[ "${COMPILER}" == "clang" ]]; then
     CXX_COMPILER_BIN="clang++"
 fi
 
-CMAKE_ARGS+=(
-    -DCMAKE_C_COMPILER="${C_COMPILER_BIN}"
-    -DCMAKE_CXX_COMPILER="${CXX_COMPILER_BIN}"
-)
+if [[ "$USE_CMAKE_PRESET" == "false" ]]; then
+    CMAKE_ARGS+=(
+        -DCMAKE_C_COMPILER="${C_COMPILER_BIN}"
+        -DCMAKE_CXX_COMPILER="${CXX_COMPILER_BIN}"
+    )
+fi
 
 # Sanitizer
 if [[ -n "$SANITIZER" ]]; then
     case "$SANITIZER" in
-        asan|address)
+        asan)
             CMAKE_ARGS+=(-DENABLE_ASAN=ON)
             ;;
-        tsan|thread)
+        tsan)
             CMAKE_ARGS+=(-DENABLE_TSAN=ON)
             ;;
-        ubsan|undefined)
+        ubsan)
             CMAKE_ARGS+=(-DENABLE_UBSAN=ON)
             ;;
-        msan|memory)
+        msan)
             if [[ "${COMPILER}" != "clang" ]]; then
                 log_error "MemorySanitizer (msan) 仅支持 Clang 编译器"
                 exit 1
@@ -349,7 +457,7 @@ if command -v conan &>/dev/null; then
         CMAKE_ARGS+=(-DCMAKE_TOOLCHAIN_FILE="${TOOLCHAIN_PATH}")
     fi
 else
-    log_warning "未检测到 conan，若依赖缺失请先安装 conan 或运行 ./scripts/install-deps --dev"
+    log_warning "未检测到 conan，若依赖缺失请先安装 conan 或运行 ./scripts/core/install-deps --dev"
 fi
 
 # =============================================================================
@@ -373,10 +481,18 @@ log_success "CMake 配置完成"
 # =============================================================================
 show_step 3 4 "编译项目"
 
-BUILD_ARGS=(
-    --build "$BUILD_DIR"
-    --parallel "$JOBS"
-)
+if [[ "$USE_CMAKE_PRESET" == "true" ]]; then
+    BUILD_ARGS=(
+        --build
+        --preset "$ACTIVE_PRESET"
+        --parallel "$JOBS"
+    )
+else
+    BUILD_ARGS=(
+        --build "$BUILD_DIR"
+        --parallel "$JOBS"
+    )
+fi
 
 if [[ "$VERBOSE" == "true" ]]; then
     BUILD_ARGS+=(--verbose)

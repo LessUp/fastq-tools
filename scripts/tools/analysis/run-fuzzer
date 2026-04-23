@@ -1,17 +1,17 @@
 #!/bin/bash
-# scripts/tools/run-fuzzer
+# scripts/tools/analysis/run-fuzzer
 #
 # Run fuzzing tests for FastQTools
 #
 # Usage:
-#   ./scripts/tools/run-fuzzer                    # Run all fuzzers
-#   ./scripts/tools/run-fuzzer parser             # Run specific fuzzer
-#   ./scripts/tools/run-fuzzer --build            # Build and run
+#   ./scripts/tools/analysis/run-fuzzer                    # Run all fuzzers
+#   ./scripts/tools/analysis/run-fuzzer parser             # Run specific fuzzer
+#   ./scripts/tools/analysis/run-fuzzer --build            # Build and run
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/../lib/common.sh"
+source "${SCRIPT_DIR}/../../lib/common.sh"
 
 # =============================================================================
 # Configuration
@@ -32,7 +32,7 @@ print_usage() {
     print_usage_header "Fuzzer Runner" "Run libFuzzer-based fuzz tests"
     
     cat << 'EOF'
-Usage: ./scripts/tools/run-fuzzer [OPTIONS] [FUZZER_NAME]
+Usage: ./scripts/tools/analysis/run-fuzzer [OPTIONS] [FUZZER_NAME]
 
 Options:
   -b, --build               Build fuzzers before running

@@ -1,13 +1,13 @@
 #!/bin/bash
-# scripts/lint
+# scripts/core/lint
 # 
 # FastQTools 代码质量检查脚本 - 统一的格式化和静态分析工具
 # 
 # 使用示例:
-#   ./scripts/lint check                     # 检查代码风格
-#   ./scripts/lint format                    # 自动格式化
-#   ./scripts/lint tidy                      # 运行 clang-tidy
-#   ./scripts/lint all                       # 运行所有检查
+#   ./scripts/core/lint check                # 检查代码风格
+#   ./scripts/core/lint format               # 自动格式化
+#   ./scripts/core/lint tidy                 # 运行 clang-tidy
+#   ./scripts/core/lint all                  # 运行所有检查
 
 set -euo pipefail
 
@@ -25,6 +25,7 @@ TIDY_CONFIG=".clang-tidy"
 FIX=false
 VERBOSE=false
 JOBS=$(get_cpu_cores)
+PRESET=""
 
 # =============================================================================
 # 帮助信息
@@ -43,8 +44,9 @@ print_usage() {
   iwyu                      运行 Include-What-You-Use 分析
   all                       运行所有检查 (format + tidy + cppcheck)
   
-选项:
+ 选项:
   -b, --build-dir DIR       构建目录（包含 compile_commands.json）
+  -p, --preset NAME         使用指定 preset 对应的构建目录
   -s, --style FILE          clang-format 样式文件 (默认: .clang-format)
   -t, --tidy-config FILE    clang-tidy 配置文件 (默认: .clang-tidy)
   -j, --jobs N              并行任务数 (默认: 自动检测)
@@ -52,11 +54,11 @@ print_usage() {
   -h, --help                显示此帮助信息
 
 示例:
-  ./scripts/lint check                        # 检查代码风格
-  ./scripts/lint format                       # 格式化所有代码
-  ./scripts/lint tidy -b build/clang-release  # 运行静态分析
-  ./scripts/lint tidy-fix                     # 自动修复问题
-  ./scripts/lint all                          # 运行所有检查
+  ./scripts/core/lint check                   # 检查代码风格
+  ./scripts/core/lint format                  # 格式化所有代码
+  ./scripts/core/lint tidy --preset clang-debug # 运行静态分析
+  ./scripts/core/lint tidy-fix                # 自动修复问题
+  ./scripts/core/lint all                     # 运行所有检查
 EOF
 }
 
@@ -113,7 +115,7 @@ run_format_check() {
         return 0
     else
         log_error "发现 ${issues} 个文件有格式问题"
-        log_info "运行 './scripts/lint format' 自动修复"
+        log_info "运行 './scripts/core/lint format' 自动修复"
         return 1
     fi
 }
@@ -211,12 +213,7 @@ run_iwyu() {
     
     # 确定构建目录
     if [[ -z "$BUILD_DIR" ]]; then
-        for dir in build/clang-* build/gcc-*; do
-            if [[ -f "$dir/compile_commands.json" ]]; then
-                BUILD_DIR="$dir"
-                break
-            fi
-        done
+        BUILD_DIR=$(find_compile_commands_dir 2>/dev/null || true)
     fi
     
     if [[ -z "$BUILD_DIR" || ! -f "${BUILD_DIR}/compile_commands.json" ]]; then
@@ -272,12 +269,7 @@ run_tidy() {
     # 确定构建目录
     if [[ -z "$BUILD_DIR" ]]; then
         # 尝试查找编译数据库
-        for dir in build/clang-* build/gcc-*; do
-            if [[ -f "$dir/compile_commands.json" ]]; then
-                BUILD_DIR="$dir"
-                break
-            fi
-        done
+        BUILD_DIR=$(find_compile_commands_dir 2>/dev/null || true)
         
         if [[ -z "$BUILD_DIR" ]]; then
             log_error "未找到构建目录"
@@ -325,22 +317,27 @@ run_tidy() {
             log_debug "分析 [${count}]: $file"
         fi
         
-        if ! clang-tidy "${tidy_args[@]}" "$file" 2>&1 | tee /tmp/tidy_output.txt; then
-            if grep -q "warning:" /tmp/tidy_output.txt || grep -q "error:" /tmp/tidy_output.txt; then
-                ((++issues))
-            fi
+        local tidy_output=""
+        if ! tidy_output=$(clang-tidy "${tidy_args[@]}" "$file" 2>&1); then
+            :
+        fi
+
+        if [[ -n "${tidy_output}" ]]; then
+            printf '%s\n' "${tidy_output}"
+        fi
+
+        if grep -Eq "warning:|error:" <<< "${tidy_output}"; then
+            ((++issues))
         fi
     done <<< "$files"
-    
-    rm -f /tmp/tidy_output.txt
-    
+
     if [[ $issues -eq 0 ]]; then
         log_success "静态分析通过 ✓ (检查了 ${count} 个文件)"
         return 0
     else
         log_warning "发现 ${issues} 个文件有问题"
         if [[ "$fix_mode" != "fix" ]]; then
-            log_info "运行 './scripts/lint tidy-fix' 尝试自动修复"
+            log_info "运行 './scripts/core/lint tidy-fix' 尝试自动修复"
         fi
         return 1
     fi
@@ -362,6 +359,10 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         -b|--build-dir)
             BUILD_DIR="$2"
+            shift 2
+            ;;
+        -p|--preset)
+            PRESET="$2"
             shift 2
             ;;
         -s|--style)
@@ -401,6 +402,10 @@ cd "$PROJECT_ROOT"
 start_timer
 
 log_section "FastQTools 代码质量检查"
+
+if [[ -z "$BUILD_DIR" && -n "$PRESET" ]]; then
+    BUILD_DIR=$(get_build_dir "clang" "Debug" "" "false" "$PRESET")
+fi
 
 case "$COMMAND" in
     check|format-check)

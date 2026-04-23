@@ -115,67 +115,67 @@ scripts/
 
 ### benchmark - 性能基准测试 CLI
 ```bash
-./scripts/tools/benchmark run              # 运行基准测试
-./scripts/tools/benchmark report           # 生成报告
-./scripts/tools/benchmark compare a.json b.json
+./scripts/tools/performance/benchmark run              # 运行基准测试
+./scripts/tools/performance/benchmark report           # 生成报告
+./scripts/tools/performance/benchmark compare a.json b.json
 ```
 
 ### benchmark-io - I/O 性能测试
 ```bash
-./scripts/tools/benchmark-io
+./scripts/tools/performance/benchmark-io
 ```
 
 ### benchmark - 统一基准测试 CLI
 ```bash
 # 运行基准测试
-./scripts/benchmark run
+./scripts/tools/performance/benchmark run
 
 # 编译器对比基准
-./scripts/benchmark compiler
+./scripts/tools/performance/benchmark compiler
 
 # 生成编译器对比可视化报告
-./scripts/benchmark visualize --format html
+./scripts/tools/performance/benchmark visualize --format html
 ```
 
 ### coverage-report - 覆盖率报告
 ```bash
-./scripts/tools/coverage-report
+./scripts/tools/analysis/coverage-report
 ```
 
 ### deploy - Docker 部署
 ```bash
-./scripts/tools/deploy --env production --action build
+./scripts/tools/release/deploy --env production --action build
 ```
 
 ### generate-diff - 差异报告
 ```bash
-./scripts/tools/generate-diff
+./scripts/tools/analysis/generate-diff
 ```
 
 ### install-llvm - LLVM 工具链安装
 ```bash
-sudo ./scripts/tools/install-llvm 21      # 安装 LLVM 21
+sudo ./scripts/tools/release/install-llvm 21      # 安装 LLVM 21
 ```
 
 ### package-release - 发布打包
 ```bash
-./scripts/tools/package-release 3.1.0
+./scripts/tools/release/package-release 3.1.0
 ```
 
 ### run-fuzzer - Fuzz 测试
 ```bash
-./scripts/tools/run-fuzzer
+./scripts/tools/analysis/run-fuzzer
 ```
 
 ### setup-devcontainer - DevContainer 初始化
 ```bash
-./scripts/tools/setup-devcontainer
+./scripts/tools/release/setup-devcontainer
 ```
 
 ### valgrind-cachegrind / valgrind-memcheck
 ```bash
-./scripts/tools/valgrind-cachegrind
-./scripts/tools/valgrind-memcheck
+./scripts/tools/performance/valgrind-cachegrind
+./scripts/tools/analysis/valgrind-memcheck
 ```
 
 详细文档：`scripts/tools/README.md`
@@ -240,7 +240,7 @@ sudo ./scripts/tools/install-llvm 21      # 安装 LLVM 21
 ./scripts/core/build --sanitizer asan
 
 # 3. 生成发布包
-./scripts/tools/package-release 3.1.0
+./scripts/tools/release/package-release 3.1.0
 ```
 
 ## 🎨 设计原则

@@ -1,5 +1,5 @@
 #!/bin/bash
-# scripts/tools/deploy
+# scripts/tools/release/deploy
 #
 # Docker deployment script for FastQTools
 # Supports building and deploying different environments
@@ -7,7 +7,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/../lib/common.sh"
+source "${SCRIPT_DIR}/../../lib/common.sh"
 
 # Default values
 ENVIRONMENT="production"

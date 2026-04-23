@@ -1,13 +1,13 @@
 #!/bin/bash
-# scripts/test
+# scripts/core/test
 # 
 # FastQTools 统一测试脚本 - 支持单元测试、集成测试和覆盖率
 # 
 # 使用示例:
-#   ./scripts/test                           # 运行所有测试
-#   ./scripts/test --filter "*timer*"        # 只运行特定测试
-#   ./scripts/test --coverage                # 生成覆盖率报告
-#   ./scripts/test --repeat 5                # 重复测试 5 次
+#   ./scripts/core/test                           # 运行所有测试
+#   ./scripts/core/test --filter "*timer*"        # 只运行特定测试
+#   ./scripts/core/test --coverage                # 生成覆盖率报告
+#   ./scripts/core/test --repeat 5                # 重复测试 5 次
 
 set -euo pipefail
 
@@ -31,6 +31,7 @@ TIMEOUT=60
 TEST_TYPE="all"  # all | unit | integration | e2e
 VALGRIND=false
 VALGRIND_OPTS=""
+PRESET=""
 
 # =============================================================================
 # 帮助信息
@@ -42,7 +43,8 @@ print_usage() {
 基本选项:
   -c, --compiler NAME       编译器: gcc | clang (默认: clang)
   -t, --build-type TYPE     构建类型: Debug | Release (默认: Debug)
-  -b, --build-dir DIR       构建目录 (默认: build/<compiler>-<type>)
+  -b, --build-dir DIR       构建目录 (默认: 与 preset/构建模式一致)
+  -p, --preset NAME         使用指定 preset 对应的构建目录
   -j, --jobs N              并行测试数 (默认: 自动检测)
 
 测试选择:
@@ -74,11 +76,12 @@ Valgrind:
   -h, --help                显示此帮助信息
 
 示例:
-  ./scripts/test                              # 运行所有测试
-  ./scripts/test --unit -v                    # 详细运行单元测试
-  ./scripts/test -f "*config*"                # 只运行配置相关测试
-  ./scripts/test --coverage                   # 生成覆盖率报告
-  ./scripts/test --e2e --repeat 3             # 重复运行 E2E 测试 3 次
+  ./scripts/core/test                         # 运行所有测试
+  ./scripts/core/test --unit -v               # 详细运行单元测试
+  ./scripts/core/test -f "*config*"           # 只运行配置相关测试
+  ./scripts/core/test --coverage              # 生成覆盖率报告
+  ./scripts/core/test --preset clang-asan     # 使用 preset 对应构建目录
+  ./scripts/core/test --e2e --repeat 3        # 重复运行 E2E 测试 3 次
 EOF
 }
 
@@ -110,6 +113,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -b|--build-dir)
             BUILD_DIR="$2"
+            shift 2
+            ;;
+        -p|--preset)
+            PRESET="$2"
             shift 2
             ;;
         -j|--jobs)
@@ -182,6 +189,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+if [[ "$BUILD_TYPE" == "Coverage" ]]; then
+    COVERAGE=true
+    BUILD_TYPE="Debug"
+fi
+
 # =============================================================================
 # 环境检查和准备
 # =============================================================================
@@ -194,17 +206,18 @@ log_section "FastQTools 测试运行器"
 
 # 确定构建目录
 if [[ -z "$BUILD_DIR" ]]; then
-    BUILD_DIR=$(get_build_dir "$COMPILER" "$BUILD_TYPE")
+    BUILD_DIR=$(get_build_dir "$COMPILER" "$BUILD_TYPE" "" "$COVERAGE" "$PRESET")
 fi
 
 # 检查构建目录是否存在
 if [[ ! -d "$BUILD_DIR" ]]; then
     log_error "构建目录不存在: ${BUILD_DIR}"
-    log_info "请先运行构建: ./scripts/build -c ${COMPILER} -t ${BUILD_TYPE}"
+    log_info "请先运行构建: ./scripts/core/build -c ${COMPILER} -t ${BUILD_TYPE}"
     exit 1
 fi
 
 log_info "构建目录: ${BUILD_DIR}"
+[[ -n "$PRESET" ]] && log_info "CMake preset: ${PRESET}"
 log_info "测试类型: ${TEST_TYPE}"
 [[ -n "$FILTER" ]] && log_info "测试过滤: ${FILTER}"
 [[ "$COVERAGE" == "true" ]] && log_info "覆盖率: 已启用"

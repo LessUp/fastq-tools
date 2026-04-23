@@ -15,17 +15,20 @@ scripts/
 │   └── gcov-wrapper        # gcov/llvm-cov 包装器
 │
 ├── tools/                   # 工具脚本
-│   ├── benchmark           # 性能基准测试 CLI
-│   ├── benchmark-io        # I/O 性能基准测试
-│   ├── coverage-report     # 覆盖率报告生成
-│   ├── deploy              # Docker 部署脚本
-│   ├── generate-diff       # 生成差异报告
-│   ├── install-llvm        # LLVM 工具链安装
-│   ├── package-release     # 发布打包
-│   ├── run-fuzzer          # Fuzz 测试运行器
-│   ├── setup-devcontainer  # DevContainer 初始化
-│   ├── valgrind-cachegrind # 缓存性能分析
-│   └── valgrind-memcheck   # 内存检查
+│   ├── performance/        # 性能测试与分析
+│   │   ├── benchmark
+│   │   ├── benchmark-io
+│   │   └── valgrind-cachegrind
+│   ├── analysis/           # 分析与测试辅助
+│   │   ├── coverage-report
+│   │   ├── generate-diff
+│   │   ├── run-fuzzer
+│   │   └── valgrind-memcheck
+│   └── release/            # 发布与环境工具
+│       ├── deploy
+│       ├── install-llvm
+│       ├── package-release
+│       └── setup-devcontainer
 │
 └── README.md                # 脚本系统文档
 ```
@@ -83,8 +86,8 @@ scripts/
 
 2. **工具脚本按需使用**
    ```bash
-   ./scripts/tools/benchmark-io
-   ./scripts/tools/package-release 3.1.0
+    ./scripts/tools/performance/benchmark-io
+    ./scripts/tools/release/package-release 3.1.0
    ```
 
 ## 迁移时间线
@@ -114,9 +117,9 @@ source "${SCRIPT_DIR}/../lib/common.sh"
 
 ### 添加新的工具脚本
 ```bash
-# 1. 在 tools/ 创建脚本
-touch scripts/tools/my-tool
-chmod +x scripts/tools/my-tool
+# 1. 在 tools 子目录创建脚本
+touch scripts/tools/analysis/my-tool
+chmod +x scripts/tools/analysis/my-tool
 
 # 2. 添加描述注释
 # 3. 可选：添加到 README.md 的工具列表
