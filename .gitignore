@@ -42,6 +42,7 @@ __pycache__/
 # ===== IDE 与编辑器 =====
 .vscode/*
 !.vscode/settings.json
+!.vscode/extensions.json
 .idea/
 *.suo
 *.user
@@ -53,6 +54,11 @@ __pycache__/
 .qoder/
 .spec-workflow/
 cascade/
+
+# ===== OpenSpec CLI（Node.js） =====
+node_modules/
+package-lock.json
+openspec.local.yaml
 
 # ===== OS 特定文件 =====
 .DS_Store
@@ -95,4 +101,10 @@ docs/performance/benchmark-reports/charts/*.svg
 docs/performance/benchmark-reports/charts/*.png
 docs/performance/benchmark-reports/data/*.fastq
 docs/performance/benchmark-reports/data/*.fastq.gz
+docs/performance/benchmark-reports/*.json
+docs/performance/benchmark-reports/*.html
+docs/performance/benchmark-reports/latest.md
+docs/performance/benchmark-reports/compiler/latest.json
+docs/performance/benchmark-reports/compiler/latest.md
+docs/performance/benchmark-reports/compiler/latest.html
 !docs/performance/benchmark-reports/baselines/*.json

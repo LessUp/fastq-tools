@@ -45,13 +45,16 @@ endif()
 
 # --- Link-Time Optimization (LTO/IPO) ---
 # Release 构建启用跨模块内联优化，显著提升小函数密集型项目的性能
+option(ENABLE_LTO "Enable IPO/LTO for non-Debug builds when supported" ON)
 include(CheckIPOSupported)
 check_ipo_supported(RESULT IPO_SUPPORTED OUTPUT IPO_OUTPUT)
-if(IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(ENABLE_LTO AND IPO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "IPO/LTO is supported and enabled for non-Debug builds.")
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 else()
-    if(NOT IPO_SUPPORTED)
+    if(NOT ENABLE_LTO)
+        message(STATUS "IPO/LTO is disabled by ENABLE_LTO=OFF")
+    elseif(NOT IPO_SUPPORTED)
         message(STATUS "IPO/LTO is not supported: ${IPO_OUTPUT}")
     endif()
 endif()
@@ -110,6 +113,18 @@ endif()
 
 if(TARGET spdlog::spdlog_header_only AND NOT TARGET spdlog::spdlog)
     add_library(spdlog::spdlog ALIAS spdlog::spdlog_header_only)
+endif()
+
+# --- Optional clang-tidy integration ---
+option(ENABLE_CLANG_TIDY "Run clang-tidy during compilation" OFF)
+if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+    if(CLANG_TIDY_EXE)
+        message(STATUS "Enabling clang-tidy during compilation: ${CLANG_TIDY_EXE}")
+        set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+    else()
+        message(FATAL_ERROR "ENABLE_CLANG_TIDY=ON but clang-tidy was not found")
+    endif()
 endif()
 
 

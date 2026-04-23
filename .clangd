@@ -1,0 +1,4 @@
+CompileFlags:
+  CompilationDatabase: build/clang-debug
+Index:
+  Background: Build

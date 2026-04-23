@@ -1,5 +1,15 @@
 {
     "git.useEditorAsCommitInput": true,
     "git.postCommitCommand": "none",
-    "git.enableCommitSigning": false
+    "git.enableCommitSigning": false,
+    "cmake.useCMakePresets": "always",
+    "cmake.configurePreset": "clang-debug",
+    "cmake.buildPreset": "clang-debug",
+    "cmake.testPreset": "clang-debug",
+    "cmake.copyCompileCommands": "${workspaceFolder}/compile_commands.json",
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "clangd.arguments": [
+        "--background-index",
+        "--compile-commands-dir=${workspaceFolder}/build/clang-debug"
+    ]
 }

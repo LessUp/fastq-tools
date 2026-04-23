@@ -75,8 +75,7 @@
             "description": "Debug build with GCC 15",
             "inherits": "conan-gcc-base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_FLAGS_DEBUG": "-g -O0 -DDEBUG"
+                "CMAKE_BUILD_TYPE": "Debug"
             }
         },
         {
@@ -85,9 +84,7 @@
             "description": "Release build with GCC 15 (recommended for production)",
             "inherits": "conan-gcc-base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG -march=native -flto",
-                "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+                "CMAKE_BUILD_TYPE": "Release"
             }
         },
         {
@@ -96,8 +93,7 @@
             "description": "Release build with debug info using GCC 15",
             "inherits": "conan-gcc-base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "-O2 -g -DNDEBUG"
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
         },
         {
@@ -106,8 +102,7 @@
             "description": "Debug build with Clang 21 + libc++ (recommended for development)",
             "inherits": "conan-clang-base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_FLAGS_DEBUG": "-g -O0 -DDEBUG -stdlib=libc++"
+                "CMAKE_BUILD_TYPE": "Debug"
             }
         },
         {
@@ -116,33 +111,43 @@
             "description": "Release build with Clang 21 + libc++",
             "inherits": "conan-clang-base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG -march=native -flto -stdlib=libc++",
-                "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+                "CMAKE_BUILD_TYPE": "Release"
             }
         },
         {
             "name": "clang-asan",
             "displayName": "Clang AddressSanitizer",
             "description": "Debug build with AddressSanitizer for memory error detection",
-            "inherits": "conan-clang-base",
+            "inherits": "clang-debug",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_FLAGS_DEBUG": "-g -O1 -DDEBUG -stdlib=libc++ -fsanitize=address,undefined -fno-omit-frame-pointer",
-                "CMAKE_EXE_LINKER_FLAGS_DEBUG": "-stdlib=libc++ -lc++abi -fsanitize=address,undefined",
-                "CMAKE_SHARED_LINKER_FLAGS_DEBUG": "-stdlib=libc++ -lc++abi -fsanitize=address,undefined"
+                "ENABLE_ASAN": "ON"
             }
         },
         {
             "name": "clang-tsan",
             "displayName": "Clang ThreadSanitizer",
             "description": "Debug build with ThreadSanitizer for data race detection",
-            "inherits": "conan-clang-base",
+            "inherits": "clang-debug",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_FLAGS_DEBUG": "-g -O1 -DDEBUG -stdlib=libc++ -fsanitize=thread -fno-omit-frame-pointer",
-                "CMAKE_EXE_LINKER_FLAGS_DEBUG": "-stdlib=libc++ -lc++abi -fsanitize=thread",
-                "CMAKE_SHARED_LINKER_FLAGS_DEBUG": "-stdlib=libc++ -lc++abi -fsanitize=thread"
+                "ENABLE_TSAN": "ON"
+            }
+        },
+        {
+            "name": "clang-ubsan",
+            "displayName": "Clang UBSan",
+            "description": "Debug build with UndefinedBehaviorSanitizer",
+            "inherits": "clang-debug",
+            "cacheVariables": {
+                "ENABLE_UBSAN": "ON"
+            }
+        },
+        {
+            "name": "clang-msan",
+            "displayName": "Clang MemorySanitizer",
+            "description": "Debug build with MemorySanitizer",
+            "inherits": "clang-debug",
+            "cacheVariables": {
+                "ENABLE_MSAN": "ON"
             }
         },
         {
@@ -151,8 +156,6 @@
             "description": "Debug build with coverage analysis using GCC",
             "inherits": "gcc-debug",
             "cacheVariables": {
-                "CMAKE_CXX_FLAGS_DEBUG": "-g -O0 -DDEBUG --coverage",
-                "CMAKE_EXE_LINKER_FLAGS_DEBUG": "--coverage",
                 "ENABLE_COVERAGE": "ON"
             }
         }
@@ -192,6 +195,16 @@
             "name": "clang-tsan",
             "configurePreset": "clang-tsan",
             "displayName": "Clang TSan Build"
+        },
+        {
+            "name": "clang-ubsan",
+            "configurePreset": "clang-ubsan",
+            "displayName": "Clang UBSan Build"
+        },
+        {
+            "name": "clang-msan",
+            "configurePreset": "clang-msan",
+            "displayName": "Clang MSan Build"
         },
         {
             "name": "coverage",
@@ -250,9 +263,47 @@
             }
         },
         {
+            "name": "clang-release",
+            "configurePreset": "clang-release",
+            "displayName": "Clang Release Tests",
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": false
+            }
+        },
+        {
             "name": "clang-tsan",
             "configurePreset": "clang-tsan",
             "displayName": "Clang TSan Tests",
+            "output": {
+                "outputOnFailure": true,
+                "verbosity": "verbose"
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            }
+        },
+        {
+            "name": "clang-ubsan",
+            "configurePreset": "clang-ubsan",
+            "displayName": "Clang UBSan Tests",
+            "output": {
+                "outputOnFailure": true,
+                "verbosity": "verbose"
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            }
+        },
+        {
+            "name": "clang-msan",
+            "configurePreset": "clang-msan",
+            "displayName": "Clang MSan Tests",
             "output": {
                 "outputOnFailure": true,
                 "verbosity": "verbose"
