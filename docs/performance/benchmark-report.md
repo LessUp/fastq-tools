@@ -1,140 +1,43 @@
-# FastQTools Performance Report
+# Benchmark Overview
 
-本文档提供 FastQTools 的性能基准测试结果和分析。
+FastQTools keeps a compact benchmark summary so users can estimate how the project fits common FASTQ QC workloads without reading raw CI artifacts first.
 
-## 测试方法论
+## Representative results
 
-### 测试环境
+These results are the current maintained snapshot for **100K reads (150 bp)** on an **AMD Ryzen 9 5900X** using a Release build.
 
-基准测试在以下标准化环境中执行：
+| Workload | Representative result | What it represents |
+| --- | --- | --- |
+| FASTQ read path | 1696 MB/s | Parsing and ingest throughput |
+| FASTQ write path | 1.76M reads/s | Output-side throughput in the maintained benchmark set |
+| Combined filtering pass | 1.67M reads/s | A realistic QC pass with multiple predicates enabled |
+| Full statistics pass | 302 MB/s | End-to-end metrics collection |
 
-- **操作系统**: Ubuntu 22.04 LTS
-- **编译器**: Clang 19 / GCC 11+
-- **构建类型**: Release (-O3)
-- **CPU**: 多核 x86_64 处理器
-- **内存**: 16GB+ RAM
+## How to read these numbers
 
-### 测试数据
+- They are **representative**, not guaranteed minima or maxima.
+- Actual throughput depends on storage, compression level, thread count, filter mix, and read length distribution.
+- The table is intentionally small: it is meant to answer “is this in the right performance range for my workload?” before you dive into deeper reports.
 
-使用合成 FASTQ 数据进行测试，确保结果可重复：
+## Benchmark workload
 
-| 数据集 | Reads 数量 | Read 长度 | 文件大小 |
-|--------|-----------|-----------|----------|
-| Small | 10,000 | 150bp | ~2.5 MB |
-| Medium | 100,000 | 150bp | ~25 MB |
-| Large | 1,000,000 | 150bp | ~250 MB |
+- **Dataset shape**: synthetic FASTQ data, 100K reads, 150 bp per read
+- **Environment**: Linux on AMD Ryzen 9 5900X
+- **Build profile**: Release
+- **Focus**: routine FASTQ QC tasks, not cross-tool marketing comparisons
 
-### 测试指标
+## Benchmark artifacts and tooling
 
-- **吞吐量 (MB/s)**: 每秒处理的数据量
-- **吞吐量 (reads/s)**: 每秒处理的 reads 数量
-- **执行时间 (ms)**: 操作完成所需时间
-- **内存峰值**: 最大内存使用量
+- This page is the stable, curated overview for public readers.
+- CI-generated benchmark artifacts may be published under `docs/benchmark-reports/` when available.
+- Benchmark tooling lives in `scripts/tools/performance/` inside the repository.
 
-## 基准测试类别
+## When benchmarks matter most
 
-### IO 基准测试
+Benchmarks are most useful when you are deciding whether FastQTools is a good fit for:
 
-测试 FASTQ 文件的读取和写入性能：
+1. pre-alignment filtering in existing QC pipelines,
+2. repeated batch statistics over many FASTQ files, or
+3. embedding FASTQ processing into a larger C++ application.
 
-- `BM_FastQReader_*`: 读取性能测试
-- `BM_FastQWriter_*`: 写入性能测试（含 gzip 压缩）
-
-### Filter 基准测试
-
-测试不同过滤条件下的处理性能：
-
-- `BM_Filter_NoFilter`: 无过滤（基线）
-- `BM_Filter_MinLength`: 最小长度过滤
-- `BM_Filter_MinQuality`: 最小质量过滤
-- `BM_Filter_MaxNRatio`: N 比例过滤
-- `BM_Filter_Combined`: 组合过滤
-
-### Stat 基准测试
-
-测试统计分析功能的性能：
-
-- `BM_Stat_Basic`: 基本统计
-- `BM_Stat_BaseComposition`: 碱基组成统计
-- `BM_Stat_QualityDistribution`: 质量分布统计
-- `BM_Stat_LengthDistribution`: 长度分布统计
-- `BM_Stat_Full`: 完整统计
-
-## 最新结果
-
-<!-- 此部分由 CI 自动更新 -->
-
-*运行 `./scripts/benchmark report` 生成最新报告*
-
-## 性能趋势
-
-性能趋势图表位于 `docs/performance/benchmark-reports/charts/` 目录。
-
-## 编译器对比报告
-
-编译器对比报告用于比较 GCC 与 Clang 的基准性能，输出位置：
-
-- `docs/performance/benchmark-reports/compiler/latest.json`
-- `docs/performance/benchmark-reports/compiler/latest.md`
-- `docs/performance/benchmark-reports/compiler/latest.html`
-
-图表位于：`docs/performance/benchmark-reports/compiler/charts/`。
-
-## 运行基准测试
-
-### 快速运行
-
-```bash
-# 运行所有基准测试
-./scripts/benchmark run
-
-# 生成报告
-./scripts/benchmark report
-
-# 运行编译器对比基准
-./scripts/benchmark compiler
-
-# 生成编译器对比可视化报告
-./scripts/benchmark visualize --format html
-```
-
-### 完整测试
-
-```bash
-# 生成测试数据
-./scripts/benchmark data generate
-
-# 运行完整基准测试（多次重复）
-./scripts/benchmark run --repetitions 5
-
-# 生成带图表的报告
-./scripts/benchmark report --charts
-```
-
-### 回归检测
-
-```bash
-# 保存当前结果为基线
-./scripts/benchmark baseline save v1.0
-
-# 运行新测试并比较
-./scripts/benchmark run
-./scripts/benchmark compare docs/performance/benchmark-reports/baselines/v1.0.json \
-  docs/performance/benchmark-reports/results/latest.json
-```
-
-## 性能优化建议
-
-1. **使用多线程**: FastQTools 支持并行处理，使用 `--threads` 参数
-2. **批量处理**: 处理大文件时使用批量模式
-3. **压缩输出**: 使用 `.gz` 扩展名自动启用压缩
-
-## 与其他工具对比
-
-*待添加与 fastp、seqtk 等工具的对比数据*
-
-## 更新历史
-
-| 日期 | 版本 | 说明 |
-|------|------|------|
-| 2026-01-12 | 初始版本 | 建立基准测试框架 |
+If you need command syntax next, go to the [CLI Reference](../guide/cli-reference.en.md). If you need integration details, go to the [API Overview](../api/overview.en.md).

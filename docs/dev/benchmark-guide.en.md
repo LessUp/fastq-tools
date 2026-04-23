@@ -9,10 +9,10 @@ This document explains how to use the FastQTools performance benchmark system.
 cmake --build build/clang-release --target benchmarks
 
 # Run benchmarks
-./scripts/benchmark run
+./scripts/tools/performance/benchmark run
 
 # Generate report
-./scripts/benchmark report
+./scripts/tools/performance/benchmark report
 ```
 
 ## CLI Commands
@@ -22,7 +22,7 @@ cmake --build build/clang-release --target benchmarks
 Run performance benchmarks.
 
 ```bash
-./scripts/benchmark run [options]
+./scripts/tools/performance/benchmark run [options]
 
 Options:
   --output, -o    Specify output file path
@@ -31,9 +31,9 @@ Options:
   --ci            CI mode
 
 Examples:
-  ./scripts/benchmark run
-  ./scripts/benchmark run --filter "Reader"
-  ./scripts/benchmark run --repetitions 5 --ci
+  ./scripts/tools/performance/benchmark run
+  ./scripts/tools/performance/benchmark run --filter "Reader"
+  ./scripts/tools/performance/benchmark run --repetitions 5 --ci
 ```
 
 ### `benchmark report`
@@ -41,7 +41,7 @@ Examples:
 Generate report from test results.
 
 ```bash
-./scripts/benchmark report [options]
+./scripts/tools/performance/benchmark report [options]
 
 Options:
   --input, -i     Input JSON file
@@ -49,9 +49,9 @@ Options:
   --charts        Generate charts
 
 Examples:
-  ./scripts/benchmark report
-  ./scripts/benchmark report --format summary
-  ./scripts/benchmark report --charts
+  ./scripts/tools/performance/benchmark report
+  ./scripts/tools/performance/benchmark report --format summary
+  ./scripts/tools/performance/benchmark report --charts
 ```
 
 ### `benchmark compare`
@@ -59,7 +59,7 @@ Examples:
 Compare two test results, detect performance regressions.
 
 ```bash
-./scripts/benchmark compare <baseline> <current> [options]
+./scripts/tools/performance/benchmark compare <baseline> <current> [options]
 
 Options:
   --warning-threshold   Warning threshold (default: 0.10 = 10%)
@@ -67,8 +67,8 @@ Options:
   --ci                  CI mode output
 
 Examples:
-  ./scripts/benchmark compare baseline.json current.json
-  ./scripts/benchmark compare baseline.json current.json --warning-threshold 0.05
+  ./scripts/tools/performance/benchmark compare baseline.json current.json
+  ./scripts/tools/performance/benchmark compare baseline.json current.json --warning-threshold 0.05
 ```
 
 ### `benchmark baseline`
@@ -76,7 +76,7 @@ Examples:
 Manage performance baselines.
 
 ```bash
-./scripts/benchmark baseline <command> [args]
+./scripts/tools/performance/benchmark baseline <command> [args]
 
 Commands:
   save <name> [source]  Save baseline
@@ -84,9 +84,9 @@ Commands:
   delete <name>         Delete baseline
 
 Examples:
-  ./scripts/benchmark baseline save v1.0
-  ./scripts/benchmark baseline list
-  ./scripts/benchmark baseline delete old-baseline
+  ./scripts/tools/performance/benchmark baseline save v1.0
+  ./scripts/tools/performance/benchmark baseline list
+  ./scripts/tools/performance/benchmark baseline delete old-baseline
 ```
 
 ### `benchmark data`
@@ -94,15 +94,15 @@ Examples:
 Manage test data.
 
 ```bash
-./scripts/benchmark data <command> [args]
+./scripts/tools/performance/benchmark data <command> [args]
 
 Commands:
   generate              Generate complete test dataset
   validate <file>       Validate FASTQ file format
 
 Examples:
-  ./scripts/benchmark data generate
-  ./scripts/benchmark data validate test.fastq
+  ./scripts/tools/performance/benchmark data generate
+  ./scripts/tools/performance/benchmark data validate test.fastq
 ```
 
 ### `benchmark compiler`
@@ -110,7 +110,7 @@ Examples:
 Run GCC vs Clang compiler comparison benchmark.
 
 ```bash
-./scripts/benchmark compiler [options]
+./scripts/tools/performance/benchmark compiler [options]
 
 Options:
   --data-dir         Specify test data directory
@@ -123,9 +123,9 @@ Options:
   --no-time          Disable max memory statistics
 
 Examples:
-  ./scripts/benchmark compiler
-  ./scripts/benchmark compiler --benchmark-filter "Reader"
-  ./scripts/benchmark compiler --output docs/performance/benchmark-reports/compiler/custom.json
+  ./scripts/tools/performance/benchmark compiler
+  ./scripts/tools/performance/benchmark compiler --benchmark-filter "Reader"
+  ./scripts/tools/performance/benchmark compiler --output docs/benchmark-reports/compiler/custom.json
 ```
 
 ### `benchmark visualize`
@@ -133,7 +133,7 @@ Examples:
 Generate compiler comparison visualization report (Markdown/HTML).
 
 ```bash
-./scripts/benchmark visualize [options]
+./scripts/tools/performance/benchmark visualize [options]
 
 Options:
   --input, -i     Input JSON file
@@ -142,15 +142,15 @@ Options:
   --no-charts     Disable chart generation
 
 Examples:
-  ./scripts/benchmark visualize
-  ./scripts/benchmark visualize --format html
-  ./scripts/benchmark visualize --input docs/performance/benchmark-reports/compiler/latest.json
+  ./scripts/tools/performance/benchmark visualize
+  ./scripts/tools/performance/benchmark visualize --format html
+  ./scripts/tools/performance/benchmark visualize --input docs/benchmark-reports/compiler/latest.json
 ```
 
 ## Directory Structure
 
 ```
-docs/performance/benchmark-reports/
+docs/benchmark-reports/
 ├── baselines/         # Named baselines
 │   └── <name>.json
 ├── data/              # Test data

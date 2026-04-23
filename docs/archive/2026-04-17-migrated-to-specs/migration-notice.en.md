@@ -1,42 +1,21 @@
 # Migration Notice
 
-> This page is archived for historical reference only.
+> This page is kept only as a historical snapshot note.
 
----
+## Current Spec Home
 
-## Overview
+The repository has since consolidated on the OpenSpec layout:
 
-**Date**: 2026-04-17
+- Baseline specs: [`openspec/baseline/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline)
+- Active proposals: `openspec/changes/`
+- Archived proposals: `openspec/archive/`
 
-This migration moved specification documents from `docs/` to `/specs/`, following the **Spec-Driven Development (SDD)** paradigm.
+## Why This Folder Still Exists
 
----
+This folder preserves the documentation-era spec snapshot captured on 2026-04-17 so older links and wording still have context.
 
-## Migrated Content
+## Guidance
 
-| Original Path | New Path |
-|---------------|----------|
-| `docs/steering/` | `specs/product/` |
-| `docs/benchmark-system/` | `specs/rfc/` |
-| `docs/memory-pool/` | `specs/rfc/` |
-| `docs/advanced-cpp-tooling/` | `specs/rfc/` |
-
----
-
-## New Directory Structure
-
-```
-specs/
-├── product/       # Product definitions & acceptance criteria
-├── rfc/           # Technical design documents
-├── api/           # API specifications
-├── db/            # Data models & configuration specs
-└── testing/       # Testing strategies & conventions
-```
-
----
-
-## Reference Links
-
-- [specs/README.md](../../../specs/README.md) — Specification index
-- [AGENTS.md](../../../AGENTS.md) — AI Agent workflow guide
+- Treat files here as historical records, not the current source of truth
+- Start from [`openspec/README.md`](https://github.com/LessUp/fastq-tools/blob/master/openspec/README.md) when looking for current specs
+- Browse this archive only when you need the legacy layout or wording

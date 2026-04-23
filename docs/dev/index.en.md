@@ -9,6 +9,7 @@ This guide is intended for contributors who want to develop on the FastQTools pr
 - [Build Guide](build.en.md) - Build system and toolchain
 - [Testing](testing.en.md) - Testing framework and conventions
 - [Coding Standards](coding-standards.en.md) - C++ coding standards
+- [Local Tooling Strategy](local-tooling.en.md) - clangd, MCP, and plugin boundaries
 - [Git Workflow](git-guidelines.en.md) - Branching strategy and commit conventions
 - [Quality Tools](quality-tools.en.md) - Linting, formatting, and static analysis
 - [Benchmark Guide](benchmark-guide.en.md) - Performance testing methodology
@@ -24,8 +25,8 @@ This guide is intended for contributors who want to develop on the FastQTools pr
 ## Development Workflow
 
 ```
-1. Fork the repo → 2. Create a feature branch → 3. Write code and tests → 
-4. Run lint/test → 5. Submit PR → 6. Code Review → 7. Merge
+1. Sync the current branch → 2. Create a branch if needed → 3. Write code and tests →
+4. Run lint/test → 5. Commit → 6. Push
 ```
 
 ## Contributing

@@ -1,40 +1,21 @@
 # Changelog
 
-All notable changes to this project are documented here.
+FastQTools keeps project history at three useful levels so readers can choose the right amount of detail.
 
-## Latest Version
+## Where to follow changes
 
-For the complete changelog, visit the GitHub repository:
+| If you want… | Use |
+| --- | --- |
+| Installable milestones and release notes | [GitHub Releases](https://github.com/LessUp/fastq-tools/releases) |
+| Curated project-level release history | [CHANGELOG.md](https://github.com/LessUp/fastq-tools/blob/master/CHANGELOG.md) |
+| Fine-grained implementation records | [`changelog/` directory](https://github.com/LessUp/fastq-tools/tree/master/changelog/) |
 
-- [Full Changelog](https://github.com/LessUp/fastq-tools/blob/master/CHANGELOG.md)
-- [Detailed Change Records](https://github.com/LessUp/fastq-tools/tree/master/changelog/)
+## How to read it
 
-## Change Format
+- **Releases** are the best starting point for users evaluating whether to upgrade.
+- **CHANGELOG.md** summarizes project movement at a higher level.
+- **Date-stamped files in `changelog/`** capture narrower work such as docs refinements, toolchain updates, and repository housekeeping.
 
-We use date-based change records:
+## Why this page exists
 
-```
-changelog/
-├── 2026-04-17-optimize-directory-structure.md
-├── 2026-04-17-fix-github-workflows.md
-└── ...
-```
-
-Each change file contains:
-- Goals and scope
-- Main changes
-- Impact area
-- Verification method
-
-## Conventional Commits
-
-Commit messages follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
-
-```
-feat|fix|docs|refactor|test|build|ci|chore(scope): subject
-```
-
-Examples:
-- `feat(cli): add filter command`
-- `fix(io): resolve memory leak in fastq reader`
-- `docs: update getting started guide`
+Public readers often need a quick answer to “where should I look for recent changes?” This page is the short answer, so the main navigation can stay clean without hiding where project history actually lives.

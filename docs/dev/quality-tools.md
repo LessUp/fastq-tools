@@ -6,14 +6,14 @@
 
 | 工具类别 | 工具 | 用途 | 运行时机 |
 |---------|------|------|---------|
-| 内存检查 | ASan | 内存错误检测 | 每次 PR |
+| 内存检查 | ASan | 内存错误检测 | 每次关键改动 |
 | 内存检查 | MSan | 未初始化内存 | 手动 |
 | 线程检查 | TSan | 数据竞争检测 | 手动 |
 | 未定义行为 | UBSan | UB 检测 | 手动 |
 | 深度分析 | Valgrind | 内存泄漏、缓存分析 | 每周 |
-| 静态分析 | clang-tidy | 代码质量 | 每次 PR |
-| 静态分析 | Cppcheck | 额外检查 | 每次 PR |
-| 覆盖率 | lcov | 测试覆盖率 | 每次 PR |
+| 静态分析 | clang-tidy | 代码质量 | 每次关键改动 |
+| 静态分析 | Cppcheck | 额外检查 | 每次关键改动 |
+| 覆盖率 | lcov | 测试覆盖率 | 按需 |
 | 安全测试 | libFuzzer | 模糊测试 | 手动 |
 
 ## Sanitizers
@@ -96,10 +96,10 @@ brew install valgrind
 ./scripts/core/test -b build/clang-debug --valgrind
 
 # 手动运行 Memcheck
-./scripts/tools/valgrind-memcheck
+./scripts/tools/analysis/valgrind-memcheck
 
 # 缓存性能分析
-./scripts/tools/valgrind-cachegrind
+./scripts/tools/performance/valgrind-cachegrind
 ```
 
 ### 输出解读
@@ -186,13 +186,13 @@ pip install gcovr
 ./scripts/core/test -b build/clang-debug
 
 # 生成报告
-./scripts/tools/coverage-report
+./scripts/tools/analysis/coverage-report
 
 # 生成 XML 报告 (CI 用)
-./scripts/tools/coverage-report --xml
+./scripts/tools/analysis/coverage-report --xml
 
 # 检查阈值
-./scripts/tools/coverage-report --check-threshold
+./scripts/tools/analysis/coverage-report --check-threshold
 ```
 
 ### 输出
@@ -221,13 +221,13 @@ pip install gcovr
 
 ```bash
 # 构建并运行
-./scripts/tools/run-fuzzer --build
+./scripts/tools/analysis/run-fuzzer --build
 
 # 运行特定 fuzzer
-./scripts/tools/run-fuzzer parser -t 300
+./scripts/tools/analysis/run-fuzzer parser -t 300
 
 # 并行运行
-./scripts/tools/run-fuzzer -j 4 -t 3600
+./scripts/tools/analysis/run-fuzzer -j 4 -t 3600
 ```
 
 ### 语料库

@@ -4,119 +4,111 @@ hide:
   - toc
 ---
 
+<div class="hero-section" markdown>
+
+<p class="hero-eyebrow">Focused FASTQ quality-control toolkit</p>
+
 # FastQTools
 
-<div style="text-align: center; margin: 2rem 0;">
+<p class="lead">Fast statistics and filtering for FASTQ files, with a CLI for routine QC work and a C++ API for pipeline integration.</p>
 
-[![CI](https://img.shields.io/github/actions/workflow/status/LessUp/fastq-tools/ci.yml?label=CI&logo=github)](https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml)
-[![Docs](https://img.shields.io/github/actions/workflow/status/LessUp/fastq-tools/pages.yml?label=Docs&logo=github)](https://lessup.github.io/fastq-tools/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![C++23](https://img.shields.io/badge/C++-23-blue.svg)
+<div class="hero-actions" markdown>
+[Get started](guide/getting-started.en.md){ .md-button .md-button--primary }
+[CLI reference](guide/cli-reference.en.md){ .md-button }
+[Benchmarks](performance/benchmark-report.md){ .md-button }
+[View on GitHub](https://github.com/LessUp/fastq-tools){ .md-button }
+</div>
 
-**现代化 FASTQ 文件处理工具集 — 高性能生物信息学质控工具**
+<p class="hero-note">Built for researchers and pipeline engineers who want a focused FASTQ tool, not a heavyweight workflow platform.</p>
 
 </div>
 
----
-
-## 核心功能
+## What you can do with it
 
 <div class="grid cards" markdown>
 
--   :material-chart-bar:{ .lg .middle } **统计分析 (`stat`)**
+-   :material-chart-box: **Inspect sequencing runs quickly**
 
     ---
 
-    FASTQ 文件统计分析，输出碱基组成、质量分布、GC 含量等核心指标
+    Use `stat` for read counts, length distribution, base composition, GC content, and quality summaries in one pass.
 
-    ```bash
-    FastQTools stat -i input.fastq.gz -o output.stat.txt
-    ```
-
--   :material-filter:{ .lg .middle } **过滤处理 (`filter`)**
+-   :material-filter-outline: **Filter and trim before downstream steps**
 
     ---
 
-    FASTQ 读段过滤与修剪，支持质量、长度、N 比例等多维条件
+    Use `filter` to combine quality, length, and N-ratio thresholds, then trim low-quality ends without stitching together separate tools.
 
-    ```bash
-    FastQTools filter -i input.fq.gz -o filtered.fq.gz \
-        --min-quality 20 --min-length 50
-    ```
+-   :material-code-braces: **Embed FASTQ processing in C++**
+
+    ---
+
+    Reuse the public API when you need the same FASTQ primitives inside a larger library or production pipeline.
 
 </div>
 
-## 技术特性
+## Start here
 
-| 特性 | 描述 |
-|------|------|
-| **高性能** | 基于 Intel TBB 的 `parallel_pipeline` 并行流水线处理 |
-| **现代化** | C++23 标准 + 现代 CMake 构建系统 |
-| **模块化** | 清晰的接口-实现分离设计，支持库级别集成 |
-| **零拷贝 I/O** | `FastqRecord` 使用 `string_view` 实现高效内存访问 |
-| **全面质控** | Sanitizers、Valgrind、模糊测试、覆盖率全覆盖 |
+| If you are trying to… | Go to |
+| --- | --- |
+| Build FastQTools and run the first command | [Getting Started](guide/getting-started.en.md) |
+| Check command syntax and examples | [CLI Reference](guide/cli-reference.en.md) |
+| Understand the benchmark numbers | [Benchmark Overview](performance/benchmark-report.md) |
+| Integrate the library from C++ | [API Overview](api/overview.en.md) |
+| Build or test the project itself | [Developer Guide](dev/index.en.md) |
+| Contribute docs or code | [Contributing](contributing.en.md) |
 
-## 快速开始
+## Representative benchmarks
 
-```bash
-# 一键构建
-./scripts/core/build
+FastQTools publishes a compact benchmark snapshot so new users can judge whether the tool fits everyday QC workloads.
 
-# 查看帮助
-./build/gcc-release/FastQTools --help
+| Workload | Representative result |
+| --- | --- |
+| FASTQ read path | 1696 MB/s |
+| FASTQ write path | 1.76M reads/s |
+| Combined filtering pass | 1.67M reads/s |
+| Full statistics pass | 302 MB/s |
 
-# 统计分析
-FastQTools stat -i input.fastq.gz -o output.stat.txt
+<p class="muted-note">These figures come from the maintained 100K-read (150 bp) benchmark set on an AMD Ryzen 9 5900X. They are intended as context, not universal promises. See the full <a href="performance/benchmark-report/">benchmark overview</a> for methodology and caveats.</p>
 
-# 过滤处理
-FastQTools filter -i input.fq.gz -o filtered.fq.gz --min-quality 20 --min-length 50
-```
+## Documentation map
 
-[:octicons-arrow-right-24: 完整入门指南](guide/getting-started.md){ .md-button .md-button--primary }
-[:octicons-book-24: API 参考](api/overview.md){ .md-button }
+<div class="grid cards" markdown>
 
-## 依赖清单
+-   **Start using the CLI**
 
-| 依赖 | 版本 | 用途 |
-|------|------|------|
-| **Intel oneTBB** | 2022.3.0 | 并行流水线核心 |
-| **zlib-ng** | 2.3.2 | gzip 压缩/解压 |
-| **libdeflate** | 1.25 | 高性能 deflate |
-| **cxxopts** | 3.1.1 | 命令行参数解析 |
-| **spdlog** | 1.17.0 | 日志框架 |
-| **fmt** | 12.1.0 | 格式化库 |
-| **nlohmann_json** | 3.11.3 | JSON 处理 |
+    ---
 
-## 性能概览
+    [Getting Started](guide/getting-started.en.md)<br>
+    [CLI Reference](guide/cli-reference.en.md)
 
-基于 100K reads (150bp) 的基准测试结果：
+-   **Integrate the library**
 
-| 操作 | 吞吐量 | 耗时 |
-|------|--------|------|
-| FastQReader | 1696 MB/s | 18.8 ms |
-| FastQWriter | 1.76 M reads/s | 57.0 ms |
-| Filter Combined | 1.67 M reads/s | 60.5 ms |
-| Stat Full | 302 MB/s | 104.6 ms |
+    ---
 
-[:octicons-graph-24: 完整 Benchmark 报告](benchmark-reports/latest.md){ .md-button }
+    [API Overview](api/overview.en.md)<br>
+    [IO Module](api/io.en.md)
 
-## 项目结构
+-   **Work on the project**
 
-```
-FastQTools/
-├── include/fqtools/   # 公共 API 头文件（对外接口）
-├── src/               # 源代码实现
-├── tests/             # 测试（unit / integration / e2e）
-├── config/            # 构建配置
-├── scripts/           # 构建与工具脚本
-├── docker/            # Docker 配置
-├── tools/             # 开发工具
-├── docs/              # 项目文档
-└── changelog/         # 变更记录
-```
+    ---
+
+    [Developer Guide](dev/index.en.md)<br>
+    [Contributing](contributing.en.md)
+
+-   **Track project movement**
+
+    ---
+
+    [Changelog](changelog.en.md)<br>
+    [GitHub Releases](https://github.com/LessUp/fastq-tools/releases)
+
+</div>
 
 ---
 
-<div style="text-align: center; margin-top: 2rem; color: #888; font-size: 0.9rem;">
-MIT License · Copyright &copy; 2025-2026 LessUp
-</div>
+<p style="text-align: center; color: var(--md-default-fg-color--light);">
+  <a href="index.en.md">中文概览</a> ·
+  <a href="https://github.com/LessUp/fastq-tools">GitHub</a> ·
+  MIT License
+</p>

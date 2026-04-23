@@ -4,7 +4,7 @@
 
 - **编译器**: GCC 15 / 现代 Clang（开发与生产统一；本地 Clang 构建由脚本按已安装版本适配 Conan）
 - **CMake**: 3.28+
-- **版本规范**: 详见 [`docs/decisions/toolchain-policy.md`](../decisions/toolchain-policy.md)
+- **版本规范**: 详见 `openspec/baseline/architecture/0002-toolchain-policy.md`
 - **并行库**: Intel oneTBB（必需，流水线实现依赖）
 - **压缩库**: zlib / bzip2 / xz
 - **内存**: 建议 4GB+ RAM

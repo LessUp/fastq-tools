@@ -9,6 +9,7 @@
 - [构建指南](build.md) - 构建系统和工具链
 - [测试策略](testing.md) - 测试框架和约定
 - [编码规范](coding-standards.md) - C++ 编码标准
+- [本地工具策略](local-tooling.md) - clangd、MCP 与插件边界
 - [Git 工作流](git-guidelines.md) - 分支策略和提交约定
 - [代码质量工具](quality-tools.md) - Linting、格式化和静态分析
 - [Benchmark 指南](benchmark-guide.md) - 性能测试方法
@@ -24,8 +25,8 @@
 ## 开发流程
 
 ```
-1. Fork 仓库 → 2. 创建特性分支 → 3. 编写代码和测试 → 
-4. 运行 lint/test → 5. 提交 PR → 6. Code Review → 7. 合并
+1. 同步当前代码 → 2. 按需新建分支 → 3. 编写代码和测试 →
+4. 运行 lint/test → 5. 提交 commit → 6. 直接推送
 ```
 
 ## 贡献

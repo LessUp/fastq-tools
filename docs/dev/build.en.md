@@ -4,7 +4,7 @@
 
 - **Compiler**: GCC 15 / modern Clang (unified for development and production; local Clang builds automatically adapted by scripts to installed version via Conan)
 - **CMake**: 3.28+
-- **Version Specification**: See [`docs/decisions/toolchain-policy.md`](../decisions/toolchain-policy.md)
+- **Version Specification**: See `openspec/baseline/architecture/0002-toolchain-policy.md`
 - **Parallel Library**: Intel oneTBB (required, pipeline implementation depends on it)
 - **Compression Libraries**: zlib / bzip2 / xz
 - **Memory**: Recommended 4GB+ RAM

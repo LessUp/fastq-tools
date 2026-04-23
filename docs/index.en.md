@@ -4,121 +4,85 @@ hide:
   - toc
 ---
 
+<div class="hero-section" markdown>
+
+<p class="hero-eyebrow">中文概览</p>
+
 # FastQTools
 
-<div style="text-align: center; margin: 2rem 0;">
+<p class="lead">面向 FASTQ 质控场景的轻量工具：快速统计、过滤与修剪，以及可嵌入的 C++ API。</p>
 
-[![CI](https://img.shields.io/github/actions/workflow/status/LessUp/fastq-tools/ci.yml?label=CI&logo=github)](https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml)
-[![Docs](https://img.shields.io/github/actions/workflow/status/LessUp/fastq-tools/pages.yml?label=Docs&logo=github)](https://lessup.github.io/fastq-tools/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![C++23](https://img.shields.io/badge/C++-23-blue.svg)
+<div class="hero-actions" markdown>
+[中文 README](https://github.com/LessUp/fastq-tools/blob/master/README.zh-CN.md){ .md-button .md-button--primary }
+[英文入门文档](guide/getting-started.en.md){ .md-button }
+[CLI 参考](guide/cli-reference.en.md){ .md-button }
+[性能总览](performance/benchmark-report.md){ .md-button }
+</div>
 
-**Modern FASTQ File Processing Toolkit — High-Performance Bioinformatics QC Tool**
+<p class="hero-note">站点完整导航目前主要维护英文页面；本页提供中文定位与关键入口，帮助你先快速判断 FastQTools 是否适合你的工作流。</p>
 
 </div>
 
----
-
-## Key Features
+## 适合哪些任务
 
 <div class="grid cards" markdown>
 
--   :material-chart-bar:{ .lg .middle } **Statistical Analysis (`stat`)**
+-   :material-file-search-outline: **快速检查 FASTQ 是否健康**
 
     ---
 
-    FASTQ file statistics: base composition, quality distribution, GC content, and more
+    用 `stat` 查看读段数量、长度分布、碱基组成、GC 含量和质量指标，适合在下游分析前做首轮 QC。
 
-    ```bash
-    FastQTools stat -i input.fastq.gz -o output.stat.txt
-    ```
-
--   :material-filter:{ .lg .middle } **Filtering (`filter`)**
+-   :material-content-cut: **过滤与修剪原始 reads**
 
     ---
 
-    Read filtering and trimming with quality, length, N-ratio, and other criteria
+    用 `filter` 组合长度、质量、N 比例条件，并在同一次处理里完成低质量端修剪。
 
-    ```bash
-    FastQTools filter -i input.fq.gz -o filtered.fq.gz \
-        --min-quality 20 --min-length 50
-    ```
+-   :material-lan-connect: **嵌入现有 C++ 工具链**
+
+    ---
+
+    如果你已有自己的分析程序，可以直接复用公开 API，而不是重新实现 FASTQ 基础处理逻辑。
 
 </div>
 
-## Technical Highlights
+## 推荐阅读路径
 
-| Feature | Description |
-|---------|-------------|
-| **High Performance** | Parallel pipeline processing based on Intel TBB `parallel_pipeline` |
-| **Modern C++** | C++23 standard + modern CMake build system |
-| **Modular Design** | Clean interface-implementation separation, library-level integration ready |
-| **Zero-Copy I/O** | `FastqRecord` uses `string_view` for efficient memory access |
-| **Comprehensive QC** | Sanitizers, Valgrind, fuzz testing, and coverage — fully covered |
+| 你的目标 | 建议入口 |
+| --- | --- |
+| 先把工具构建起来并跑通第一个命令 | [Getting Started](guide/getting-started.en.md) |
+| 想查具体命令和参数 | [CLI Reference](guide/cli-reference.en.md) |
+| 想知道性能数字应该怎么理解 | [Benchmark Overview](performance/benchmark-report.md) |
+| 想看 C++ 接口组织方式 | [API Overview](api/overview.en.md) |
+| 想参与项目改进 | [Contributing](contributing.en.md) |
 
-## Quick Start
+## 代表性性能数据
 
-```bash
-# One-command build
-./scripts/core/build
+| 工作负载 | 代表性结果 |
+| --- | --- |
+| FASTQ 读取路径 | 1696 MB/s |
+| FASTQ 写出路径 | 176 万 reads/s |
+| 组合过滤处理 | 167 万 reads/s |
+| 完整统计分析 | 302 MB/s |
 
-# Show help
-./build/clang-release/FastQTools --help
+<p class="muted-note">以上数字来自维护中的 100K reads（150 bp）基准集合，硬件为 AMD Ryzen 9 5900X。它们用于帮助你判断量级，而不是对所有输入和环境作绝对承诺。</p>
 
-# Statistical analysis
-FastQTools stat -i input.fastq.gz -o output.stat.txt
+## 中文用户的实用入口
 
-# Filtering
-FastQTools filter -i input.fq.gz -o filtered.fq.gz --min-quality 20 --min-length 50
-```
+<div class="language-note" markdown>
 
-[:octicons-arrow-right-24: Getting Started Guide](guide/getting-started.en.md){ .md-button .md-button--primary }
-[:octicons-book-24: API Reference](api/overview.en.md){ .md-button }
+- 仓库说明： [README.zh-CN.md](https://github.com/LessUp/fastq-tools/blob/master/README.zh-CN.md)
+- 代码仓库： [LessUp/fastq-tools](https://github.com/LessUp/fastq-tools)
+- 英文文档首页： [Documentation Home](index.md)
+- 发布记录： [GitHub Releases](https://github.com/LessUp/fastq-tools/releases)
 
-## Dependencies
-
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| **Intel oneTBB** | 2022.3.0 | Parallel pipeline core |
-| **zlib-ng** | 2.3.2 | gzip compression/decompression |
-| **libdeflate** | 1.25 | High-performance deflate |
-| **cxxopts** | 3.1.1 | Command-line argument parsing |
-| **spdlog** | 1.17.0 | Logging framework |
-| **fmt** | 12.1.0 | Formatting library |
-| **nlohmann_json** | 3.11.3 | JSON processing |
-
-## Performance
-
-Benchmark results with 100K reads (150bp):
-
-| Operation | Throughput | Time |
-|-----------|------------|------|
-| FastQReader | 1696 MB/s | 18.8 ms |
-| FastQWriter | 1.76 M reads/s | 57.0 ms |
-| Filter Combined | 1.67 M reads/s | 60.5 ms |
-| Stat Full | 302 MB/s | 104.6 ms |
-
-[:octicons-graph-24: Full Benchmark Report](benchmark-reports/latest.md){ .md-button }
-
-## Project Structure
-
-```
-FastQTools/
-├── include/fqtools/   # Public API headers
-├── src/               # Source implementation
-├── tests/             # Tests (unit / integration / e2e)
-├── config/            # Build config (Conan profiles, sanitizers, valgrind, etc.)
-├── scripts/           # Build & utility scripts (core / lib / tools)
-├── docker/            # Docker config (dev / prod / deploy)
-├── tools/             # Dev tools (benchmark / fuzz / data)
-├── cmake/modules/     # Custom CMake modules
-├── docs/              # Documentation
-├── changelog/         # Change records
-└── examples/          # Usage examples
-```
+</div>
 
 ---
 
-<div style="text-align: center; margin-top: 2rem; color: #888; font-size: 0.9rem;">
-MIT License · Copyright &copy; 2025-2026 LessUp
-</div>
+<p style="text-align: center; color: var(--md-default-fg-color--light);">
+  <a href="index.md">English home</a> ·
+  <a href="https://github.com/LessUp/fastq-tools">GitHub</a> ·
+  MIT License
+</p>

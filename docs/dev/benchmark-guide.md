@@ -9,10 +9,10 @@
 cmake --build build/clang-release --target benchmarks
 
 # 运行基准测试
-./scripts/benchmark run
+./scripts/tools/performance/benchmark run
 
 # 生成报告
-./scripts/benchmark report
+./scripts/tools/performance/benchmark report
 ```
 
 ## CLI 命令
@@ -22,7 +22,7 @@ cmake --build build/clang-release --target benchmarks
 运行性能基准测试。
 
 ```bash
-./scripts/benchmark run [options]
+./scripts/tools/performance/benchmark run [options]
 
 Options:
   --output, -o    指定输出文件路径
@@ -31,9 +31,9 @@ Options:
   --ci            CI 模式
 
 Examples:
-  ./scripts/benchmark run
-  ./scripts/benchmark run --filter "Reader"
-  ./scripts/benchmark run --repetitions 5 --ci
+  ./scripts/tools/performance/benchmark run
+  ./scripts/tools/performance/benchmark run --filter "Reader"
+  ./scripts/tools/performance/benchmark run --repetitions 5 --ci
 ```
 
 ### `benchmark report`
@@ -41,7 +41,7 @@ Examples:
 从测试结果生成报告。
 
 ```bash
-./scripts/benchmark report [options]
+./scripts/tools/performance/benchmark report [options]
 
 Options:
   --input, -i     输入 JSON 文件
@@ -49,9 +49,9 @@ Options:
   --charts        生成图表
 
 Examples:
-  ./scripts/benchmark report
-  ./scripts/benchmark report --format summary
-  ./scripts/benchmark report --charts
+  ./scripts/tools/performance/benchmark report
+  ./scripts/tools/performance/benchmark report --format summary
+  ./scripts/tools/performance/benchmark report --charts
 ```
 
 ### `benchmark compare`
@@ -59,7 +59,7 @@ Examples:
 比较两个测试结果，检测性能回归。
 
 ```bash
-./scripts/benchmark compare <baseline> <current> [options]
+./scripts/tools/performance/benchmark compare <baseline> <current> [options]
 
 Options:
   --warning-threshold   警告阈值（默认: 0.10 = 10%）
@@ -67,8 +67,8 @@ Options:
   --ci                  CI 模式输出
 
 Examples:
-  ./scripts/benchmark compare baseline.json current.json
-  ./scripts/benchmark compare baseline.json current.json --warning-threshold 0.05
+  ./scripts/tools/performance/benchmark compare baseline.json current.json
+  ./scripts/tools/performance/benchmark compare baseline.json current.json --warning-threshold 0.05
 ```
 
 ### `benchmark baseline`
@@ -76,7 +76,7 @@ Examples:
 管理性能基线。
 
 ```bash
-./scripts/benchmark baseline <command> [args]
+./scripts/tools/performance/benchmark baseline <command> [args]
 
 Commands:
   save <name> [source]  保存基线
@@ -84,9 +84,9 @@ Commands:
   delete <name>         删除基线
 
 Examples:
-  ./scripts/benchmark baseline save v1.0
-  ./scripts/benchmark baseline list
-  ./scripts/benchmark baseline delete old-baseline
+  ./scripts/tools/performance/benchmark baseline save v1.0
+  ./scripts/tools/performance/benchmark baseline list
+  ./scripts/tools/performance/benchmark baseline delete old-baseline
 ```
 
 ### `benchmark data`
@@ -94,15 +94,15 @@ Examples:
 管理测试数据。
 
 ```bash
-./scripts/benchmark data <command> [args]
+./scripts/tools/performance/benchmark data <command> [args]
 
 Commands:
   generate              生成完整测试数据集
   validate <file>       验证 FASTQ 文件格式
 
 Examples:
-  ./scripts/benchmark data generate
-  ./scripts/benchmark data validate test.fastq
+  ./scripts/tools/performance/benchmark data generate
+  ./scripts/tools/performance/benchmark data validate test.fastq
 ```
 
 ### `benchmark compiler`
@@ -110,7 +110,7 @@ Examples:
 运行 GCC vs Clang 编译器对比基准。
 
 ```bash
-./scripts/benchmark compiler [options]
+./scripts/tools/performance/benchmark compiler [options]
 
 Options:
   --data-dir         指定测试数据目录
@@ -123,9 +123,9 @@ Options:
   --no-time          禁用最大内存统计
 
 Examples:
-  ./scripts/benchmark compiler
-  ./scripts/benchmark compiler --benchmark-filter "Reader"
-  ./scripts/benchmark compiler --output docs/performance/benchmark-reports/compiler/custom.json
+  ./scripts/tools/performance/benchmark compiler
+  ./scripts/tools/performance/benchmark compiler --benchmark-filter "Reader"
+  ./scripts/tools/performance/benchmark compiler --output docs/benchmark-reports/compiler/custom.json
 ```
 
 ### `benchmark visualize`
@@ -133,7 +133,7 @@ Examples:
 生成编译器对比可视化报告（Markdown/HTML）。
 
 ```bash
-./scripts/benchmark visualize [options]
+./scripts/tools/performance/benchmark visualize [options]
 
 Options:
   --input, -i     输入 JSON 文件
@@ -142,15 +142,15 @@ Options:
   --no-charts     禁用图表生成
 
 Examples:
-  ./scripts/benchmark visualize
-  ./scripts/benchmark visualize --format html
-  ./scripts/benchmark visualize --input docs/performance/benchmark-reports/compiler/latest.json
+  ./scripts/tools/performance/benchmark visualize
+  ./scripts/tools/performance/benchmark visualize --format html
+  ./scripts/tools/performance/benchmark visualize --input docs/benchmark-reports/compiler/latest.json
 ```
 
 ## 目录结构
 
 ```
-docs/performance/benchmark-reports/
+docs/benchmark-reports/
 ├── baselines/         # 命名基线
 │   └── <name>.json
 ├── data/              # 测试数据

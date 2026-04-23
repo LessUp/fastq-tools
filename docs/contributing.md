@@ -1,80 +1,40 @@
 # 贡献指南
 
-欢迎为 FastQTools 项目做出贡献！
+FastQTools 欢迎聚焦明确的改进：bug 反馈、文档修订、测试补强、基准说明，以及范围清晰的代码变更。目标不是堆功能，而是让项目更可信、更易用。
 
-## 快速开始
+## 适合优先参与的内容
 
-详细的贡献指南请参阅项目根目录的 [CONTRIBUTING.md](https://github.com/LessUp/fastq-tools/blob/master/CONTRIBUTING.md)。
+- 补充更清楚的安装步骤或使用示例
+- 改进错误场景说明和排障信息
+- 为已有行为补测试、补边界条件
+- 复现实验或整理性能基准流程
+- 帮助核实 issue 中的问题是否可复现
 
-## 贡献方式
+## 提交 PR 前建议先做的事
 
-### 1. 报告问题
+1. 如果改动会影响公开行为、文档或示例，请一起更新，避免信息分叉。
+2. 保持范围尽量小，让审阅者可以快速判断正确性。
+3. 如果变更影响外部可见行为，先确认是否与相关 OpenSpec baseline 一致。
 
-- 使用 [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) 报告 bug 或提出功能请求
-- 提供详细的复现步骤和环境信息
-
-### 2. 提交代码
+## 本地验证
 
 ```bash
-# 1. Fork 仓库
-# 2. 创建特性分支
-git checkout -b feat/my-feature
-
-# 3. 编写代码和测试
-# 4. 运行验证
+# 需要时先格式化代码
 ./scripts/core/lint format
+
+# 运行相关检查
 ./scripts/core/test
 
-# 5. 提交并推送
-git commit -m "feat: add my feature"
-git push origin feat/my-feature
-
-# 6. 创建 Pull Request
+# 修改公开文档时，构建文档站点
+mkdocs build --strict
 ```
 
-### 3. 改进文档
+## 从哪里开始
 
-- 修正拼写/语法错误
-- 添加使用示例
-- 改进指南和教程
-- 翻译文档
+- [仓库根目录 CONTRIBUTING.md](https://github.com/LessUp/fastq-tools/blob/master/CONTRIBUTING.md) — 完整贡献流程
+- [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) — bug 与可执行问题单
+- [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions) — 提案与开放讨论
 
-### 4. 代码审查
+## 文档贡献同样重要
 
-- 审查开放的 Pull Requests
-- 提供建设性反馈
-- 验证测试通过
-
-## 开发环境设置
-
-```bash
-# 安装依赖
-./scripts/core/install-deps
-
-# 构建项目
-./scripts/core/build
-
-# 运行测试
-./scripts/core/test
-```
-
-## 代码规范
-
-- 遵循 [C++ 编码规范](dev/coding-standards.md)
-- 使用 `./scripts/core/lint format` 格式化代码
-- 添加必要的测试
-- 更新相关文档
-
-## 提交约定
-
-使用 [Conventional Commits](https://www.conventionalcommits.org/) 格式：
-
-```
-feat|fix|docs|refactor|test|build|ci|chore(scope): subject
-```
-
-## 行为准则
-
-请遵守 [Code of Conduct](https://github.com/LessUp/fastq-tools/blob/master/CODE_OF_CONDUCT.md)。
-
-感谢你的贡献！🎉
+很多时候，一次好的文档修改就是提升项目可用性的最快方式。README 是否清楚、首页是否好用、命令示例是否可信、性能数字是否解释得当，都会直接影响新用户是否愿意采用 FastQTools。

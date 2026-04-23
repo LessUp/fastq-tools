@@ -1,80 +1,40 @@
-# Contributing Guide
+# Contributing
 
-Welcome to contribute to the FastQTools project!
+FastQTools welcomes focused improvements: bug reports, docs fixes, tests, benchmark work, and narrow code changes that keep the project easier to trust and easier to use.
 
-## Quick Start
+## Good first contributions
 
-For detailed contributing guidelines, please see [CONTRIBUTING.md](https://github.com/LessUp/fastq-tools/blob/master/CONTRIBUTING.md) in the project root.
+- Clarify setup steps or usage examples
+- Improve error-case documentation and troubleshooting notes
+- Add or tighten tests around existing behavior
+- Reproduce or document benchmark workflows
+- Review open issues and help confirm expected behavior
 
-## Ways to Contribute
+## Before you open a pull request
 
-### 1. Report Issues
+1. Check whether the change affects public behavior, docs, or examples, and keep those in sync.
+2. Keep the scope small enough that reviewers can reason about it quickly.
+3. If the change affects externally visible behavior, align it with the relevant OpenSpec baseline first.
 
-- Use [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) to report bugs or request features
-- Provide detailed reproduction steps and environment information
-
-### 2. Submit Code
+## Local validation
 
 ```bash
-# 1. Fork the repository
-# 2. Create a feature branch
-git checkout -b feat/my-feature
-
-# 3. Write code and tests
-# 4. Run validation
+# Format code when needed
 ./scripts/core/lint format
+
+# Run the relevant checks
 ./scripts/core/test
 
-# 5. Commit and push
-git commit -m "feat: add my feature"
-git push origin feat/my-feature
-
-# 6. Create a Pull Request
+# Build the docs site when touching public docs
+mkdocs build --strict
 ```
 
-### 3. Improve Documentation
+## Where to start
 
-- Fix spelling/grammar errors
-- Add usage examples
-- Improve guides and tutorials
-- Translate documentation
+- [Root CONTRIBUTING.md](https://github.com/LessUp/fastq-tools/blob/master/CONTRIBUTING.md) — full contribution process
+- [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) — bugs and scoped work items
+- [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions) — proposals and open-ended questions
 
-### 4. Code Review
+## Docs contributions are valuable
 
-- Review open Pull Requests
-- Provide constructive feedback
-- Verify tests pass
-
-## Development Setup
-
-```bash
-# Install dependencies
-./scripts/core/install-deps
-
-# Build the project
-./scripts/core/build
-
-# Run tests
-./scripts/core/test
-```
-
-## Code Standards
-
-- Follow the [C++ Coding Standards](dev/coding-standards.en.md)
-- Format code with `./scripts/core/lint format`
-- Add necessary tests
-- Update related documentation
-
-## Commit Convention
-
-Use [Conventional Commits](https://www.conventionalcommits.org/) format:
-
-```
-feat|fix|docs|refactor|test|build|ci|chore(scope): subject
-```
-
-## Code of Conduct
-
-Please follow the [Code of Conduct](https://github.com/LessUp/fastq-tools/blob/master/CODE_OF_CONDUCT.md).
-
-Thank you for your contribution! 🎉
+A good documentation change is often the fastest way to improve the project for new users. README clarity, landing-page structure, command examples, and benchmark interpretation all directly affect whether people can adopt FastQTools confidently.

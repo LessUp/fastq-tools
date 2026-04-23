@@ -1,25 +1,27 @@
 # Archived Documents
 
-This directory contains documents that have been migrated to `/specs/` and audit records.
+This directory keeps **historical reference material only**. It is no longer a source of truth for current specs or workflow.
 
-## Archive Contents
+## Current Entry Points
 
-### 2026-04-17 Migrated to Specs
-On April 17, 2026, all Architecture Decision Records (ADRs) and specification documents were migrated from `docs/` to the `/specs/` directory to align with the **Spec-Driven Development (SDD)** paradigm.
+- Current baseline specs: [`openspec/baseline/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline)
+- Active proposals: `openspec/changes/`
+- Archived proposals: `openspec/archive/`
+- Versioned maintenance history: [`changelog/`](https://github.com/LessUp/fastq-tools/tree/master/changelog)
 
-- [Migration Notice](2026-04-17-migrated-to-specs/migration-notice.md)
-- Toolchain policy, optimization decisions, project assessments migrated
-- Benchmark system and memory pool specs migrated
+## Retained Historical Material
 
-### 2025-12-29 Documentation Audit
-Documentation style and completeness audit conducted on December 29, 2025.
+### 2026-04-17 Documentation-era spec snapshot
+
+This snapshot preserves the last docs-based spec bundle for historical lookup.
+
+- [Migration Notice](2026-04-17-migrated-to-specs/migration-notice.en.md)
+- Historical toolchain, benchmark, and memory-pool documents
+
+### 2025-12-29 Documentation audit
+
+These files capture the final output of a one-off documentation audit.
 
 - [Audit Report](2025-12-29-audit/audit-2025-12-29-docs-style.md)
 - [Implementation Progress](2025-12-29-audit/implementation-progress.md)
 - [Requirements Document](2025-12-29-audit/requirements.md)
-
-## Migration Notice
-
-If you're looking for technical decision documents, please visit `/specs/rfc/` directory.
-If you're looking for product requirements, please visit `/specs/product/` directory.
-If you're looking for API specifications, please visit `/specs/api/` directory.

@@ -1,44 +1,23 @@
 # 文档迁移说明 / Migration Notice
 
-> 本页面已归档，仅作历史记录。
+> 本页面仅保留为历史快照说明。
 
----
+## 当前规范位置 / Current Spec Home
 
-## 迁移概述 / Migration Overview
+当前规范已经进一步收敛到 OpenSpec 结构：
 
-**日期 / Date**: 2026-04-17
+- 基线规范 / Baseline specs: [`openspec/baseline/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline)
+- 活跃提案 / Active proposals: `openspec/changes/`
+- 已归档提案 / Archived proposals: `openspec/archive/`
 
-本次迁移将项目规范文档从 `docs/` 目录迁移到 `/specs/` 目录，遵循 **Spec-Driven Development (SDD)** 范式。
+## 本目录仍然保留的原因 / Why This Folder Still Exists
 
-This migration moved specification documents from `docs/` to `/specs/`, following the **Spec-Driven Development (SDD)** paradigm.
+本目录保留 2026-04-17 时点的文档化规范快照，便于追溯当时的目录布局和历史表述。
 
----
+This folder preserves the documentation-era spec snapshot captured on 2026-04-17 for historical lookup.
 
-## 迁移内容 / Migrated Content
+## 使用建议 / Guidance
 
-| 原路径 / Original Path | 新路径 / New Path |
-|------------------------|-------------------|
-| `docs/steering/` | `specs/product/` |
-| `docs/benchmark-system/` | `specs/rfc/` |
-| `docs/memory-pool/` | `specs/rfc/` |
-| `docs/advanced-cpp-tooling/` | `specs/rfc/` |
-
----
-
-## 新目录结构 / New Directory Structure
-
-```
-specs/
-├── product/       # 产品功能定义与验收标准
-├── rfc/           # 技术设计文档
-├── api/           # API 接口规范
-├── db/            # 数据模型与配置规范
-└── testing/       # 测试策略与约定
-```
-
----
-
-## 参考链接 / Reference Links
-
-- [specs/README.md](../../../specs/README.md) — 规范文档目录索引
-- [AGENTS.md](../../../AGENTS.md) — AI Agent 工作流指南
+- 将这里的内容视为历史记录，不要作为当前事实来源
+- 查找当前规范时，请从 [`openspec/README.md`](https://github.com/LessUp/fastq-tools/blob/master/openspec/README.md) 开始
+- 如需回看旧结构，可继续浏览本归档目录

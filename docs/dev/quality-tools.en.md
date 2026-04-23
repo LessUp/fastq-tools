@@ -6,14 +6,14 @@ This document introduces the code quality tools used in the FastQTools project, 
 
 | Tool Category | Tool | Purpose | Execution Timing |
 |--------------|------|---------|------------------|
-| Memory Check | ASan | Memory error detection | Every PR |
+| Memory Check | ASan | Memory error detection | Every significant change |
 | Memory Check | MSan | Uninitialized memory | Manual |
 | Thread Check | TSan | Data race detection | Manual |
 | Undefined Behavior | UBSan | UB detection | Manual |
 | Deep Analysis | Valgrind | Memory leaks, cache analysis | Weekly |
-| Static Analysis | clang-tidy | Code quality | Every PR |
-| Static Analysis | Cppcheck | Additional checks | Every PR |
-| Coverage | lcov | Test coverage | Every PR |
+| Static Analysis | clang-tidy | Code quality | Every significant change |
+| Static Analysis | Cppcheck | Additional checks | Every significant change |
+| Coverage | lcov | Test coverage | As needed |
 | Security Testing | libFuzzer | Fuzz testing | Manual |
 
 ## Sanitizers
@@ -96,10 +96,10 @@ brew install valgrind
 ./scripts/core/test -b build/clang-debug --valgrind
 
 # Manual Memcheck run
-./scripts/tools/valgrind-memcheck
+./scripts/tools/analysis/valgrind-memcheck
 
 # Cache performance analysis
-./scripts/tools/valgrind-cachegrind
+./scripts/tools/performance/valgrind-cachegrind
 ```
 
 ### Output Interpretation
@@ -186,13 +186,13 @@ pip install gcovr
 ./scripts/core/test -b build/clang-debug
 
 # Generate report
-./scripts/tools/coverage-report
+./scripts/tools/analysis/coverage-report
 
 # Generate XML report (for CI)
-./scripts/tools/coverage-report --xml
+./scripts/tools/analysis/coverage-report --xml
 
 # Check threshold
-./scripts/tools/coverage-report --check-threshold
+./scripts/tools/analysis/coverage-report --check-threshold
 ```
 
 ### Output
@@ -221,13 +221,13 @@ Fuzz testing requires Clang compiler and libFuzzer (built into Clang).
 
 ```bash
 # Build and run
-./scripts/tools/run-fuzzer --build
+./scripts/tools/analysis/run-fuzzer --build
 
 # Run specific fuzzer
-./scripts/tools/run-fuzzer parser -t 300
+./scripts/tools/analysis/run-fuzzer parser -t 300
 
 # Parallel run
-./scripts/tools/run-fuzzer -j 4 -t 3600
+./scripts/tools/analysis/run-fuzzer -j 4 -t 3600
 ```
 
 ### Corpus
