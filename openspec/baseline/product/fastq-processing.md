@@ -69,6 +69,6 @@ Based on 100K reads (150bp) benchmark:
 
 ## Related Specifications
 
-- [RFC-0001: Core Architecture](../rfc/0001-core-architecture.md)
-- [RFC-0002: Toolchain Policy](../rfc/0002-toolchain-policy.md)
+- [Core Architecture](../architecture/0001-core-architecture.md)
+- [Toolchain Policy](../architecture/0002-toolchain-policy.md)
 - [API Specification](../api/core-api.md)

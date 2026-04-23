@@ -2,9 +2,9 @@
 
 > **Status**: Active  
 > **Created**: 2026-04-17  
-> **Last Updated**: 2026-04-17  
+> **Last Updated**: 2026-04-23  
 > **Authors**: FastQTools Core Team  
-> **Supersedes**: `docs/specs/benchmark-system/design.md`
+> **Migrated From**: legacy benchmark system design document in the pre-OpenSpec docs tree
 
 ## Context
 
@@ -259,5 +259,5 @@ Options:
 ## Related Documents
 
 - [Product Specification](../product/fastq-processing.md)
-- [RFC-0001: Core Architecture](0001-core-architecture.md)
-- [Benchmark Reports](../../docs/benchmark-reports/)
+- [Core Architecture](0001-core-architecture.md)
+- [Benchmark Guide](../../../docs/dev/benchmark-guide.md)

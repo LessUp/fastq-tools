@@ -1,63 +1,63 @@
 # Contributing to FastQTools
 
-Thank you for considering contributing to FastQTools! To keep things simple (KISS) and efficient, please follow the guidelines below.
+Thanks for helping improve FastQTools.
 
-## Spec-Driven Development (SDD)
+## Before you start
 
-This project follows **Spec-Driven Development** paradigm. All code implementation must be based on specifications in the `/specs` directory as the Single Source of Truth.
+- Review the relevant baseline spec in [`openspec/baseline/`](openspec/baseline/).
+- If your change affects behavior, public APIs, schemas/file formats, architecture, toolchain policy, or compatibility, create or update a proposal under [`openspec/changes/`](openspec/changes/) before implementation.
+- Docs-only, test-only, and internal cleanup changes that do not alter baseline meaning can go straight to implementation, but the commit or push should cite the relevant baseline section or state `no baseline delta`.
+- If you use repository agents, also follow [`AGENTS.md`](AGENTS.md).
 
-### Before Writing Code
+## Preflight
 
-1. **Review relevant specs**: Check `/specs` directory for product requirements, RFCs, and API specifications
-2. **Spec-first**: If your contribution changes behavior or interfaces, update or create specs first
-3. **Get alignment**: Ensure spec changes are reviewed before implementation
+Run this lightweight check set before you start a task:
 
-### Spec Categories
+```bash
+git status --short --branch
+```
 
-- `/specs/product/`: Product requirements and feature definitions
-- `/specs/rfc/`: Technical design documents (numbered, e.g., `0001-core-architecture.md`)
-- `/specs/api/`: API interface specifications
-- `/specs/db/`: Data models and configuration schemas
-- `/specs/testing/`: Testing strategies and conventions
+- Make sure the current tree is in a state you can safely continue from.
+- Use `git fetch --prune origin`, `git worktree list`, or `gh` only when the task actually needs remote inspection or extra isolation.
 
-## Getting Started
+## Branch workflow
 
-- Use recent CMake (>= 3.28) and a C++23 compiler (GCC 11+ / Clang 12+).
-- Preferred build flow uses Conan toolchains.
-- Run a full build and tests locally before opening a PR.
-- **Full spec documentation**: See [specs/README.md](specs/README.md)
+For this solo-maintained repository, direct push is the default. Use an extra branch or worktree only when it genuinely helps isolate risky changes:
 
-## Development Workflow
+```bash
+git checkout -b fix/<slug>   # optional
+# or: git worktree add ../fastq-tools-<slug> -b fix/<slug> master
+```
 
-1. **Check specs**: Review `/specs` for relevant requirements before starting
-2. Fork the repo and create a feature branch.
-3. Keep PRs small and focused. One change per PR.
-4. **Update specs first**: If changing behavior, update `/specs` documents
-5. Ensure formatting/lint pass:
-   - `./scripts/core/lint format`
-   - `./scripts/core/lint check`
-6. Run tests: `./scripts/core/test` (or `ctest`).
-7. Add/update documentation when behavior changes.
+- Use `fix/<slug>`, `docs/<slug>`, or `chore/<slug>` depending on the change.
+- Small, focused changes are preferred whether you push directly or use a short-lived branch.
+- Run only the checks relevant to your change. For docs-only changes, `git diff --check` is the minimum.
+- Push directly once the relevant checks pass and the baseline/proposal state is correct.
 
-## Commit Messages
+## Local checks
 
-- Use conventional commits where possible, e.g.:
-  - `feat: ...`, `fix: ...`, `chore: ...`, `docs: ...`, `test: ...`.
-  - For spec changes: `docs(specs): ...`
-- Keep subject concise; add details in body if necessary.
+Use the maintained `scripts/core/` entry points instead of legacy script paths:
 
-## Code Style
+```bash
+./scripts/core/install-deps
+./scripts/core/build --dev
+./scripts/core/lint check
+./scripts/core/test
+```
 
-- Follow `.clang-format` and `.clang-tidy`.
-- Prefer modern C++ (RAII, smart pointers, const-correctness).
-- Keep public headers minimal and stable.
-- **100% spec compliance**: Code must implement behavior defined in `/specs`.
+Keep changes small and focused, add or update tests for behavior changes, and update user-facing docs when needed.
 
-## Tests
+## Commit messages
 
-- Add unit tests for new features and bug fixes.
-- Keep tests fast and deterministic.
-- **Cover spec acceptance criteria**: Ensure tests validate all acceptance criteria in relevant specs.
+Prefer Conventional Commits such as `feat: ...`, `fix: ...`, `docs: ...`, or `test: ...`.
+
+## More guidance
+
+- OpenSpec overview: [`openspec/README.md`](openspec/README.md)
+- Git workflow details: [`docs/dev/git-guidelines.md`](docs/dev/git-guidelines.md)
+- Core script reference: [`scripts/core/README.md`](scripts/core/README.md)
+- Developer documentation: [`docs/dev/index.md`](docs/dev/index.md)
+- Toolchain policy: [`openspec/baseline/architecture/0002-toolchain-policy.md`](openspec/baseline/architecture/0002-toolchain-policy.md)
 
 ## Security
 

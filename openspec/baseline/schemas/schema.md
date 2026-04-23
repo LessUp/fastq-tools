@@ -1,7 +1,7 @@
 # Schema Specification: Configuration & Data Models
 
 > **Status**: Active  
-> **Last Updated**: 2026-04-17  
+> **Last Updated**: 2026-04-23  
 > **Related**: [Product Spec](../product/fastq-processing.md)
 
 ## Overview
@@ -230,5 +230,5 @@ FQ_THROW_CONFIG_ERROR("thread_count must be between 1 and 256, got: " + std::to_
 ## Related Documents
 
 - [Product Specification](../product/fastq-processing.md)
-- [API Specification](core-api.md)
-- [CLI Reference](../../docs/guide/cli-reference.md)
+- [API Specification](../api/core-api.md)
+- [CLI Reference](../../../docs/guide/cli-reference.md)

@@ -1,9 +1,9 @@
-# RFC-0001: Core Architecture
+# Architecture-0001: Core Architecture
 
-> **Status**: Active  
-> **Created**: 2026-04-17  
-> **Last Updated**: 2026-04-17  
-> **Authors**: FastQTools Core Team  
+> **Status**: Active
+> **Created**: 2026-04-17
+> **Last Updated**: 2026-04-23
+> **Authors**: FastQTools Core Team
 > **Related**: [Product Spec](../product/fastq-processing.md)
 
 ## Context
@@ -192,6 +192,6 @@ public:
 ## Related Documents
 
 - [Product Specification](../product/fastq-processing.md)
-- [RFC-0002: Toolchain Policy](0002-toolchain-policy.md)
+- [Architecture-0002: Toolchain Policy](0002-toolchain-policy.md)
 - [API Specification](../api/core-api.md)
-- [Architecture Design](../../docs/dev/architecture.md) (legacy)
+- [Legacy Architecture Guide](../../../docs/dev/architecture.md)

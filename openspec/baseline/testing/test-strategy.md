@@ -2,7 +2,7 @@
 
 > **Status**: Active  
 > **Last Updated**: 2026-04-17  
-> **Related**: [Product Spec](../product/fastq-processing.md), [RFC-0001](../rfc/0001-core-architecture.md)
+> **Related**: [Product Spec](../product/fastq-processing.md), [Architecture-0001](../architecture/0001-core-architecture.md)
 
 ## Overview
 
@@ -211,8 +211,8 @@ BENCHMARK(BM_FastqReader);
 ```
 
 **Validation**:
-- Performance targets documented in `specs/product/fastq-processing.md`
-- Regression detection via `specs/rfc/0003-benchmark-system.md`
+- Performance targets documented in `baseline/product/fastq-processing.md`
+- Regression detection via `baseline/architecture/0003-benchmark-system.md`
 
 ## Coverage Requirements
 
@@ -231,13 +231,13 @@ BENCHMARK(BM_FastqReader);
 
 ## Sanitizer Testing
 
-All tests run with sanitizers in CI:
+Sanitizer coverage is enforced in CI for mainline-quality changes:
 
 | Sanitizer | CI Job | Failure Action |
 |-----------|--------|---------------|
-| ASan | `clang-asan` preset | Block merge |
-| TSan | `clang-tsan` preset | Block merge |
-| UBSan | Part of ASan job | Block merge |
+| ASan | `clang-asan` preset | Treat as release blocker |
+| TSan | `clang-tsan` preset | Treat as release blocker |
+| UBSan | Part of ASan job | Treat as release blocker |
 
 **Local Testing**:
 ```bash
@@ -340,6 +340,6 @@ Tests run in CI on every PR:
 ## Related Documents
 
 - [Product Specification](../product/fastq-processing.md)
-- [RFC-0001: Core Architecture](../rfc/0001-core-architecture.md)
-- [RFC-0005: Advanced Tooling](../rfc/0005-advanced-tooling.md)
-- [Testing Guide](../../docs/dev/testing.md)
+- [Architecture-0001: Core Architecture](../architecture/0001-core-architecture.md)
+- [Architecture-0005: Advanced Tooling](../architecture/0005-advanced-tooling.md)
+- [Testing Guide](../../../docs/dev/testing.md)

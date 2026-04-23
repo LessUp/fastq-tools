@@ -5,98 +5,178 @@
 
 ## 规则文件状态
 
-- 当前仓库未发现 `.cursor/rules/`、`.cursorrules` 或 `.github/copilot-instructions.md`。
-- 因此，根目录 `AGENTS.md` 就是本仓库的主 Agent 规则文件。
+- 根目录 `AGENTS.md` 是仓库级 AI 治理主文件。
+- `.github/copilot-instructions.md`、`.windsurf/rules.md`、`CLAUDE.md`、`QWEN.md` 仅提供工具级补充，不能与本文件冲突。
 
 ---
 
-# Project Philosophy: Spec-Driven Development (SDD)
+## 权威层级
 
-本项目严格遵循**规范驱动开发（Spec-Driven Development, SDD）**范式。所有的代码实现必须以 `/specs` 目录下的规范文档为唯一事实来源（Single Source of Truth）。
-
-## Directory Context (目录说明)
-
-- `/specs/product/`：产品功能定义与验收标准。
-- `/specs/rfc/`：技术设计文档（架构决策、实现方案）。
-- `/specs/api/`：API 接口规范（机器可读与人类可读）。
-- `/specs/db/`：数据模型与配置规范。
-- `/specs/testing/`：测试策略与约定。
+1. `AGENTS.md`：AI Agent 的最高优先级治理文件，定义工作流、变更边界与协作规则。
+2. `openspec/baseline/`：当前实现的规范事实来源；产品、架构、API、schema、测试约束都以此为准。
+3. `openspec/changes/`：提案与待落地变更；仅在任务跨过 proposal 阈值或当前任务明确要求处理对应 proposal 时，才可作为执行依据。
+4. `.github/copilot-instructions.md`、`.windsurf/rules.md`、`CLAUDE.md`、`QWEN.md`：面向特定 Agent 的补充速查表；若与前述内容冲突，一律以前三项为准。
+5. 仓库内可执行约束（如 `.clang-format`、`.clang-tidy`、`CMakeLists.txt`、`scripts/core/*`）用于落实实现细节，不得被辅助文档覆盖。
 
 ---
 
-## AI Agent Workflow Instructions (AI 工作流指令)
+## 维护期协作工作流（必须遵守）
 
-当你（AI）被要求开发一个新功能、修改现有功能或修复 Bug 时，**必须严格按照以下工作流执行，不可跳过任何步骤**：
+### 0. 任务前预检
 
-### Step 1: 审查与分析 (Review Specs)
+在开始任何修改前，至少执行：
 
-- 在编写任何代码之前，首先阅读 `/specs` 目录下相关的产品文档、RFC 和 API 定义。
-- 如果用户指令与现有 Spec 冲突，请立即停止编码，并指出冲突点，询问用户是否需要先更新 Spec。
+```bash
+git status --short --branch
+```
 
-### Step 2: 规范优先 (Spec-First Update)
+- 当前工作树不干净时，先确认这些改动是否与本任务兼容，再决定继续、切分分支，或额外使用 worktree。
+- `gh auth status`、`git fetch --prune origin`、`git worktree list`、`git branch -vv` 等检查改为**按需执行**，不再是单人项目的固定门槛。
 
-- 如果这是一个新功能，或者需要改变现有的接口/数据库结构，**必须首先提议修改或创建相应的 Spec 文档**（如 API 规范或 RFC 文档）。
-- 等待用户确认 Spec 的修改后，才能进入代码编写阶段。
+### 1. 分支与 worktree
 
-### Step 3: 代码实现 (Implementation)
+- 本仓库是单人项目，默认允许直接在当前分支完成改动并推送。
+- 只有在需要隔离高风险实验、并行任务或大规模整理时，才额外使用 feature branch 或独立 worktree。
+- 若使用分支，推荐命名：`fix/<slug>`、`docs/<slug>`、`chore/<slug>`。
+- 若使用 worktree，一个 worktree 只服务一个任务；不要让多个 Agent 同时写同一 worktree。
 
-- 编写代码时，必须 100% 遵守 Spec 中的定义（包括变量命名、API 路径、数据类型、状态码等）。
-- 不要在代码中擅自添加 Spec 中未定义的功能（No Gold-Plating）。
+### 2. 工具协作分工
 
-### Step 4: 测试验证 (Test against Spec)
-
-- 根据 `/specs` 中的验收标准（Acceptance Criteria）编写单元测试和集成测试。
-- 确保测试用例覆盖了 Spec 中描述的所有边界情况。
-
----
-
-## Code Generation Rules
-
-- 任何对外部暴露的 API 变更，必须同步修改 `/specs/api/core-api.md`。
-- 如果遇到不确定的技术细节，请查阅 `/specs/rfc/` 下的架构约定，不要自行捏造设计模式。
-- 任何修改行为都应记录在 `changelog/` 目录中。
+- 一组活动改动只指定一个“主编辑 Agent”；其他工具只做审阅、验证或命令执行，不重复实现同一补丁。
+- Claude / OpenCode：优先用于跨文件梳理、规范对齐、复杂改动设计、diff review 总结。
+- Copilot / Codex：优先用于已定范围内的补丁实现、命令执行、测试修复、提交说明补完。
+- Windsurf / Cascade：优先用于执行仓库既有工作流（build/test/lint/review-diff 等）和规则化任务。
+- 切换主编辑 Agent 时，先提交、暂存，或在任务描述中留下 handoff，避免双写。
 
 ---
 
-## Project Snapshot
+## 项目概述
 
-- **项目名**：`FastQTools`
-- **语言**：C++23
-- **构建系统**：CMake 3.28+、Ninja、Conan 2.x
-- **推荐开发编译器**：Clang 21 + libc++
-- **备用编译器**：GCC 15
-- **主要依赖**：`cxxopts`、`spdlog`、`fmt`、`onetbb`、`nlohmann_json`、`libdeflate`、`GTest`
-- **主要运行环境**：Linux / Docker；Windows 主要用于编辑。
+**FastQTools** 是一个使用现代 C++23 编写的高性能 FASTQ 文件处理工具包，专为生物信息学质量控制（QC）工作流设计。
 
----
+### 核心特性
 
-## Key Directories
+- **极致性能**: 基于 Intel oneTBB 的并行流水线，高达 170 万 reads/秒
+- **零拷贝 I/O**: 基于 `std::string_view` 的记录处理，最小化内存开销
+- **生产就绪**: 完整的消毒剂、模糊测试和 CI/CD 验证
+- **规范驱动**: 所有实现必须以 `/openspec/baseline/` 目录下的规范为唯一事实来源
 
-| 目录 | 用途 |
-|------|------|
-| `/specs/` | **规范文档**（产品需求、RFC、API 规范、测试策略）；实现代码的唯一事实来源 |
-| `include/fqtools/` | 稳定公共 API；改动前先确认是否真的需要 |
-| `src/` | 实现代码；多数功能修改应落在这里 |
-| `tests/unit/` | GTest 单元测试，按模块镜像源码结构 |
-| `tests/integration/` | 跨模块集成测试 |
-| `tests/e2e/` | CLI 端到端测试，已通过 CTest 统一接入 |
-| `scripts/core/` | 优先使用这里的 `build`、`test`、`lint` |
-| `changelog/` | 每次修改都要新增变更记录 |
+### 技术栈
 
----
-
-## Preferred Workflow
-
-1. 先搜索并阅读相关实现和测试，不要猜接口。
-2. 优先做最小正确改动，不要顺手重构无关代码。
-3. 修改行为时同步补充或更新测试。
-4. 改完后运行最小必要验证，并新增 `changelog/YYYY-MM-DD-<slug>.md`。
+| 类别 | 技术 | 版本 | 用途 |
+|------|------|------|------|
+| 语言 | C++ | 23 | 现代特性、概念、范围 |
+| 并行计算 | Intel oneTBB | 2022.3.0 | 流水线并行 |
+| 构建系统 | CMake + Ninja | 3.28+ | 快速增量构建 |
+| 包管理 | Conan | 2.x | 依赖管理 |
+| 压缩 | libdeflate + zlib-ng | 1.25 / 2.3.2 | 高性能 gzip |
+| 日志 | spdlog | 1.17.0 | 异步日志（仅头文件） |
+| CLI | cxxopts | 3.1.1 | 参数解析 |
+| 测试 | GoogleTest | 1.14+ | 单元/集成测试 |
+| JSON | nlohmann_json | 3.11.3 | JSON 处理 |
+| 格式化 | fmt | 12.1.0 | 格式化（仅头文件） |
 
 ---
 
-## Build Commands
+## 项目结构
 
-推荐优先使用脚本；脚本会自动处理默认构建目录和 Conan toolchain。
+```
+fastq-tools/
+├── CMakeLists.txt              # 根 CMake 配置（项目版本 3.1.0）
+├── CMakePresets.json           # 8 个构建预设
+├── conanfile.py                # Conan 包发布配置
+├── .clang-format               # 代码格式化配置
+├── .clang-tidy                 # 静态分析配置
+├── .pre-commit-config.yaml     # 预提交钩子
+├── .editorconfig               # 编辑器配置
+│
+├── include/fqtools/            # 公共 API 头文件
+│   ├── fq.h                    # 主入口头文件
+│   ├── io/                     # FastqReader、FastqWriter、FastqBatch
+│   ├── processing/             # 流水线、谓词、变形器接口
+│   ├── statistics/             # 统计计算器接口
+│   ├── common/                 # 工具类（Timer 等）
+│   ├── config/                 # 配置管理
+│   ├── error/                  # 异常层次结构
+│   └── core/                   # 核心算法
+│
+├── src/                        # 实现代码
+│   ├── cli/                    # CLI 入口和命令（stat、filter）
+│   ├── common/                 # 通用工具
+│   ├── config/                 # 配置管理实现
+│   ├── error/                  # 错误处理实现
+│   ├── io/                     # FASTQ I/O 实现（零拷贝）
+│   ├── processing/             # 并行流水线、谓词、变形器
+│   ├── statistics/             # 统计计算实现
+│   └── benchmark/              # 性能基准测试
+│
+├── tests/                      # 测试套件
+│   ├── unit/                   # 单元测试（镜像 src/ 结构）
+│   ├── integration/            # 集成测试
+│   ├── e2e/                    # 端到端测试
+│   ├── utils/                  # 测试工具库
+│   └── cmake_package_consumer/ # CMake 包消费者验证
+│
+├── openspec/                  # 规范文档（单一事实来源）
+│   ├── baseline/              # 基础规范
+│   │   ├── product/           # 产品需求
+│   │   ├── architecture/      # 架构决策（RFC）
+│   │   ├── api/               # API 规范
+│   │   ├── schemas/           # 数据模型
+│   │   └── testing/           # 测试策略
+│   ├── changes/               # 变更提案
+│   ├── archive/               # 归档
+│   └── templates/             # 文档模板
+│
+├── scripts/core/               # 核心开发脚本
+│   ├── build                   # 统一构建脚本
+│   ├── test                    # 统一测试脚本
+│   ├── lint                    # 代码质量脚本
+│   └── install-deps            # 依赖安装脚本
+│
+├── docker/                     # Docker 配置
+│   ├── Dockerfile.dev          # 开发环境镜像
+│   ├── Dockerfile.prod         # 生产环境镜像
+│   └── docker-compose.yml      # 编排配置
+│
+├── .devcontainer/              # DevContainer 配置
+├── .github/workflows/          # CI/CD 工作流
+├── docs/                       # MkDocs 文档
+├── tools/                      # 开发工具（基准测试、模糊测试、测试数据）
+└── changelog/                  # 变更记录
+```
+
+---
+
+## 关键配置文件说明
+
+### CMake 配置
+
+- **CMakeLists.txt**: 定义项目、C++23 标准、编译器版本检查（GCC 11+/Clang 12+）、LTO 优化、Conan 集成
+- **CMakePresets.json**: 提供 8 个配置预设：
+  - `gcc-debug` / `gcc-release` / `gcc-relwithdebinfo`
+  - `clang-debug` / `clang-release`（推荐开发使用）
+  - `clang-asan` / `clang-tsan`（消毒剂构建）
+  - `coverage`（覆盖率构建）
+
+### Conan 配置
+
+- **config/dependencies/conanfile.py**: 主要依赖管理文件
+  - 运行时依赖：cxxopts、spdlog、fmt、zlib-ng、nlohmann_json、onetbb、libdeflate
+  - 构建依赖：benchmark、gtest、cmake
+  - 特殊配置：fmt/spdlog 头文件模式，hwloc 动态库
+
+### 代码质量工具配置
+
+- **.clang-format**: 列宽 100、4 空格缩进、左指针对齐、Attach 大括号风格
+- **.clang-tidy**: 启用 bugprone-*、performance-*、modernize-*、readability-* 检查，包含命名约定强制
+- **.editorconfig**: UTF-8、LF、4 空格缩进、文件末尾换行
+
+---
+
+## 构建命令
+
+推荐使用统一构建脚本；脚本自动处理默认构建目录和 Conan toolchain。
 
 ```bash
 # 统一构建脚本（推荐）
@@ -114,13 +194,13 @@ cmake --preset clang-debug
 cmake --build --preset clang-debug
 ```
 
-**默认构建目录**：`build/<compiler>-<type-lower>`，例如 `build/clang-debug`。
+**默认构建目录**: `build/<compiler>-<type-lower>`，例如 `build/clang-debug`。
 
-**常用 presets**：`gcc-debug`、`gcc-release`、`clang-debug`、`clang-release`、`clang-asan`、`clang-tsan`、`coverage`。
+**常用 presets**: `gcc-debug`、`gcc-release`、`clang-debug`、`clang-release`、`clang-asan`、`clang-tsan`、`coverage`。
 
 ---
 
-## Test Commands
+## 测试命令
 
 ```bash
 # 统一测试脚本（推荐）
@@ -135,13 +215,13 @@ cmake --build --preset clang-debug
 ./scripts/core/test --filter '^test_io$'  # 过滤特定测试
 ```
 
-**单个 CTest 测试目标**：
+**单个 CTest 测试目标**:
 ```bash
 ctest --test-dir build/clang-debug -R '^test_integration_pipeline$' --output-on-failure
 ctest --test-dir build/clang-debug -R '^e2e_shell_cli$' --output-on-failure
 ```
 
-**单个 GTest case**：
+**单个 GTest case**:
 ```bash
 cmake --build --preset clang-debug --target test_common
 ./build/clang-debug/tests/unit/test_common --gtest_filter=TimerTest.BasicTiming
@@ -150,7 +230,7 @@ cmake --build --preset clang-debug --target test_common
 
 ---
 
-## Lint / Format / Static Analysis
+## 代码质量 / Lint 命令
 
 ```bash
 ./scripts/core/lint check                  # 检查代码格式
@@ -164,7 +244,9 @@ cmake --build --preset clang-debug --target test_common
 
 ---
 
-## Code Style
+## 代码风格指南
+
+### 基本规范
 
 - 使用 C++23；不要引入编译器特定扩展，`CMAKE_CXX_EXTENSIONS` 关闭。
 - `.editorconfig` 规定：UTF-8、LF、4 空格缩进、文件末尾保留换行。
@@ -177,9 +259,7 @@ cmake --build --preset clang-debug --target test_common
 - include 顺序交给 `clang-format`；不要手工维持特殊排序。
 - 避免在头文件中写 `using namespace`。
 
----
-
-## Naming Conventions
+### 命名约定
 
 | 类型 | 规则 | 示例 |
 |------|------|------|
@@ -195,9 +275,7 @@ cmake --build --preset clang-debug --target test_common
 
 这些规则由 `.clang-tidy` 的 `readability-identifier-naming` 实际约束。
 
----
-
-## Types & Interface Habits
+### 类型与接口习惯
 
 - 公共接口定义放在 `include/fqtools/`，实现放在 `src/`。
 - 查询函数、轻量 getter、状态判断函数，优先考虑加 `[[nodiscard]]`。
@@ -205,9 +283,7 @@ cmake --build --preset clang-debug --target test_common
 - 项目强调零拷贝 FASTQ 视图和批处理；不要无必要引入额外字符串复制。
 - 并行处理基于 `tbb::parallel_pipeline`；不要在热点路径随意加入串行瓶颈。
 
----
-
-## Error Handling & Logging
+### 错误处理与日志
 
 - 统一异常基类是 `fq::error::FastQException`。
 - 常见异常类型：`IOError`、`FormatError`、`ConfigurationError`。
@@ -217,16 +293,153 @@ cmake --build --preset clang-debug --target test_common
 - 除 CLI 帮助等明确面向终端用户的输出外，不要随意直接写 `std::cout`。
 - 不要使用 `std::endl`；统一使用 `"\n"`。
 
----
-
-## Comments & Testing Conventions
+### 注释规范
 
 - 公共 API 和不直观的逻辑使用简洁中文注释。
 - 重要接口优先使用中文 Doxygen：`@brief`、`@param`、`@return`。
-- 行为变更先看对应模块现有测试，再决定补充位置。
-- 单元测试放在 `tests/unit/<module>/`；集成测试放在 `tests/integration/`。
-- `tests/CMakeLists.txt` 中 `add_fq_test()` 会自动注册 CTest 名称、label 和 timeout。
-- 若改动 CLI、安装导出或跨模块集成，至少补跑对应 integration / e2e。
+
+---
+
+## 测试策略
+
+### 测试组织结构
+
+| 目录 | 内容 | 框架 |
+|------|------|------|
+| `tests/unit/` | 单元测试，镜像 `src/` 结构 | GTest |
+| `tests/integration/` | 跨模块集成测试 | GTest |
+| `tests/e2e/` | CLI 端到端测试 | Bash + Python |
+| `tests/utils/` | 测试工具库 | GTest |
+| `tools/data/` | 测试数据（FASTQ 样本） | - |
+
+### 测试命名约定
+
+| 类型 | 约定 | 示例 |
+|------|------|------|
+| 测试文件名 | `test_<module>.cpp` | `test_fastq_reader.cpp` |
+| 测试类名 | `<Module>Test` | `FastqReaderTest` |
+| 测试用例 | `<Object>_<Scenario>_<Expected>` | `PassesReadWithHighAverageQuality` |
+| 测试目标 | `test_<module>` | `test_io`, `test_processing` |
+
+### 测试工具（tests/utils/）
+
+- **FixtureLoader**: `loadTextFile()`, `loadLines()`, `getFixturePath()`, `createTempFastq()`, `compareFiles()`
+- **TempDirectory**: RAII 临时目录，自动清理
+- **PerformanceTimer**: 性能计时器
+- **TestDataGenerator**: `generateFastQRecords()`, `generateRandomDNA()`, `generateRandomQuality()`, `createTempFile()`
+- **FastQToolsTest**: 测试基类，提供 `tempDir_` 和 `testDataDir_`
+
+### CTest 标签
+
+| 标签 | 包含测试 | 默认超时 |
+|------|----------|----------|
+| `unit` | 所有单元测试 | 60s |
+| `integration` | 集成测试、cmake 包消费者测试 | 120-180s |
+| `e2e` | Bash CLI 测试、Python CLI 测试 | 180s |
+
+---
+
+## CI/CD 工作流
+
+GitHub Actions 工作流位于 `.github/workflows/`：
+
+| 工作流 | 触发条件 | 用途 |
+|--------|----------|------|
+| `ci.yml` | Push/PR to master | 格式检查、静态分析、构建/测试矩阵、覆盖率、Docker smoke |
+| `release.yml` | 标签推送 (v*)、手动 | 多平台发布构建 |
+| `benchmark.yml` | Push/PR、每周定时 | 性能基准测试与回归检测 |
+| `valgrind.yml` | 每周定时、手动 | 深度内存分析 |
+| `pages.yml` | 文档变更 | MkDocs 文档部署 |
+
+### 质量门禁检查
+
+1. 格式检查（clang-format）
+2. 静态分析（clang-tidy + cppcheck）
+3. ASan 测试
+4. 代码覆盖率
+
+---
+
+## 开发环境
+
+### Docker 支持
+
+| 镜像 | 用途 |
+|------|------|
+| `Dockerfile.dev` | 完整开发环境（含 GDB、Valgrind、文档工具） |
+| `Dockerfile.prod` | 最小运行时镜像 |
+
+**使用 Docker Compose**:
+```bash
+cd docker
+docker-compose up dev    # 开发容器
+docker-compose up prod   # 生产容器
+docker-compose up test   # 测试运行器
+```
+
+### DevContainer
+
+VS Code DevContainer 配置位于 `.devcontainer/`：
+- 基于 Docker Compose（dev 服务）
+- 预装扩展：CMake Tools、clangd、LLDB、Docker、GitLens
+- 自动配置 SSH 密钥、Git 配置挂载
+
+---
+
+# Project Philosophy: Spec-Driven Development (SDD)
+
+本项目严格遵循**规范驱动开发（Spec-Driven Development, SDD）**范式。所有的代码实现必须以 `/openspec/baseline/` 目录下的规范文档为唯一事实来源（Single Source of Truth）。
+
+## Directory Context (目录说明)
+
+- `/openspec/baseline/product/`: 产品功能定义与验收标准。
+- `/openspec/baseline/architecture/`: 技术设计文档（架构决策、实现方案）。
+- `/openspec/baseline/api/`: API 接口规范（机器可读与人类可读）。
+- `/openspec/baseline/schemas/`: 数据模型与配置规范。
+- `/openspec/baseline/testing/`: 测试策略与约定。
+
+---
+
+## AI Agent Workflow Instructions (AI 工作流指令)
+
+当你（AI）被要求开发一个新功能、修改现有功能或修复 Bug 时，遵循以下维护期工作流：
+
+### Step 1: 审查规范 (Review Baseline)
+
+- 在编写任何代码之前，首先阅读 `openspec/baseline/` 目录下的相关规范文档。
+- 如果用户指令与现有规范冲突，请立即停止编码，并指出冲突点，询问用户是否需要先创建变更提案。
+
+### Step 2: 判断是否需要 Proposal
+
+- 若改动影响**行为、公共 API、schema / 文件格式、架构 / 工具链 / 发布策略、兼容性或弃用策略**，先在 `openspec/changes/<name>/` 创建或更新提案。
+- 若只是 docs、测试、注释、命名、实现内整理，且**不改变 baseline 含义**，可直接进入实现流程，但提交说明必须注明相关 baseline 引用或“no baseline delta”。
+- 临近维护冻结时，proposal 保持最小：写清 Why、影响的 baseline、兼容性 / 风险、验证方式即可；只有架构级改动才需要完整 design。
+
+### Step 3: 实施改动
+
+- 在当前工作分支执行实现；如任务风险较高，可自行增加 branch / worktree 隔离。实现范围不得超出当前 baseline 或已批准的 proposal。
+- 若实现过程中发现 proposal 不再准确，先更新 proposal / tasks，再继续。
+- 不添加规范外功能（No Gold-Plating）。
+
+### Step 4: 轻量验证并整理提交
+
+- 运行与改动直接相关的最小验证集；文档 / 规则改动至少执行 `git diff --check`。
+- 在提交说明、changelog 或任务记录中写明 baseline 引用、验证结果、风险点、是否需要 archive。
+- 如任务复杂或风险较高，可自行补一次人工或次级 AI 的 diff review。
+
+### Step 5: 落地后归档
+
+- 仅当改动已稳定落地（提交/推送完成）时，才运行 `/opsx:archive` 或手动归档到 `openspec/archive/YYYY/MM-<name>/`。
+- 归档记录应回填 commit SHA（如适用），并同步 baseline。
+- 尚未落地或被放弃的 proposal 继续留在 `openspec/changes/`，不要提前归档。
+
+---
+
+## Code Generation Rules
+
+- 任何对外部暴露的 API 变更，必须同步修改 `openspec/baseline/api/core-api.md`。
+- 如果遇到不确定的技术细节，请查阅 `openspec/baseline/architecture/` 下的架构约定，不要自行捏造设计模式。
+- 任何修改行为都应记录在 `changelog/` 目录中。
 
 ---
 
@@ -252,4 +465,5 @@ cmake --build --preset clang-debug --target test_common
 
 - [CLAUDE.md](CLAUDE.md) — Claude Code AI 助手指南
 - [CONTRIBUTING.md](CONTRIBUTING.md) — 贡献指南
-- [specs/README.md](specs/README.md) — 规范文档目录索引
+- [openspec/README.md](openspec/README.md) — 规范文档目录索引
+- [OpenSpec GitHub](https://github.com/Fission-AI/OpenSpec) — OpenSpec 框架

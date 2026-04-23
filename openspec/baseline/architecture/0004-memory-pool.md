@@ -2,9 +2,9 @@
 
 > **Status**: Active  
 > **Created**: 2026-04-17  
-> **Last Updated**: 2026-04-17  
+> **Last Updated**: 2026-04-23  
 > **Authors**: FastQTools Core Team  
-> **Supersedes**: `docs/specs/memory-pool/design.md`
+> **Migrated From**: legacy memory pool design document in the pre-OpenSpec docs tree
 
 ## Context
 

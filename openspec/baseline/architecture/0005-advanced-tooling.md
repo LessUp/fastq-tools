@@ -2,13 +2,13 @@
 
 > **Status**: Active  
 > **Created**: 2026-04-17  
-> **Last Updated**: 2026-04-17  
+> **Last Updated**: 2026-04-23  
 > **Authors**: FastQTools Core Team  
-> **Supersedes**: `docs/specs/advanced-cpp-tooling/design.md`
+> **Migrated From**: legacy advanced C++ tooling design document in the pre-OpenSpec docs tree
 
 ## Context
 
-FastQTools requires comprehensive development tooling integration to ensure code quality, detect issues early, and maintain high reliability standards. This RFC defines the tooling ecosystem.
+FastQTools requires comprehensive development tooling integration to ensure code quality, detect issues early, and maintain high reliability standards. This architecture specification defines the tooling ecosystem.
 
 ## Decision
 
@@ -123,9 +123,9 @@ All quality tools integrated into CI/CD:
 
 | Check | Trigger | Failure Action |
 |-------|---------|---------------|
-| Static analysis | Every PR | Block merge |
-| ASan tests | Every PR | Block merge |
-| Coverage report | Every PR | Block merge if below threshold |
+| Static analysis | Every significant change | Treat as release blocker |
+| ASan tests | Every significant change | Treat as release blocker |
+| Coverage report | As needed | Investigate if below threshold |
 | Full Valgrind | Daily/weekly | Alert maintainers |
 | Fuzz testing | Daily | Report crashes |
 
@@ -180,5 +180,5 @@ All quality tools integrated into CI/CD:
 ## Related Documents
 
 - [RFC-0002: Toolchain Policy](0002-toolchain-policy.md)
-- [Quality Tools Guide](../../docs/dev/quality-tools.md)
-- [Testing Guide](../../docs/dev/testing.md)
+- [Quality Tools Guide](../../../docs/dev/quality-tools.md)
+- [Testing Guide](../../../docs/dev/testing.md)

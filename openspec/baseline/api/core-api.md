@@ -1,8 +1,8 @@
 # API Specification: Core Interfaces
 
 > **Status**: Active  
-> **Last Updated**: 2026-04-17  
-> **Related**: [Product Spec](../product/fastq-processing.md), [RFC-0001](../rfc/0001-core-architecture.md)
+> **Last Updated**: 2026-04-23  
+> **Related**: [Product Spec](../product/fastq-processing.md), [Core Architecture](../architecture/0001-core-architecture.md)
 
 ## Overview
 
@@ -363,5 +363,5 @@ auto createStatisticCalculator(StatisticType type)
 ## Related Documents
 
 - [Product Specification](../product/fastq-processing.md)
-- [RFC-0001: Core Architecture](../rfc/0001-core-architecture.md)
-- [Coding Standards](../../docs/dev/coding-standards.md)
+- [Core Architecture](../architecture/0001-core-architecture.md)
+- [Coding Standards](../../../docs/dev/coding-standards.md)

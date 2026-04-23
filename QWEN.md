@@ -1,8 +1,19 @@
 # FastQTools - QWEN Context File
 
+> Status: secondary quick-reference only. `AGENTS.md` is the primary AI governance file.
+> On conflicts, follow `AGENTS.md` first, then `openspec/baseline/`, then repository-enforced config and scripts.
+> Keep this file lightweight; do not add independent workflow or policy rules here.
+
+## Maintenance Workflow Snapshot
+
+- Run at least `git status --short --branch` before editing; use `gh`, extra branches, or worktrees only when the task actually needs them.
+- This solo repository defaults to direct push after relevant local checks pass. Use a dedicated branch or worktree only for risky or parallel work.
+- Use `openspec/changes/` only when the task changes behavior, public API, schema/file format, architecture/toolchain, or compatibility policy.
+- If another tool already owns the active changes, switch Qwen to diff review or validation instead of parallel edits.
+
 ## Project Overview
 
-**FastQTools** is a high-performance toolkit for processing FASTQ files (bioinformatics sequencing data) built with **modern C++23**. It provides extreme performance (up to 1.7 billion reads/second) through parallel TBB pipelines, zero-copy I/O using `std::string_view`, and production-ready quality with comprehensive sanitizers, fuzzing, and CI/CD validation.
+**FastQTools** is a high-performance toolkit for processing FASTQ files (bioinformatics sequencing data) built with **modern C++23**. It provides extreme performance (up to 1.7 million reads/second) through parallel TBB pipelines, zero-copy I/O using `std::string_view`, and production-ready quality with comprehensive sanitizers, fuzzing, and CI/CD validation.
 
 ### Key Features
 - **`stat` command**: Comprehensive FASTQ file statistics (read count, length distribution, base composition, GC content, Q20/Q30)
@@ -126,12 +137,12 @@ FastQTools stat -i input.fastq.gz -o report.json --format json
 
 ### Architecture Philosophy
 
-The project follows **Spec-Driven Development (SDD)**. All implementations must be based on specification documents in `/specs/`:
-- `/specs/product/` - Product requirements and acceptance criteria
-- `/specs/rfc/` - Technical design documents (architecture decisions)
-- `/specs/api/` - API specifications
-- `/specs/db/` - Data models
-- `/specs/testing/` - Testing strategies
+The project follows **Spec-Driven Development (SDD)**. All implementations must be based on specification documents in `/openspec/baseline/`:
+- `/openspec/baseline/product/` - Product requirements and acceptance criteria
+- `/openspec/baseline/architecture/` - Technical design documents (architecture decisions)
+- `/openspec/baseline/api/` - API specifications
+- `/openspec/baseline/schemas/` - Data models
+- `/openspec/baseline/testing/` - Testing strategies
 
 ### Code Style
 
@@ -174,7 +185,7 @@ fastq-tools/
 ├── tools/                    # Development tools
 │   ├── benchmark/            # Performance benchmarks
 │   └── fuzz/                 # Fuzzing harnesses
-├── specs/                    # Specification documents (SDD)
+├── openspec/                 # Specification documents (SDD)
 ├── docs/                     # MkDocs documentation site
 ├── scripts/core/             # Build, test, lint scripts
 ├── cmake/                    # CMake modules
@@ -241,7 +252,7 @@ fastq-tools/
 
 GitHub Actions workflows:
 - **ci.yml**: Build and test matrix (GCC/Clang × Debug/Release)
-- **quality.yml**: Format check, ASan/TSan tests, coverage
+- **ci.yml additional jobs**: Format check, static analysis, sanitizer builds, coverage, Docker smoke
 - **pages.yml**: MkDocs documentation deployment
 - **benchmark.yml**: Performance benchmark tracking
 - **release.yml**: Release packaging
@@ -268,7 +279,7 @@ docker run -v /your/data:/data lessup/fastqtools:latest \
 
 ## Important Notes
 
-1. **Spec-Driven**: Always check `/specs/` before implementing features
+1. **Spec-Driven**: Always check `openspec/baseline/` before implementing features
 2. **Zero-Copy Design**: Project emphasizes `std::string_view`-based processing - avoid unnecessary string copies
 3. **Parallel Processing**: Uses `tbb::parallel_pipeline` - don't introduce serial bottlenecks in hot paths
 4. **Public API Stability**: `include/fqtools/` headers are stable API - confirm before modifying
@@ -285,4 +296,4 @@ docker run -v /your/data:/data lessup/fastqtools:latest \
 - Conan recipe: `conanfile.py`
 - Agent guide: `AGENTS.md`
 - Changelog directory: `changelog/`
-- Specifications: `specs/`
+- Specifications: `openspec/baseline/`

@@ -2,9 +2,9 @@
 
 > **Status**: Active  
 > **Created**: 2026-04-17  
-> **Last Updated**: 2026-04-17  
+> **Last Updated**: 2026-04-23  
 > **Authors**: FastQTools Core Team  
-> **Supersedes**: `docs/decisions/toolchain-policy.md`
+> **Migrated From**: legacy toolchain decision document in the pre-OpenSpec docs tree
 
 ## Context
 
@@ -155,5 +155,5 @@ The following files must remain consistent with this specification:
 ## Related Documents
 
 - [Product Specification](../product/fastq-processing.md)
-- [RFC-0001: Core Architecture](0001-core-architecture.md)
-- [Build Guide](../../docs/dev/build.md)
+- [Core Architecture](0001-core-architecture.md)
+- [Build Guide](../../../docs/dev/build.md)

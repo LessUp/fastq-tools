@@ -1,0 +1,48 @@
+# OpenSpec 项目配置
+# FastQTools - High-performance FASTQ processing toolkit
+
+project:
+  name: FastQTools
+  version: 3.1.0
+  description: High-performance FASTQ processing toolkit for bioinformatics QC workflows
+
+# 基础规范分类
+baseline:
+  product:
+    path: baseline/product
+    description: 产品需求定义与验收标准
+  architecture:
+    path: baseline/architecture
+    description: 技术架构决策记录
+  api:
+    path: baseline/api
+    description: 公共 API 接口规范
+  schemas:
+    path: baseline/schemas
+    description: 数据模型与配置模式
+  testing:
+    path: baseline/testing
+    description: 测试策略与约定
+
+# 工作流配置
+workflow:
+  change_dir: changes
+  archive_dir: archive
+  templates_dir: templates
+
+# 集成配置
+integrations:
+  changelog:
+    path: ../changelog
+    auto_sync: true
+  agents_md:
+    path: ../AGENTS.md
+  claude_md:
+    path: ../CLAUDE.md
+
+# 模板配置
+templates:
+  proposal: templates/proposal.md
+  spec: templates/spec.md
+  design: templates/design.md
+  tasks: templates/tasks.md
