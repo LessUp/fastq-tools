@@ -1,0 +1,179 @@
+name: Setup C++ CI Environment
+description: Install the shared FastQTools CI toolchain and optional analysis tools.
+
+inputs:
+  python-version:
+    description: Python version to install.
+    default: '3.11'
+  cmake-version:
+    description: CMake version to install.
+    default: '4.0.2'
+  conan-version:
+    description: Conan version to install.
+    default: '2.24.0'
+  llvm-version:
+    description: LLVM version to install when Clang tools are required.
+    default: '21'
+  compiler:
+    description: Primary compiler for the job (gcc or clang).
+    default: 'gcc'
+  install-conan:
+    description: Whether to install Conan and detect the default profile.
+    default: 'true'
+  install-clang-tools:
+    description: Whether to install clang-tidy.
+    default: 'false'
+  install-clang-format:
+    description: Whether to install clang-format.
+    default: 'false'
+  install-cppcheck:
+    description: Whether to install cppcheck.
+    default: 'false'
+  install-lcov:
+    description: Whether to install lcov.
+    default: 'false'
+  install-valgrind:
+    description: Whether to install valgrind.
+    default: 'false'
+  extra-apt-packages:
+    description: Additional apt packages separated by spaces.
+    default: ''
+  extra-python-packages:
+    description: Additional pip packages separated by spaces.
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install base system dependencies
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        packages=(
+          build-essential
+          ninja-build
+          pkg-config
+          git
+          curl
+          ca-certificates
+          gnupg
+          lsb-release
+          software-properties-common
+          tar
+          xz-utils
+        )
+
+        if [[ '${{ inputs.install-cppcheck }}' == 'true' ]]; then
+          packages+=(cppcheck)
+        fi
+        if [[ '${{ inputs.install-lcov }}' == 'true' ]]; then
+          packages+=(lcov)
+        fi
+        if [[ '${{ inputs.install-valgrind }}' == 'true' ]]; then
+          packages+=(valgrind)
+        fi
+        if [[ -n '${{ inputs.extra-apt-packages }}' ]]; then
+          read -r -a extra_packages <<< '${{ inputs.extra-apt-packages }}'
+          packages+=("${extra_packages[@]}")
+        fi
+
+        sudo apt-get update -o Acquire::Retries=3
+        sudo apt-get install -y --no-install-recommends --fix-missing "${packages[@]}"
+
+    - name: Install CMake
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        case "$(uname -m)" in
+          x86_64|amd64)
+            cmake_arch=x86_64
+            ;;
+          aarch64|arm64)
+            cmake_arch=aarch64
+            ;;
+          *)
+            echo "Unsupported architecture: $(uname -m)" >&2
+            exit 1
+            ;;
+        esac
+
+        archive_path="$RUNNER_TEMP/cmake-${{ inputs.cmake-version }}-${cmake_arch}.tar.gz"
+        curl -fsSL "https://github.com/Kitware/CMake/releases/download/v${{ inputs.cmake-version }}/cmake-${{ inputs.cmake-version }}-linux-${cmake_arch}.tar.gz" \
+          -o "$archive_path"
+        sudo mkdir -p /opt
+        sudo tar -C /opt -xzf "$archive_path"
+        sudo ln -sf "/opt/cmake-${{ inputs.cmake-version }}-linux-${cmake_arch}/bin/cmake" /usr/local/bin/cmake
+        sudo ln -sf "/opt/cmake-${{ inputs.cmake-version }}-linux-${cmake_arch}/bin/ctest" /usr/local/bin/ctest
+        sudo ln -sf "/opt/cmake-${{ inputs.cmake-version }}-linux-${cmake_arch}/bin/cpack" /usr/local/bin/cpack
+
+    - name: Install LLVM tools
+      if: ${{ inputs.compiler == 'clang' || inputs.install-clang-tools == 'true' || inputs.install-clang-format == 'true' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        llvm_script="$RUNNER_TEMP/llvm.sh"
+        curl -fsSL https://apt.llvm.org/llvm.sh -o "$llvm_script"
+        chmod +x "$llvm_script"
+        sudo "$llvm_script" ${{ inputs.llvm-version }}
+
+        llvm_packages=()
+        if [[ '${{ inputs.compiler }}' == 'clang' ]]; then
+          llvm_packages+=(
+            clang-${{ inputs.llvm-version }}
+            lld-${{ inputs.llvm-version }}
+            libc++-${{ inputs.llvm-version }}-dev
+            libc++abi-${{ inputs.llvm-version }}-dev
+          )
+        fi
+        if [[ '${{ inputs.install-clang-tools }}' == 'true' ]]; then
+          llvm_packages+=(clang-tidy-${{ inputs.llvm-version }})
+        fi
+        if [[ '${{ inputs.install-clang-format }}' == 'true' ]]; then
+          llvm_packages+=(clang-format-${{ inputs.llvm-version }})
+        fi
+
+        if (( ${#llvm_packages[@]} )); then
+          sudo apt-get install -y --no-install-recommends --fix-missing "${llvm_packages[@]}"
+        fi
+
+        if [[ '${{ inputs.compiler }}' == 'clang' ]]; then
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${{ inputs.llvm-version }} 100
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${{ inputs.llvm-version }} 100
+          sudo update-alternatives --install /usr/bin/ld.lld ld.lld /usr/bin/ld.lld-${{ inputs.llvm-version }} 100
+        fi
+        if [[ '${{ inputs.install-clang-tools }}' == 'true' ]]; then
+          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${{ inputs.llvm-version }} 100
+        fi
+        if [[ '${{ inputs.install-clang-format }}' == 'true' ]]; then
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-${{ inputs.llvm-version }} 100
+        fi
+
+    - name: Install Conan and Python dependencies
+      if: ${{ inputs.install-conan == 'true' || inputs.extra-python-packages != '' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        python_packages=()
+        if [[ '${{ inputs.install-conan }}' == 'true' ]]; then
+          python_packages+=("conan==${{ inputs.conan-version }}")
+        fi
+        if [[ -n '${{ inputs.extra-python-packages }}' ]]; then
+          read -r -a extra_python_packages <<< '${{ inputs.extra-python-packages }}'
+          python_packages+=("${extra_python_packages[@]}")
+        fi
+
+        python -m pip install --upgrade pip
+        python -m pip install "${python_packages[@]}"
+
+        if [[ '${{ inputs.install-conan }}' == 'true' ]]; then
+          conan profile detect --force
+        fi

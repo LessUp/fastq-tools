@@ -3,10 +3,17 @@ name: Performance Benchmark
 on:
   push:
     branches: [master]
-  pull_request:
-    branches: [master]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'tools/benchmark/**'
+      - 'config/conan/**'
+      - 'config/dependencies/**'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
+      - '.github/workflows/benchmark.yml'
+      - '.github/actions/setup-cpp/**'
   schedule:
-    # 每周一 UTC 00:00 运行
     - cron: '0 0 * * 1'
   workflow_dispatch:
     inputs:
@@ -24,187 +31,110 @@ permissions:
   contents: read
 
 env:
-  BUILD_TYPE: Release
-  CONAN_VERSION: "2.24.0"
-  CMAKE_VERSION: "4.0.2"
+  CONAN_VERSION: '2.24.0'
+  CMAKE_VERSION: '4.0.2'
 
 jobs:
   benchmark:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: ${{ runner.os }}-conan-gcc-benchmark-${{ hashFiles('config/dependencies/**') }}
+          restore-keys: |
+            ${{ runner.os }}-conan-gcc-benchmark-
+            ${{ runner.os }}-conan-gcc-
+            ${{ runner.os }}-conan-
 
-    - name: Install Python dependencies
-      run: |
-        pip install matplotlib
+      - name: Setup benchmark toolchain
+        uses: ./.github/actions/setup-cpp
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+          conan-version: ${{ env.CONAN_VERSION }}
+          compiler: gcc
+          extra-python-packages: matplotlib
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update -o Acquire::Retries=3
-        sudo apt-get install -y --fix-missing \
-          build-essential \
-          wget \
-          ninja-build \
-          ccache \
-          tar \
-          xz-utils \
-          libtbb-dev \
-          zlib1g-dev \
-          libbz2-dev \
-          liblzma-dev \
-          libdeflate-dev
+      - name: Install dependencies for gcc-release
+        run: |
+          conan install config/dependencies/ --build=missing \
+            -of=build/gcc-release \
+            -s build_type=Release \
+            -pr:h config/conan/profile-gcc \
+            -pr:b default
 
-        # CMake 4.x
-        CMAKE_ARCH=x86_64
-        sudo wget -q --tries=3 --waitretry=5 "https://github.com/Kitware/CMake/releases/download/v${{ env.CMAKE_VERSION }}/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}.tar.gz" -O /tmp/cmake.tar.gz
-        sudo mkdir -p /opt
-        sudo tar -C /opt -xzf /tmp/cmake.tar.gz
-        sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cmake" /usr/local/bin/cmake
-        sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/ctest" /usr/local/bin/ctest
-        sudo ln -sf "/opt/cmake-${{ env.CMAKE_VERSION }}-linux-${CMAKE_ARCH}/bin/cpack" /usr/local/bin/cpack
-        sudo rm -f /tmp/cmake.tar.gz
+      - name: Configure benchmarks with preset build directory
+        run: cmake --preset gcc-release -DBUILD_BENCHMARKS=ON
 
-    - name: Install Conan
-      run: |
-        pip install conan==${{ env.CONAN_VERSION }}
-        conan profile detect --force
+      - name: Build benchmarks
+        run: cmake --build --preset gcc-release --target benchmarks
 
-    - name: Cache Conan packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.conan2
-        key: "${{ runner.os }}-conan-bench-${{ hashFiles('config/dependencies/**') }}"
-        restore-keys: |
-          ${{ runner.os }}-conan-bench-
-          ${{ runner.os }}-conan-
+      - name: Generate test data
+        run: |
+          python tools/benchmark/scripts/gen_benchmark_data.py \
+            --generate-dataset \
+            --output-dir docs/benchmark-reports/data
 
-    - name: Install dependencies
-      run: |
-        conan install config/dependencies/ --output-folder=build --build=missing -s build_type=${{ env.BUILD_TYPE }}
+      - name: Run benchmarks
+        run: |
+          mkdir -p docs/benchmark-reports/results
+          ./build/gcc-release/tools/benchmark/benchmark_fastq_io \
+            --benchmark_format=json \
+            --benchmark_out=docs/benchmark-reports/results/current.json \
+            --benchmark_repetitions=3 \
+            --benchmark_report_aggregates_only=true
 
-    - name: Configure CMake
-      run: |
-        cmake -B build \
-          -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake \
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
-          -DBUILD_BENCHMARKS=ON \
-          -G Ninja
+      - name: Download baseline (if exists)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-baseline
+          path: docs/benchmark-reports/baselines/
 
-    - name: Build benchmarks
-      run: |
-        cmake --build build --target benchmarks
+      - name: Check for regressions
+        run: |
+          if [[ -f docs/benchmark-reports/baselines/default.json ]]; then
+            python tools/benchmark/scripts/regression_detector.py \
+              docs/benchmark-reports/baselines/default.json \
+              docs/benchmark-reports/results/current.json \
+              --google-benchmark --ci
+          else
+            echo 'No baseline found, skipping regression check'
+          fi
 
-    - name: Generate test data
-      run: |
-        python3 tools/benchmark/scripts/gen_benchmark_data.py \
-          --generate-dataset \
-          --output-dir docs/benchmark-reports/data
-
-    - name: Run benchmarks
-      run: |
-        mkdir -p docs/benchmark-reports/results
-        ./build/tools/benchmark/benchmark_fastq_io \
-          --benchmark_format=json \
-          --benchmark_out=docs/benchmark-reports/results/current.json \
-          --benchmark_repetitions=3 \
-          --benchmark_report_aggregates_only=true
-
-    - name: Download baseline (if exists)
-      continue-on-error: true
-      uses: actions/download-artifact@v4
-      with:
-        name: benchmark-baseline
-        path: docs/benchmark-reports/baselines/
-
-    - name: Check for regressions
-      if: github.event_name == 'pull_request'
-      run: |
-        if [[ -f docs/benchmark-reports/baselines/default.json ]]; then
-          python3 tools/benchmark/scripts/regression_detector.py \
-            docs/benchmark-reports/baselines/default.json \
+      - name: Generate report
+        run: |
+          python tools/benchmark/scripts/report_generator.py \
             docs/benchmark-reports/results/current.json \
-            --google-benchmark --ci
-        else
-          echo "No baseline found, skipping regression check"
-        fi
+            --google-benchmark \
+            --format markdown \
+            --charts
 
-    - name: Generate report
-      run: |
-        python3 tools/benchmark/scripts/report_generator.py \
-          docs/benchmark-reports/results/current.json \
-          --google-benchmark \
-          --format markdown \
-          --charts
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            docs/benchmark-reports/results/
+            docs/benchmark-reports/charts/
+            docs/benchmark-reports/latest.md
+            docs/benchmark-reports/latest.json
 
-    - name: Upload benchmark results
-      uses: actions/upload-artifact@v4
-      with:
-        name: benchmark-results
-        path: |
-          docs/benchmark-reports/results/
-          docs/benchmark-reports/charts/
-          docs/benchmark-reports/latest.md
-          docs/benchmark-reports/latest.json
+      - name: Save as baseline
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event.inputs.save_baseline == 'true'
+        run: |
+          mkdir -p docs/benchmark-reports/baselines
+          cp docs/benchmark-reports/results/current.json docs/benchmark-reports/baselines/default.json
 
-    - name: Save as baseline
-      if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event.inputs.save_baseline == 'true'
-      run: |
-        mkdir -p docs/benchmark-reports/baselines
-        cp docs/benchmark-reports/results/current.json docs/benchmark-reports/baselines/default.json
-
-    - name: Upload baseline
-      if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event.inputs.save_baseline == 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: benchmark-baseline
-        path: docs/benchmark-reports/baselines/default.json
-        retention-days: 90
-
-    - name: Comment on PR
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          const reportPath = 'docs/benchmark-reports/latest.md';
-
-          if (fs.existsSync(reportPath)) {
-            const report = fs.readFileSync(reportPath, 'utf8');
-
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const botComment = comments.find(c =>
-              c.user.type === 'Bot' && c.body.includes('Performance Report')
-            );
-
-            const body = `## Performance Report\n\n${report}\n\n*Updated: ${new Date().toISOString()}*`;
-
-            if (botComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: body
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: body
-              });
-            }
-          }
+      - name: Upload baseline
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event.inputs.save_baseline == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-baseline
+          path: docs/benchmark-reports/baselines/default.json
+          retention-days: 90
