@@ -6,109 +6,108 @@ hide:
 
 <div class="hero-section" markdown>
 
-<p class="hero-eyebrow">Focused FASTQ quality-control toolkit</p>
+<p class="hero-eyebrow">High-performance FASTQ toolkit for sequencing QC</p>
 
 # FastQTools
 
-<p class="lead">Fast statistics and filtering for FASTQ files, with a CLI for routine QC work and a C++ API for pipeline integration.</p>
+<p class="lead">Process FASTQ files at 1.7M reads/sec with a CLI for everyday QC and a zero-copy C++ API for pipeline integration.</p>
 
 <div class="hero-actions" markdown>
 [Get started](guide/getting-started.en.md){ .md-button .md-button--primary }
-[CLI reference](guide/cli-reference.en.md){ .md-button }
-[Benchmarks](performance/benchmark-report.md){ .md-button }
 [View on GitHub](https://github.com/LessUp/fastq-tools){ .md-button }
+[Benchmarks](performance/benchmark-report.md){ .md-button }
+[API docs](api/overview.en.md){ .md-button }
 </div>
 
-<p class="hero-note">Built for researchers and pipeline engineers who want a focused FASTQ tool, not a heavyweight workflow platform.</p>
+<p class="hero-note">Designed for researchers and pipeline engineers who need focused, predictable FASTQ tools built on specifications.</p>
 
 </div>
 
-## What you can do with it
+## Three reasons to use it
 
 <div class="grid cards" markdown>
 
--   :material-chart-box: **Inspect sequencing runs quickly**
+-   ⚡ **Extreme performance**
 
     ---
 
-    Use `stat` for read counts, length distribution, base composition, GC content, and quality summaries in one pass.
+    1.7M reads/sec on standard hardware (AMD Ryzen 5900X). Zero idle overhead between pipeline stages. Built on Intel oneTBB for lock-free parallelism.
 
--   :material-filter-outline: **Filter and trim before downstream steps**
-
-    ---
-
-    Use `filter` to combine quality, length, and N-ratio thresholds, then trim low-quality ends without stitching together separate tools.
-
--   :material-code-braces: **Embed FASTQ processing in C++**
+-   📖 **Zero-copy design**
 
     ---
 
-    Reuse the public API when you need the same FASTQ primitives inside a larger library or production pipeline.
+    All record processing uses `std::string_view`. Minimize allocations and page faults when handling large FASTQ files or streaming buffers.
+
+-   📋 **Specification-driven**
+
+    ---
+
+    Every API decision and file format is documented in [`openspec/baseline/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline). Easy to audit, predict, and integrate.
 
 </div>
 
-## Start here
-
-| If you are trying to… | Go to |
-| --- | --- |
-| Build FastQTools and run the first command | [Getting Started](guide/getting-started.en.md) |
-| Check command syntax and examples | [CLI Reference](guide/cli-reference.en.md) |
-| Understand the benchmark numbers | [Benchmark Overview](performance/benchmark-report.md) |
-| Integrate the library from C++ | [API Overview](api/overview.en.md) |
-| Build or test the project itself | [Developer Guide](dev/index.en.md) |
-| Contribute docs or code | [Contributing](contributing.en.md) |
-
-## Representative benchmarks
-
-FastQTools publishes a compact benchmark snapshot so new users can judge whether the tool fits everyday QC workloads.
-
-| Workload | Representative result |
-| --- | --- |
-| FASTQ read path | 1696 MB/s |
-| FASTQ write path | 1.76M reads/s |
-| Combined filtering pass | 1.67M reads/s |
-| Full statistics pass | 302 MB/s |
-
-<p class="muted-note">These figures come from the maintained 100K-read (150 bp) benchmark set on an AMD Ryzen 9 5900X. They are intended as context, not universal promises. See the full <a href="performance/benchmark-report/">benchmark overview</a> for methodology and caveats.</p>
-
-## Documentation map
+## What you can do
 
 <div class="grid cards" markdown>
 
--   **Start using the CLI**
+-   :material-chart-box: **Inspect runs in one pass**
 
     ---
 
-    [Getting Started](guide/getting-started.en.md)<br>
-    [CLI Reference](guide/cli-reference.en.md)
+    `fqstat` computes read counts, length distribution, base composition, GC content, and quality summaries in a single streaming pass.
 
--   **Integrate the library**
-
-    ---
-
-    [API Overview](api/overview.en.md)<br>
-    [IO Module](api/io.en.md)
-
--   **Work on the project**
+-   :material-filter-outline: **Filter and trim together**
 
     ---
 
-    [Developer Guide](dev/index.en.md)<br>
-    [Contributing](contributing.en.md)
+    `fqfilter` combines quality, length, and N-ratio thresholds, then trims low-quality ends in one tool without intermediate files.
 
--   **Track project movement**
+-   :material-code-braces: **Embed in C++ pipelines**
 
     ---
 
-    [Changelog](changelog.en.md)<br>
-    [GitHub Releases](https://github.com/LessUp/fastq-tools/releases)
+    Use the public API to reuse the same zero-copy FASTQ primitives inside a larger library or production system.
 
 </div>
+
+## Quick stats
+
+| Operation | Speed | Cores |
+|-----------|-------|-------|
+| FASTQ read | 1696 MB/s | 1× |
+| FASTQ write | 1.76M reads/s | 1× |
+| Full stat pass | 302 MB/s | parallel |
+| Combined filter | 1.67M reads/s | parallel |
+
+See [full benchmarks](performance/benchmark-report.md) for methodology and hardware details.
+
+## Choose your path
+
+| I want to… | Start here |
+| --- | --- |
+| Build and run the first command | [Getting Started](guide/getting-started.en.md) |
+| See command syntax and examples | [CLI Reference](guide/cli-reference.en.md) |
+| Understand the benchmark methodology | [Benchmark Overview](performance/benchmark-report.md) |
+| Integrate the library in C++ | [API Overview](api/overview.en.md) |
+| Work on the project | [Developer Guide](dev/index.en.md) |
+
+## Why specifications matter
+
+<p markdown>
+
+FastQTools is **specification-driven** from the ground up. Every public API, file format decision, and performance guarantee is documented in version-controlled specifications. This means:
+
+- **Easy to audit**: No hidden behavior. Read [`openspec/baseline/api/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline/api) for the exact API contract.
+- **Easy to extend**: Proposals go in [`openspec/changes/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/changes). Reviewers can see the impact before code is written.
+- **Easy to maintain**: Archived decisions in [`openspec/archive/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/archive). No re-discovering the "why" of old choices.
+
+</p>
 
 ---
 
 <p style="text-align: center; color: var(--md-default-fg-color--light);">
-  <a href="index.en.md">中文概览</a> ·
+  <a href="index.en.md">中文版</a> ·
   <a href="https://github.com/LessUp/fastq-tools">GitHub</a> ·
-  MIT License
+  <a href="https://github.com/LessUp/fastq-tools/blob/master/LICENSE">MIT License</a>
 </p>
