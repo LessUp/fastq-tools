@@ -90,10 +90,12 @@ Use [`TEMPLATE.md`](TEMPLATE.md) as the standard format.
 
 ## Change Statistics / 变更统计
 
-| Year / 年份 | Count / 数量 | Main Topics / 主要主题 |
-|-------------|--------------|------------------------|
-| 2025 | 50 | Architecture design, core functionality, naming conventions / 架构设计、核心功能、命名规范 |
-| 2026 | 29+ | Toolchain upgrade, DevContainer, performance optimization, documentation / 工具链升级、DevContainer、性能优化、文档完善 |
+| Year / 年份 | Archive Count / 归档数 | Active / 活跃条目 | Main Topics / 主要主题 |
+|-------------|---|---|---|
+| 2025 | 50 | 1 summary | Architecture design, core functionality, naming conventions / 架构设计、核心功能、命名规范 |
+| 2026 (Apr) | 26 (archiving) | 8 current | Phase 1 baseline alignment, docs cleanup, toolchain precision / Phase 1 真值对齐、文档清理、工具链精化 |
+
+**当前策略**：仅保留当前月份（2026-04-）的活跃条目在根目录，历史改动自动归档到 `archive/YYYY/`。
 
 ---
 
