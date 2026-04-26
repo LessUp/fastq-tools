@@ -125,7 +125,7 @@ Options:
 Examples:
   ./scripts/tools/performance/benchmark compiler
   ./scripts/tools/performance/benchmark compiler --benchmark-filter "Reader"
-  ./scripts/tools/performance/benchmark compiler --output docs/benchmark-reports/compiler/custom.json
+  ./scripts/tools/performance/benchmark compiler --output docs/performance/benchmark-reports/compiler/custom.json
 ```
 
 ### `benchmark visualize`
@@ -144,13 +144,13 @@ Options:
 Examples:
   ./scripts/tools/performance/benchmark visualize
   ./scripts/tools/performance/benchmark visualize --format html
-  ./scripts/tools/performance/benchmark visualize --input docs/benchmark-reports/compiler/latest.json
+  ./scripts/tools/performance/benchmark visualize --input docs/performance/benchmark-reports/compiler/latest.json
 ```
 
 ## 目录结构
 
 ```
-docs/benchmark-reports/
+docs/performance/benchmark-reports/
 ├── baselines/         # 命名基线
 │   └── <name>.json
 ├── data/              # 测试数据
@@ -306,7 +306,7 @@ pip install matplotlib
 基准测试在以下标准化环境中执行：
 
 - **操作系统**: Ubuntu 22.04 LTS
-- **编译器**: 现代 Clang / GCC 15
+- **编译器**: 满足兼容性下限的现代 Clang / GCC；仓库首选 profile 为 Clang 21 与 GCC 15
 - **构建类型**: Release (-O3)
 - **CPU**: 多核 x86_64 处理器
 - **内存**: 16GB+ RAM

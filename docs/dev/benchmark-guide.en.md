@@ -125,7 +125,7 @@ Options:
 Examples:
   ./scripts/tools/performance/benchmark compiler
   ./scripts/tools/performance/benchmark compiler --benchmark-filter "Reader"
-  ./scripts/tools/performance/benchmark compiler --output docs/benchmark-reports/compiler/custom.json
+  ./scripts/tools/performance/benchmark compiler --output docs/performance/benchmark-reports/compiler/custom.json
 ```
 
 ### `benchmark visualize`
@@ -144,13 +144,13 @@ Options:
 Examples:
   ./scripts/tools/performance/benchmark visualize
   ./scripts/tools/performance/benchmark visualize --format html
-  ./scripts/tools/performance/benchmark visualize --input docs/benchmark-reports/compiler/latest.json
+  ./scripts/tools/performance/benchmark visualize --input docs/performance/benchmark-reports/compiler/latest.json
 ```
 
 ## Directory Structure
 
 ```
-docs/benchmark-reports/
+docs/performance/benchmark-reports/
 ├── baselines/         # Named baselines
 │   └── <name>.json
 ├── data/              # Test data
@@ -306,7 +306,7 @@ pip install matplotlib
 Benchmarks execute in the following standardized environment:
 
 - **OS**: Ubuntu 22.04 LTS
-- **Compiler**: Modern Clang / GCC 15
+- **Compiler**: Modern Clang / GCC meeting the compatibility floor; preferred repo profiles are Clang 21 and GCC 15
 - **Build Type**: Release (-O3)
 - **CPU**: Multi-core x86_64 processor
 - **Memory**: 16GB+ RAM

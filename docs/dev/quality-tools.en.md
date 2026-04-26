@@ -20,22 +20,22 @@ This document introduces the code quality tools used in the FastQTools project, 
 
 ### Installation
 
-Sanitizers are built-in compiler features, no additional installation needed. Recommended to use GCC 15 or modern Clang; local Clang builds can be automatically adapted by scripts to installed version via Conan.
+Sanitizers are built-in compiler features and need no extra installation. Use any GCC/Clang toolchain that meets the compatibility floor; the repo keeps GCC 15 / Clang 21 as preferred profiles, while local builds adapt to the installed toolchain.
 
 ### Usage
 
 ```bash
 # AddressSanitizer - Memory error detection
 ./scripts/core/build --sanitizer asan --dev
-./scripts/core/test -b build/clang-debug
+./scripts/core/test --preset clang-debug
 
 # ThreadSanitizer - Data race detection
 ./scripts/core/build --sanitizer tsan --dev
-./scripts/core/test -b build/clang-debug
+./scripts/core/test --preset clang-debug
 
 # UndefinedBehaviorSanitizer - Undefined behavior detection
 ./scripts/core/build --sanitizer ubsan --dev
-./scripts/core/test -b build/clang-debug
+./scripts/core/test --preset clang-debug
 
 # MemorySanitizer - Uninitialized memory detection (Clang only)
 ./scripts/core/build --sanitizer msan --dev -c clang

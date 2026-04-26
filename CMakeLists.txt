@@ -4,7 +4,7 @@ project(FastQTools
     LANGUAGES CXX
     VERSION 3.1.0
     DESCRIPTION "A modern toolkit for FASTQ file processing"
-    HOMEPAGE_URL "https://github.com/LessUp/FastQTools"
+    HOMEPAGE_URL "https://github.com/LessUp/fastq-tools"
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

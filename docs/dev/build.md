@@ -2,11 +2,11 @@
 
 ## 系统要求
 
-- **编译器**: GCC 15 / 现代 Clang（开发与生产统一；本地 Clang 构建由脚本按已安装版本适配 Conan）
+- **编译器**: GCC 11+ 或 Clang 12+；仓库内保留 GCC 15 / Clang 21 作为首选 profile，但本地构建以实际已安装工具链为准
 - **CMake**: 3.28+
 - **版本规范**: 详见 `openspec/baseline/architecture/0002-toolchain-policy.md`
 - **并行库**: Intel oneTBB（必需，流水线实现依赖）
-- **压缩库**: zlib / bzip2 / xz
+- **压缩路径**: 维护中的压缩 I/O 以 gzip 为主，依赖 zlib 与 libdeflate
 - **内存**: 建议 4GB+ RAM
 - **存储**: 1GB+ 可用空间
 

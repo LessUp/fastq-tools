@@ -34,8 +34,8 @@ This guide helps you set up FastQTools and run your first command in minimal tim
 
 **Development dependencies include:**
 
-- GCC 15 compiler
-- Clang development toolchain (the build script adapts Conan to the local installed version)
+- GCC 15 profile where available, or any GCC 11+ meeting the compatibility floor
+- Clang development toolchain (the repo keeps a Clang 21 profile, but local builds adapt to the installed version)
 - CMake, Ninja build system
 - Conan 2.x package manager
 - GDB, Valgrind debugging tools
@@ -59,8 +59,8 @@ ldd build/clang-debug/FastQTools
 **Runtime dependencies include:**
 
 - libtbb12 (Intel TBB parallel library)
-- zlib, bzip2, xz compression libraries
-- libdeflate (high-performance decompression)
+- zlib (gzip path)
+- libdeflate (high-performance gzip decompression/compression helper)
 
 ---
 

@@ -29,7 +29,7 @@
             "hidden": true,
             "inherits": "base",
             "displayName": "GCC Base",
-            "description": "Base configuration for GCC 15 compiler",
+            "description": "Base configuration for the preferred GCC profile",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "gcc",
                 "CMAKE_CXX_COMPILER": "g++"
@@ -44,7 +44,7 @@
             "hidden": true,
             "inherits": "base",
             "displayName": "Clang Base",
-            "description": "Base configuration for Clang 21 compiler with libc++",
+            "description": "Base configuration for the preferred Clang profile with libc++",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++",
@@ -72,7 +72,7 @@
         {
             "name": "gcc-debug",
             "displayName": "GCC Debug",
-            "description": "Debug build with GCC 15",
+            "description": "Debug build with the preferred GCC profile",
             "inherits": "conan-gcc-base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
@@ -81,7 +81,7 @@
         {
             "name": "gcc-release",
             "displayName": "GCC Release",
-            "description": "Release build with GCC 15 (recommended for production)",
+            "description": "Release build with the preferred GCC profile (recommended for production)",
             "inherits": "conan-gcc-base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
@@ -90,7 +90,7 @@
         {
             "name": "gcc-relwithdebinfo",
             "displayName": "GCC RelWithDebInfo",
-            "description": "Release build with debug info using GCC 15",
+            "description": "Release build with debug info using the preferred GCC profile",
             "inherits": "conan-gcc-base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
@@ -99,7 +99,7 @@
         {
             "name": "clang-debug",
             "displayName": "Clang Debug",
-            "description": "Debug build with Clang 21 + libc++ (recommended for development)",
+            "description": "Debug build with the preferred Clang profile + libc++ (recommended for development)",
             "inherits": "conan-clang-base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
@@ -108,7 +108,7 @@
         {
             "name": "clang-release",
             "displayName": "Clang Release",
-            "description": "Release build with Clang 21 + libc++",
+            "description": "Release build with the preferred Clang profile + libc++",
             "inherits": "conan-clang-base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"

@@ -1,18 +1,33 @@
 # API Specification: Core Interfaces
 
-> **Status**: Active  
-> **Last Updated**: 2026-04-23  
+> **Status**: Active
+> **Last Updated**: 2026-04-26
 > **Related**: [Product Spec](../product/fastq-processing.md), [Core Architecture](../architecture/0001-core-architecture.md)
 
 ## Overview
 
-This document defines the core C++ API interfaces for FastQTools. All public interfaces are located in `include/fqtools/` and follow stable API conventions.
+FastQTools exposes its maintained public C++ surface from `include/fqtools/`. The umbrella header is:
+
+```cpp
+#include <fqtools/fq.h>
+```
+
+The closeout-phase API goal is **truthful stability**, not breadth. Only interfaces present in public headers are part of this baseline.
+
+## Public Header Map
+
+| Area | Entry points |
+| --- | --- |
+| Common / config / errors | `fqtools/common/common.h`, `fqtools/config/config.h`, `fqtools/error/error.h` |
+| I/O | `fqtools/io/fastq_io.h`, `fqtools/io/fastq_reader.h`, `fqtools/io/fastq_writer.h` |
+| Processing | `fqtools/processing/processing_pipeline_interface.h`, `fqtools/processing/read_predicate_interface.h`, `fqtools/processing/read_mutator_interface.h`, `fqtools/processing/predicates.h`, `fqtools/processing/mutators.h` |
+| Statistics | `fqtools/statistics/statistic_calculator.h`, `fqtools/statistics/statistic_calculator_interface.h`, `fqtools/statistics/statistic_interface.h` |
 
 ## I/O Module (`fq::io`)
 
-### FastqRecord
+### `FastqRecord`
 
-Lightweight view into FASTQ record data.
+Zero-copy view into a record owned by a `FastqBatch`.
 
 ```cpp
 namespace fq::io {
@@ -20,101 +35,117 @@ namespace fq::io {
 struct FastqRecord {
     std::string_view id;
     std::string_view comment;
-    std::string_view sequence;
-    std::string_view quality;
+    std::string_view seq;
+    std::string_view qual;
+    std::string_view plus;
 
-    [[nodiscard]] auto isValid() const -> bool;
+    [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto length() const -> size_t;
-    [[nodiscard]] auto averageQuality() const -> double;
+    [[nodiscard]] auto validateLengths() const -> bool;
 };
 
 }  // namespace fq::io
 ```
 
-**Lifecycle**: `FastqRecord` instances are views into `FastqBatch` memory. The batch must outlive all records.
+**Lifecycle rule**: `FastqRecord` does not own memory. All views become invalid when the underlying `FastqBatch` is cleared or destroyed.
 
-### FastqBatch
+### `FastqBatch`
 
-Contiguous memory block holding multiple FASTQ records.
+Reusable batch container that owns contiguous buffer storage and a record list.
 
 ```cpp
 namespace fq::io {
 
 class FastqBatch {
 public:
-    explicit FastqBatch(size_t capacity);
+    explicit FastqBatch(size_t capacityBytes = 4 * 1024 * 1024);
+    FastqBatch(size_t capacityBytes, size_t expectedRecords);
 
-    [[nodiscard]] auto records() const -> std::vector<FastqRecord>;
-    [[nodiscard]] auto count() const -> size_t;
-    [[nodiscard]] auto capacity() const -> size_t;
-
-    void addRecord(std::string_view id, std::string_view seq, std::string_view qual);
     void clear();
 
-    [[nodiscard]] auto memoryUsage() const -> size_t;
+    [[nodiscard]] auto begin() const;
+    [[nodiscard]] auto end() const;
+    [[nodiscard]] auto begin();
+    [[nodiscard]] auto end();
+
+    [[nodiscard]] auto size() const -> size_t;
+    [[nodiscard]] auto empty() const -> bool;
+
+    [[nodiscard]] auto buffer() -> std::vector<char>&;
+    [[nodiscard]] auto records() -> std::vector<FastqRecord>&;
+    [[nodiscard]] auto buffer() const -> const std::vector<char>&;
+
+    auto moveRemainderToStart(size_t validEndPos) -> size_t;
 };
 
 }  // namespace fq::io
 ```
 
-**Invariants**:
-- `count() <= capacity()` always holds
-- All records reference valid offsets into `buffer`
-- Memory is contiguous (enables efficient parsing)
-
-### FastqReader
-
-Reads FASTQ files with automatic compression detection.
+### `FastqReaderOptions` and `FastqReader`
 
 ```cpp
 namespace fq::io {
+
+struct FastqReaderOptions {
+    size_t readChunkBytes = 1 * 1024 * 1024;
+    size_t zlibBufferBytes = 128 * 1024;
+    size_t maxBufferBytes = 0;
+};
 
 class FastqReader {
 public:
-    explicit FastqReader(std::string_view filePath);
+    explicit FastqReader(const std::string& path);
+    FastqReader(const std::string& path, const FastqReaderOptions& options);
     ~FastqReader();
 
-    // Read next batch
-    auto readBatch(size_t maxRecords = 10000) -> std::unique_ptr<FastqBatch>;
-
-    // Iteration support
-    [[nodiscard]] auto hasNext() const -> bool;
-    [[nodiscard]] auto getTotalReads() const -> size_t;
-
-    // Disable copy
     FastqReader(const FastqReader&) = delete;
-    auto operator=(const FastqReader&) = delete;
+    FastqReader& operator=(const FastqReader&) = delete;
+    FastqReader(FastqReader&&) noexcept;
+    FastqReader& operator=(FastqReader&&) noexcept;
+
+    [[nodiscard]] auto nextBatch(FastqBatch& batch) -> bool;
+    [[nodiscard]] auto nextBatch(FastqBatch& batch, size_t maxRecords) -> bool;
+    [[nodiscard]] auto isOpen() const -> bool;
 };
 
 }  // namespace fq::io
 ```
 
-**Error Handling**:
-- File not found → throws `fq::error::IOError`
-- Invalid format → throws `fq::error::FormatError` with line number
-- Compression error → throws `fq::error::IOError` with details
+**Supported compression path**: gzip by filename convention (`.gz`).
 
-### FastqWriter
-
-Writes FASTQ files with compression support.
+### `FastqWriterCompressionMode`, `FastqWriterOptions`, and `FastqWriter`
 
 ```cpp
 namespace fq::io {
 
+enum class FastqWriterCompressionMode : std::uint8_t {
+    Auto,
+    Gzip,
+    None,
+};
+
+struct FastqWriterOptions {
+    size_t zlibBufferBytes = 128 * 1024;
+    size_t outputBufferBytes = 128 * 1024;
+    FastqWriterCompressionMode compression = FastqWriterCompressionMode::Auto;
+};
+
 class FastqWriter {
 public:
-    FastqWriter(std::string_view filePath, CompressionType compression = CompressionType::None);
+    explicit FastqWriter(const std::string& path);
+    FastqWriter(const std::string& path, const FastqWriterOptions& options);
     ~FastqWriter();
 
-    void writeBatch(const FastqBatch& batch);
-    void writeRecord(const FastqRecord& record);
-    void close();
-
-    [[nodiscard]] auto getWrittenReads() const -> size_t;
-
-    // Disable copy
     FastqWriter(const FastqWriter&) = delete;
-    auto operator=(const FastqWriter&) = delete;
+    FastqWriter& operator=(const FastqWriter&) = delete;
+    FastqWriter(FastqWriter&&) noexcept;
+    FastqWriter& operator=(FastqWriter&&) noexcept;
+
+    void write(const FastqBatch& batch);
+    void write(const FastqRecord& record);
+
+    [[nodiscard]] auto isOpen() const -> bool;
+    [[nodiscard]] auto totalUncompressedBytes() const -> std::uint64_t;
 };
 
 }  // namespace fq::io
@@ -122,246 +153,249 @@ public:
 
 ## Processing Module (`fq::processing`)
 
-### Pipeline
-
-TBB-based parallel processing pipeline.
+### Low-level extension interfaces
 
 ```cpp
 namespace fq::processing {
 
-class Pipeline {
+class ReadPredicateInterface {
 public:
-    Pipeline();
-    ~Pipeline();
+    virtual ~ReadPredicateInterface() = default;
+    virtual auto evaluate(const fq::io::FastqRecord& read) const -> bool = 0;
+};
 
-    // Add processing stage
-    template<typename Func>
-    void addStage(Func&& stage);
-
-    // Execute pipeline
-    auto execute(std::unique_ptr<FastqBatch> batch) -> std::unique_ptr<FastqBatch>;
-
-    // Configuration
-    void setThreadCount(size_t threads);
-    void setBatchSize(size_t size);
-
-    [[nodiscard]] auto getThreadCount() const -> size_t;
+class ReadMutatorInterface {
+public:
+    virtual ~ReadMutatorInterface() = default;
+    virtual void process(fq::io::FastqRecord& read) = 0;
 };
 
 }  // namespace fq::processing
 ```
 
-### Predicate
-
-Filtering conditions for read validation.
+### Built-in predicates
 
 ```cpp
 namespace fq::processing {
 
-class Predicate {
+class MinQualityPredicate : public ReadPredicateInterface {
 public:
-    virtual ~Predicate() = default;
-    [[nodiscard]] virtual auto passes(const FastqRecord& record) const -> bool = 0;
+    explicit MinQualityPredicate(double minQuality, int qualityEncoding = 33);
 };
 
-// Built-in predicates
-class QualityPredicate : public Predicate {
+class MinLengthPredicate : public ReadPredicateInterface {
 public:
-    explicit QualityPredicate(double minQuality);
-    [[nodiscard]] auto passes(const FastqRecord& record) const -> bool override;
+    explicit MinLengthPredicate(size_t minLength);
 };
 
-class LengthPredicate : public Predicate {
+class MaxLengthPredicate : public ReadPredicateInterface {
 public:
-    explicit LengthPredicate(size_t minLength, size_t maxLength = SIZE_MAX);
-    [[nodiscard]] auto passes(const FastqRecord& record) const -> bool override;
+    explicit MaxLengthPredicate(size_t maxLength);
 };
 
-class NBasesPredicate : public Predicate {
+class MaxNRatioPredicate : public ReadPredicateInterface {
 public:
-    explicit NBasesPredicate(double maxNRatio);
-    [[nodiscard]] auto passes(const FastqRecord& record) const -> bool override;
+    explicit MaxNRatioPredicate(double maxNRatio);
 };
 
 }  // namespace fq::processing
 ```
 
-### Mutator
-
-Read modification operations.
+### Built-in mutators
 
 ```cpp
 namespace fq::processing {
 
-class Mutator {
+class QualityTrimmer : public ReadMutatorInterface {
 public:
-    virtual ~Mutator() = default;
-    virtual void apply(FastqRecord& record) const = 0;
+    enum class TrimMode { Both, FivePrime, ThreePrime };
+
+    QualityTrimmer(double qualityThreshold,
+                   size_t minLength = 1,
+                   TrimMode mode = TrimMode::Both,
+                   int qualityEncoding = 33);
 };
 
-// Quality trimming
-class QualityTrimmer : public Mutator {
+class LengthTrimmer : public ReadMutatorInterface {
 public:
-    enum class Mode { BothEnds, FivePrime, ThreePrime };
+    enum class TrimStrategy { FixedLength, MaxLength, FromStart, FromEnd };
 
-    QualityTrimmer(double qualityThreshold, Mode mode = Mode::BothEnds);
-    void apply(FastqRecord& record) const override;
+    LengthTrimmer(size_t targetLength, TrimStrategy strategy = TrimStrategy::FixedLength);
 };
 
-// Length filtering
-class LengthFilter : public Mutator {
+class AdapterTrimmer : public ReadMutatorInterface {
 public:
-    explicit LengthFilter(size_t minLength);
-    void apply(FastqRecord& record) const override;
+    AdapterTrimmer(const std::vector<std::string>& adapterSequences,
+                   size_t minOverlap = 3,
+                   size_t maxMismatches = 1);
 };
+
+}  // namespace fq::processing
+```
+
+### Processing pipeline
+
+```cpp
+namespace fq::processing {
+
+struct ProcessingStatistics {
+    uint64_t totalReads = 0;
+    uint64_t passedReads = 0;
+    uint64_t filteredReads = 0;
+    uint64_t modifiedReads = 0;
+    uint64_t errorReads = 0;
+    uint64_t inputBytes = 0;
+    uint64_t outputBytes = 0;
+    uint64_t elapsedMs = 0;
+    double processingTimeMs = 0.0;
+    double throughputMbps = 0.0;
+
+    [[nodiscard]] auto getPassRate() const -> double;
+    [[nodiscard]] auto getFilterRate() const -> double;
+    [[nodiscard]] auto toString() const -> std::string;
+};
+
+struct ProcessingConfig {
+    size_t batchSize = 10000;
+    size_t threadCount = 1;
+    size_t readChunkBytes = 1 * 1024 * 1024;
+    size_t zlibBufferBytes = 128 * 1024;
+    size_t writerBufferBytes = 128 * 1024;
+    size_t batchCapacityBytes = 4 * 1024 * 1024;
+    size_t memoryLimitBytes = 0;
+    size_t maxInFlightBatches = 0;
+};
+
+class ProcessingPipelineInterface {
+public:
+    virtual ~ProcessingPipelineInterface() = default;
+
+    virtual void setInputPath(const std::string& inputPath) = 0;
+    virtual void setOutputPath(const std::string& outputPath) = 0;
+    virtual void setProcessingConfig(const ProcessingConfig& config) = 0;
+    virtual void addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator) = 0;
+    virtual void addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicate) = 0;
+    virtual auto run() -> ProcessingStatistics = 0;
+};
+
+auto createProcessingPipeline() -> std::unique_ptr<ProcessingPipelineInterface>;
 
 }  // namespace fq::processing
 ```
 
 ## Statistics Module (`fq::statistic`)
 
-### StatisticCalculator
-
-Calculates various FASTQ statistics.
+### High-level statistics entry point
 
 ```cpp
 namespace fq::statistic {
 
-struct StatisticsResult {
-    size_t totalReads;
-    size_t totalBases;
-    size_t q20Count;
-    size_t q30Count;
-    double gcContent;
-    double atContent;
-    double nContent;
-    std::map<size_t, size_t> lengthDistribution;
-    std::array<double, 4> baseComposition;  // A, T, C, G
+struct StatisticOptions {
+    std::string inputFastqPath;
+    std::string outputStatPath;
+    uint32_t batchSize = 50000;
+    uint32_t threadCount = 4;
+    size_t readChunkBytes = 1 * 1024 * 1024;
+    size_t zlibBufferBytes = 128 * 1024;
+    size_t batchCapacityBytes = 4 * 1024 * 1024;
+    size_t memoryLimitBytes = 0;
+    size_t maxInFlightBatches = 0;
+    int qualityEncoding = 33;
 };
 
-class StatisticCalculator {
+class StatisticCalculatorInterface {
 public:
-    StatisticCalculator();
-
-    void processBatch(const FastqBatch& batch);
-    [[nodiscard]] auto getResult() const -> StatisticsResult;
-    void reset();
-
-    // Convenience function
-    static auto calculateFromFile(std::string_view filePath) -> StatisticsResult;
+    virtual ~StatisticCalculatorInterface() = default;
+    virtual void run() = 0;
 };
+
+auto createStatisticCalculator(const StatisticOptions& options)
+    -> std::unique_ptr<StatisticCalculatorInterface>;
 
 }  // namespace fq::statistic
+```
+
+### Low-level statistic extension point
+
+```cpp
+namespace fq::statistic {
+
+struct FqStatisticResult;  // forward-declared in the public interface
+
+class StatisticInterface {
+public:
+    using Batch = fq::io::FastqBatch;
+    using Result = FqStatisticResult;
+
+    virtual ~StatisticInterface() = default;
+    virtual auto calculateStats(const Batch& batch) -> Result = 0;
+};
+
+using IStatistic = StatisticInterface;
+
+}  // namespace fq::statistic
+```
+
+**API note**: the maintained public workflow for statistics is `StatisticOptions + createStatisticCalculator(...)->run()`. The low-level `StatisticInterface` surface is available for module internals and specialized extension, but is not the recommended first integration path.
+
+## Configuration Module (`fq::config`)
+
+```cpp
+namespace fq::config {
+
+using ConfigValue = std::variant<bool, std::int64_t, double, std::string>;
+
+class Configuration {
+public:
+    void loadFromFile(const std::filesystem::path& configFile);
+    void loadFromArgs(int argc, char* argv[]);
+    void loadFromEnv();
+
+    template <typename T>
+    [[nodiscard]] auto get(std::string_view key) const -> T;
+
+    template <typename T>
+    [[nodiscard]] auto getOr(std::string_view key, T defaultValue) const -> T;
+
+    template <typename T>
+    void set(std::string_view key, T value);
+
+    [[nodiscard]] auto hasKey(std::string_view key) const -> bool;
+    [[nodiscard]] auto empty() const -> bool;
+    [[nodiscard]] auto size() const -> size_t;
+    [[nodiscard]] auto keys() const -> std::vector<std::string>;
+    void clear();
+    void validate() const;
+    void printConfig(std::ostream& out) const;
+    void setFromString(const std::string& key, const std::string& value);
+};
+
+auto globalConfig() -> Configuration&;
+
+template <typename T>
+auto getConfig(std::string_view key) -> T;
+
+template <typename T>
+auto getConfigOr(std::string_view key, T defaultValue) -> T;
+
+template <typename T>
+void setConfig(std::string_view key, T value);
+
+}  // namespace fq::config
 ```
 
 ## Error Handling
 
-All errors use exception hierarchy:
+Public code uses the exception hierarchy in `fqtools/error/error.h`. Configuration access failures surface as `fq::error::ConfigurationError`; I/O and format failures are surfaced by the I/O and CLI layers.
 
-```cpp
-namespace fq::error {
+## Stability Notes
 
-class FastQException : public std::exception {
-public:
-    explicit FastQException(std::string message);
-    [[nodiscard]] auto what() const noexcept -> const char* override;
-};
+1. Public integration must include headers from `include/fqtools/`.
+2. Types or helpers only declared under `src/` are implementation details, even if referenced by public interfaces internally.
+3. Closeout-phase changes should favor clarifying or narrowing this API surface rather than extending it.
 
-class IOError : public FastQException {
-public:
-    using FastQException::FastQException;
-};
-
-class FormatError : public FastQException {
-public:
-    using FastQException::FastQException;
-};
-
-class ConfigurationError : public FastQException {
-public:
-    using FastQException::FastQException;
-};
-
-}  // namespace fq::error
-```
-
-**Convenience Macros**:
-```cpp
-#define FQ_THROW_IO_ERROR(msg) throw fq::error::IOError(msg)
-#define FQ_THROW_FORMAT_ERROR(msg) throw fq::error::FormatError(msg)
-#define FQ_THROW_CONFIG_ERROR(msg) throw fq::error::ConfigurationError(msg)
-```
-
-## Logging
-
-Uses spdlog-based logging:
-
-```cpp
-namespace fq::logging {
-
-void trace(std::string_view fmt, auto&&... args);
-void debug(std::string_view fmt, auto&&... args);
-void info(std::string_view fmt, auto&&... args);
-void warn(std::string_view fmt, auto&&... args);
-void error(std::string_view fmt, auto&&... args);
-void critical(std::string_view fmt, auto&&... args);
-
-}  // namespace fq::logging
-```
-
-**Usage**: `fq::logging::info("Processing batch: {} records", count);`
-
-## Factory Functions
-
-### Pipeline Factory
-
-```cpp
-namespace fq::processing {
-
-auto createProcessingPipeline(const PipelineConfig& config) 
-    -> std::unique_ptr<Pipeline>;
-
-}  // namespace fq::processing
-```
-
-### Statistics Factory
-
-```cpp
-namespace fq::statistic {
-
-auto createStatisticCalculator(StatisticType type) 
-    -> std::unique_ptr<StatisticCalculator>;
-
-}  // namespace fq::statistic
-```
-
-## Conventions
-
-### Naming
-
-| Element | Style | Example |
-|---------|-------|---------|
-| Classes | PascalCase | `FastqReader`, `QualityPredicate` |
-| Functions | camelCase | `readBatch()`, `calculateFromFile()` |
-| Variables | camelCase | `totalReads`, `filePath` |
-| Private members | camelCase_ | `config_`, `pipeline_` |
-| Constants | kCamelCase | `kDefaultBatchSize` |
-| Namespaces | lower_case | `fq::io`, `fq::processing` |
-
-### Header Files
-
-- Public API: `#include <fqtools/module/file.h>`
-- Use `#pragma once` for header guards
-- Avoid `using namespace` in headers
-
-### Return Types
-
-- Use trailing return types: `auto foo() -> int`
-- Use `[[nodiscard]]` for queries, getters, state checks
-- Use `std::string_view` for read-only string parameters
-
-## Related Documents
+## Related Specifications
 
 - [Product Specification](../product/fastq-processing.md)
+- [Schema Specification](../schemas/schema.md)
 - [Core Architecture](../architecture/0001-core-architecture.md)
-- [Coding Standards](../../../docs/dev/coding-standards.md)

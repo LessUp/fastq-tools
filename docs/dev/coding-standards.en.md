@@ -8,7 +8,7 @@
 ## Basic Rules
 
 - **Language Standard**: C++23
-- **Compiler**: GCC 15 / modern Clang (local Clang builds are automatically adapted by scripts to installed version via Conan)
+- **Compiler**: GCC 11+ or modern Clang; the repo keeps GCC 15 / Clang 21 as preferred profiles, while local builds use the actually installed toolchain
 - **Formatting**: Use `.clang-format` for automatic formatting (based on LLVM style, 4-space indentation, 100-column width)
 
 ### Manual Unified Commands

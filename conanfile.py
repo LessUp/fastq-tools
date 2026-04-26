@@ -8,7 +8,7 @@ class FastQToolsConan(ConanFile):
     version = "3.1.0"
     license = "MIT"
     author = "LessUp <jiashuai.mail@gmail.com>"
-    url = "https://github.com/LessUp/FastQTools"
+    url = "https://github.com/LessUp/fastq-tools"
     description = "A modern toolkit for FASTQ file processing"
     topics = ("bioinformatics", "fastq", "genomics")
     settings = "os", "compiler", "build_type", "arch"

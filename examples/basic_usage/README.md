@@ -162,4 +162,4 @@ results/
 | `输入文件不存在` | 检查路径是否正确，可使用仓库内 `../../tools/data/*.fastq` 数据 |
 | `内存不足` | 减小 `FASTQTOOLS_BATCH_SIZE`，或使用较小的测试文件 |
 
-更多帮助请参考 [快速入门](../../docs/guide/getting-started.md) 或提交 [Issue](https://github.com/LessUp/FastQTools/issues)。
+更多帮助请参考 [快速入门](../../docs/guide/getting-started.md) 或提交 [Issue](https://github.com/LessUp/fastq-tools/issues)。

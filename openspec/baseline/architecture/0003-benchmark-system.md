@@ -44,7 +44,7 @@ The benchmark system follows a modular design with four core components:
 │                          ▼                                    │
 │  ┌─────────────────────────────────────────────────────────┐│
 │  │                    Storage Layer                         ││
-│  │  docs/benchmark-reports/                                 ││
+│  │  docs/performance/benchmark-reports/                     ││
 │  │  ├── results/           # Historical results             ││
 │  │  ├── baselines/         # Named baselines                ││
 │  │  ├── charts/            # Generated charts               ││
@@ -76,7 +76,7 @@ struct BenchmarkConfig {
     std::vector<size_t> readCounts = {10000, 100000, 1000000};
     std::vector<size_t> readLengths = {100, 150, 250};
     std::string inputFile;
-    std::string outputDir = "docs/benchmark-reports";
+    std::string outputDir = "docs/performance/benchmark-reports";
     bool ciMode = false;
 };
 
@@ -207,7 +207,7 @@ Options:
 
 #### Property 4: Historical Data Preservation
 
-*For any* sequence of N benchmark runs, `docs/benchmark-reports/results/` SHALL contain exactly N distinct result files with unique timestamp-based filenames.
+*For any* sequence of N benchmark runs, `docs/performance/benchmark-reports/results/` SHALL contain exactly N distinct result files with unique timestamp-based filenames.
 
 #### Property 5: Regression Detection Thresholds
 

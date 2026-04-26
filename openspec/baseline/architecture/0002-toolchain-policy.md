@@ -1,159 +1,145 @@
 # RFC-0002: Toolchain Policy
 
-> **Status**: Active  
-> **Created**: 2026-04-17  
-> **Last Updated**: 2026-04-23  
-> **Authors**: FastQTools Core Team  
+> **Status**: Active
+> **Created**: 2026-04-17
+> **Last Updated**: 2026-04-26
+> **Authors**: FastQTools Core Team
 > **Migrated From**: legacy toolchain decision document in the pre-OpenSpec docs tree
 
 ## Context
 
-FastQTools requires a consistent, reproducible toolchain across development, CI, and production environments to eliminate "works on my machine" issues and ensure binary compatibility.
+FastQTools needs a toolchain policy that is reproducible enough for CI and contributor handoff, but lightweight enough for a maintenance closeout repository. The previous baseline overstated uniformity by claiming a single Docker-pinned compiler stack across development, CI, and production, while the real repository already supports multiple presets, multiple Conan profiles, and local-first workflows.
+
+The current policy must therefore describe what contributors can actually rely on:
+
+- source compatibility floors;
+- canonical local build/test/lint entry points;
+- preferred Conan/CMake profiles where available;
+- consistency rules for docs, presets, Dockerfiles, and workflows.
 
 ## Decision
 
-### Unified Toolchain Strategy
+### 1. Source Compatibility Floor
 
-**All environments (development, CI, production) use the same compiler versions**, packaged via Docker to isolate users from compiler dependencies.
+FastQTools requires:
 
-### Version Specifications
+| Component | Maintained floor | Notes |
+| --- | --- | --- |
+| C++ | C++23 | Required for all code |
+| GCC | 11+ | Enforced by `CMakeLists.txt` |
+| Clang | 12+ | Enforced by `CMakeLists.txt` |
+| CMake | 3.28+ | Presets and root build configuration depend on it |
+| Conan | 2.x | Project scripts and dependency setup assume Conan 2 |
 
-| Component | Unified Version | Minimum Compatible | Notes |
-|-----------|----------------|-------------------|-------|
-| **GCC** | 15.x | 11.0 | CI compatibility check: 14.x (allow-failure) |
-| **Clang/LLVM** | 21 | 12.0 | CI compatibility check: 19 (allow-failure) |
-| **C++ Standard** | C++23 | C++23 | Required for all code |
-| **CMake** | 4.x (Docker) | 3.28 | `cmake_minimum_required(VERSION 3.28)` |
-| **Conan** | 2.24.0 | 2.0 | Locked in Dockerfile |
-| **Ninja** | Latest system | 1.10 | Not locked, use system package |
+These are the compatibility floors. They are not the same thing as the repo's preferred profiles.
 
-### Docker Image Strategy
+### 2. Canonical Local Workflow
 
-| Purpose | Image | Rationale |
-|---------|-------|-----------|
-| **Build (unified)** | `gcc:15.2-bookworm` | Dev, CI, prod all use same base image |
-| **Runtime** | `debian:bookworm-slim` | Minimal footprint (~52MB), security surface |
+The authoritative local entry points are:
 
-**Tag Strategy**:
-```
-fastqtools:latest          ← GCC 15 build, debian:bookworm-slim runtime (recommended)
-fastqtools:<version>       ← Version-locked, e.g., fastqtools:3.1.0
+```bash
+./scripts/core/build
+./scripts/core/test
+./scripts/core/lint
+./scripts/core/install-deps
 ```
 
-### Rationale
+The canonical local development posture is:
 
-1. **Docker Distribution**: Users receive pre-compiled binaries; compiler version is transparent to them
-2. **Environment Consistency**: Eliminates "dev compiles, prod fails" issues
-3. **GCC 15 Value**: Latest optimizer, mature C++23 support, bugfix release
-4. **Single Configuration**: Lower cognitive load and error probability than maintaining multiple configs
+- use CMake presets;
+- use `clang-debug` for local editor integration and compile commands;
+- use `clangd + compile_commands.json` for C++ navigation and diagnostics;
+- keep Docker optional for local work rather than mandatory.
 
-### Why Not Other Options
+### 3. Preferred Profiles and Presets
 
-**Not Ubuntu**:
-- Larger image size, no benefit for this project
-- Ubuntu 24.04 itself is based on Debian Bookworm, binary compatible anyway
-- Can create Ubuntu variant if bioinformatics community demands
+FastQTools keeps preferred Conan profiles in:
 
-**Not Alpine**:
-- musl libc vs glibc ABI incompatibility
-- TBB, libdeflate may have issues or performance degradation on musl
+- `config/conan/profile-gcc` → GCC 15 + `libstdc++11`
+- `config/conan/profile-clang` → Clang 21 + `libc++`
 
-### CI Matrix Configuration
+These profile files express the repository's preferred target configurations where those toolchains are available. They do **not** mean every local machine or CI runner must literally use those exact compiler binaries.
 
-```yaml
-strategy:
-  matrix:
-    include:
-      # ===== Primary (must pass) =====
-      - compiler: gcc
-        version: "15"
-        preset: gcc-release
+In practice:
 
-      - compiler: clang
-        version: "21"
-        preset: clang-release
+- local scripts may adapt to the installed Clang toolchain while preserving the preset/profile intent;
+- the verified local baseline for this repository currently includes Linux + Clang 18 + libc++;
+- CI should favor signal and maintainability over maximal version-matrix breadth.
 
-      # ===== Sanitizers (must pass) =====
-      - compiler: clang
-        version: "21"
-        preset: clang-asan
+### 4. CMake Preset Policy
 
-      - compiler: clang
-        version: "21"
-        preset: clang-tsan
+The maintained preset families are:
 
-      # ===== Compatibility checks (allow-failure) =====
-      - compiler: gcc
-        version: "14"
-        preset: gcc-release
-        allow-failure: true
+- `gcc-debug`
+- `gcc-release`
+- `gcc-relwithdebinfo`
+- `clang-debug`
+- `clang-release`
+- sanitizer presets (`clang-asan`, `clang-tsan`, `clang-ubsan`, `clang-msan`)
+- `coverage`
 
-      - compiler: clang
-        version: "19"
-        preset: clang-release
-        allow-failure: true
-```
+Rules:
 
-### Version Locking Rules
+1. Local LSP and editor tooling should target `clang-debug`.
+2. Release-oriented packaging should use a release preset rather than ad-hoc directories.
+3. New build flows must integrate through presets and `scripts/core/*`, not custom wrapper scripts.
 
-1. **Must use versioned image tags** (e.g., `gcc:15.2-bookworm`), never `latest`
-2. **Must document** selection rationale and last review date in Dockerfiles
-3. **Runtime image** follows Debian major version upgrades (Bookworm → Trixie), expect 2025-2026 review
+### 5. Dependency Policy
 
-### Upgrade Policy
+The maintained dependency recipes are:
 
-| Component | Review Cycle | Notes |
-|-----------|--------------|-------|
-| GCC | Within 1 month of new stable release | Check C++23 feature maturity |
-| Clang | Follow LLVM stable release schedule | Within 1 month |
-| Minimum compatible | Every 2 years | Follow mainstream LTS distros |
-| CMake minimum | As needed | Currently 3.28 (Ubuntu 24.04 line) |
-| Conan | After each release | Verify profile compatibility |
-| Runtime base image | Debian major version | Bookworm EOL: 2028 |
+- `config/dependencies/conanfile.py` for project build/test consumption
+- root `conanfile.py` for package metadata and installation/export use
 
-### Review Process
+If dependency versions or options change, both recipes must be reviewed together. Divergence between them is treated as technical debt and must be intentional, documented, and minimal.
 
-1. **Bi-annual review** (January / July) of all toolchain versions
-2. **Review scope**: Compiler releases, Docker base image security updates, Conan compatibility
-3. **Review results** recorded in `changelog/`
-4. **Version changes** must update this document and all related files
+### 6. Consistency Rules
 
-### Consistency Checklist
+The following must stay aligned whenever toolchain-facing changes are made:
 
-The following files must remain consistent with this specification:
-- [ ] `AGENTS.md` / `CLAUDE.md`
-- [ ] `config/conan/profile-gcc`
-- [ ] `config/conan/profile-clang`
-- [ ] `docker/Dockerfile.dev`
-- [ ] `docker/Dockerfile.prod`
-- [ ] `docker/Dockerfile.deploy`
-- [ ] `CMakeLists.txt`
-- [ ] `CMakePresets.json`
-- [ ] `docs/dev/build.md`
+- `CMakeLists.txt`
+- `CMakePresets.json`
+- `config/conan/profile-gcc`
+- `config/conan/profile-clang`
+- `config/dependencies/conanfile.py`
+- `conanfile.py`
+- `docker/` toolchain-related Dockerfiles
+- `docs/dev/build*.md`
+- AI governance docs that describe local tooling (`AGENTS.md`, `CLAUDE.md`, Copilot instructions)
+
+### 7. Review Policy
+
+Toolchain statements must be reviewed when one of the following changes:
+
+1. a preferred compiler profile is updated;
+2. local scripts change how presets or Conan profiles are resolved;
+3. CI changes its primary build/test presets;
+4. public docs or AI instructions change contributor setup guidance.
 
 ## Consequences
 
 ### Positive
-- Reproducible builds across environments
-- Docker isolates users from compiler dependencies
-- Single configuration reduces maintenance burden
-- Sanitizer results consistent between dev and CI
+
+- The baseline now matches the repository's real local-first workflow.
+- Contributors can distinguish compatibility floors from preferred target profiles.
+- Tooling guidance is simpler to keep in sync across docs, scripts, and AI instructions.
 
 ### Negative
-- Requires Docker for development
-- Users building from source need specific compiler versions
-- Docker layer caching can cause non-deterministic builds (mitigated by apt snapshot pinning)
+
+- The repository no longer claims a single literal compiler version across every environment.
+- Profile files still introduce some cognitive overhead because both preferred targets and compatibility floors exist.
 
 ### Risks & Mitigations
 
 | Risk | Mitigation |
-|------|-----------|
-| Clang 21 via `llvm.sh` may pull different commits | Cache Docker layers in CI, pin apt snapshot dates |
-| GCC 15 not available on older distros | Docker distribution, users get binaries |
-| Conan 2.x API changes | Lock version in Dockerfile, review after releases |
+| --- | --- |
+| Docs claim a version the scripts do not actually use | Treat cross-file version alignment as part of every toolchain change |
+| Preferred Clang profile and installed local Clang differ | Keep compatibility floor explicit; document local verified baseline separately |
+| Dependency recipes drift apart | Review both Conan recipes together whenever versions or options change |
 
 ## Related Documents
 
 - [Product Specification](../product/fastq-processing.md)
 - [Core Architecture](0001-core-architecture.md)
 - [Build Guide](../../../docs/dev/build.md)
+- [Local Tooling Strategy](../../../docs/dev/local-tooling.md)

@@ -34,8 +34,8 @@
 
 **开发依赖包含：**
 
-- GCC 15 编译器
-- Clang 开发工具链（脚本会按本机版本自动适配 Conan）
+- GCC 15 profile（如环境可用）或满足最低要求的 GCC 11+
+- Clang 开发工具链（仓库保留 Clang 21 profile；脚本会按本机已安装版本适配本地构建）
 - CMake、Ninja 构建系统
 - Conan 2.x 包管理器
 - GDB、Valgrind 调试工具
@@ -46,8 +46,8 @@
 **运行时依赖包含：**
 
 - libtbb12（Intel TBB 并行库）
-- zlib、bzip2、xz 压缩库
-- libdeflate（高性能解压）
+- zlib（gzip 路径）
+- libdeflate（高性能 gzip 解压/压缩辅助）
 
 ---
 

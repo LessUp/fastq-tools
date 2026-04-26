@@ -60,7 +60,7 @@ class BenchmarkReport:
 class ReportGenerator:
     """报告生成器"""
     
-    def __init__(self, output_dir: Path = Path("docs/benchmark-reports")):
+    def __init__(self, output_dir: Path = Path("docs/performance/benchmark-reports")):
         self.output_dir = output_dir
         self.charts_dir = output_dir / "charts"
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -397,7 +397,7 @@ def main():
     
     args = parser.parse_args()
     
-    output_dir = args.output or Path("docs/benchmark-reports")
+    output_dir = args.output or Path("docs/performance/benchmark-reports")
     generator = ReportGenerator(output_dir)
     
     if args.input:

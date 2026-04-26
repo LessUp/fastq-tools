@@ -112,7 +112,7 @@ add_custom_target(benchmarks
 )
 
 # 定义输出目录
-set(BENCHMARK_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/docs/benchmark-reports/results")
+set(BENCHMARK_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/docs/performance/benchmark-reports/results")
 
 # 运行所有基准测试的目标（输出 JSON 格式）
 add_custom_target(run_benchmarks

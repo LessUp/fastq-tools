@@ -347,7 +347,8 @@ def build_compiler_report(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run GCC vs Clang compiler benchmarks")
-    parser.add_argument("--data-dir", type=Path, default=Path("docs/benchmark-reports/data"))
+    parser.add_argument(
+        "--data-dir", type=Path, default=Path("docs/performance/benchmark-reports/data"))
     parser.add_argument("--output", "-o", type=Path, help="Output JSON path")
     parser.add_argument("--benchmark-filter", help="Google Benchmark regex filter")
     parser.add_argument("--repetitions", type=int, help="Benchmark repetitions")

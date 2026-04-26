@@ -50,7 +50,7 @@ def generate_performance_badge(throughput_mbps: float) -> str:
         "performance",
         message,
         color,
-        "docs/benchmark-reports/latest.md",
+        "docs/performance/benchmark-reports/latest.md",
     )
 
 
@@ -79,7 +79,7 @@ def main():
     
     if not args.input:
         # 尝试找到最新的结果
-        results_dir = Path("docs/benchmark-reports/results")
+        results_dir = Path("docs/performance/benchmark-reports/results")
         if results_dir.exists():
             files = sorted(results_dir.glob("*.json"), reverse=True)
             if files:

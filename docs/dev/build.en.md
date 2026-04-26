@@ -2,11 +2,11 @@
 
 ## System Requirements
 
-- **Compiler**: GCC 15 / modern Clang (unified for development and production; local Clang builds automatically adapted by scripts to installed version via Conan)
+- **Compiler**: GCC 11+ or Clang 12+; the repo keeps GCC 15 / Clang 21 as preferred profiles, but local builds use the actually installed toolchain
 - **CMake**: 3.28+
 - **Version Specification**: See `openspec/baseline/architecture/0002-toolchain-policy.md`
 - **Parallel Library**: Intel oneTBB (required, pipeline implementation depends on it)
-- **Compression Libraries**: zlib / bzip2 / xz
+- **Compression Path**: maintained compressed I/O is centered on gzip, backed by zlib and libdeflate
 - **Memory**: Recommended 4GB+ RAM
 - **Storage**: 1GB+ available space
 

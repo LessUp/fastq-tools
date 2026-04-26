@@ -29,7 +29,7 @@ These results are the current maintained snapshot for **100K reads (150 bp)** on
 ## Benchmark artifacts and tooling
 
 - This page is the stable, curated overview for public readers.
-- CI-generated benchmark artifacts may be published under `docs/benchmark-reports/` when available.
+- CI-generated benchmark artifacts may be published under `docs/performance/benchmark-reports/` when available.
 - Benchmark tooling lives in `scripts/tools/performance/` inside the repository.
 
 ## When benchmarks matter most

@@ -20,22 +20,22 @@
 
 ### 安装
 
-Sanitizers 是编译器内置功能，无需额外安装。建议使用 GCC 15 或现代 Clang；本地 Clang 构建可由脚本按已安装版本自动适配 Conan。
+Sanitizers 是编译器内置功能，无需额外安装。建议使用满足兼容性下限的 GCC / Clang；仓库保留 GCC 15 / Clang 21 作为首选 profile，本地构建则按已安装工具链适配。
 
 ### 使用
 
 ```bash
 # AddressSanitizer - 检测内存错误
 ./scripts/core/build --sanitizer asan --dev
-./scripts/core/test -b build/clang-debug
+./scripts/core/test --preset clang-debug
 
 # ThreadSanitizer - 检测数据竞争
 ./scripts/core/build --sanitizer tsan --dev
-./scripts/core/test -b build/clang-debug
+./scripts/core/test --preset clang-debug
 
 # UndefinedBehaviorSanitizer - 检测未定义行为
 ./scripts/core/build --sanitizer ubsan --dev
-./scripts/core/test -b build/clang-debug
+./scripts/core/test --preset clang-debug
 
 # MemorySanitizer - 检测未初始化内存 (仅 Clang)
 ./scripts/core/build --sanitizer msan --dev -c clang
