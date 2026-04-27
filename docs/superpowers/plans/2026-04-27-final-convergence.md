@@ -623,9 +623,9 @@ hide:
 <p class="lead">Analyze and filter FASTQ files at <strong>1.7M reads/sec</strong>. A focused CLI for daily bioinformatics QC and a clean C++ API for pipeline integration.</p>
 
 <div class="hero-actions" markdown>
-[Get started](guide/getting-started.en.md){ .md-button .md-button--primary }
+[Get started](../../guide/getting-started.en.md){ .md-button .md-button--primary }
 [API reference](api/overview.en.md){ .md-button }
-[Benchmarks](performance/benchmark-report.md){ .md-button }
+[Benchmarks](../../performance/benchmark-report.md){ .md-button }
 [GitHub](https://github.com/LessUp/fastq-tools){ .md-button }
 </div>
 
@@ -682,7 +682,7 @@ cd fastq-tools
   --min-quality 20 --min-length 50
 ```
 
-→ [Full guide](guide/getting-started.en.md) · [CLI reference](guide/cli-reference.en.md) · [Build options](dev/build.en.md)
+→ [Full guide](../../guide/getting-started.en.md) · [CLI reference](../../guide/cli-reference.en.md) · [Build options](../../dev/build.en.md)
 
 ---
 
@@ -693,7 +693,7 @@ cd fastq-tools
 | `stat` (gzip FASTQ) | 1.7M reads/sec | AMD Ryzen 5900X, 8 threads |
 | `filter` (pass-through) | 2.1M reads/sec | AMD Ryzen 5900X, 8 threads |
 
-→ [Full benchmark report](performance/benchmark-report.md)
+→ [Full benchmark report](../../performance/benchmark-report.md)
 ```
 
 - [ ] **Step 3: 重写 docs/index.md（中文版）**
@@ -716,9 +716,9 @@ hide:
 <p class="lead">以 <strong>170 万 reads/秒</strong> 分析和过滤 FASTQ 文件。专注于日常生物信息学 QC 的 CLI 工具，以及可嵌入流水线的 C++ API。</p>
 
 <div class="hero-actions" markdown>
-[快速开始](guide/getting-started.md){ .md-button .md-button--primary }
+[快速开始](../../guide/getting-started.md){ .md-button .md-button--primary }
 [API 参考](api/overview.md){ .md-button }
-[性能基准](performance/benchmark-report.md){ .md-button }
+[性能基准](../../performance/benchmark-report.md){ .md-button }
 [GitHub](https://github.com/LessUp/fastq-tools){ .md-button }
 </div>
 
@@ -775,7 +775,7 @@ cd fastq-tools
   --min-quality 20 --min-length 50
 ```
 
-→ [完整指南](guide/getting-started.md) · [CLI 参考](guide/cli-reference.md) · [构建选项](dev/build.md)
+→ [完整指南](../../guide/getting-started.md) · [CLI 参考](../../guide/cli-reference.md) · [构建选项](../../dev/build.md)
 
 ---
 
@@ -786,7 +786,7 @@ cd fastq-tools
 | `stat`（gzip FASTQ） | 170 万 reads/秒 | AMD Ryzen 5900X，8 线程 |
 | `filter`（直通） | 210 万 reads/秒 | AMD Ryzen 5900X，8 线程 |
 
-→ [完整基准报告](performance/benchmark-report.md)
+→ [完整基准报告](../../performance/benchmark-report.md)
 ```
 
 - [ ] **Step 4: 验证 mkdocs 构建通过**

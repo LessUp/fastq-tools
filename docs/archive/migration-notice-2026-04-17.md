@@ -9,7 +9,7 @@ The repository no longer uses `docs/` for authoritative specifications.
 
 - Current baseline specs live in [`openspec/baseline/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline)
 - Active change proposals live in `openspec/changes/`
-- Historical docs-era spec snapshots remain in [`docs/archive/2026-04-17-migrated-to-specs/`](2026-04-17-migrated-to-specs/migration-notice.md)
+- Historical docs-era notes remain indexed in [this archive landing page](index.md).
 
 ## What This Archive Contains
 
