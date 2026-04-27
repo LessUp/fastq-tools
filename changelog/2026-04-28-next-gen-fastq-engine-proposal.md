@@ -9,6 +9,7 @@
 - 新增 `openspec/changes/next-gen-fastq-engine/proposal.md`
 - 新增 `openspec/changes/next-gen-fastq-engine/design.md`
 - 新增 `openspec/changes/next-gen-fastq-engine/tasks.md`
+- 新增 `openspec/changes/next-gen-fastq-engine/specs/` 下 5 个最小 spec delta 文件
 - 明确后续 4 个独立子项目：execution-abstraction、memory-resource-policy、advanced-preprocessing、qc-signatures-and-screening
 
 ## 影响范围
@@ -19,5 +20,5 @@
 ## 验证方式
 
 - `git diff --check`
-- `rg -n "TBD|TODO|implement later|fill in details" openspec/changes/next-gen-fastq-engine`
+- `rg -n "TBD|TODO|implement later|fill in details" openspec/changes/next-gen-fastq-engine/proposal.md openspec/changes/next-gen-fastq-engine/design.md openspec/changes/next-gen-fastq-engine/specs`
 - `python3 -m mkdocs build --strict --site-dir build/docs-site-validation`

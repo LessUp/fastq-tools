@@ -26,7 +26,7 @@
 ## 3. 验证与记录
 
 - [ ] 3.1 运行 `git diff --check`
-- [ ] 3.2 运行 `rg -n "TBD|TODO|implement later|fill in details" openspec/changes/next-gen-fastq-engine`
+- [ ] 3.2 运行 `rg -n "TBD|TODO|implement later|fill in details" openspec/changes/next-gen-fastq-engine/proposal.md openspec/changes/next-gen-fastq-engine/design.md openspec/changes/next-gen-fastq-engine/specs`
 - [ ] 3.3 在 `changelog/2026-04-28-next-gen-fastq-engine-proposal.md` 记录目标、影响范围、验证方式
 - [ ] 3.4 完成一次人工或次级 AI review，确认 scope 没有滑向平台化
 
