@@ -132,5 +132,31 @@ class TestFastQToolsCLI(unittest.TestCase):
         content = self._read_fastq_content(output_fastq)
         self.assertIn("\nGT\n+\nII\n", content)
 
+    def test_filter_accepts_execution_backend_option(self):
+        output_fastq = os.path.join(self.test_dir, "backend.fastq")
+        result = self.run_cmd([
+            "filter",
+            "--input", self.sample_fastq,
+            "--output", output_fastq,
+            "--threads", "2",
+            "--execution-backend", "oneTbb",
+        ])
+
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(os.path.exists(output_fastq))
+
+    def test_stat_accepts_execution_backend_option(self):
+        output_stats = os.path.join(self.test_dir, "backend-stats.txt")
+        result = self.run_cmd([
+            "stat",
+            "--input", self.sample_fastq,
+            "--output", output_stats,
+            "--threads", "2",
+            "--execution-backend", "oneTbb",
+        ])
+
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(os.path.exists(output_stats))
+
 if __name__ == "__main__":
     unittest.main()

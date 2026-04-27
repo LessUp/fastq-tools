@@ -16,6 +16,7 @@
 #include "fqtools/io/fastq_writer.h"
 
 // 处理管道
+#include "fqtools/processing/execution_backend.h"
 #include "fqtools/processing/mutators.h"
 #include "fqtools/processing/predicates.h"
 #include "fqtools/processing/processing_pipeline_interface.h"

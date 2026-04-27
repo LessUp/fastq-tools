@@ -2,12 +2,25 @@
 #include "fqtools/processing/mutators.h"
 #include "fqtools/processing/predicates.h"
 #include "fqtools/processing/processing_pipeline.h"
+#include "fqtools/statistics/statistic_calculator_interface.h"
 
 #include <gtest/gtest.h>
 
 TEST(PipelineSmokeTest, CanCreatePipelineFromFactory) {
     auto pipeline = fq::processing::createProcessingPipeline();
     ASSERT_TRUE(static_cast<bool>(pipeline));
+}
+
+TEST(PipelineSmokeTest, ProcessingConfigDefaultsToOneTbbBackend) {
+    fq::processing::ProcessingConfig config;
+
+    EXPECT_EQ(config.executionBackend, fq::processing::ExecutionBackend::OneTbb);
+}
+
+TEST(PipelineSmokeTest, StatisticOptionsDefaultsToOneTbbBackend) {
+    fq::statistic::StatisticOptions options;
+
+    EXPECT_EQ(options.executionBackend, fq::processing::ExecutionBackend::OneTbb);
 }
 
 TEST(PipelineSmokeTest, QualityTrimmerTrimsLowQualityEnds) {

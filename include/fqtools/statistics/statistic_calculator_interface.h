@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "fqtools/processing/execution_backend.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -32,9 +34,11 @@ struct StatisticOptions {
     std::string outputStatPath;  ///< 输出统计结果路径（JSON）
     uint32_t batchSize = 50000;  ///< 每批次处理的记录数
 
-    uint32_t threadCount = 4;                     ///< 并行线程数
-    size_t readChunkBytes = 1 * 1024 * 1024;      ///< 读取块大小（字节）
-    size_t zlibBufferBytes = 128 * 1024;          ///< zlib 缓冲区大小（字节）
+    uint32_t threadCount = 4;                      ///< 并行线程数
+    fq::processing::ExecutionBackend executionBackend =
+        fq::processing::ExecutionBackend::OneTbb;  ///< 执行后端
+    size_t readChunkBytes = 1 * 1024 * 1024;       ///< 读取块大小（字节）
+    size_t zlibBufferBytes = 128 * 1024;           ///< zlib 缓冲区大小（字节）
     size_t batchCapacityBytes = 4 * 1024 * 1024;  ///< 批次容量（字节）
     size_t memoryLimitBytes = 0;                  ///< 内存限制（0 表示无限制）
     size_t maxInFlightBatches = 0;                ///< 最大并行批次（0 表示自动）

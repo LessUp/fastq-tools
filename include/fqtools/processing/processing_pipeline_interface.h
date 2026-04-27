@@ -1,5 +1,7 @@
 #pragma once
 
+#include "fqtools/processing/execution_backend.h"
+
 /**
  * @file processing_pipeline_interface.h
  * @brief 处理管道接口定义
@@ -59,8 +61,9 @@ struct ProcessingStatistics {
  * @note 所有参数都有合理的默认值
  */
 struct ProcessingConfig {
-    size_t batchSize = 10000;  ///< 批处理大小（每个批次的读取数量）
-    size_t threadCount = 1;    ///< 线程数量（1表示串行处理）
+    size_t batchSize = 10000;                                   ///< 批处理大小（每个批次的读取数量）
+    size_t threadCount = 1;                                     ///< 线程数量（1表示串行处理）
+    ExecutionBackend executionBackend = ExecutionBackend::OneTbb;  ///< 执行后端
 
     size_t readChunkBytes = 1 * 1024 * 1024;
     size_t zlibBufferBytes = 128 * 1024;

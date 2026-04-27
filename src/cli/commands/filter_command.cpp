@@ -1,4 +1,5 @@
 #include "filter_command.h"
+#include "execution_backend_option.h"
 
 #include <iomanip>
 #include <iostream>
@@ -58,6 +59,9 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
         cxxopts::value<size_t>()->default_value("10"))("quality-encoding",
                                                        "Quality encoding offset (33 or 64)",
                                                        cxxopts::value<int>()->default_value("33"))(
+        "execution-backend",
+        "Execution backend (oneTbb)",
+        cxxopts::value<std::string>()->default_value("oneTbb"))(
         "min-quality", "Minimum average quality threshold", cxxopts::value<double>())(
         "min-length", "Minimum read length", cxxopts::value<size_t>())(
         "max-length", "Maximum read length", cxxopts::value<size_t>())(
@@ -103,6 +107,8 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     pipelineConfig.zlibBufferBytes = result["zlib-buffer-bytes"].as<size_t>();
     pipelineConfig.writerBufferBytes = result["writer-buffer-bytes"].as<size_t>();
     pipelineConfig.maxInFlightBatches = result["in-flight"].as<size_t>();
+    pipelineConfig.executionBackend =
+        parseExecutionBackend(result["execution-backend"].as<std::string>());
     const size_t memGb = result["memory-limit-gb"].as<size_t>();
     pipelineConfig.memoryLimitBytes = memGb == 0 ? 0 : (memGb * 1024ULL * 1024ULL * 1024ULL);
     pipeline_->setProcessingConfig(pipelineConfig);

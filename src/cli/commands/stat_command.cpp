@@ -1,4 +1,5 @@
 #include "stat_command.h"
+#include "execution_backend_option.h"
 
 #include <iostream>
 
@@ -34,6 +35,9 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
         cxxopts::value<size_t>()->default_value("10"))("quality-encoding",
                                                        "Quality encoding offset (33 or 64)",
                                                        cxxopts::value<int>()->default_value("33"))(
+        "execution-backend",
+        "Execution backend (oneTbb)",
+        cxxopts::value<std::string>()->default_value("oneTbb"))(
         "h,help", "Print usage");
 
     if (argc == 1) {
@@ -65,6 +69,8 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
     statOptions.batchCapacityBytes = result["batch-capacity-bytes"].as<size_t>();
     statOptions.zlibBufferBytes = result["zlib-buffer-bytes"].as<size_t>();
     statOptions.maxInFlightBatches = result["in-flight"].as<size_t>();
+    statOptions.executionBackend =
+        parseExecutionBackend(result["execution-backend"].as<std::string>());
     const size_t memGb = result["memory-limit-gb"].as<size_t>();
     statOptions.memoryLimitBytes = memGb == 0 ? 0 : (memGb * 1024ULL * 1024ULL * 1024ULL);
     statOptions.qualityEncoding = result["quality-encoding"].as<int>();

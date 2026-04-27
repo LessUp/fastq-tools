@@ -35,11 +35,15 @@ void ProcessingPipeline::addReadPredicate(std::unique_ptr<ReadPredicateInterface
 }
 
 auto ProcessingPipeline::run() -> ProcessingStatistics {
-    if (config_.threadCount > 1) {
-        return processWithTBB();
-    } else {
+    switch (config_.executionBackend) {
+    case ExecutionBackend::OneTbb:
+        if (config_.threadCount > 1) {
+            return processWithTBB();
+        }
         return processSequential();
     }
+
+    throw std::invalid_argument("Unsupported execution backend for processing pipeline.");
 }
 
 auto ProcessingPipeline::processSequential() -> ProcessingStatistics {

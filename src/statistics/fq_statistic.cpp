@@ -86,6 +86,11 @@ FastqStatisticCalculator::FastqStatisticCalculator(const StatisticOptions& optio
 }
 
 void FastqStatisticCalculator::run() {
+    switch (options_.executionBackend) {
+    case fq::processing::ExecutionBackend::OneTbb:
+        break;
+    }
+
     fq::logging::info("Starting FASTQ statistics generation for '{}' using TBB pipeline (New IO).",
                       options_.inputFastqPath);
 
