@@ -4,7 +4,7 @@
 
 ### Requirement: 公共边界与未来扩展点
 
-**原定义**: [`openspec/baseline/api/core-api.md`](../../../baseline/api/core-api.md)
+**原定义**: [`openspec/baseline/api/core-api.md`](../../../../baseline/api/core-api.md)
 
 **变更内容**:
 

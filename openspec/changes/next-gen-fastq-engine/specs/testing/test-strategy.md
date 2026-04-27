@@ -4,7 +4,7 @@
 
 ### Requirement: 后续实现的测试扩展与兼容性保护
 
-**原定义**: [`openspec/baseline/testing/test-strategy.md`](../../../baseline/testing/test-strategy.md)
+**原定义**: [`openspec/baseline/testing/test-strategy.md`](../../../../baseline/testing/test-strategy.md)
 
 **变更内容**:
 

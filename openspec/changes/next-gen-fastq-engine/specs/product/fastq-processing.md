@@ -4,7 +4,7 @@
 
 ### Requirement: 产品定位与范围边界
 
-**原定义**: [`openspec/baseline/product/fastq-processing.md`](../../../baseline/product/fastq-processing.md)
+**原定义**: [`openspec/baseline/product/fastq-processing.md`](../../../../baseline/product/fastq-processing.md)
 
 **变更内容**:
 

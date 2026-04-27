@@ -4,7 +4,7 @@
 
 ### Requirement: 后续演进顺序与默认执行后端
 
-**原定义**: [`openspec/baseline/architecture/0001-core-architecture.md`](../../../baseline/architecture/0001-core-architecture.md)
+**原定义**: [`openspec/baseline/architecture/0001-core-architecture.md`](../../../../baseline/architecture/0001-core-architecture.md)
 
 **变更内容**:
 

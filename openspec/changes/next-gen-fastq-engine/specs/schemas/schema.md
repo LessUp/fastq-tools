@@ -4,7 +4,7 @@
 
 ### Requirement: Schema 演进必须保持加法兼容
 
-**原定义**: [`openspec/baseline/schemas/schema.md`](../../../baseline/schemas/schema.md)
+**原定义**: [`openspec/baseline/schemas/schema.md`](../../../../baseline/schemas/schema.md)
 
 **变更内容**:
 
