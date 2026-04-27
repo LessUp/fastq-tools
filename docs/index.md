@@ -55,13 +55,13 @@ hide:
 
     ---
 
-    `fqstat` computes read counts, length distribution, base composition, GC content, and quality summaries in a single streaming pass.
+    `FastQTools stat` computes read counts, length distribution, base composition, GC content, and quality summaries in a single streaming pass.
 
 -   :material-filter-outline: **Filter and trim together**
 
     ---
 
-    `fqfilter` combines quality, length, and N-ratio thresholds, then trims low-quality ends in one tool without intermediate files.
+    `FastQTools filter` combines quality, length, and N-ratio thresholds, then trims low-quality ends in one tool without intermediate files.
 
 -   :material-code-braces: **Embed in C++ pipelines**
 

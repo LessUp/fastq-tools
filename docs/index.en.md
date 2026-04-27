@@ -55,13 +55,13 @@ hide:
 
     ---
 
-    `fqstat` 一遍完成：读段数、长度分布、碱基组成、GC 含量、质量统计。
+    `FastQTools stat` 一遍完成：读段数、长度分布、碱基组成、GC 含量、质量统计。
 
 -   :material-content-cut: **过滤与修剪原始数据**
 
     ---
 
-    `fqfilter` 组合长度、质量、N 比例条件，并在一次处理中完成低质量端修剪。
+    `FastQTools filter` 组合长度、质量、N 比例条件，并在一次处理中完成低质量端修剪。
 
 -   :material-lan-connect: **嵌入 C++ 工具链**
 
