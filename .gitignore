@@ -55,6 +55,8 @@ __pycache__/
 .qoder/
 .spec-workflow/
 cascade/
+.claude/
+.omc/
 
 # ===== OpenSpec CLI（Node.js） =====
 node_modules/
