@@ -1,4 +1,3 @@
-<!-- openspec/changes/next-gen-fastq-engine/proposal.md -->
 # Proposal: next-gen-fastq-engine
 
 > **Status**: Draft
