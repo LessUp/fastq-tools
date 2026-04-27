@@ -50,6 +50,7 @@ __pycache__/
 *.sln.docstates
 
 # ===== AI 工具配置（自动生成，不提交） =====
+.worktrees/
 .kiro/
 .qoder/
 .spec-workflow/
