@@ -17,6 +17,7 @@
 #pragma once
 
 #include "fqtools/processing/execution_backend.h"
+#include "fqtools/processing/memory_resource_policy.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -37,6 +38,9 @@ struct StatisticOptions {
     uint32_t threadCount = 4;                      ///< 并行线程数
     fq::processing::ExecutionBackend executionBackend =
         fq::processing::ExecutionBackend::OneTbb;  ///< 执行后端
+    fq::processing::MemoryResourcePolicy memoryResourcePolicy =
+        fq::processing::MemoryResourcePolicy::ObjectPool;  ///< 内存资源策略
+    bool allocationTelemetryEnabled = false;               ///< 是否启用内存遥测
     size_t readChunkBytes = 1 * 1024 * 1024;       ///< 读取块大小（字节）
     size_t zlibBufferBytes = 128 * 1024;           ///< zlib 缓冲区大小（字节）
     size_t batchCapacityBytes = 4 * 1024 * 1024;  ///< 批次容量（字节）

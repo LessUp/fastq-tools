@@ -23,6 +23,20 @@ TEST(PipelineSmokeTest, StatisticOptionsDefaultsToOneTbbBackend) {
     EXPECT_EQ(options.executionBackend, fq::processing::ExecutionBackend::OneTbb);
 }
 
+TEST(PipelineSmokeTest, ProcessingConfigDefaultsToObjectPoolMemoryPolicy) {
+    fq::processing::ProcessingConfig config;
+
+    EXPECT_EQ(config.memoryResourcePolicy, fq::processing::MemoryResourcePolicy::ObjectPool);
+    EXPECT_FALSE(config.allocationTelemetryEnabled);
+}
+
+TEST(PipelineSmokeTest, StatisticOptionsDefaultsToObjectPoolMemoryPolicy) {
+    fq::statistic::StatisticOptions options;
+
+    EXPECT_EQ(options.memoryResourcePolicy, fq::processing::MemoryResourcePolicy::ObjectPool);
+    EXPECT_FALSE(options.allocationTelemetryEnabled);
+}
+
 TEST(PipelineSmokeTest, QualityTrimmerTrimsLowQualityEnds) {
     fq::processing::QualityTrimmer trimmer(20.0);
 

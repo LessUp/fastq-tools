@@ -29,6 +29,36 @@
 
 namespace fq::statistic {
 
+namespace {
+
+auto resolveMaxInFlightBatches(size_t configuredMaxInFlightBatches,
+                               size_t memoryLimitBytes,
+                               size_t batchCapacityBytes,
+                               size_t threadCount) -> size_t {
+    size_t maxTokens = std::max(static_cast<size_t>(1), threadCount * 2);
+    if (configuredMaxInFlightBatches > 0) {
+        maxTokens = configuredMaxInFlightBatches;
+    }
+    if (memoryLimitBytes > 0 && batchCapacityBytes > 0) {
+        const size_t cap = (memoryLimitBytes * 7 / 10) / batchCapacityBytes;
+        if (cap > 0) {
+            maxTokens = std::min(maxTokens, cap);
+        }
+    }
+    return std::max(static_cast<size_t>(1), maxTokens);
+}
+
+auto memoryPolicyName(fq::processing::MemoryResourcePolicy policy) -> const char* {
+    switch (policy) {
+    case fq::processing::MemoryResourcePolicy::ObjectPool:
+        return "objectPool";
+    }
+
+    return "unknown";
+}
+
+}  // namespace
+
 /**
  * @brief 统计结果累加操作符重载
  */
@@ -99,17 +129,10 @@ void FastqStatisticCalculator::run() {
     const size_t threadCount = std::max<size_t>(1, static_cast<size_t>(options_.threadCount));
     tbb::global_control globalLimit(tbb::global_control::max_allowed_parallelism, threadCount);
 
-    size_t maxLiveTokens = std::max(static_cast<size_t>(1), threadCount * 2);
-    if (options_.maxInFlightBatches > 0) {
-        maxLiveTokens = options_.maxInFlightBatches;
-    }
-    if (options_.memoryLimitBytes > 0 && options_.batchCapacityBytes > 0) {
-        const size_t cap = (options_.memoryLimitBytes * 7 / 10) / options_.batchCapacityBytes;
-        if (cap > 0) {
-            maxLiveTokens = std::min(maxLiveTokens, cap);
-        }
-    }
-    maxLiveTokens = std::max(static_cast<size_t>(1), maxLiveTokens);
+    const size_t maxLiveTokens = resolveMaxInFlightBatches(options_.maxInFlightBatches,
+                                                           options_.memoryLimitBytes,
+                                                           options_.batchCapacityBytes,
+                                                           threadCount);
 
     fq::io::FastqReaderOptions readerOptions;
     readerOptions.readChunkBytes = options_.readChunkBytes;
@@ -122,7 +145,15 @@ void FastqStatisticCalculator::run() {
         throw std::runtime_error("Failed to open input file: " + options_.inputFastqPath);
     }
 
-    auto batchPool = fq::io::createFastqBatchPool(maxLiveTokens, maxLiveTokens * 2);
+    std::shared_ptr<fq::io::FastqBatchPool> batchPool;
+    switch (options_.memoryResourcePolicy) {
+    case fq::processing::MemoryResourcePolicy::ObjectPool:
+        batchPool = fq::io::createFastqBatchPool(maxLiveTokens, maxLiveTokens * 2);
+        break;
+    }
+    if (!batchPool) {
+        throw std::invalid_argument("Unsupported memory resource policy for statistic calculator.");
+    }
 
     tbb::parallel_pipeline(
         maxLiveTokens,
@@ -191,6 +222,15 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
     writer << "#Name\t" << fqName << "\n";
     writer << "#PhredQual\t" << options_.qualityEncoding << "\n";
     writer << "#ReadNum\t" << result.readCount << "\n";
+    if (options_.allocationTelemetryEnabled) {
+        writer << "#MemoryPolicy\t" << memoryPolicyName(options_.memoryResourcePolicy) << "\n";
+        writer << "#MaxInFlightBatches\t"
+               << resolveMaxInFlightBatches(options_.maxInFlightBatches,
+                                            options_.memoryLimitBytes,
+                                            options_.batchCapacityBytes,
+                                            std::max<size_t>(1, static_cast<size_t>(options_.threadCount)))
+               << "\n";
+    }
     writer << "#MaxReadLength\t" << result.maxReadLength << "\n";  // Changed from fixed ReadLength
     writer << "#BaseCount\t" << result.totalBases << "\n";
 

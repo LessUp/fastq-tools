@@ -1,5 +1,6 @@
 #include "stat_command.h"
 #include "execution_backend_option.h"
+#include "memory_resource_policy_option.h"
 
 #include <iostream>
 
@@ -38,6 +39,12 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
         "execution-backend",
         "Execution backend (oneTbb)",
         cxxopts::value<std::string>()->default_value("oneTbb"))(
+        "memory-policy",
+        "Memory resource policy (objectPool)",
+        cxxopts::value<std::string>()->default_value("objectPool"))(
+        "allocation-telemetry",
+        "Emit memory allocation telemetry",
+        cxxopts::value<bool>()->default_value("false")->implicit_value("true"))(
         "h,help", "Print usage");
 
     if (argc == 1) {
@@ -71,6 +78,9 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
     statOptions.maxInFlightBatches = result["in-flight"].as<size_t>();
     statOptions.executionBackend =
         parseExecutionBackend(result["execution-backend"].as<std::string>());
+    statOptions.memoryResourcePolicy =
+        parseMemoryResourcePolicy(result["memory-policy"].as<std::string>());
+    statOptions.allocationTelemetryEnabled = result["allocation-telemetry"].as<bool>();
     const size_t memGb = result["memory-limit-gb"].as<size_t>();
     statOptions.memoryLimitBytes = memGb == 0 ? 0 : (memGb * 1024ULL * 1024ULL * 1024ULL);
     statOptions.qualityEncoding = result["quality-encoding"].as<int>();

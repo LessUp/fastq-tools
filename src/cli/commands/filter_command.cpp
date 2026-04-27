@@ -1,5 +1,6 @@
 #include "filter_command.h"
 #include "execution_backend_option.h"
+#include "memory_resource_policy_option.h"
 
 #include <iomanip>
 #include <iostream>
@@ -62,6 +63,12 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
         "execution-backend",
         "Execution backend (oneTbb)",
         cxxopts::value<std::string>()->default_value("oneTbb"))(
+        "memory-policy",
+        "Memory resource policy (objectPool)",
+        cxxopts::value<std::string>()->default_value("objectPool"))(
+        "allocation-telemetry",
+        "Emit memory allocation telemetry",
+        cxxopts::value<bool>()->default_value("false")->implicit_value("true"))(
         "min-quality", "Minimum average quality threshold", cxxopts::value<double>())(
         "min-length", "Minimum read length", cxxopts::value<size_t>())(
         "max-length", "Maximum read length", cxxopts::value<size_t>())(
@@ -109,6 +116,9 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     pipelineConfig.maxInFlightBatches = result["in-flight"].as<size_t>();
     pipelineConfig.executionBackend =
         parseExecutionBackend(result["execution-backend"].as<std::string>());
+    pipelineConfig.memoryResourcePolicy =
+        parseMemoryResourcePolicy(result["memory-policy"].as<std::string>());
+    pipelineConfig.allocationTelemetryEnabled = result["allocation-telemetry"].as<bool>();
     const size_t memGb = result["memory-limit-gb"].as<size_t>();
     pipelineConfig.memoryLimitBytes = memGb == 0 ? 0 : (memGb * 1024ULL * 1024ULL * 1024ULL);
     pipeline_->setProcessingConfig(pipelineConfig);

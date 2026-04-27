@@ -15,6 +15,27 @@
 
 namespace fq::processing {
 
+namespace {
+
+auto resolveMaxInFlightBatches(size_t configuredMaxInFlightBatches,
+                               size_t memoryLimitBytes,
+                               size_t batchCapacityBytes,
+                               size_t threadCount) -> size_t {
+    size_t maxTokens = std::max(static_cast<size_t>(4), threadCount * 2);
+    if (configuredMaxInFlightBatches > 0) {
+        maxTokens = configuredMaxInFlightBatches;
+    }
+    if (memoryLimitBytes > 0 && batchCapacityBytes > 0) {
+        const size_t cap = (memoryLimitBytes * 7 / 10) / batchCapacityBytes;
+        if (cap > 0) {
+            maxTokens = std::min(maxTokens, cap);
+        }
+    }
+    return std::max(static_cast<size_t>(1), maxTokens);
+}
+
+}  // namespace
+
 ProcessingPipeline::ProcessingPipeline() = default;
 ProcessingPipeline::~ProcessingPipeline() = default;
 
@@ -48,6 +69,9 @@ auto ProcessingPipeline::run() -> ProcessingStatistics {
 
 auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
     ProcessingStatistics stats;
+    stats.allocationTelemetryEnabled = config_.allocationTelemetryEnabled;
+    stats.memoryResourcePolicy = config_.memoryResourcePolicy;
+    stats.resolvedMaxInFlightBatches = 1;
 
     try {
         fq::io::FastqReaderOptions readerOptions;
@@ -151,6 +175,8 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
 
 auto ProcessingPipeline::processWithTBB() -> ProcessingStatistics {
     ProcessingStatistics finalStats;
+    finalStats.allocationTelemetryEnabled = config_.allocationTelemetryEnabled;
+    finalStats.memoryResourcePolicy = config_.memoryResourcePolicy;
     auto startTime = std::chrono::steady_clock::now();
 
     const size_t threadCount = std::max<size_t>(1, config_.threadCount);
@@ -174,20 +200,21 @@ auto ProcessingPipeline::processWithTBB() -> ProcessingStatistics {
         throw std::runtime_error("Failed to open output file: " + outputPath_);
 
     try {
-        size_t maxTokens = std::max(static_cast<size_t>(4), threadCount * 2);
-        if (config_.maxInFlightBatches > 0) {
-            maxTokens = config_.maxInFlightBatches;
-        }
-        if (config_.memoryLimitBytes > 0 && config_.batchCapacityBytes > 0) {
-            const size_t cap = (config_.memoryLimitBytes * 7 / 10) / config_.batchCapacityBytes;
-            if (cap > 0) {
-                maxTokens = std::min(maxTokens, cap);
-            }
-        }
-        maxTokens = std::max(static_cast<size_t>(1), maxTokens);
+        size_t maxTokens = resolveMaxInFlightBatches(config_.maxInFlightBatches,
+                                                     config_.memoryLimitBytes,
+                                                     config_.batchCapacityBytes,
+                                                     threadCount);
+        finalStats.resolvedMaxInFlightBatches = maxTokens;
 
-        // 创建 FastqBatch 对象池，预分配 maxTokens 个对象
-        auto batchPool = fq::io::createFastqBatchPool(maxTokens, maxTokens * 2);
+        std::shared_ptr<fq::io::FastqBatchPool> batchPool;
+        switch (config_.memoryResourcePolicy) {
+        case MemoryResourcePolicy::ObjectPool:
+            batchPool = fq::io::createFastqBatchPool(maxTokens, maxTokens * 2);
+            break;
+        }
+        if (!batchPool) {
+            throw std::invalid_argument("Unsupported memory resource policy for processing pipeline.");
+        }
 
         tbb::parallel_pipeline(
             maxTokens,

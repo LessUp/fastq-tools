@@ -158,5 +158,36 @@ class TestFastQToolsCLI(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertTrue(os.path.exists(output_stats))
 
+    def test_filter_accepts_memory_policy_option(self):
+        output_fastq = os.path.join(self.test_dir, "memory-policy.fastq")
+        result = self.run_cmd([
+            "filter",
+            "--input", self.sample_fastq,
+            "--output", output_fastq,
+            "--threads", "2",
+            "--memory-policy", "objectPool",
+        ])
+
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(os.path.exists(output_fastq))
+
+    def test_stat_writes_memory_telemetry_when_requested(self):
+        output_stats = os.path.join(self.test_dir, "memory-telemetry.txt")
+        result = self.run_cmd([
+            "stat",
+            "--input", self.sample_fastq,
+            "--output", output_stats,
+            "--threads", "2",
+            "--memory-policy", "objectPool",
+            "--allocation-telemetry",
+        ])
+
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(os.path.exists(output_stats))
+        with open(output_stats, "r") as f:
+            content = f.read()
+        self.assertIn("#MemoryPolicy\tobjectPool", content)
+        self.assertIn("#MaxInFlightBatches\t", content)
+
 if __name__ == "__main__":
     unittest.main()

@@ -5,6 +5,19 @@
 
 namespace fq::processing {
 
+namespace {
+
+auto memoryPolicyName(MemoryResourcePolicy policy) -> const char* {
+    switch (policy) {
+    case MemoryResourcePolicy::ObjectPool:
+        return "objectPool";
+    }
+
+    return "unknown";
+}
+
+}  // namespace
+
 auto ProcessingStatistics::toString() const -> std::string {
     std::ostringstream oss;
 
@@ -18,6 +31,10 @@ auto ProcessingStatistics::toString() const -> std::string {
     oss << "  错误读取数: " << errorReads << "\n";
     oss << "  处理时间: " << std::fixed << std::setprecision(2) << processingTimeMs << " ms\n";
     oss << "  处理吞吐量: " << std::fixed << std::setprecision(2) << throughputMbps << " MB/s";
+    if (allocationTelemetryEnabled) {
+        oss << "\n  内存策略: " << memoryPolicyName(memoryResourcePolicy);
+        oss << "\n  In-flight 批次数上限: " << resolvedMaxInFlightBatches;
+    }
 
     return oss.str();
 }
