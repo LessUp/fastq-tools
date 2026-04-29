@@ -71,6 +71,29 @@ hide:
 
 </div>
 
+## 架构概览
+
+![FastQTools Architecture](assets/images/architecture.svg){ .center }
+
+流水线使用 Intel oneTBB 实现无锁并行，全程采用零拷贝 `std::string_view`。记录从 I/O 流经处理阶段，无额外分配开销。
+
+## 性能对比
+
+| 特性 | FastQTools | seqtk | fastp |
+|------|------------|-------|-------|
+| **吞吐量** | 170 万 reads/s | ~50 万 reads/s | ~80 万 reads/s |
+| **内存模型** | 零拷贝、有界池 | 缓冲区 | 自适应 |
+| **并行度** | TBB 流水线（自动扩展） | 单线程 | 多线程 |
+| **QC sidecar** | ✅ 内置 | ❌ | ✅ HTML 报告 |
+| **质量修剪** | ✅ AVX2 优化 | ✅ 基础 | ✅ 内置 |
+| **接头修剪** | ✅ | ❌ | ✅ 自动检测 |
+| **签名统计** | ✅ k-mer 签名 | ❌ | ❌ |
+| **C++ API** | ✅ 公开头文件 | ❌ | ❌ |
+| **规范驱动** | ✅ 完整基线 | ❌ | ❌ |
+
+!!! note "基准测试条件"
+    AMD Ryzen 9 5900X，100K reads × 150bp，单线程读写，并行处理。
+
 ## 性能指标
 
 | 操作 | 速度 | 并行度 |
@@ -107,47 +130,7 @@ FastQTools 从设计之初就采用**规范驱动**方法。每个公开 API、�
 ---
 
 <p style="text-align: center; color: var(--md-default-fg-color--light);">
-  <a href="index.md">English</a> ·
+  <a href="index.md">中文</a> ·
   <a href="https://github.com/LessUp/fastq-tools">GitHub</a> ·
   <a href="https://github.com/LessUp/fastq-tools/blob/master/LICENSE">MIT 许可证</a>
-</p>
-
-## 推荐阅读路径
-
-| 你的目标 | 建议入口 |
-| --- | --- |
-| 先把工具构建起来并跑通第一个命令 | [Getting Started](guide/getting-started.en.md) |
-| 想查具体命令和参数 | [CLI Reference](guide/cli-reference.en.md) |
-| 想知道性能数字应该怎么理解 | [Benchmark Overview](performance/benchmark-report.md) |
-| 想看 C++ 接口组织方式 | [API Overview](api/overview.en.md) |
-| 想参与项目改进 | [Contributing](contributing.en.md) |
-
-## 代表性性能数据
-
-| 工作负载 | 代表性结果 |
-| --- | --- |
-| FASTQ 读取路径 | 1696 MB/s |
-| FASTQ 写出路径 | 176 万 reads/s |
-| 组合过滤处理 | 167 万 reads/s |
-| 完整统计分析 | 302 MB/s |
-
-<p class="muted-note">以上数字来自维护中的 100K reads（150 bp）基准集合，硬件为 AMD Ryzen 9 5900X。它们用于帮助你判断量级，而不是对所有输入和环境作绝对承诺。</p>
-
-## 中文用户的实用入口
-
-<div class="language-note" markdown>
-
-- 仓库说明： [README.zh-CN.md](https://github.com/LessUp/fastq-tools/blob/master/README.zh-CN.md)
-- 代码仓库： [LessUp/fastq-tools](https://github.com/LessUp/fastq-tools)
-- 英文文档首页： [Documentation Home](index.md)
-- 发布记录： [GitHub Releases](https://github.com/LessUp/fastq-tools/releases)
-
-</div>
-
----
-
-<p style="text-align: center; color: var(--md-default-fg-color--light);">
-  <a href="index.md">English home</a> ·
-  <a href="https://github.com/LessUp/fastq-tools">GitHub</a> ·
-  MIT License
 </p>

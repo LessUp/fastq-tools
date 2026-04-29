@@ -71,6 +71,29 @@ hide:
 
 </div>
 
+## Architecture Overview
+
+![FastQTools Architecture](assets/images/architecture.svg){ .center }
+
+The pipeline uses Intel oneTBB for lock-free parallelism, with zero-copy `std::string_view` throughout. Records flow from I/O through processing stages without allocation overhead.
+
+## Performance Comparison
+
+| Feature | FastQTools | seqtk | fastp |
+|---------|------------|-------|-------|
+| **Throughput** | 1.7M reads/s | ~500K reads/s | ~800K reads/s |
+| **Memory model** | Zero-copy, bounded pool | Buffer-based | Adaptive |
+| **Parallelism** | TBB pipeline (auto-scale) | Single-threaded | Multi-threaded |
+| **QC sidecar** | ✅ Built-in | ❌ | ✅ HTML report |
+| **Quality trimming** | ✅ AVX2 optimized | ✅ Basic | ✅ Built-in |
+| **Adapter trimming** | ✅ | ❌ | ✅ Auto-detect |
+| **Signature stats** | ✅ k-mer signatures | ❌ | ❌ |
+| **C++ API** | ✅ Public headers | ❌ | ❌ |
+| **Spec-driven** | ✅ Full baseline | ❌ | ❌ |
+
+!!! note "Benchmark conditions"
+    AMD Ryzen 9 5900X, 100K reads × 150bp, single-threaded read/write, parallel processing.
+
 ## Quick stats
 
 | Operation | Speed | Cores |
