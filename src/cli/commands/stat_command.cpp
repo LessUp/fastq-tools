@@ -1,9 +1,9 @@
 #include "stat_command.h"
-#include "execution_backend_option.h"
-#include "memory_resource_policy_option.h"
 
 #include <iostream>
 
+#include "execution_backend_option.h"
+#include "memory_resource_policy_option.h"
 #include <cxxopts.hpp>
 
 #include <fqtools/logging.h>
@@ -45,7 +45,17 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
         "allocation-telemetry",
         "Emit memory allocation telemetry",
         cxxopts::value<bool>()->default_value("false")->implicit_value("true"))(
-        "h,help", "Print usage");
+        "signature-report",
+        "Write optional signature sidecar report (TSV)",
+        cxxopts::value<std::string>())("signature-kmer-size",
+                                       "Head k-mer size for signature report",
+                                       cxxopts::value<size_t>()->default_value("15"))(
+        "signature-limit",
+        "Maximum signature rows to emit",
+        cxxopts::value<size_t>()->default_value("20"))(
+        "duplicate-sample-modulo",
+        "Sampling modulo for duplicate estimation (1 = exact in tests)",
+        cxxopts::value<size_t>()->default_value("1024"))("h,help", "Print usage");
 
     if (argc == 1) {
         std::cout << options.help() << '\n';
@@ -84,6 +94,12 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
     const size_t memGb = result["memory-limit-gb"].as<size_t>();
     statOptions.memoryLimitBytes = memGb == 0 ? 0 : (memGb * 1024ULL * 1024ULL * 1024ULL);
     statOptions.qualityEncoding = result["quality-encoding"].as<int>();
+    statOptions.signatureKmerSize = result["signature-kmer-size"].as<size_t>();
+    statOptions.maxReportedSignatures = result["signature-limit"].as<size_t>();
+    statOptions.duplicateEstimateSampleModulo = result["duplicate-sample-modulo"].as<size_t>();
+    if (result.count("signature-report")) {
+        statOptions.signatureReportPath = result["signature-report"].as<std::string>();
+    }
 
     try {
         // Use the factory to create an instance of the calculator

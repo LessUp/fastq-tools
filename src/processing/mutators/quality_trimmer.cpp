@@ -308,4 +308,96 @@ void AdapterTrimmer::reset() {
     totalBasesRemoved_ = 0;
 }
 
+// --- PolyTailTrimmer ---
+
+PolyTailTrimmer::PolyTailTrimmer(TailKind kind, size_t minRunLength)
+    : kind_(kind), minRunLength_(std::max<size_t>(1, minRunLength)) {}
+
+void PolyTailTrimmer::process(fq::io::FastqRecord& read) {
+    totalProcessed_++;
+    if (read.empty()) {
+        return;
+    }
+
+    const size_t trimPos = trimPosition(read.seq);
+    if (trimPos >= read.seq.size()) {
+        return;
+    }
+
+    const size_t removed = read.seq.size() - trimPos;
+    read.seq = read.seq.substr(0, trimPos);
+    read.qual = read.qual.substr(0, trimPos);
+    totalBasesRemoved_ += removed;
+    trimmedCount_++;
+}
+
+auto PolyTailTrimmer::getName() const -> std::string {
+    return kind_ == TailKind::PolyG ? "PolyGTailTrimmer" : "PolyXTailTrimmer";
+}
+
+auto PolyTailTrimmer::getDescription() const -> std::string {
+    return kind_ == TailKind::PolyG
+        ? fmt::format("Trims polyG tails with run >= {}", minRunLength_)
+        : fmt::format("Trims low-complexity polyX tails with run >= {}", minRunLength_);
+}
+
+void PolyTailTrimmer::reset() {
+    totalProcessed_ = 0;
+    trimmedCount_ = 0;
+    totalBasesRemoved_ = 0;
+}
+
+auto PolyTailTrimmer::trimPosition(std::string_view sequence) const -> size_t {
+    if (sequence.size() < minRunLength_) {
+        return sequence.size();
+    }
+
+    char tailBase = '\0';
+    size_t runLength = 0;
+    for (size_t i = sequence.size(); i > 0; --i) {
+        const char normalized = normalizeBase(sequence[i - 1]);
+        if (normalized == '\0') {
+            break;
+        }
+
+        if (tailBase == '\0') {
+            tailBase = normalized;
+            runLength = 1;
+        } else if (normalized == tailBase) {
+            ++runLength;
+        } else {
+            break;
+        }
+    }
+
+    if (runLength < minRunLength_) {
+        return sequence.size();
+    }
+
+    if (kind_ == TailKind::PolyG && tailBase != 'G') {
+        return sequence.size();
+    }
+
+    return sequence.size() - runLength;
+}
+
+auto PolyTailTrimmer::normalizeBase(char base) -> char {
+    switch (base) {
+        case 'A':
+        case 'a':
+            return 'A';
+        case 'C':
+        case 'c':
+            return 'C';
+        case 'G':
+        case 'g':
+            return 'G';
+        case 'T':
+        case 't':
+            return 'T';
+        default:
+            return '\0';
+    }
+}
+
 }  // namespace fq::processing

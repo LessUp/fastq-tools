@@ -19,6 +19,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <iterator>
 #include <memory>
 #include <numeric>
 #include <vector>
@@ -50,11 +51,30 @@ auto resolveMaxInFlightBatches(size_t configuredMaxInFlightBatches,
 
 auto memoryPolicyName(fq::processing::MemoryResourcePolicy policy) -> const char* {
     switch (policy) {
-    case fq::processing::MemoryResourcePolicy::ObjectPool:
-        return "objectPool";
+        case fq::processing::MemoryResourcePolicy::ObjectPool:
+            return "objectPool";
     }
 
     return "unknown";
+}
+
+auto sortedTopEntries(const std::map<std::string, uint64_t>& counts,
+                      size_t limit) -> std::vector<std::pair<std::string, uint64_t>> {
+    std::vector<std::pair<std::string, uint64_t>> entries(counts.begin(), counts.end());
+    std::sort(entries.begin(), entries.end(), [](const auto& lhs, const auto& rhs) {
+        if (lhs.second != rhs.second) {
+            return lhs.second > rhs.second;
+        }
+        return lhs.first < rhs.first;
+    });
+    if (entries.size() > limit) {
+        entries.resize(limit);
+    }
+    return entries;
+}
+
+auto estimateDuplicates(uint64_t duplicateSampledReads, size_t sampleModulo) -> uint64_t {
+    return duplicateSampledReads * std::max<size_t>(1, sampleModulo);
 }
 
 }  // namespace
@@ -65,6 +85,7 @@ auto memoryPolicyName(fq::processing::MemoryResourcePolicy policy) -> const char
 auto FqStatisticResult::operator+=(const FqStatisticResult& other) -> FqStatisticResult& {
     this->readCount += other.readCount;
     this->totalBases += other.totalBases;
+    this->duplicateSampledReads += other.duplicateSampledReads;
 
     // 确保 this 能容纳 other 的最大长度
     if (other.maxReadLength > this->maxReadLength) {
@@ -89,6 +110,18 @@ auto FqStatisticResult::operator+=(const FqStatisticResult& other) -> FqStatisti
         for (size_t i = 0; i < n; ++i) {
             dst[i] += src[i];
         }
+    }
+
+    for (const auto& [hashValue, count] : other.sampledSequenceHashes) {
+        auto& current = sampledSequenceHashes[hashValue];
+        if (current > 0 && count > 0) {
+            ++duplicateSampledReads;
+        }
+        current += count;
+    }
+
+    for (const auto& [kmer, count] : other.headKmerCounts) {
+        headKmerCounts[kmer] += count;
     }
 
     return *this;
@@ -117,8 +150,8 @@ FastqStatisticCalculator::FastqStatisticCalculator(const StatisticOptions& optio
 
 void FastqStatisticCalculator::run() {
     switch (options_.executionBackend) {
-    case fq::processing::ExecutionBackend::OneTbb:
-        break;
+        case fq::processing::ExecutionBackend::OneTbb:
+            break;
     }
 
     fq::logging::info("Starting FASTQ statistics generation for '{}' using TBB pipeline (New IO).",
@@ -147,9 +180,9 @@ void FastqStatisticCalculator::run() {
 
     std::shared_ptr<fq::io::FastqBatchPool> batchPool;
     switch (options_.memoryResourcePolicy) {
-    case fq::processing::MemoryResourcePolicy::ObjectPool:
-        batchPool = fq::io::createFastqBatchPool(maxLiveTokens, maxLiveTokens * 2);
-        break;
+        case fq::processing::MemoryResourcePolicy::ObjectPool:
+            batchPool = fq::io::createFastqBatchPool(maxLiveTokens, maxLiveTokens * 2);
+            break;
     }
     if (!batchPool) {
         throw std::invalid_argument("Unsupported memory resource policy for statistic calculator.");
@@ -179,7 +212,9 @@ void FastqStatisticCalculator::run() {
                     if (!batch) {
                         return FqStatisticResult();
                     }
-                    FqStatisticWorker worker(options_.qualityEncoding);
+                    FqStatisticWorker worker(options_.qualityEncoding,
+                                             options_.signatureKmerSize,
+                                             options_.duplicateEstimateSampleModulo);
                     FqStatisticResult result;
                     // 预分配典型 Illumina read length (150bp) 的容量，
                     // 避免 ensureCapacity 在处理每条 read 时反复 resize
@@ -222,13 +257,20 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
     writer << "#Name\t" << fqName << "\n";
     writer << "#PhredQual\t" << options_.qualityEncoding << "\n";
     writer << "#ReadNum\t" << result.readCount << "\n";
+    const auto duplicateEstimate =
+        estimateDuplicates(result.duplicateSampledReads, options_.duplicateEstimateSampleModulo);
+    writer << "#DuplicateEstimate\t" << duplicateEstimate << "\n";
+    writer << "#DuplicateEstimateRate\t"
+           << 100.0 * static_cast<double>(duplicateEstimate) / static_cast<double>(result.readCount)
+           << "%\n";
     if (options_.allocationTelemetryEnabled) {
         writer << "#MemoryPolicy\t" << memoryPolicyName(options_.memoryResourcePolicy) << "\n";
         writer << "#MaxInFlightBatches\t"
-               << resolveMaxInFlightBatches(options_.maxInFlightBatches,
-                                            options_.memoryLimitBytes,
-                                            options_.batchCapacityBytes,
-                                            std::max<size_t>(1, static_cast<size_t>(options_.threadCount)))
+               << resolveMaxInFlightBatches(
+                      options_.maxInFlightBatches,
+                      options_.memoryLimitBytes,
+                      options_.batchCapacityBytes,
+                      std::max<size_t>(1, static_cast<size_t>(options_.threadCount)))
                << "\n";
     }
     writer << "#MaxReadLength\t" << result.maxReadLength << "\n";  // Changed from fixed ReadLength
@@ -299,6 +341,30 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
         } else {
             writer << "0.0\t0.0\n";
         }
+    }
+
+    if (!options_.signatureReportPath.empty()) {
+        writeSignatureSidecar(result);
+    }
+}
+
+void FastqStatisticCalculator::writeSignatureSidecar(const FqStatisticResult& result) {
+    std::ofstream writer(options_.signatureReportPath);
+    if (!writer) {
+        throw std::runtime_error("Failed to open signature report file: " +
+                                 options_.signatureReportPath);
+    }
+
+    writer << "metric\tkey\tcount\n";
+    writer << "summary\ttotal_reads\t" << result.readCount << "\n";
+    writer << "summary\tduplicate_estimate\t"
+           << estimateDuplicates(result.duplicateSampledReads,
+                                 options_.duplicateEstimateSampleModulo)
+           << "\n";
+
+    for (const auto& [kmer, count] :
+         sortedTopEntries(result.headKmerCounts, options_.maxReportedSignatures)) {
+        writer << "head_kmer\t" << kmer << "\t" << count << "\n";
     }
 }
 

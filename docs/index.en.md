@@ -55,7 +55,7 @@ hide:
 
     ---
 
-    `FastQTools stat` 一遍完成：读段数、长度分布、碱基组成、GC 含量、质量统计。
+    `FastQTools stat` 一遍完成：读段数、最大读长、总碱基数、碱基组成、GC 含量、质量统计，以及可选的轻量 sidecar。
 
 -   :material-content-cut: **过滤与修剪原始数据**
 

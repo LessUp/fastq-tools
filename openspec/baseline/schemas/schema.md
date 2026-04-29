@@ -1,7 +1,7 @@
 # Schema Specification: Configuration & Data Models
 
 > **Status**: Active
-> **Last Updated**: 2026-04-26
+> **Last Updated**: 2026-04-28
 > **Related**: [Product Spec](../product/fastq-processing.md), [Core API](../api/core-api.md)
 
 ## Overview
@@ -52,6 +52,9 @@ struct FastqWriterOptions {
 struct ProcessingConfig {
     size_t batchSize = 10000;
     size_t threadCount = 1;
+    ExecutionBackend executionBackend = ExecutionBackend::OneTbb;
+    MemoryResourcePolicy memoryResourcePolicy = MemoryResourcePolicy::ObjectPool;
+    bool allocationTelemetryEnabled = false;
     size_t readChunkBytes = 1 * 1024 * 1024;
     size_t zlibBufferBytes = 128 * 1024;
     size_t writerBufferBytes = 128 * 1024;
@@ -75,6 +78,9 @@ struct ProcessingStatistics {
     uint64_t elapsedMs = 0;
     double processingTimeMs = 0.0;
     double throughputMbps = 0.0;
+    bool allocationTelemetryEnabled = false;
+    MemoryResourcePolicy memoryResourcePolicy = MemoryResourcePolicy::ObjectPool;
+    size_t resolvedMaxInFlightBatches = 0;
 };
 ```
 
@@ -84,8 +90,16 @@ struct ProcessingStatistics {
 struct StatisticOptions {
     std::string inputFastqPath;
     std::string outputStatPath;
+    std::string signatureReportPath;
     uint32_t batchSize = 50000;
+    size_t signatureKmerSize = 15;
+    size_t maxReportedSignatures = 20;
+    size_t duplicateEstimateSampleModulo = 1024;
     uint32_t threadCount = 4;
+    fq::processing::ExecutionBackend executionBackend = fq::processing::ExecutionBackend::OneTbb;
+    fq::processing::MemoryResourcePolicy memoryResourcePolicy =
+        fq::processing::MemoryResourcePolicy::ObjectPool;
+    bool allocationTelemetryEnabled = false;
     size_t readChunkBytes = 1 * 1024 * 1024;
     size_t zlibBufferBytes = 128 * 1024;
     size_t batchCapacityBytes = 4 * 1024 * 1024;
@@ -128,7 +142,16 @@ Runtime:
   --zlib-buffer-bytes N
   --in-flight N
   --memory-limit-gb N
+  --execution-backend oneTbb
+  --memory-policy objectPool
+  --allocation-telemetry
   --quality-encoding {33|64}
+
+ Optional sidecar:
+  --signature-report FILE
+  --signature-kmer-size N
+  --signature-limit N
+  --duplicate-sample-modulo N
   -h, --help
 ```
 
@@ -150,6 +173,9 @@ Runtime:
   --writer-buffer-bytes N
   --in-flight N
   --memory-limit-gb N
+  --execution-backend oneTbb
+  --memory-policy objectPool
+  --allocation-telemetry
   --quality-encoding {33|64}
 
 Predicates:
@@ -161,6 +187,11 @@ Predicates:
 Mutators:
   --trim-quality FLOAT
   --trim-mode {both|five|three}
+  --adapter-seq SEQ (repeatable)
+  --adapter-min-overlap N
+  --adapter-max-mismatches N
+  --trim-poly-g N
+  --trim-poly-x N
 
 Other:
   -h, --help
@@ -178,6 +209,8 @@ The output begins with comment-style summary lines:
 #Name    <input name>
 #PhredQual    33
 #ReadNum    <count>
+#DuplicateEstimate    <count>
+#DuplicateEstimateRate    <percent>%
 #MaxReadLength    <count>
 #BaseCount    <count>
 #Q20(>=20)    <count>    <percent>%
@@ -208,13 +241,29 @@ Each row corresponds to one read position and contains:
 3. average quality at that position
 4. estimated error rate at that position
 
+## Optional Signature Sidecar Schema
+
+When `--signature-report` is supplied, `stat` may emit a TSV sidecar with the following shape:
+
+```text
+metric   key                 count
+summary  total_reads         <count>
+summary  duplicate_estimate  <count>
+head_kmer <kmer>             <count>
+```
+
+The sidecar is additive and bounded: `head_kmer` rows are limited by `--signature-limit`, and duplicate estimation is derived from hashed sampling controlled by `--duplicate-sample-modulo`.
+
 ## Validation Rules
 
 1. `FastqRecord::validateLengths()` must remain true for valid processed records.
 2. `threadCount` must be positive when supplied through CLI or runtime config.
 3. `qualityEncoding` is currently expected to be `33` or `64`.
 4. `trim-mode` is currently one of `both`, `five`, or `three`.
-5. Supported maintained compression mode is gzip; no schema contract is made for bzip2/xz.
+5. `execution-backend` currently accepts `oneTbb` only.
+6. `memory-policy` currently accepts `objectPool` only.
+7. `duplicate-sample-modulo` must be a positive integer.
+8. Supported maintained compression mode is gzip; no schema contract is made for bzip2/xz.
 
 ## Notes on Scope
 

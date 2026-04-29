@@ -43,9 +43,8 @@ struct ProcessingStatistics {
     double processingTimeMs = 0.0;  ///< 处理时间（毫秒，浮点数，保留兼容）
     double throughputMbps = 0.0;    ///< 吞吐量（MB/s）
     bool allocationTelemetryEnabled = false;  ///< 是否启用内存遥测
-    MemoryResourcePolicy memoryResourcePolicy =
-        MemoryResourcePolicy::ObjectPool;       ///< 内存资源策略
-    size_t resolvedMaxInFlightBatches = 0;      ///< 本次运行解析后的 in-flight 上限
+    MemoryResourcePolicy memoryResourcePolicy = MemoryResourcePolicy::ObjectPool;  ///< 内存资源策略
+    size_t resolvedMaxInFlightBatches = 0;  ///< 本次运行解析后的 in-flight 上限
 
     [[nodiscard]] auto getPassRate() const -> double {
         return totalReads > 0 ? static_cast<double>(passedReads) / totalReads : 0.0;
@@ -66,11 +65,10 @@ struct ProcessingStatistics {
  * @note 所有参数都有合理的默认值
  */
 struct ProcessingConfig {
-    size_t batchSize = 10000;                                   ///< 批处理大小（每个批次的读取数量）
-    size_t threadCount = 1;                                     ///< 线程数量（1表示串行处理）
-    ExecutionBackend executionBackend = ExecutionBackend::OneTbb;  ///< 执行后端
-    MemoryResourcePolicy memoryResourcePolicy =
-        MemoryResourcePolicy::ObjectPool;  ///< 内存资源策略
+    size_t batchSize = 10000;  ///< 批处理大小（每个批次的读取数量）
+    size_t threadCount = 1;    ///< 线程数量（1表示串行处理）
+    ExecutionBackend executionBackend = ExecutionBackend::OneTbb;                  ///< 执行后端
+    MemoryResourcePolicy memoryResourcePolicy = MemoryResourcePolicy::ObjectPool;  ///< 内存资源策略
     bool allocationTelemetryEnabled = false;  ///< 是否启用内存遥测
 
     size_t readChunkBytes = 1 * 1024 * 1024;

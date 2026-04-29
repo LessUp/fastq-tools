@@ -200,4 +200,45 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorWritesMemoryTelemetryWhenEnab
     EXPECT_NE(content.find("#MaxInFlightBatches\t3\n"), std::string::npos);
 }
 
+TEST_F(PipelineIntegrationTest, StatisticCalculatorWritesSignatureSidecarWhenEnabled) {
+    const auto input = tempDir_.path() / "input.fastq";
+    const auto output = tempDir_.path() / "stats.txt";
+    const auto sidecar = tempDir_.path() / "signatures.tsv";
+
+    {
+        std::ofstream out(input);
+        out << "@read1\n"
+            << "ACGTAAAA\n"
+            << "+\n"
+            << "IIIIIIII\n"
+            << "@read2\n"
+            << "ACGTAAAA\n"
+            << "+\n"
+            << "IIIIIIII\n"
+            << "@read3\n"
+            << "TTTTCCCC\n"
+            << "+\n"
+            << "IIIIIIII\n";
+    }
+
+    fq::statistic::StatisticOptions options;
+    options.inputFastqPath = input.string();
+    options.outputStatPath = output.string();
+    options.signatureReportPath = sidecar.string();
+    options.signatureKmerSize = 4;
+    options.maxReportedSignatures = 10;
+    options.duplicateEstimateSampleModulo = 1;
+    options.batchSize = 2;
+    options.threadCount = 2;
+
+    auto calculator = fq::statistic::createStatisticCalculator(options);
+    calculator->run();
+
+    const auto report = FixtureLoader::loadTextFile(output);
+    const auto signatures = FixtureLoader::loadTextFile(sidecar);
+    EXPECT_NE(report.find("#DuplicateEstimate\t1\n"), std::string::npos);
+    EXPECT_NE(signatures.find("summary\tduplicate_estimate\t1\n"), std::string::npos);
+    EXPECT_NE(signatures.find("head_kmer\tACGT\t2\n"), std::string::npos);
+}
+
 }  // namespace fq::test

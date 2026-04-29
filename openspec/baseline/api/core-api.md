@@ -1,7 +1,7 @@
 # API Specification: Core Interfaces
 
 > **Status**: Active
-> **Last Updated**: 2026-04-26
+> **Last Updated**: 2026-04-28
 > **Related**: [Product Spec](../product/fastq-processing.md), [Core Architecture](../architecture/0001-core-architecture.md)
 
 ## Overview
@@ -12,7 +12,7 @@ FastQTools exposes its maintained public C++ surface from `include/fqtools/`. Th
 #include <fqtools/fq.h>
 ```
 
-The closeout-phase API goal is **truthful stability**, not breadth. Only interfaces present in public headers are part of this baseline.
+The maintained API goal is **truthful stability with additive evolution**. Only interfaces present in public headers are part of this baseline, and new capabilities should extend the existing `stat` / `filter` workflows instead of creating parallel command families.
 
 ## Public Header Map
 
@@ -153,6 +153,22 @@ public:
 
 ## Processing Module (`fq::processing`)
 
+### Runtime policy enums
+
+```cpp
+namespace fq::processing {
+
+enum class ExecutionBackend : std::uint8_t {
+    OneTbb,
+};
+
+enum class MemoryResourcePolicy : std::uint8_t {
+    ObjectPool,
+};
+
+}  // namespace fq::processing
+```
+
 ### Low-level extension interfaces
 
 ```cpp
@@ -230,6 +246,13 @@ public:
                    size_t maxMismatches = 1);
 };
 
+class PolyTailTrimmer : public ReadMutatorInterface {
+public:
+    enum class TailKind { PolyG, PolyX };
+
+    PolyTailTrimmer(TailKind kind, size_t minRunLength = 10);
+};
+
 }  // namespace fq::processing
 ```
 
@@ -249,6 +272,9 @@ struct ProcessingStatistics {
     uint64_t elapsedMs = 0;
     double processingTimeMs = 0.0;
     double throughputMbps = 0.0;
+    bool allocationTelemetryEnabled = false;
+    MemoryResourcePolicy memoryResourcePolicy = MemoryResourcePolicy::ObjectPool;
+    size_t resolvedMaxInFlightBatches = 0;
 
     [[nodiscard]] auto getPassRate() const -> double;
     [[nodiscard]] auto getFilterRate() const -> double;
@@ -258,6 +284,9 @@ struct ProcessingStatistics {
 struct ProcessingConfig {
     size_t batchSize = 10000;
     size_t threadCount = 1;
+    ExecutionBackend executionBackend = ExecutionBackend::OneTbb;
+    MemoryResourcePolicy memoryResourcePolicy = MemoryResourcePolicy::ObjectPool;
+    bool allocationTelemetryEnabled = false;
     size_t readChunkBytes = 1 * 1024 * 1024;
     size_t zlibBufferBytes = 128 * 1024;
     size_t writerBufferBytes = 128 * 1024;
@@ -293,8 +322,16 @@ namespace fq::statistic {
 struct StatisticOptions {
     std::string inputFastqPath;
     std::string outputStatPath;
+    std::string signatureReportPath;
     uint32_t batchSize = 50000;
+    size_t signatureKmerSize = 15;
+    size_t maxReportedSignatures = 20;
+    size_t duplicateEstimateSampleModulo = 1024;
     uint32_t threadCount = 4;
+    fq::processing::ExecutionBackend executionBackend = fq::processing::ExecutionBackend::OneTbb;
+    fq::processing::MemoryResourcePolicy memoryResourcePolicy =
+        fq::processing::MemoryResourcePolicy::ObjectPool;
+    bool allocationTelemetryEnabled = false;
     size_t readChunkBytes = 1 * 1024 * 1024;
     size_t zlibBufferBytes = 128 * 1024;
     size_t batchCapacityBytes = 4 * 1024 * 1024;
@@ -336,7 +373,7 @@ using IStatistic = StatisticInterface;
 }  // namespace fq::statistic
 ```
 
-**API note**: the maintained public workflow for statistics is `StatisticOptions + createStatisticCalculator(...)->run()`. The low-level `StatisticInterface` surface is available for module internals and specialized extension, but is not the recommended first integration path.
+**API note**: the maintained public workflow for statistics is `StatisticOptions + createStatisticCalculator(...)->run()`. Optional signature output remains additive through `signatureReportPath`; the default text report is still the primary contract.
 
 ## Configuration Module (`fq::config`)
 
@@ -392,7 +429,7 @@ Public code uses the exception hierarchy in `fqtools/error/error.h`. Configurati
 
 1. Public integration must include headers from `include/fqtools/`.
 2. Types or helpers only declared under `src/` are implementation details, even if referenced by public interfaces internally.
-3. Closeout-phase changes should favor clarifying or narrowing this API surface rather than extending it.
+3. Additive changes should prefer extending `ProcessingConfig`, `ProcessingStatistics`, or `StatisticOptions` instead of inventing separate command-specific configuration surfaces.
 
 ## Related Specifications
 

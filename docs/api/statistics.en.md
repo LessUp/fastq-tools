@@ -14,6 +14,7 @@ Abstract interface for statistical calculation tasks, create instances via facto
 fq::statistic::StatisticOptions options;
 options.inputFastqPath = "input.fastq.gz";
 options.outputStatPath = "output.stat.txt";
+options.signatureReportPath = "output.signatures.tsv";
 options.threadCount = 4;
 
 auto calculator = fq::statistic::createStatisticCalculator(options);
@@ -40,8 +41,21 @@ Statistics task configuration.
 |-------|------|-------------|
 | `inputFastqPath` | `std::string` | Input FASTQ file path |
 | `outputStatPath` | `std::string` | Output statistics file path |
-| `threadCount` | `size_t` | Number of threads |
-| `batchSize` | `size_t` | Batch processing size |
+| `signatureReportPath` | `std::string` | Optional signature sidecar path |
+| `batchSize` | `uint32_t` | Number of records processed per batch |
+| `signatureKmerSize` | `size_t` | Head-kmer size used by the sidecar |
+| `maxReportedSignatures` | `size_t` | Maximum number of signature rows to emit |
+| `duplicateEstimateSampleModulo` | `size_t` | Sampling modulo used for duplicate estimation |
+| `threadCount` | `uint32_t` | Number of threads |
+| `executionBackend` | `ExecutionBackend` | Currently supports `OneTbb` |
+| `memoryResourcePolicy` | `MemoryResourcePolicy` | Currently supports `ObjectPool` |
+| `allocationTelemetryEnabled` | `bool` | Emits memory telemetry headers in the text report |
+| `readChunkBytes` | `size_t` | Reader chunk size |
+| `zlibBufferBytes` | `size_t` | zlib internal buffer size |
+| `batchCapacityBytes` | `size_t` | Per-batch buffer capacity |
+| `memoryLimitBytes` | `size_t` | Memory budget used to resolve in-flight batches |
+| `maxInFlightBatches` | `size_t` | Explicit in-flight batch cap (`0` means auto) |
+| `qualityEncoding` | `int` | Quality encoding offset (typically `33`) |
 
 ---
 
@@ -64,15 +78,17 @@ public:
 
 ## FqStatisticResult
 
-Statistics result data structure.
+The public header only forward-declares `FqStatisticResult`; the table below describes the current result semantics used by workers and aggregators rather than a stable ABI layout.
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `readCount` | `uint64_t` | Total read count |
 | `totalBases` | `uint64_t` | Total base count |
 | `maxReadLength` | `uint32_t` | Maximum read length |
-| `posQualityDist` | `vector<vector<uint64_t>>` | Position quality distribution |
-| `posBaseDist` | `vector<vector<uint64_t>>` | Position base distribution |
+| `duplicateSampledReads` | `uint64_t` | Number of sampled duplicate reads |
+| `posQualityDist` | `vector<uint64_t>` | Flattened position-quality distribution |
+| `posBaseDist` | `vector<uint64_t>` | Flattened position-base distribution |
+| `headKmerCounts` | `map<string, uint64_t>` | Bounded head-kmer signature counts |
 
 Supports `operator+=` to merge statistics results from multiple batches.
 
@@ -95,10 +111,21 @@ Input file → FastqReader → [Source] → [Processing] → [Aggregation] → O
 
 ## Output Format
 
-Statistics results support JSON and text format output, containing:
+Statistics results write a text report by default and may optionally emit a TSV sidecar, containing:
 
-- Total reads, valid reads
-- Sequence length distribution (min/max/average)
+- Total reads, max read length, and total bases
 - Base composition (A/T/C/G/N ratio)
 - GC content
 - Position quality distribution (Q20/Q30 percentage)
+- Per-position base counts, average quality, and estimated error rate
+- Duplicate estimate (sampling-based)
+- Bounded head-kmer signatures (enabled via `--signature-report`)
+
+When `--signature-report` is enabled, the sidecar uses this TSV shape:
+
+```text
+metric	key	count
+summary	total_reads	<count>
+summary	duplicate_estimate	<count>
+head_kmer	<kmer>	<count>
+```

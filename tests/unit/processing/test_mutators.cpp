@@ -312,6 +312,51 @@ TEST_F(AdapterTrimmerTest, ResetClearsStatistics) {
     trimmer.reset();
 }
 
+class PolyTailTrimmerTest : public ::testing::Test {
+protected:
+    void SetUp() override {}
+};
+
+TEST_F(PolyTailTrimmerTest, TrimsPolyGTailWhenRunLengthMet) {
+    PolyTailTrimmer trimmer(PolyTailTrimmer::TailKind::PolyG, 4);
+
+    FastqRecord read{"read1", {}, "ACGTGGGG", "IIIIIIII", "+"};
+    trimmer.process(read);
+
+    EXPECT_EQ(read.seq, "ACGT");
+    EXPECT_EQ(read.qual, "IIII");
+}
+
+TEST_F(PolyTailTrimmerTest, LeavesReadUntouchedWhenPolyGRunTooShort) {
+    PolyTailTrimmer trimmer(PolyTailTrimmer::TailKind::PolyG, 5);
+
+    FastqRecord read{"read1", {}, "ACGTGGGG", "IIIIIIII", "+"};
+    trimmer.process(read);
+
+    EXPECT_EQ(read.seq, "ACGTGGGG");
+    EXPECT_EQ(read.qual, "IIIIIIII");
+}
+
+TEST_F(PolyTailTrimmerTest, TrimsPolyXTailWhenTailIsLowComplexity) {
+    PolyTailTrimmer trimmer(PolyTailTrimmer::TailKind::PolyX, 4);
+
+    FastqRecord read{"read1", {}, "ACGTTTTT", "IIIIIIII", "+"};
+    trimmer.process(read);
+
+    EXPECT_EQ(read.seq, "ACG");
+    EXPECT_EQ(read.qual, "III");
+}
+
+TEST_F(PolyTailTrimmerTest, DoesNotTrimMixedTailInPolyXMode) {
+    PolyTailTrimmer trimmer(PolyTailTrimmer::TailKind::PolyX, 4);
+
+    FastqRecord read{"read1", {}, "ACGTTTTA", "IIIIIIII", "+"};
+    trimmer.process(read);
+
+    EXPECT_EQ(read.seq, "ACGTTTTA");
+    EXPECT_EQ(read.qual, "IIIIIIII");
+}
+
 // ============================================================================
 // 边界条件测试
 // ============================================================================

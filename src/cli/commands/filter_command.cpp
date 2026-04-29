@@ -1,10 +1,10 @@
 #include "filter_command.h"
-#include "execution_backend_option.h"
-#include "memory_resource_policy_option.h"
 
 #include <iomanip>
 #include <iostream>
 
+#include "execution_backend_option.h"
+#include "memory_resource_policy_option.h"
 #include <cxxopts.hpp>
 
 #include <fqtools/fq.h>  // 公共 API Façade（包含 pipeline 接口、predicates、mutators）
@@ -76,7 +76,19 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
         "trim-quality", "Trim bases below quality threshold", cxxopts::value<double>())(
         "trim-mode",
         "Trim mode (both,five,three)",
-        cxxopts::value<std::string>()->default_value("both"))("h,help", "Print usage");
+        cxxopts::value<std::string>()->default_value("both"))(
+        "adapter-seq",
+        "Trim adapter sequence from 3' end (repeatable)",
+        cxxopts::value<std::vector<std::string>>())("adapter-min-overlap",
+                                                    "Minimum adapter overlap",
+                                                    cxxopts::value<size_t>()->default_value("3"))(
+        "adapter-max-mismatches",
+        "Maximum adapter mismatches",
+        cxxopts::value<size_t>()->default_value("1"))(
+        "trim-poly-g", "Trim polyG tail with minimum run length", cxxopts::value<size_t>())(
+        "trim-poly-x",
+        "Trim low-complexity polyX tail with minimum run length",
+        cxxopts::value<size_t>())("h,help", "Print usage");
 
     if (argc == 1) {
         std::cout << options.help() << '\n';
@@ -158,6 +170,23 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
             mode = fq::processing::QualityTrimmer::TrimMode::ThreePrime;
         pipeline_->addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(
             trimQ, /*min_length*/ 1, mode, qualityEncoding));
+    }
+
+    if (result.count("adapter-seq")) {
+        pipeline_->addReadMutator(std::make_unique<fq::processing::AdapterTrimmer>(
+            result["adapter-seq"].as<std::vector<std::string>>(),
+            result["adapter-min-overlap"].as<size_t>(),
+            result["adapter-max-mismatches"].as<size_t>()));
+    }
+
+    if (result.count("trim-poly-g")) {
+        pipeline_->addReadMutator(std::make_unique<fq::processing::PolyTailTrimmer>(
+            fq::processing::PolyTailTrimmer::TailKind::PolyG, result["trim-poly-g"].as<size_t>()));
+    }
+
+    if (result.count("trim-poly-x")) {
+        pipeline_->addReadMutator(std::make_unique<fq::processing::PolyTailTrimmer>(
+            fq::processing::PolyTailTrimmer::TailKind::PolyX, result["trim-poly-x"].as<size_t>()));
     }
 
     auto stats = pipeline_->run();

@@ -43,16 +43,24 @@ FastQTools stat -i <input> -o <output> [选项]
 |------|------|
 | `-i, --input <path>` | 输入 FASTQ 文件（支持 `.gz` 压缩） |
 | `-o, --output <path>` | 输出统计文件 |
-| `-t, --threads <N>` | 线程数（默认自动检测） |
+| `-t, --threads <N>` | 线程数（默认 `1`） |
 | `--batch-size <N>` | 每批处理的 reads 数量 |
+| `--execution-backend oneTbb` | 显式指定执行后端 |
+| `--memory-policy objectPool` | 显式指定内存资源策略 |
+| `--allocation-telemetry` | 在统计头部写出内存策略与 in-flight 上限 |
+| `--signature-report <path>` | 生成可选的 signature sidecar（TSV） |
+| `--signature-kmer-size <N>` | sidecar 中 head-kmer 的 k 值 |
+| `--signature-limit <N>` | sidecar 中最多输出的 signature 行数 |
+| `--duplicate-sample-modulo <N>` | duplicate estimate 的采样模数，默认 `1024`；`1` 可用于精确测试 |
 
 ### 输出指标
 
-- **读段统计**：总读段数、有效读段数
-- **长度分布**：最小/最大/平均长度
+- **读段统计**：总读段数、最大读长、总碱基数
 - **质量分析**：Q20/Q30 碱基百分比
 - **碱基组成**：A/T/C/G/N 比例
 - **GC 含量**：整体和位置特异性
+- **逐位统计**：每个位点的碱基计数、平均质量与估计错误率
+- **轻量 sidecar**：可选输出 duplicate estimate 与 top head-kmer signature
 
 ### 示例
 
@@ -62,6 +70,10 @@ FastQTools stat -i reads.fq.gz -o analysis.txt
 
 # 多线程处理
 FastQTools stat -i reads.fq.gz -o analysis.txt -t 8
+
+# 输出 signature sidecar
+FastQTools stat -i reads.fq.gz -o analysis.txt \
+  --signature-report signatures.tsv --signature-kmer-size 15
 
 # 调试模式
 FastQTools -v stat -i reads.fq.gz -o analysis.txt
@@ -97,6 +109,19 @@ FastQTools filter -i <input> -o <output> [选项]
 |------|------|
 | `--trim-quality <float>` | 质量修剪阈值 |
 | `--trim-mode <mode>` | 修剪模式：`both`（两端）、`five`（5' 端）、`three`（3' 端） |
+| `--adapter-seq <seq>` | 3' 端 adapter 序列，可重复指定 |
+| `--adapter-min-overlap <N>` | adapter 命中最小重叠长度 |
+| `--adapter-max-mismatches <N>` | adapter 命中允许的最大错配数 |
+| `--trim-poly-g <N>` | 修剪长度大于等于 `N` 的 polyG 尾巴 |
+| `--trim-poly-x <N>` | 修剪长度大于等于 `N` 的低复杂度 polyX 尾巴 |
+
+### 运行时选项
+
+| 选项 | 说明 |
+|------|------|
+| `--execution-backend oneTbb` | 显式指定执行后端 |
+| `--memory-policy objectPool` | 显式指定内存资源策略 |
+| `--allocation-telemetry` | 在控制台统计中展示解析后的内存参数 |
 
 ### 示例
 
@@ -113,6 +138,11 @@ FastQTools filter -i input.fq.gz -o trimmed.fq.gz \
 FastQTools filter -i input.fq.gz -o clean.fq.gz \
   --min-quality 20 --min-length 50 --max-n-ratio 0.1 \
   --trim-quality 20 --trim-mode both
+
+# 接头 + polyG/polyX 预处理
+FastQTools filter -i input.fq.gz -o clean.fq.gz \
+  --adapter-seq AGATCGGAAGAGC --adapter-min-overlap 6 \
+  --trim-poly-g 8 --trim-poly-x 8
 
 # 静默模式
 FastQTools -q filter -i input.fq.gz -o filtered.fq.gz --min-quality 20
@@ -140,6 +170,7 @@ FastQTools 也可作为 C++ 库使用：
 fq::statistic::StatisticOptions options;
 options.inputFastqPath = "input.fastq.gz";
 options.outputStatPath = "output.stat.txt";
+options.signatureReportPath = "output.signatures.tsv";
 auto calculator = fq::statistic::createStatisticCalculator(options);
 calculator->run();
 
@@ -150,6 +181,7 @@ pipeline->setOutputPath("filtered.fq.gz");
 
 fq::processing::ProcessingConfig config;
 config.threadCount = 4;
+config.executionBackend = fq::processing::ExecutionBackend::OneTbb;
 pipeline->setProcessingConfig(config);
 
 auto stats = pipeline->run();

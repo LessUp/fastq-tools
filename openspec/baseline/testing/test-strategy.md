@@ -1,7 +1,7 @@
 # Testing Specification: FastQTools
 
-> **Status**: Active  
-> **Last Updated**: 2026-04-17  
+> **Status**: Active
+> **Last Updated**: 2026-04-28
 > **Related**: [Product Spec](../product/fastq-processing.md), [Architecture-0001](../architecture/0001-core-architecture.md)
 
 ## Overview
@@ -124,6 +124,8 @@ Test cross-module interactions.
 - Reader → Pipeline → Writer flow
 - Configuration → Command integration
 - Error propagation across layers
+- Execution backend / memory policy option compatibility
+- Optional signature sidecar output compatibility
 
 **Example**:
 ```cpp
@@ -153,6 +155,7 @@ Test complete CLI workflows.
 - Shell script-based tests
 - Python-based validation
 - Output comparison with golden files
+- Small-sample smoke validation for signature sidecar and bounded preprocessing options
 
 **Example** (Shell):
 ```bash
@@ -213,6 +216,7 @@ BENCHMARK(BM_FastqReader);
 **Validation**:
 - Performance targets documented in `baseline/product/fastq-processing.md`
 - Regression detection via `baseline/architecture/0003-benchmark-system.md`
+- Large-sample smoke validation should include bounded-memory `stat` sidecar generation and preprocessing-heavy `filter` runs
 
 ## Coverage Requirements
 
@@ -268,6 +272,7 @@ All generated test data must:
 1. Be valid FASTQ format
 2. Have known, deterministic properties
 3. Be reproducible (seed-based generation)
+4. Include at least one real gzip FASTQ smoke dataset for CLI-level validation when available locally
 
 ## Test Naming Conventions
 
@@ -314,6 +319,15 @@ TEST(FastqReaderTest, ThrowsOnInvalidFormat) {
     }, fq::error::FormatError);
 }
 ```
+
+## Maintained Regression Matrix
+
+The maintained fast regression matrix for current runtime slices and next-gen baseline additions SHALL include:
+
+1. `filter` with `--execution-backend oneTbb`
+2. `stat` with `--memory-policy objectPool --allocation-telemetry`
+3. `filter` with adapter trimming and poly-tail trimming enabled
+4. `stat` with `--signature-report` enabled, including duplicate estimate and bounded `head_kmer` rows
 
 ## CI Integration
 

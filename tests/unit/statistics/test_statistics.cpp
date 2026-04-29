@@ -42,6 +42,26 @@ TEST(FqStatisticResultTest, OperatorPlusEquals) {
     }
 }
 
+TEST(FqStatisticResultTest, AggregatesDuplicateAndSignatureMaps) {
+    FqStatisticResult left;
+    left.duplicateSampledReads = 1;
+    left.headKmerCounts["AAAA"] = 2;
+    left.sampledSequenceHashes[1] = 2;
+
+    FqStatisticResult right;
+    right.duplicateSampledReads = 4;
+    right.headKmerCounts["AAAA"] = 4;
+    right.headKmerCounts["TTTT"] = 1;
+    right.sampledSequenceHashes[1] = 5;
+
+    left += right;
+
+    EXPECT_EQ(left.duplicateSampledReads, 6);
+    EXPECT_EQ(left.headKmerCounts["AAAA"], 6);
+    EXPECT_EQ(left.headKmerCounts["TTTT"], 1);
+    EXPECT_EQ(left.sampledSequenceHashes[1], 7);
+}
+
 TEST(FqStatisticWorkerTest, CalculateStats) {
     FqStatisticWorker worker(33);  // Sanger offset
     fq::io::FastqBatch batch;
@@ -99,6 +119,26 @@ TEST(FqStatisticWorkerTest, EmptyBatch) {
     auto result = worker.calculateStats(batch);
     EXPECT_EQ(result.readCount, 0);
     EXPECT_TRUE(result.posQualityDist.empty());
+}
+
+TEST(FqStatisticWorkerTest, TracksDuplicatesAndHeadKmers) {
+    FqStatisticWorker worker(33, 4, 1);
+    fq::io::FastqBatch batch;
+
+    fq::io::FastqRecord rec1{"read1", {}, "ACGTAAAA", "IIIIIIII", "+"};
+    fq::io::FastqRecord rec2{"read2", {}, "ACGTAAAA", "IIIIIIII", "+"};
+    fq::io::FastqRecord rec3{"read3", {}, "TTTTCCCC", "IIIIIIII", "+"};
+
+    batch.records().push_back(rec1);
+    batch.records().push_back(rec2);
+    batch.records().push_back(rec3);
+
+    const auto result = worker.calculateStats(batch);
+
+    EXPECT_EQ(result.readCount, 3);
+    EXPECT_EQ(result.duplicateSampledReads, 1);
+    EXPECT_EQ(result.headKmerCounts.at("ACGT"), 2);
+    EXPECT_EQ(result.headKmerCounts.at("TTTT"), 1);
 }
 
 }  // namespace fq::statistic

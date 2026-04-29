@@ -108,7 +108,7 @@ python3 tools/data/gen_fastq.py -o test_data.fastq --reads 5000 --min-len 80 --m
 FastQTools stat -i test_data.fastq -o stats.txt --threads 4
 ```
 
-输出包含：读段总数、长度分布、碱基组成（A/T/C/G/N）、GC 含量、Q20/Q30 百分比等。
+输出包含：读段总数、最大读长、总碱基数、碱基组成（A/T/C/G/N）、GC 含量、Q20/Q30 百分比，以及逐位置质量/错误率统计等。
 
 ### 3. 质量过滤
 

@@ -55,7 +55,7 @@ hide:
 
     ---
 
-    `FastQTools stat` computes read counts, length distribution, base composition, GC content, and quality summaries in a single streaming pass.
+    `FastQTools stat` computes read counts, max read length, total bases, base composition, GC content, quality summaries, and optional lightweight QC sidecars in a single streaming pass.
 
 -   :material-filter-outline: **Filter and trim together**
 

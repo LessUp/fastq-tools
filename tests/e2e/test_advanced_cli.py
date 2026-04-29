@@ -189,5 +189,53 @@ class TestFastQToolsCLI(unittest.TestCase):
         self.assertIn("#MemoryPolicy\tobjectPool", content)
         self.assertIn("#MaxInFlightBatches\t", content)
 
+    def test_filter_accepts_adapter_and_poly_tail_options(self):
+        input_fastq = os.path.join(self.test_dir, "preprocess.fastq")
+        output_fastq = os.path.join(self.test_dir, "preprocess.out.fastq")
+        with open(input_fastq, "w") as f:
+            f.write("@read1\nACGTGGGG\n+\nIIIIIIII\n")
+            f.write("@read2\nTTTTTTAA\n+\nIIIIIIII\n")
+
+        result = self.run_cmd([
+            "filter",
+            "--input", input_fastq,
+            "--output", output_fastq,
+            "--adapter-seq", "TTAA",
+            "--trim-poly-g", "4",
+        ])
+
+        self.assertEqual(result.returncode, 0)
+        content = self._read_fastq_content(output_fastq)
+        self.assertIn("@read1\nACGT\n+\nIIII\n", content)
+        self.assertIn("@read2\nTTTT\n+\nIIII\n", content)
+
+    def test_stat_writes_signature_sidecar_when_requested(self):
+        input_fastq = os.path.join(self.test_dir, "signature.fastq")
+        output_stats = os.path.join(self.test_dir, "signature-stats.txt")
+        output_sidecar = os.path.join(self.test_dir, "signature.tsv")
+        with open(input_fastq, "w") as f:
+            f.write("@read1\nACGTAAAA\n+\nIIIIIIII\n")
+            f.write("@read2\nACGTAAAA\n+\nIIIIIIII\n")
+            f.write("@read3\nTTTTCCCC\n+\nIIIIIIII\n")
+
+        result = self.run_cmd([
+            "stat",
+            "--input", input_fastq,
+            "--output", output_stats,
+            "--signature-report", output_sidecar,
+            "--signature-kmer-size", "4",
+            "--signature-limit", "10",
+            "--duplicate-sample-modulo", "1",
+        ])
+
+        self.assertEqual(result.returncode, 0)
+        with open(output_stats, "r") as f:
+            stats_content = f.read()
+        with open(output_sidecar, "r") as f:
+            sidecar_content = f.read()
+        self.assertIn("#DuplicateEstimate\t1", stats_content)
+        self.assertIn("summary\tduplicate_estimate\t1", sidecar_content)
+        self.assertIn("head_kmer\tACGT\t2", sidecar_content)
+
 if __name__ == "__main__":
     unittest.main()

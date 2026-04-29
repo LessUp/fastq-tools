@@ -140,6 +140,26 @@ TEST(PipelineSmokeTest, AdapterTrimmerLeavesReadUntouchedWhenNoAdapterFound) {
     EXPECT_EQ(read.qual, "IIIIIIII");
 }
 
+TEST(PipelineSmokeTest, PolyGTailTrimmerRemovesPolyGTail) {
+    fq::processing::PolyTailTrimmer trimmer(fq::processing::PolyTailTrimmer::TailKind::PolyG, 4);
+
+    fq::io::FastqRecord read{"read1", {}, "ACGTGGGG", "IIIIIIII", "+"};
+    trimmer.process(read);
+
+    EXPECT_EQ(read.seq, "ACGT");
+    EXPECT_EQ(read.qual, "IIII");
+}
+
+TEST(PipelineSmokeTest, PolyXTailTrimmerRemovesLowComplexityTail) {
+    fq::processing::PolyTailTrimmer trimmer(fq::processing::PolyTailTrimmer::TailKind::PolyX, 4);
+
+    fq::io::FastqRecord read{"read1", {}, "ACGTTTTT", "IIIIIIII", "+"};
+    trimmer.process(read);
+
+    EXPECT_EQ(read.seq, "ACG");
+    EXPECT_EQ(read.qual, "III");
+}
+
 TEST(PipelineSmokeTest, LengthTrimmerFromStartKeepsSuffix) {
     fq::processing::LengthTrimmer trimmer(3,
                                           fq::processing::LengthTrimmer::TrimStrategy::FromStart);

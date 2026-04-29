@@ -1,14 +1,14 @@
 # Product Specification: FASTQ Processing
 
 > **Status**: Active
-> **Last Updated**: 2026-04-26
+> **Last Updated**: 2026-04-28
 > **Owner**: FastQTools Core Team
 
 ## Overview
 
-FastQTools is a focused C++23 FASTQ quality-control toolkit for day-to-day sequencing workflows. The product surface is intentionally small: a CLI for routine QC tasks and a reusable C++ API for embedding the same primitives into other tools.
+FastQTools is a focused C++23 FASTQ preprocessing and quality-control toolkit for day-to-day sequencing workflows. The product surface remains intentionally small: a CLI for routine QC/preprocessing tasks and a reusable C++ API for embedding the same primitives into other tools.
 
-The project is in a maintenance closeout phase. Product scope is therefore defined by what is already implemented, maintained, and worth keeping trustworthy over time.
+The project keeps a narrow product scope, but the maintained baseline now allows additive evolution in execution policy, bounded preprocessing modules, and lightweight QC signatures as long as the default user experience remains stable.
 
 ## Target Users
 
@@ -20,13 +20,13 @@ The project is in a maintenance closeout phase. Product scope is therefore defin
 
 ### 1. `stat` command
 
-Generate a tabular quality-control report for one FASTQ file.
+Generate a tabular quality-control report for one FASTQ file, with an optional lightweight signature sidecar.
 
 **Current contract**
 
 - Required inputs: `--input`, `--output`
-- Runtime controls: threads, batch size, memory limit, chunk size, quality encoding
-- Output: a text report with summary lines and per-position metrics
+- Runtime controls: threads, batch size, execution backend, memory policy, memory limit, chunk size, quality encoding
+- Output: a text report with summary lines and per-position metrics; optional signature sidecar for duplicate estimation and head-kmer summaries
 - Supported inputs: plain FASTQ and gzip-compressed FASTQ (`.gz`)
 
 **Representative usage**
@@ -43,8 +43,8 @@ Filter and optionally trim reads in a single pass.
 
 - Required inputs: `--input`, `--output`
 - Supported predicates: minimum average quality, minimum length, maximum length, maximum N ratio
-- Supported mutators: quality trimming
-- Runtime controls: threads, batch size, memory limit, buffer sizing, quality encoding
+- Supported mutators: quality trimming, adapter trimming, polyG tail trimming, bounded polyX tail trimming
+- Runtime controls: threads, batch size, execution backend, memory policy, memory limit, buffer sizing, quality encoding
 - Supported I/O: plain FASTQ and gzip-compressed FASTQ (`.gz`)
 
 **Representative usage**
@@ -65,13 +65,16 @@ FastQTools filter \
 2. **Predicate/mutator pipeline** — filtering and trimming are composed through a processing pipeline interface.
 3. **Per-position statistics** — `stat` computes summary metrics plus per-position base/quality distributions.
 4. **Gzip-aware file handling** — the maintained compression path is gzip for both reading and writing.
-5. **Embeddable C++ surface** — public headers under `include/fqtools/` remain the supported integration boundary.
+5. **Execution and memory policy controls** — default oneTBB + object-pool execution remains explicit and configurable.
+6. **Lightweight QC signatures** — `stat` may emit bounded sidecar summaries for duplicate estimation and head-kmer signatures without replacing the default text report.
+7. **Embeddable C++ surface** — public headers under `include/fqtools/` remain the supported integration boundary.
 
 ## Explicit Non-Goals
 
 - Becoming a general-purpose workflow runner
 - Claiming maintained support for bzip2/xz I/O when the current implementation does not provide it
-- Expanding the public surface with new commands during the closeout phase
+- Expanding the public surface with new commands instead of extending the existing `stat` / `filter` workflows
+- Turning lightweight QC signatures into a classifier, mapper, or platform service
 - Keeping legacy docs, workflows, or metadata that no longer improve the maintained product
 
 ## Representative Performance Targets
@@ -89,9 +92,11 @@ These are product-sizing targets for the maintained benchmark dataset, not unive
 
 1. `stat` and `filter` must work on plain FASTQ and `.gz` FASTQ inputs.
 2. `filter` must preserve record integrity (`seq` and `qual` lengths remain aligned after mutation).
-3. `stat` output must include summary metrics and a per-position table.
-4. Public C++ integration continues to use headers in `include/fqtools/` as the supported boundary.
-5. Build, test, and lint entry points remain the scripts under `scripts/core/`.
+3. `filter` must continue to work when adapter trimming or poly-tail trimming are enabled.
+4. `stat` output must include summary metrics and a per-position table.
+5. Optional signature sidecar output must remain additive and must not replace the default text report.
+6. Public C++ integration continues to use headers in `include/fqtools/` as the supported boundary.
+7. Build, test, and lint entry points remain the scripts under `scripts/core/`.
 
 ## Related Specifications
 

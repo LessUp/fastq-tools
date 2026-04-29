@@ -43,16 +43,24 @@ FastQTools stat -i <input> -o <output> [options]
 |--------|-------------|
 | `-i, --input <path>` | Input FASTQ file (supports `.gz` compression) |
 | `-o, --output <path>` | Output statistics file |
-| `-t, --threads <N>` | Number of threads (auto-detect by default) |
+| `-t, --threads <N>` | Number of threads (default `1`) |
 | `--batch-size <N>` | Number of reads per batch |
+| `--execution-backend oneTbb` | Explicit execution backend selection |
+| `--memory-policy objectPool` | Explicit memory resource policy |
+| `--allocation-telemetry` | Emit memory policy and resolved in-flight metadata |
+| `--signature-report <path>` | Write an optional signature sidecar (TSV) |
+| `--signature-kmer-size <N>` | Head-kmer size used in the sidecar |
+| `--signature-limit <N>` | Maximum number of signature rows in the sidecar |
+| `--duplicate-sample-modulo <N>` | Sampling modulo for duplicate estimation; default `1024`, and `1` is useful for exact tests |
 
 ### Output Metrics
 
-- **Read statistics**: Total reads, valid reads
-- **Length distribution**: Min/max/average length
+- **Read statistics**: Total reads, max read length, and total bases
 - **Quality analysis**: Q20/Q30 base percentages
 - **Base composition**: A/T/C/G/N ratios
 - **GC content**: Overall and position-specific
+- **Per-position table**: Base counts, average quality, and estimated error rate for each cycle
+- **Lightweight sidecar**: Optional duplicate estimate and top head-kmer signatures
 
 ### Examples
 
@@ -62,6 +70,10 @@ FastQTools stat -i reads.fq.gz -o analysis.txt
 
 # Multi-threaded processing
 FastQTools stat -i reads.fq.gz -o analysis.txt -t 8
+
+# Emit a signature sidecar
+FastQTools stat -i reads.fq.gz -o analysis.txt \
+  --signature-report signatures.tsv --signature-kmer-size 15
 
 # Debug mode
 FastQTools -v stat -i reads.fq.gz -o analysis.txt
@@ -97,6 +109,19 @@ FastQTools filter -i <input> -o <output> [options]
 |--------|-------------|
 | `--trim-quality <float>` | Quality trimming threshold |
 | `--trim-mode <mode>` | Trimming mode: `both` (both ends), `five` (5' end), `three` (3' end) |
+| `--adapter-seq <seq>` | 3' adapter sequence, repeatable |
+| `--adapter-min-overlap <N>` | Minimum overlap for adapter trimming |
+| `--adapter-max-mismatches <N>` | Maximum mismatches allowed for adapter trimming |
+| `--trim-poly-g <N>` | Trim polyG tails with run length >= `N` |
+| `--trim-poly-x <N>` | Trim low-complexity polyX tails with run length >= `N` |
+
+### Runtime Options
+
+| Option | Description |
+|--------|-------------|
+| `--execution-backend oneTbb` | Explicit execution backend selection |
+| `--memory-policy objectPool` | Explicit memory resource policy |
+| `--allocation-telemetry` | Include resolved memory telemetry in processing stats |
 
 ### Examples
 
@@ -113,6 +138,11 @@ FastQTools filter -i input.fq.gz -o trimmed.fq.gz \
 FastQTools filter -i input.fq.gz -o clean.fq.gz \
   --min-quality 20 --min-length 50 --max-n-ratio 0.1 \
   --trim-quality 20 --trim-mode both
+
+# Adapter + poly-tail preprocessing
+FastQTools filter -i input.fq.gz -o clean.fq.gz \
+  --adapter-seq AGATCGGAAGAGC --adapter-min-overlap 6 \
+  --trim-poly-g 8 --trim-poly-x 8
 
 # Quiet mode
 FastQTools -q filter -i input.fq.gz -o filtered.fq.gz --min-quality 20
@@ -140,6 +170,7 @@ FastQTools can also be used as a C++ library:
 fq::statistic::StatisticOptions options;
 options.inputFastqPath = "input.fastq.gz";
 options.outputStatPath = "output.stat.txt";
+options.signatureReportPath = "output.signatures.tsv";
 auto calculator = fq::statistic::createStatisticCalculator(options);
 calculator->run();
 
@@ -150,6 +181,7 @@ pipeline->setOutputPath("filtered.fq.gz");
 
 fq::processing::ProcessingConfig config;
 config.threadCount = 4;
+config.executionBackend = fq::processing::ExecutionBackend::OneTbb;
 pipeline->setProcessingConfig(config);
 
 auto stats = pipeline->run();

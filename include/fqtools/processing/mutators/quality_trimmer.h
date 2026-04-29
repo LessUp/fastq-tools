@@ -85,4 +85,28 @@ private:
     auto countMismatches(std::string_view seq1, std::string_view seq2) const -> size_t;
 };
 
+class PolyTailTrimmer : public ReadMutatorInterface {
+public:
+    enum class TailKind { PolyG, PolyX };
+
+    PolyTailTrimmer(TailKind kind, size_t minRunLength = 10);
+
+    void process(fq::io::FastqRecord& read) override;
+
+    [[nodiscard]] auto getName() const -> std::string;
+    [[nodiscard]] auto getDescription() const -> std::string;
+    void reset();
+
+private:
+    TailKind kind_;
+    size_t minRunLength_;
+
+    std::atomic<size_t> totalProcessed_{0};
+    std::atomic<size_t> trimmedCount_{0};
+    std::atomic<size_t> totalBasesRemoved_{0};
+
+    [[nodiscard]] auto trimPosition(std::string_view sequence) const -> size_t;
+    [[nodiscard]] static auto normalizeBase(char base) -> char;
+};
+
 }  // namespace fq::processing

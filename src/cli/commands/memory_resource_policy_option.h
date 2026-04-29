@@ -8,7 +8,8 @@
 
 namespace fq::cli::commands {
 
-inline auto parseMemoryResourcePolicy(std::string_view value) -> fq::processing::MemoryResourcePolicy {
+inline auto parseMemoryResourcePolicy(std::string_view value)
+    -> fq::processing::MemoryResourcePolicy {
     if (value == "objectPool") {
         return fq::processing::MemoryResourcePolicy::ObjectPool;
     }

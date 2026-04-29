@@ -41,7 +41,9 @@ public:
      * @param qualOffset 质量分数偏移量，默认为 33
      * @post 工作器被初始化并准备使用
      */
-    explicit FqStatisticWorker(int qualOffset = 33);
+    explicit FqStatisticWorker(int qualOffset = 33,
+                               size_t signatureKmerSize = 15,
+                               size_t duplicateEstimateSampleModulo = 1024);
 
     /**
      * @brief 处理单个 FASTQ 记录批次并返回统计结果
@@ -54,7 +56,9 @@ public:
     auto calculateStats(const Batch& batch) -> Result override;
 
 private:
-    int qualOffset_ = 33;  ///< 质量分数偏移量
+    int qualOffset_ = 33;                          ///< 质量分数偏移量
+    size_t signatureKmerSize_ = 15;                ///< 头部 k-mer signature 长度
+    size_t duplicateEstimateSampleModulo_ = 1024;  ///< duplicate 采样模数
 };
 
 }  // namespace fq::statistic

@@ -57,11 +57,11 @@ void ProcessingPipeline::addReadPredicate(std::unique_ptr<ReadPredicateInterface
 
 auto ProcessingPipeline::run() -> ProcessingStatistics {
     switch (config_.executionBackend) {
-    case ExecutionBackend::OneTbb:
-        if (config_.threadCount > 1) {
-            return processWithTBB();
-        }
-        return processSequential();
+        case ExecutionBackend::OneTbb:
+            if (config_.threadCount > 1) {
+                return processWithTBB();
+            }
+            return processSequential();
     }
 
     throw std::invalid_argument("Unsupported execution backend for processing pipeline.");
@@ -208,12 +208,13 @@ auto ProcessingPipeline::processWithTBB() -> ProcessingStatistics {
 
         std::shared_ptr<fq::io::FastqBatchPool> batchPool;
         switch (config_.memoryResourcePolicy) {
-        case MemoryResourcePolicy::ObjectPool:
-            batchPool = fq::io::createFastqBatchPool(maxTokens, maxTokens * 2);
-            break;
+            case MemoryResourcePolicy::ObjectPool:
+                batchPool = fq::io::createFastqBatchPool(maxTokens, maxTokens * 2);
+                break;
         }
         if (!batchPool) {
-            throw std::invalid_argument("Unsupported memory resource policy for processing pipeline.");
+            throw std::invalid_argument(
+                "Unsupported memory resource policy for processing pipeline.");
         }
 
         tbb::parallel_pipeline(

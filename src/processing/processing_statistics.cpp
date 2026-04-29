@@ -9,8 +9,8 @@ namespace {
 
 auto memoryPolicyName(MemoryResourcePolicy policy) -> const char* {
     switch (policy) {
-    case MemoryResourcePolicy::ObjectPool:
-        return "objectPool";
+        case MemoryResourcePolicy::ObjectPool:
+            return "objectPool";
     }
 
     return "unknown";

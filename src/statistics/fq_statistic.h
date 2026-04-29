@@ -19,6 +19,7 @@
 #include "fqtools/statistics/statistic_interface.h"
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -35,14 +36,17 @@ constexpr int kMaxBaseNum = 5;  ///< 最大碱基数量
  *          位置质量分数分布和位置碱基分布等信息
  */
 struct FqStatisticResult {
-    uint64_t readCount = 0;      ///< 总读取数量
-    uint64_t totalBases = 0;     ///< 总碱基数
-    uint32_t maxReadLength = 0;  ///< 最大读取长度
+    uint64_t readCount = 0;              ///< 总读取数量
+    uint64_t totalBases = 0;             ///< 总碱基数
+    uint32_t maxReadLength = 0;          ///< 最大读取长度
+    uint64_t duplicateSampledReads = 0;  ///< 采样命中的 duplicate reads 数量
 
     /// 位置质量分数分布（扁平化一维布局：[pos * kMaxQual + qual]）
     std::vector<uint64_t> posQualityDist;
     /// 位置碱基分布（扁平化一维布局：[pos * kMaxBaseNum + base]）
     std::vector<uint64_t> posBaseDist;
+    std::map<std::string, uint64_t> headKmerCounts;      ///< 头部 k-mer signature 计数
+    std::map<uint64_t, uint64_t> sampledSequenceHashes;  ///< duplicate 采样哈希计数
 
     /// 确保分布数组能容纳 newLength 个位置
     void ensureCapacity(size_t newLength) {
@@ -116,6 +120,7 @@ private:
      * @post 统计信息被写入到配置指定的输出文件中
      */
     void writeResult(const FqStatisticResult& result);
+    void writeSignatureSidecar(const FqStatisticResult& result);
 
     StatisticOptions options_;  ///< 统计配置选项
 };

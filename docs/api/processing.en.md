@@ -24,7 +24,7 @@ public:
     virtual void setProcessingConfig(const ProcessingConfig& config) = 0;
     virtual void addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicate) = 0;
     virtual void addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator) = 0;
-    virtual auto run() -> ProcessingStats = 0;
+    virtual auto run() -> ProcessingStatistics = 0;
 };
 ```
 
@@ -38,6 +38,9 @@ Pipeline configuration parameters.
 |-----------|------|-------------|
 | `batchSize` | `size_t` | Number of reads per batch |
 | `threadCount` | `size_t` | Number of parallel threads |
+| `executionBackend` | `ExecutionBackend` | Currently supports `OneTbb` |
+| `memoryResourcePolicy` | `MemoryResourcePolicy` | Currently supports `ObjectPool` |
+| `allocationTelemetryEnabled` | `bool` | Enables memory telemetry |
 | `readChunkBytes` | `size_t` | Read chunk size |
 | `zlibBufferBytes` | `size_t` | zlib buffer |
 | `writerBufferBytes` | `size_t` | Writer buffer |
@@ -47,7 +50,7 @@ Pipeline configuration parameters.
 
 ---
 
-## ProcessingStats
+## ProcessingStatistics
 
 Processing result statistics.
 
@@ -56,11 +59,16 @@ Processing result statistics.
 | `totalReads` | `uint64_t` | Total input reads |
 | `passedReads` | `uint64_t` | Reads passed filter |
 | `filteredReads` | `uint64_t` | Reads filtered out |
+| `modifiedReads` | `uint64_t` | Reads trimmed or otherwise modified |
 | `errorReads` | `uint64_t` | Error reads |
 | `inputBytes` | `uint64_t` | Input bytes |
 | `outputBytes` | `uint64_t` | Output bytes |
 | `elapsedMs` | `uint64_t` | Total time (milliseconds) |
+| `processingTimeMs` | `double` | Processing time in milliseconds (floating-point) |
 | `throughputMbps` | `double` | Throughput (MB/s) |
+| `allocationTelemetryEnabled` | `bool` | Whether memory telemetry was enabled |
+| `memoryResourcePolicy` | `MemoryResourcePolicy` | Resolved memory policy |
+| `resolvedMaxInFlightBatches` | `size_t` | Resolved in-flight batch limit |
 
 ```cpp
 auto getPassRate() const -> double;
@@ -126,6 +134,7 @@ public:
 | `QualityTrimmer` | Quality trim (Both/FivePrime/ThreePrime modes) |
 | `LengthTrimmer` | Length trim (FixedLength/MaxLength/FromStart/FromEnd) |
 | `AdapterTrimmer` | Adapter trim |
+| `PolyTailTrimmer` | polyG / bounded polyX tail trimming |
 
 ```cpp
 pipeline->addReadMutator(
@@ -148,6 +157,7 @@ pipeline->setOutputPath("output.fastq");
 fq::processing::ProcessingConfig config;
 config.batchSize = 10000;
 config.threadCount = 4;
+config.executionBackend = fq::processing::ExecutionBackend::OneTbb;
 pipeline->setProcessingConfig(config);
 
 pipeline->addReadPredicate(
@@ -157,7 +167,10 @@ pipeline->addReadPredicate(
 pipeline->addReadMutator(
     std::make_unique<fq::processing::QualityTrimmer>(
         20.0, 50, fq::processing::QualityTrimmer::TrimMode::Both, 33));
+pipeline->addReadMutator(
+    std::make_unique<fq::processing::AdapterTrimmer>(
+        std::vector<std::string>{"AGATCGGAAGAGC"}, 6, 1));
 
 auto stats = pipeline->run();
-std::cout << stats.toString() << std::endl;
+std::cout << stats.toString() << "\n";
 ```

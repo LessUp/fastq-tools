@@ -24,7 +24,7 @@ public:
     virtual void setProcessingConfig(const ProcessingConfig& config) = 0;
     virtual void addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicate) = 0;
     virtual void addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator) = 0;
-    virtual auto run() -> ProcessingStats = 0;
+    virtual auto run() -> ProcessingStatistics = 0;
 };
 ```
 
@@ -38,6 +38,9 @@ public:
 |------|------|------|
 | `batchSize` | `size_t` | 每批 reads 数量 |
 | `threadCount` | `size_t` | 并行线程数 |
+| `executionBackend` | `ExecutionBackend` | 当前支持 `OneTbb` |
+| `memoryResourcePolicy` | `MemoryResourcePolicy` | 当前支持 `ObjectPool` |
+| `allocationTelemetryEnabled` | `bool` | 是否启用内存遥测 |
 | `readChunkBytes` | `size_t` | 读取块大小 |
 | `zlibBufferBytes` | `size_t` | zlib 缓冲区 |
 | `writerBufferBytes` | `size_t` | 写入缓冲区 |
@@ -47,7 +50,7 @@ public:
 
 ---
 
-## ProcessingStats
+## ProcessingStatistics
 
 处理结果统计。
 
@@ -56,11 +59,16 @@ public:
 | `totalReads` | `uint64_t` | 输入读段总数 |
 | `passedReads` | `uint64_t` | 通过过滤的读段数 |
 | `filteredReads` | `uint64_t` | 被过滤的读段数 |
+| `modifiedReads` | `uint64_t` | 被修剪或修改的读段数 |
 | `errorReads` | `uint64_t` | 错误读段数 |
 | `inputBytes` | `uint64_t` | 输入字节数 |
 | `outputBytes` | `uint64_t` | 输出字节数 |
 | `elapsedMs` | `uint64_t` | 总耗时（毫秒） |
+| `processingTimeMs` | `double` | 处理耗时（毫秒，浮点表示） |
 | `throughputMbps` | `double` | 吞吐量（MB/s） |
+| `allocationTelemetryEnabled` | `bool` | 是否启用内存遥测 |
+| `memoryResourcePolicy` | `MemoryResourcePolicy` | 解析后的内存策略 |
+| `resolvedMaxInFlightBatches` | `size_t` | 本次运行解析后的 in-flight 上限 |
 
 ```cpp
 auto getPassRate() const -> double;
@@ -126,6 +134,7 @@ public:
 | `QualityTrimmer` | 质量修剪（支持 Both/FivePrime/ThreePrime 模式） |
 | `LengthTrimmer` | 长度修剪（FixedLength/MaxLength/FromStart/FromEnd） |
 | `AdapterTrimmer` | 接头修剪 |
+| `PolyTailTrimmer` | polyG / bounded polyX 尾巴修剪 |
 
 ```cpp
 pipeline->addReadMutator(
@@ -148,6 +157,7 @@ pipeline->setOutputPath("output.fastq");
 fq::processing::ProcessingConfig config;
 config.batchSize = 10000;
 config.threadCount = 4;
+config.executionBackend = fq::processing::ExecutionBackend::OneTbb;
 pipeline->setProcessingConfig(config);
 
 pipeline->addReadPredicate(
@@ -157,7 +167,10 @@ pipeline->addReadPredicate(
 pipeline->addReadMutator(
     std::make_unique<fq::processing::QualityTrimmer>(
         20.0, 50, fq::processing::QualityTrimmer::TrimMode::Both, 33));
+pipeline->addReadMutator(
+    std::make_unique<fq::processing::AdapterTrimmer>(
+        std::vector<std::string>{"AGATCGGAAGAGC"}, 6, 1));
 
 auto stats = pipeline->run();
-std::cout << stats.toString() << std::endl;
+std::cout << stats.toString() << "\n";
 ```

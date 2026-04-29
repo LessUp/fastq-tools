@@ -111,7 +111,7 @@ python3 tools/data/gen_fastq.py -o test_data.fastq --reads 5000 --min-len 80 --m
 FastQTools stat -i test_data.fastq -o stats.txt --threads 4
 ```
 
-Output includes: total reads, length distribution, base composition (A/T/C/G/N), GC content, Q20/Q30 percentages, etc.
+Output includes: total reads, max read length, total bases, base composition (A/T/C/G/N), GC content, Q20/Q30 percentages, and per-position quality/error summaries.
 
 ### 3. Quality Filtering
 
