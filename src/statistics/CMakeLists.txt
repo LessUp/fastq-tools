@@ -2,6 +2,7 @@ add_library(fq_statistics STATIC
     factory.cpp
     fq_statistic.cpp
     fq_statistic_worker.cpp
+    statistics_writer.cpp
 )
 
 # fq_common PUBLIC 传递 include 路径，无需重复声明 PUBLIC include

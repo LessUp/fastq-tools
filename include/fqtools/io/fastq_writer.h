@@ -17,6 +17,7 @@
 #include <string>
 
 #include "fastq_io.h"
+#include "writer_interface.h"
 
 namespace fq::io {
 
@@ -56,7 +57,7 @@ struct FastqWriterOptions {
  * writer.write(batch);
  * @endcode
  */
-class FastqWriter {
+class FastqWriter : public IWriter {
 public:
     /**
      * @brief 构造写入器（默认选项）
@@ -85,11 +86,12 @@ public:
      * @brief 写入一批 FASTQ 记录
      * @param batch 要写入的记录批次
      */
-    void write(const FastqBatch& batch);
+    void write(const FastqBatch& batch) override;
 
     /**
      * @brief 写入单条 FASTQ 记录
      * @param record 要写入的单条记录
+     * @note 此方法不在 IWriter 接口中，为具体类额外提供
      */
     void write(const FastqRecord& record);
 

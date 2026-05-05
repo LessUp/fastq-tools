@@ -7,7 +7,7 @@
 #include <cxxopts.hpp>
 
 #include <fqtools/logging.h>
-#include <fqtools/statistics/statistic_calculator.h>
+#include <fqtools/statistics/statistic_calculator_interface.h>
 
 namespace fq::cli::commands {
 

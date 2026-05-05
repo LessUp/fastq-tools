@@ -13,17 +13,11 @@
 
 namespace fq::cli::commands {
 
+// FilterCommand 内部配置仅保存输入输出路径
+// 其他配置参数直接使用 fq::processing::ProcessingConfig
 struct FilterCommand::Config {
     std::string inputFile;
     std::string outputFile;
-    size_t threadCount = 1;
-    size_t batchSize = 10000;
-    size_t readChunkBytes = 1048576;
-    size_t batchCapacityBytes = 4194304;
-    size_t zlibBufferBytes = 131072;
-    size_t writerBufferBytes = 131072;
-    size_t maxInFlightBatches = 0;
-    size_t memoryLimitGb = 10;
 };
 
 // Use the factory in the constructor
@@ -112,14 +106,12 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     config_->inputFile = result["input"].as<std::string>();
     config_->outputFile = result["output"].as<std::string>();
 
-    config_->threadCount = result["threads"].as<size_t>();
-
     pipeline_->setInputPath(config_->inputFile);
     pipeline_->setOutputPath(config_->outputFile);
 
-    // Use the config from the interface
+    // 直接使用接口层配置结构体
     fq::processing::ProcessingConfig pipelineConfig;
-    pipelineConfig.threadCount = config_->threadCount;
+    pipelineConfig.threadCount = result["threads"].as<size_t>();
     pipelineConfig.batchSize = result["batch-size"].as<size_t>();
     pipelineConfig.readChunkBytes = result["read-chunk-bytes"].as<size_t>();
     pipelineConfig.batchCapacityBytes = result["batch-capacity-bytes"].as<size_t>();

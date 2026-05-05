@@ -16,6 +16,7 @@
 #include <string>
 
 #include "fastq_io.h"
+#include "reader_interface.h"
 
 namespace fq::io {
 
@@ -52,7 +53,7 @@ struct FastqReaderOptions {
  * }
  * @endcode
  */
-class FastqReader {
+class FastqReader : public IReader {
 public:
     /**
      * @brief 构造读取器（默认选项）
@@ -81,7 +82,7 @@ public:
      * @param batch 输出批次（会被清空后填充）
      * @return 是否成功读取到数据（false 表示文件结束或错误）
      */
-    [[nodiscard]] auto nextBatch(FastqBatch& batch) -> bool;
+    [[nodiscard]] auto nextBatch(FastqBatch& batch) -> bool override;
 
     /**
      * @brief 读取下一批 FASTQ 记录（限制记录数）

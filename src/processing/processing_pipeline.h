@@ -1,19 +1,5 @@
 #pragma once
 
-/**
- * @file processing_pipeline.h
- * @brief FastQ 数据处理管道实现
- * @details 该模块实现了 FastQ 文件的读取、处理和写入功能，支持多种数据处理策略
- *
- * @author FastQTools Team
- * @date 2024
- * @version 1.0
- *
- * @copyright Copyright (c) 2024 FastQTools
- * @license MIT License
- */
-
-#include "fqtools/io/fastq_io.h"
 #include "fqtools/processing/processing_pipeline_interface.h"
 
 #include <atomic>
@@ -60,10 +46,10 @@ public:
      * @brief 设置输入文件路径
      * @details 指定要处理的 FastQ 文件路径
      *
-     * @param input_path 输入文件路径
-     * @pre input_path 必须指向有效的 FastQ 文件
+     * @param inputPath 输入文件路径
+     * @pre inputPath 必须指向有效的 FastQ 文件
      * @post 输入路径被设置，但文件不会立即打开
-     * @throw std::invalid_argument 如果路径为空
+     * @note 如果已通过 setReader 设置了自定义 Reader，此路径可能被忽略
      */
     void setInputPath(const std::string& inputPath) override;
 
@@ -71,12 +57,30 @@ public:
      * @brief 设置输出文件路径
      * @details 指定处理结果的输出文件路径
      *
-     * @param output_path 输出文件路径
-     * @pre output_path 必须是有效的文件路径
+     * @param outputPath 输出文件路径
+     * @pre outputPath 必须是有效的文件路径
      * @post 输出路径被设置，但文件不会立即创建
-     * @throw std::invalid_argument 如果路径为空
+     * @note 如果已通过 setWriter 设置了自定义 Writer，此路径可能被忽略
      */
     void setOutputPath(const std::string& outputPath) override;
+
+    /**
+     * @brief 设置自定义 Reader
+     * @details 注入自定义的 FASTQ 读取器，用于测试或特殊数据源
+     *
+     * @param reader FASTQ 读取器实例
+     * @post 使用注入的 reader 替代默认的文件读取器
+     */
+    void setReader(std::unique_ptr<fq::io::IReader> reader) override;
+
+    /**
+     * @brief 设置自定义 Writer
+     * @details 注入自定义的 FASTQ 写入器，用于测试或特殊输出目标
+     *
+     * @param writer FASTQ 写入器实例
+     * @post 使用注入的 writer 替代默认的文件写入器
+     */
+    void setWriter(std::unique_ptr<fq::io::IWriter> writer) override;
 
     /**
      * @brief 设置处理配置
@@ -164,6 +168,8 @@ private:
     ProcessingConfig config_;                                          ///< 处理配置
     std::vector<std::unique_ptr<ReadMutatorInterface>> mutators_;      ///< 数据修改器列表
     std::vector<std::unique_ptr<ReadPredicateInterface>> predicates_;  ///< 数据过滤器列表
+    std::unique_ptr<fq::io::IReader> customReader_;  ///< 自定义读取器（测试用）
+    std::unique_ptr<fq::io::IWriter> customWriter_;  ///< 自定义写入器（测试用）
 };
 
 }  // namespace fq::processing

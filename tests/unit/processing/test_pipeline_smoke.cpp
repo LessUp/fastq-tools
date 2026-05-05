@@ -1,7 +1,7 @@
 #include "fqtools/io/fastq_io.h"
 #include "fqtools/processing/mutators.h"
 #include "fqtools/processing/predicates.h"
-#include "fqtools/processing/processing_pipeline.h"
+#include "fqtools/processing/processing_pipeline_interface.h"
 #include "fqtools/statistics/statistic_calculator_interface.h"
 
 #include <gtest/gtest.h>

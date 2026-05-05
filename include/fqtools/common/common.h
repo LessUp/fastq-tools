@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <string>
@@ -202,5 +203,38 @@ void printSoftwareInfo();
  * @brief 打印 FastQTools 的 ASCII Logo。
  */
 void printLogo();
+
+/**
+ * @brief 根据配置参数计算最大并行批次数量
+ * @details 用于 TBB pipeline 的 max_number_of_live_tokens 参数，
+ *          控制内存使用和并行度的平衡。
+ *
+ * @param configuredMaxInFlightBatches 用户配置的最大批次数（0 表示自动计算）
+ * @param memoryLimitBytes 内存限制（字节，0 表示无限制）
+ * @param batchCapacityBytes 每个批次的容量（字节）
+ * @param threadCount 线程数量
+ * @return 计算后的最大并行批次数，至少为 1
+ *
+ * @note 计算逻辑：
+ *       1. 如果用户指定了值，优先使用用户值
+ *       2. 否则基于线程数计算（threadCount * 2，最小 4）
+ *       3. 如果有内存限制，进一步约束为内存的 70% / 批次大小
+ */
+[[nodiscard]] inline auto resolveMaxInFlightBatches(size_t configuredMaxInFlightBatches,
+                                                    size_t memoryLimitBytes,
+                                                    size_t batchCapacityBytes,
+                                                    size_t threadCount) -> size_t {
+    size_t maxTokens = std::max(static_cast<size_t>(4), threadCount * 2);
+    if (configuredMaxInFlightBatches > 0) {
+        maxTokens = configuredMaxInFlightBatches;
+    }
+    if (memoryLimitBytes > 0 && batchCapacityBytes > 0) {
+        const size_t cap = (memoryLimitBytes * 7 / 10) / batchCapacityBytes;
+        if (cap > 0) {
+            maxTokens = std::min(maxTokens, cap);
+        }
+    }
+    return std::max(static_cast<size_t>(1), maxTokens);
+}
 
 }  // namespace fq::common

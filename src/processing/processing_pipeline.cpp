@@ -1,5 +1,6 @@
 #include "processing/processing_pipeline.h"
 
+#include "fqtools/common/common.h"
 #include "fqtools/io/fastq_batch_pool.h"
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/io/fastq_writer.h"
@@ -17,22 +18,8 @@ namespace fq::processing {
 
 namespace {
 
-auto resolveMaxInFlightBatches(size_t configuredMaxInFlightBatches,
-                               size_t memoryLimitBytes,
-                               size_t batchCapacityBytes,
-                               size_t threadCount) -> size_t {
-    size_t maxTokens = std::max(static_cast<size_t>(4), threadCount * 2);
-    if (configuredMaxInFlightBatches > 0) {
-        maxTokens = configuredMaxInFlightBatches;
-    }
-    if (memoryLimitBytes > 0 && batchCapacityBytes > 0) {
-        const size_t cap = (memoryLimitBytes * 7 / 10) / batchCapacityBytes;
-        if (cap > 0) {
-            maxTokens = std::min(maxTokens, cap);
-        }
-    }
-    return std::max(static_cast<size_t>(1), maxTokens);
-}
+// 保留原有函数名作为别名，便于后续迁移
+using fq::common::resolveMaxInFlightBatches;
 
 }  // namespace
 
@@ -45,6 +32,15 @@ void ProcessingPipeline::setInputPath(const std::string& inputPath) {
 void ProcessingPipeline::setOutputPath(const std::string& outputPath) {
     outputPath_ = outputPath;
 }
+
+void ProcessingPipeline::setReader(std::unique_ptr<fq::io::IReader> reader) {
+    customReader_ = std::move(reader);
+}
+
+void ProcessingPipeline::setWriter(std::unique_ptr<fq::io::IWriter> writer) {
+    customWriter_ = std::move(writer);
+}
+
 void ProcessingPipeline::setProcessingConfig(const ProcessingConfig& config) {
     config_ = config;
 }
@@ -56,6 +52,12 @@ void ProcessingPipeline::addReadPredicate(std::unique_ptr<ReadPredicateInterface
 }
 
 auto ProcessingPipeline::run() -> ProcessingStatistics {
+    // 如果设置了自定义 Reader/Writer，强制使用串行模式
+    // TBB 并行模式需要更复杂的接口适配
+    if (customReader_ || customWriter_) {
+        return processSequential();
+    }
+
     switch (config_.executionBackend) {
         case ExecutionBackend::OneTbb:
             if (config_.threadCount > 1) {
@@ -74,31 +76,45 @@ auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
     stats.resolvedMaxInFlightBatches = 1;
 
     try {
-        fq::io::FastqReaderOptions readerOptions;
-        readerOptions.readChunkBytes = config_.readChunkBytes;
-        readerOptions.zlibBufferBytes = config_.zlibBufferBytes;
-        readerOptions.maxBufferBytes = config_.batchCapacityBytes;
+        // 创建或使用自定义 Reader
+        std::unique_ptr<fq::io::FastqReader> fileReader;
+        fq::io::IReader* reader = customReader_.get();
 
-        fq::io::FastqReader reader(inputPath_, readerOptions);
-        if (!reader.isOpen()) {
-            throw std::runtime_error("Failed to open input file: " + inputPath_);
+        if (!reader) {
+            fq::io::FastqReaderOptions readerOptions;
+            readerOptions.readChunkBytes = config_.readChunkBytes;
+            readerOptions.zlibBufferBytes = config_.zlibBufferBytes;
+            readerOptions.maxBufferBytes = config_.batchCapacityBytes;
+
+            fileReader = std::make_unique<fq::io::FastqReader>(inputPath_, readerOptions);
+            if (!fileReader->isOpen()) {
+                throw std::runtime_error("Failed to open input file: " + inputPath_);
+            }
+            reader = fileReader.get();
         }
 
-        fq::io::FastqWriterOptions writerOptions;
-        writerOptions.zlibBufferBytes = config_.zlibBufferBytes;
-        writerOptions.outputBufferBytes = config_.writerBufferBytes;
+        // 创建或使用自定义 Writer
+        std::unique_ptr<fq::io::FastqWriter> fileWriter;
+        fq::io::IWriter* writer = customWriter_.get();
 
-        fq::io::FastqWriter writer(outputPath_, writerOptions);
-        if (!writer.isOpen()) {
-            throw std::runtime_error("Failed to open output file: " + outputPath_);
+        if (!writer) {
+            fq::io::FastqWriterOptions writerOptions;
+            writerOptions.zlibBufferBytes = config_.zlibBufferBytes;
+            writerOptions.outputBufferBytes = config_.writerBufferBytes;
+
+            fileWriter = std::make_unique<fq::io::FastqWriter>(outputPath_, writerOptions);
+            if (!fileWriter->isOpen()) {
+                throw std::runtime_error("Failed to open output file: " + outputPath_);
+            }
+            writer = fileWriter.get();
         }
 
         fq::io::FastqBatch batch(config_.batchCapacityBytes, config_.batchSize);
         auto startTime = std::chrono::steady_clock::now();
 
-        while (reader.nextBatch(batch, config_.batchSize)) {
+        while (reader->nextBatch(batch)) {
             processBatch(batch, stats);
-            writer.write(batch);
+            writer->write(batch);
         }
 
         auto endTime = std::chrono::steady_clock::now();
@@ -106,7 +122,10 @@ auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
             std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
         stats.elapsedMs = static_cast<uint64_t>(duration);
         stats.processingTimeMs = static_cast<double>(stats.elapsedMs);
-        stats.outputBytes = writer.totalUncompressedBytes();
+        // 注意：自定义 writer 可能没有 totalUncompressedBytes 方法
+        if (fileWriter) {
+            stats.outputBytes = fileWriter->totalUncompressedBytes();
+        }
         if (stats.elapsedMs > 0) {
             stats.throughputMbps = (static_cast<double>(stats.outputBytes) / 1024.0 / 1024.0) /
                 (static_cast<double>(stats.elapsedMs) / 1000.0);

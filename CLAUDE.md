@@ -71,6 +71,20 @@
 - `src/cli/commands/`：`stat` / `filter` 子命令实现。
 - 热路径中避免破坏 `string_view` 生命周期或引入串行瓶颈。
 
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues. Uses `gh` CLI for issue operations. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Uses default triage label vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout. Domain language in `CONTEXT.md` (to be created), ADRs in `openspec/baseline/architecture/`. See `docs/agents/domain.md`.
+
 ## 相关文档
 
 - [AGENTS.md](AGENTS.md) — 主 Agent 规则文件

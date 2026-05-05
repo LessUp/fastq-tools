@@ -10,9 +10,11 @@
 
 #include "statistics/fq_statistic.h"
 
+#include "fqtools/common/common.h"
 #include "fqtools/io/fastq_batch_pool.h"
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/logging.h"
+#include "fqtools/statistics/statistics_writer.h"
 
 #include <algorithm>
 #include <cmath>
@@ -32,50 +34,8 @@ namespace fq::statistic {
 
 namespace {
 
-auto resolveMaxInFlightBatches(size_t configuredMaxInFlightBatches,
-                               size_t memoryLimitBytes,
-                               size_t batchCapacityBytes,
-                               size_t threadCount) -> size_t {
-    size_t maxTokens = std::max(static_cast<size_t>(1), threadCount * 2);
-    if (configuredMaxInFlightBatches > 0) {
-        maxTokens = configuredMaxInFlightBatches;
-    }
-    if (memoryLimitBytes > 0 && batchCapacityBytes > 0) {
-        const size_t cap = (memoryLimitBytes * 7 / 10) / batchCapacityBytes;
-        if (cap > 0) {
-            maxTokens = std::min(maxTokens, cap);
-        }
-    }
-    return std::max(static_cast<size_t>(1), maxTokens);
-}
-
-auto memoryPolicyName(fq::processing::MemoryResourcePolicy policy) -> const char* {
-    switch (policy) {
-        case fq::processing::MemoryResourcePolicy::ObjectPool:
-            return "objectPool";
-    }
-
-    return "unknown";
-}
-
-auto sortedTopEntries(const std::map<std::string, uint64_t>& counts,
-                      size_t limit) -> std::vector<std::pair<std::string, uint64_t>> {
-    std::vector<std::pair<std::string, uint64_t>> entries(counts.begin(), counts.end());
-    std::sort(entries.begin(), entries.end(), [](const auto& lhs, const auto& rhs) {
-        if (lhs.second != rhs.second) {
-            return lhs.second > rhs.second;
-        }
-        return lhs.first < rhs.first;
-    });
-    if (entries.size() > limit) {
-        entries.resize(limit);
-    }
-    return entries;
-}
-
-auto estimateDuplicates(uint64_t duplicateSampledReads, size_t sampleModulo) -> uint64_t {
-    return duplicateSampledReads * std::max<size_t>(1, sampleModulo);
-}
+// 使用共享的 resolveMaxInFlightBatches 函数
+using fq::common::resolveMaxInFlightBatches;
 
 }  // namespace
 
@@ -241,107 +201,21 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
                                  options_.outputStatPath);
     }
 
-    writer << std::fixed << std::setprecision(2);
+    StatisticsWriterOptions writerOptions;
+    writerOptions.inputFastqPath = options_.inputFastqPath;
+    writerOptions.qualityEncoding = options_.qualityEncoding;
+    writerOptions.duplicateEstimateSampleModulo = options_.duplicateEstimateSampleModulo;
+    writerOptions.allocationTelemetryEnabled = options_.allocationTelemetryEnabled;
+    writerOptions.memoryResourcePolicy = options_.memoryResourcePolicy;
+    writerOptions.maxInFlightBatches = options_.maxInFlightBatches;
+    writerOptions.memoryLimitBytes = options_.memoryLimitBytes;
+    writerOptions.batchCapacityBytes = options_.batchCapacityBytes;
+    writerOptions.threadCount = options_.threadCount;
+    writerOptions.signatureReportPath = options_.signatureReportPath;
+    writerOptions.maxReportedSignatures = options_.maxReportedSignatures;
 
-    if (result.readCount == 0) {
-        fq::logging::warn("No reads found in input file.");
-        return;
-    }
-
-    std::string fqName = std::filesystem::path(options_.inputFastqPath).filename().string();
-
-    // Infer info for header
-    // Since we removed FileAttributes, we just output what we know.
-    // QScoreType defaults to Sanger (33)
-
-    writer << "#Name\t" << fqName << "\n";
-    writer << "#PhredQual\t" << options_.qualityEncoding << "\n";
-    writer << "#ReadNum\t" << result.readCount << "\n";
-    const auto duplicateEstimate =
-        estimateDuplicates(result.duplicateSampledReads, options_.duplicateEstimateSampleModulo);
-    writer << "#DuplicateEstimate\t" << duplicateEstimate << "\n";
-    writer << "#DuplicateEstimateRate\t"
-           << 100.0 * static_cast<double>(duplicateEstimate) / static_cast<double>(result.readCount)
-           << "%\n";
-    if (options_.allocationTelemetryEnabled) {
-        writer << "#MemoryPolicy\t" << memoryPolicyName(options_.memoryResourcePolicy) << "\n";
-        writer << "#MaxInFlightBatches\t"
-               << resolveMaxInFlightBatches(
-                      options_.maxInFlightBatches,
-                      options_.memoryLimitBytes,
-                      options_.batchCapacityBytes,
-                      std::max<size_t>(1, static_cast<size_t>(options_.threadCount)))
-               << "\n";
-    }
-    writer << "#MaxReadLength\t" << result.maxReadLength << "\n";  // Changed from fixed ReadLength
-    writer << "#BaseCount\t" << result.totalBases << "\n";
-
-    constexpr int kQ20Threshold = 20;
-    constexpr int kQ30Threshold = 30;
-    uint64_t nQ20 = 0, nQ30 = 0;
-    uint64_t nA = 0, nC = 0, nG = 0, nT = 0, nN = 0;
-
-    // Iterate up to maxReadLength（扁平化布局：使用 qualityAt/baseAt 访问器）
-    for (size_t i = 0; i < result.maxReadLength; ++i) {
-        const uint64_t* qSlot = result.qualityAt(i);
-        const uint64_t* bSlot = result.baseAt(i);
-
-        for (int j = kQ20Threshold; j < kMaxQual; ++j) {
-            nQ20 += qSlot[j];
-        }
-        for (int j = kQ30Threshold; j < kMaxQual; ++j) {
-            nQ30 += qSlot[j];
-        }
-
-        nA += bSlot[0];
-        nC += bSlot[1];
-        nG += bSlot[2];
-        nT += bSlot[3];
-        nN += bSlot[4];
-    }
-
-    writer << "#Q20(>=20)\t" << nQ20 << "\t"
-           << 100.0 * static_cast<double>(nQ20) / static_cast<double>(result.totalBases) << "%\n";
-    writer << "#Q30(>=30)\t" << nQ30 << "\t"
-           << 100.0 * static_cast<double>(nQ30) / static_cast<double>(result.totalBases) << "%\n";
-    writer << "#A\t" << nA << "\t"
-           << 100.0 * static_cast<double>(nA) / static_cast<double>(result.totalBases) << "%\n";
-    writer << "#C\t" << nC << "\t"
-           << 100.0 * static_cast<double>(nC) / static_cast<double>(result.totalBases) << "%\n";
-    writer << "#G\t" << nG << "\t"
-           << 100.0 * static_cast<double>(nG) / static_cast<double>(result.totalBases) << "%\n";
-    writer << "#T\t" << nT << "\t"
-           << 100.0 * static_cast<double>(nT) / static_cast<double>(result.totalBases) << "%\n";
-    writer << "#N\t" << nN << "\t"
-           << 100.0 * static_cast<double>(nN) / static_cast<double>(result.totalBases) << "%\n";
-    writer << "#GC\t" << nG + nC << "\t"
-           << 100.0 * static_cast<double>(nG + nC) / static_cast<double>(result.totalBases)
-           << "%\n";
-
-    writer << "#Pos\tA\tC\tG\tT\tN\tAvgQual\tErrRate\n";
-    for (size_t i = 0; i < result.maxReadLength; ++i) {
-        const uint64_t* bSlot = result.baseAt(i);
-        const uint64_t* qSlot = result.qualityAt(i);
-
-        writer << i + 1 << "\t";
-        writer << bSlot[0] << "\t" << bSlot[1] << "\t" << bSlot[2] << "\t" << bSlot[3] << "\t"
-               << bSlot[4] << "\t";
-
-        uint64_t sumQual = 0;
-        uint64_t countReadsAtPos = 0;
-
-        for (int j = 0; j < kMaxQual; ++j) {
-            sumQual += qSlot[j] * j;
-            countReadsAtPos += qSlot[j];
-        }
-
-        if (countReadsAtPos > 0) {
-            writer << static_cast<double>(sumQual) / static_cast<double>(countReadsAtPos) << "\t";
-            writer << calculateErrorPerPosition(qSlot, countReadsAtPos) << "\n";
-        } else {
-            writer << "0.0\t0.0\n";
-        }
-    }
+    StatisticsWriter statsWriter(writerOptions);
+    statsWriter.write(writer, result);
 
     if (!options_.signatureReportPath.empty()) {
         writeSignatureSidecar(result);
@@ -355,17 +229,12 @@ void FastqStatisticCalculator::writeSignatureSidecar(const FqStatisticResult& re
                                  options_.signatureReportPath);
     }
 
-    writer << "metric\tkey\tcount\n";
-    writer << "summary\ttotal_reads\t" << result.readCount << "\n";
-    writer << "summary\tduplicate_estimate\t"
-           << estimateDuplicates(result.duplicateSampledReads,
-                                 options_.duplicateEstimateSampleModulo)
-           << "\n";
+    StatisticsWriterOptions writerOptions;
+    writerOptions.duplicateEstimateSampleModulo = options_.duplicateEstimateSampleModulo;
+    writerOptions.maxReportedSignatures = options_.maxReportedSignatures;
 
-    for (const auto& [kmer, count] :
-         sortedTopEntries(result.headKmerCounts, options_.maxReportedSignatures)) {
-        writer << "head_kmer\t" << kmer << "\t" << count << "\n";
-    }
+    StatisticsWriter statsWriter(writerOptions);
+    statsWriter.writeSignature(writer, result);
 }
 
 }  // namespace fq::statistic
