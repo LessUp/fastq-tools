@@ -94,18 +94,18 @@
 
 ## Acceptance Criteria (evolving)
 
-- [ ] 代码库干净（无未提交改动）
-- [ ] openspec/changes/ 下无滞留提案
-- [ ] 文档精简且无冗余
-- [ ] CI/CD 运行正常
-- [ ] 测试全部通过
+- [x] 代码库干净（无未提交改动）
+- [x] openspec/changes/ 下无滞留提案
+- [x] 文档精简且无冗余
+- [x] CI/CD 运行正常
+- [x] 测试全部通过
 
 ## Definition of Done
 
-- Tests added/updated (unit/integration where appropriate)
-- Lint / typecheck / CI green
-- Docs/notes updated if behavior changes
-- All changes committed and pushed to master
+- [x] Tests added/updated (unit/integration where appropriate)
+- [x] Lint / typecheck / CI green
+- [x] Docs/notes updated if behavior changes
+- [x] All changes committed and pushed to master
 
 ## Out of Scope (explicit)
 
