@@ -35,6 +35,7 @@ public:
              Reduce&& reduce,
              AfterCommit&& afterCommit,
              Final initial) -> Final {
+        plan.options.validate();
         fq::io::FastqBatch batch;
         Final finalResult = std::move(initial);
         while (adapter_->nextBatch(batch, plan.options.batchSize)) {

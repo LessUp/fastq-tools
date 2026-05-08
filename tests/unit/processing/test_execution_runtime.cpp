@@ -41,7 +41,6 @@ private:
 TEST(ExecutionRuntimeTest, DeterministicAdapterVisitsBatchesInOrder) {
     auto adapter = std::make_unique<DeterministicAdapter>(
         std::vector<fq::io::FastqBatch>{makeBatch("read1", "ACGT"), makeBatch("read2", "TTTT")});
-    auto* adapterPtr = adapter.get();
     ExecutionRuntime runtime(std::move(adapter));
 
     ExecutionRuntimePlan plan;
@@ -86,6 +85,74 @@ TEST(ExecutionRuntimeTest, ForwardsBatchSizeToAdapter) {
 
 TEST(ExecutionRuntimeTest, RequiresNonNullAdapter) {
     EXPECT_THROW(ExecutionRuntime runtime(nullptr), std::invalid_argument);
+}
+
+TEST(ExecutionRuntimeTest, ValidatesProcessingOptionsBeforeRun) {
+    auto adapter = std::make_unique<DeterministicAdapter>(
+        std::vector<fq::io::FastqBatch>{makeBatch("read1", "ACGT")});
+    ExecutionRuntime runtime(std::move(adapter));
+
+    ExecutionRuntimePlan plan;
+    plan.options.batchSize = 0;  // Invalid: batchSize must be > 0
+    plan.options.threadCount = 1;
+
+    EXPECT_THROW(
+        runtime.run<size_t>(
+            plan,
+            [](fq::io::FastqBatch&) { return size_t{1}; },
+            [](size_t& total, size_t partial) { total += partial; },
+            [](size_t&, std::uint64_t) {},
+            size_t{0}),
+        std::invalid_argument);
+}
+
+TEST(ExecutionRuntimeTest, ValidatesThreadCountBeforeRun) {
+    auto adapter = std::make_unique<DeterministicAdapter>(
+        std::vector<fq::io::FastqBatch>{makeBatch("read1", "ACGT")});
+    ExecutionRuntime runtime(std::move(adapter));
+
+    ExecutionRuntimePlan plan;
+    plan.options.batchSize = 100;
+    plan.options.threadCount = 0;  // Invalid: threadCount must be > 0
+
+    EXPECT_THROW(
+        runtime.run<size_t>(
+            plan,
+            [](fq::io::FastqBatch&) { return size_t{1}; },
+            [](size_t& total, size_t partial) { total += partial; },
+            [](size_t&, std::uint64_t) {},
+            size_t{0}),
+        std::invalid_argument);
+}
+
+TEST(ExecutionRuntimeTest, CallbackSequencingIsCorrect) {
+    auto adapter = std::make_unique<DeterministicAdapter>(
+        std::vector<fq::io::FastqBatch>{makeBatch("read1", "ACGT"), makeBatch("read2", "TTTT")});
+    ExecutionRuntime runtime(std::move(adapter));
+
+    ExecutionRuntimePlan plan;
+    plan.options.batchSize = 1;
+    plan.options.threadCount = 1;
+
+    std::vector<std::string> callOrder;
+
+    runtime.run<size_t>(
+        plan,
+        [&](fq::io::FastqBatch&) {
+            callOrder.push_back("batchWork");
+            return size_t{1};
+        },
+        [&](size_t& total, size_t partial) {
+            callOrder.push_back("reduce");
+            total += partial;
+        },
+        [&](size_t&, std::uint64_t) { callOrder.push_back("afterCommit"); },
+        size_t{0});
+
+    // Expected order per batch: batchWork -> commit (implicit) -> afterCommit -> reduce
+    EXPECT_THAT(callOrder,
+                ::testing::ElementsAre("batchWork", "afterCommit", "reduce", "batchWork",
+                                       "afterCommit", "reduce"));
 }
 
 }  // namespace fq::processing
