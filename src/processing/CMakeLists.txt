@@ -1,4 +1,5 @@
 add_library(fq_processing STATIC
+    execution_runtime.cpp
     factory.cpp
     internal_config.cpp
     pipeline_execution_plan.cpp
