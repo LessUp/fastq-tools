@@ -5,14 +5,13 @@
  *
  * @author FastQTools Team
  * @date 2026
- * @version 1.0
+ * @version 2.0
  * @copyright Copyright (c) 2026 FastQTools
  * @license MIT License
  */
 
 #pragma once
 
-#include "fqtools/processing/memory_resource_policy.h"
 #include "fqtools/statistics/statistic_interface.h"
 
 #include <cstdint>
@@ -30,15 +29,8 @@ struct StatisticsWriterOptions {
     std::string inputFastqPath;                   ///< 输入文件路径（用于报告头）
     int qualityEncoding = 33;                     ///< 质量编码偏移
     size_t duplicateEstimateSampleModulo = 1024;  ///< 重复估计采样模数
-    bool allocationTelemetryEnabled = false;      ///< 是否显示内存遥测
-    fq::processing::MemoryResourcePolicy memoryResourcePolicy =
-        fq::processing::MemoryResourcePolicy::ObjectPool;
-    size_t maxInFlightBatches = 0;
-    size_t memoryLimitBytes = 0;
-    size_t batchCapacityBytes = 0;
-    uint32_t threadCount = 1;
-    std::string signatureReportPath;    ///< 签名报告路径（空则不生成）
-    size_t maxReportedSignatures = 20;  ///< 最大报告签名数
+    std::string signatureReportPath;              ///< 签名报告路径（空则不生成）
+    size_t maxReportedSignatures = 20;            ///< 最大报告签名数
 };
 
 /**

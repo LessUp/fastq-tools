@@ -1,10 +1,3 @@
-#pragma once
-
-#include "fqtools/io/reader_interface.h"
-#include "fqtools/io/writer_interface.h"
-#include "fqtools/processing/execution_backend.h"
-#include "fqtools/processing/memory_resource_policy.h"
-
 /**
  * @file processing_pipeline_interface.h
  * @brief 处理管道接口定义
@@ -12,20 +5,24 @@
  *          实现了命令行层与具体实现之间的解耦
  *
  * @author FastQTools Team
- * @date 2024
- * @version 1.0
+ * @date 2026
+ * @version 2.0
  *
- * @copyright Copyright (c) 2024 FastQTools
+ * @copyright Copyright (c) 2026 FastQTools
  * @license MIT License
  */
 
+#pragma once
+
+#include "fqtools/io/reader_interface.h"
+#include "fqtools/io/writer_interface.h"
+#include "fqtools/processing/processing_options.h"
 #include "fqtools/processing/read_mutator_interface.h"
 #include "fqtools/processing/read_predicate_interface.h"
 
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <vector>
 
 namespace fq::processing {
 
@@ -44,41 +41,28 @@ struct ProcessingStatistics {
     uint64_t elapsedMs = 0;         ///< 处理时间（毫秒）
     double processingTimeMs = 0.0;  ///< 处理时间（毫秒，浮点数，保留兼容）
     double throughputMbps = 0.0;    ///< 吞吐量（MB/s）
-    bool allocationTelemetryEnabled = false;  ///< 是否启用内存遥测
-    MemoryResourcePolicy memoryResourcePolicy = MemoryResourcePolicy::ObjectPool;  ///< 内存资源策略
-    size_t resolvedMaxInFlightBatches = 0;  ///< 本次运行解析后的 in-flight 上限
 
+    /**
+     * @brief 获取通过率
+     * @return 通过率（0.0 ~ 1.0）
+     */
     [[nodiscard]] auto getPassRate() const -> double {
         return totalReads > 0 ? static_cast<double>(passedReads) / totalReads : 0.0;
     }
 
+    /**
+     * @brief 获取过滤率
+     * @return 过滤率（0.0 ~ 1.0）
+     */
     [[nodiscard]] auto getFilterRate() const -> double {
         return totalReads > 0 ? static_cast<double>(filteredReads) / totalReads : 0.0;
     }
 
+    /**
+     * @brief 转换为字符串表示
+     * @return 统计信息的可读字符串
+     */
     [[nodiscard]] auto toString() const -> std::string;
-};
-
-/**
- * @brief 处理管道配置结构体
- * @details 定义处理管道的各项配置参数，在接口级别定义以实现客户端解耦
- *          该配置包含了批处理大小和线程数等关键性能参数
- *
- * @note 所有参数都有合理的默认值
- */
-struct ProcessingConfig {
-    size_t batchSize = 10000;  ///< 批处理大小（每个批次的读取数量）
-    size_t threadCount = 1;    ///< 线程数量（1表示串行处理）
-    ExecutionBackend executionBackend = ExecutionBackend::OneTbb;                  ///< 执行后端
-    MemoryResourcePolicy memoryResourcePolicy = MemoryResourcePolicy::ObjectPool;  ///< 内存资源策略
-    bool allocationTelemetryEnabled = false;  ///< 是否启用内存遥测
-
-    size_t readChunkBytes = 1 * 1024 * 1024;
-    size_t zlibBufferBytes = 128 * 1024;
-    size_t writerBufferBytes = 128 * 1024;
-    size_t batchCapacityBytes = 4 * 1024 * 1024;
-    size_t memoryLimitBytes = 0;
-    size_t maxInFlightBatches = 0;
 };
 
 /**
@@ -141,15 +125,15 @@ public:
     virtual void setWriter(std::unique_ptr<fq::io::IWriter> writer) = 0;
 
     /**
-     * @brief 设置处理配置
-     * @details 配置处理参数，包括批处理大小和线程数等
+     * @brief 设置处理选项
+     * @details 配置处理参数，包括批处理大小、线程数和性能预设
      *
-     * @param config 处理配置结构体
-     * @pre config 必须包含有效的配置参数
+     * @param options 处理选项结构体
+     * @pre options 必须包含有效的配置参数
      * @post 配置被应用到处理管道
      * @throw std::invalid_argument 如果配置参数无效
      */
-    virtual void setProcessingConfig(const ProcessingConfig& config) = 0;
+    virtual void setProcessingOptions(const ProcessingOptions& options) = 0;
 
     /**
      * @brief 添加数据修改器

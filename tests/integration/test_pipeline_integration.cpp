@@ -32,11 +32,10 @@ TEST_F(PipelineIntegrationTest, ReaderPipelineWriterPreservesCustomPlusLine) {
     pipeline->setInputPath(input.string());
     pipeline->setOutputPath(output.string());
 
-    fq::processing::ProcessingConfig config;
-    config.threadCount = 1;
-    config.batchSize = 2;
-    config.batchCapacityBytes = 1024;
-    pipeline->setProcessingConfig(config);
+    fq::processing::ProcessingOptions options;
+    options.threadCount = 1;
+    options.batchSize = 2;
+    pipeline->setProcessingOptions(options);
 
     const auto stats = pipeline->run();
 
@@ -63,8 +62,8 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorWritesConfiguredPhredHeader) 
     fq::statistic::StatisticOptions options;
     options.inputFastqPath = input.string();
     options.outputStatPath = output.string();
-    options.batchSize = 1;
-    options.threadCount = 1;
+    options.processing.batchSize = 1;
+    options.processing.threadCount = 1;
     options.qualityEncoding = 64;
 
     auto calculator = fq::statistic::createStatisticCalculator(options);
@@ -75,7 +74,7 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorWritesConfiguredPhredHeader) 
     EXPECT_NE(content.find("#ReadNum\t1\n"), std::string::npos);
 }
 
-TEST_F(PipelineIntegrationTest, PipelineRunsWithExplicitOneTbbBackend) {
+TEST_F(PipelineIntegrationTest, PipelineRunsWithMultipleThreads) {
     const auto input = tempDir_.path() / "input.fastq";
     const auto output = tempDir_.path() / "output.fastq";
 
@@ -95,12 +94,10 @@ TEST_F(PipelineIntegrationTest, PipelineRunsWithExplicitOneTbbBackend) {
     pipeline->setInputPath(input.string());
     pipeline->setOutputPath(output.string());
 
-    fq::processing::ProcessingConfig config;
-    config.threadCount = 2;
-    config.batchSize = 1;
-    config.batchCapacityBytes = 1024;
-    config.executionBackend = fq::processing::ExecutionBackend::OneTbb;
-    pipeline->setProcessingConfig(config);
+    fq::processing::ProcessingOptions options;
+    options.threadCount = 2;
+    options.batchSize = 1;
+    pipeline->setProcessingOptions(options);
 
     const auto stats = pipeline->run();
 
@@ -109,7 +106,7 @@ TEST_F(PipelineIntegrationTest, PipelineRunsWithExplicitOneTbbBackend) {
     EXPECT_TRUE(std::filesystem::exists(output));
 }
 
-TEST_F(PipelineIntegrationTest, StatisticCalculatorRunsWithExplicitOneTbbBackend) {
+TEST_F(PipelineIntegrationTest, StatisticCalculatorRunsWithMultipleThreads) {
     const auto input = tempDir_.path() / "input.fastq";
     const auto output = tempDir_.path() / "stats.txt";
 
@@ -128,9 +125,8 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorRunsWithExplicitOneTbbBackend
     fq::statistic::StatisticOptions options;
     options.inputFastqPath = input.string();
     options.outputStatPath = output.string();
-    options.batchSize = 1;
-    options.threadCount = 2;
-    options.executionBackend = fq::processing::ExecutionBackend::OneTbb;
+    options.processing.batchSize = 1;
+    options.processing.threadCount = 2;
 
     auto calculator = fq::statistic::createStatisticCalculator(options);
     calculator->run();
@@ -139,7 +135,7 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorRunsWithExplicitOneTbbBackend
     EXPECT_NE(content.find("#ReadNum\t2\n"), std::string::npos);
 }
 
-TEST_F(PipelineIntegrationTest, PipelineReportsMemoryTelemetryWhenEnabled) {
+TEST_F(PipelineIntegrationTest, PipelineRunsInLowMemoryMode) {
     const auto input = tempDir_.path() / "input.fastq";
     const auto output = tempDir_.path() / "output.fastq";
 
@@ -155,23 +151,19 @@ TEST_F(PipelineIntegrationTest, PipelineReportsMemoryTelemetryWhenEnabled) {
     pipeline->setInputPath(input.string());
     pipeline->setOutputPath(output.string());
 
-    fq::processing::ProcessingConfig config;
-    config.threadCount = 2;
-    config.batchSize = 1;
-    config.batchCapacityBytes = 1024;
-    config.maxInFlightBatches = 3;
-    config.memoryResourcePolicy = fq::processing::MemoryResourcePolicy::ObjectPool;
-    config.allocationTelemetryEnabled = true;
-    pipeline->setProcessingConfig(config);
+    fq::processing::ProcessingOptions options;
+    options.threadCount = 2;
+    options.batchSize = 1;
+    options.profile = fq::processing::ProcessingProfile::LowMemory;
+    pipeline->setProcessingOptions(options);
 
     const auto stats = pipeline->run();
 
-    EXPECT_TRUE(stats.allocationTelemetryEnabled);
-    EXPECT_EQ(stats.memoryResourcePolicy, fq::processing::MemoryResourcePolicy::ObjectPool);
-    EXPECT_EQ(stats.resolvedMaxInFlightBatches, 3u);
+    EXPECT_EQ(stats.totalReads, 1);
+    EXPECT_EQ(stats.passedReads, 1);
 }
 
-TEST_F(PipelineIntegrationTest, StatisticCalculatorWritesMemoryTelemetryWhenEnabled) {
+TEST_F(PipelineIntegrationTest, StatisticCalculatorRunsInHighThroughputMode) {
     const auto input = tempDir_.path() / "input.fastq";
     const auto output = tempDir_.path() / "stats.txt";
 
@@ -186,18 +178,15 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorWritesMemoryTelemetryWhenEnab
     fq::statistic::StatisticOptions options;
     options.inputFastqPath = input.string();
     options.outputStatPath = output.string();
-    options.batchSize = 1;
-    options.threadCount = 2;
-    options.maxInFlightBatches = 3;
-    options.memoryResourcePolicy = fq::processing::MemoryResourcePolicy::ObjectPool;
-    options.allocationTelemetryEnabled = true;
+    options.processing.batchSize = 1;
+    options.processing.threadCount = 2;
+    options.processing.profile = fq::processing::ProcessingProfile::HighThroughput;
 
     auto calculator = fq::statistic::createStatisticCalculator(options);
     calculator->run();
 
     const auto content = FixtureLoader::loadTextFile(output);
-    EXPECT_NE(content.find("#MemoryPolicy\tobjectPool\n"), std::string::npos);
-    EXPECT_NE(content.find("#MaxInFlightBatches\t3\n"), std::string::npos);
+    EXPECT_NE(content.find("#ReadNum\t1\n"), std::string::npos);
 }
 
 TEST_F(PipelineIntegrationTest, StatisticCalculatorWritesSignatureSidecarWhenEnabled) {
@@ -228,8 +217,8 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorWritesSignatureSidecarWhenEna
     options.signatureKmerSize = 4;
     options.maxReportedSignatures = 10;
     options.duplicateEstimateSampleModulo = 1;
-    options.batchSize = 2;
-    options.threadCount = 2;
+    options.processing.batchSize = 2;
+    options.processing.threadCount = 2;
 
     auto calculator = fq::statistic::createStatisticCalculator(options);
     calculator->run();

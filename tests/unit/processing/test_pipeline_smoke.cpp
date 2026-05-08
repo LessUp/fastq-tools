@@ -11,30 +11,32 @@ TEST(PipelineSmokeTest, CanCreatePipelineFromFactory) {
     ASSERT_TRUE(static_cast<bool>(pipeline));
 }
 
-TEST(PipelineSmokeTest, ProcessingConfigDefaultsToOneTbbBackend) {
-    fq::processing::ProcessingConfig config;
+TEST(PipelineSmokeTest, ProcessingOptionsDefaults) {
+    fq::processing::ProcessingOptions options;
 
-    EXPECT_EQ(config.executionBackend, fq::processing::ExecutionBackend::OneTbb);
+    EXPECT_EQ(options.batchSize, 10000);
+    EXPECT_EQ(options.threadCount, 1);
+    EXPECT_EQ(options.profile, fq::processing::ProcessingProfile::Default);
+    EXPECT_FALSE(options.memoryLimitBytes.has_value());
 }
 
-TEST(PipelineSmokeTest, StatisticOptionsDefaultsToOneTbbBackend) {
+TEST(PipelineSmokeTest, StatisticOptionsDefaults) {
     fq::statistic::StatisticOptions options;
 
-    EXPECT_EQ(options.executionBackend, fq::processing::ExecutionBackend::OneTbb);
+    EXPECT_EQ(options.processing.batchSize, 10000);
+    EXPECT_EQ(options.processing.threadCount, 1);
+    EXPECT_EQ(options.processing.profile, fq::processing::ProcessingProfile::Default);
 }
 
-TEST(PipelineSmokeTest, ProcessingConfigDefaultsToObjectPoolMemoryPolicy) {
-    fq::processing::ProcessingConfig config;
+TEST(PipelineSmokeTest, ProcessingProfileEnumExists) {
+    // 验证三种预设存在
+    auto defaultProfile = fq::processing::ProcessingProfile::Default;
+    auto lowMemory = fq::processing::ProcessingProfile::LowMemory;
+    auto highThroughput = fq::processing::ProcessingProfile::HighThroughput;
 
-    EXPECT_EQ(config.memoryResourcePolicy, fq::processing::MemoryResourcePolicy::ObjectPool);
-    EXPECT_FALSE(config.allocationTelemetryEnabled);
-}
-
-TEST(PipelineSmokeTest, StatisticOptionsDefaultsToObjectPoolMemoryPolicy) {
-    fq::statistic::StatisticOptions options;
-
-    EXPECT_EQ(options.memoryResourcePolicy, fq::processing::MemoryResourcePolicy::ObjectPool);
-    EXPECT_FALSE(options.allocationTelemetryEnabled);
+    EXPECT_NE(defaultProfile, lowMemory);
+    EXPECT_NE(defaultProfile, highThroughput);
+    EXPECT_NE(lowMemory, highThroughput);
 }
 
 TEST(PipelineSmokeTest, QualityTrimmerTrimsLowQualityEnds) {

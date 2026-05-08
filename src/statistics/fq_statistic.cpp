@@ -6,6 +6,7 @@
  * @date 2025-08-01
  * @version 2.0
  * @copyright Copyright (c) 2025 FastQTools
+ * @license MIT License
  */
 
 #include "statistics/fq_statistic.h"
@@ -15,6 +16,7 @@
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/logging.h"
 #include "fqtools/statistics/statistics_writer.h"
+#include "processing/internal_config.h"
 
 #include <algorithm>
 #include <cmath>
@@ -31,13 +33,6 @@
 #include <tbb/parallel_pipeline.h>
 
 namespace fq::statistic {
-
-namespace {
-
-// 使用共享的 resolveMaxInFlightBatches 函数
-using fq::common::resolveMaxInFlightBatches;
-
-}  // namespace
 
 /**
  * @brief 统计结果累加操作符重载
@@ -105,32 +100,32 @@ auto FqStatisticResult::operator+=(const FqStatisticResult& other) -> FqStatisti
 
 FastqStatisticCalculator::FastqStatisticCalculator(const StatisticOptions& options)
     : options_(options) {
-    // No pre-inference needed in new architecture
+    // 验证配置
+    options_.processing.validate();
 }
 
 void FastqStatisticCalculator::run() {
-    switch (options_.executionBackend) {
-        case fq::processing::ExecutionBackend::OneTbb:
-            break;
-    }
-
-    fq::logging::info("Starting FASTQ statistics generation for '{}' using TBB pipeline (New IO).",
+    fq::logging::info("Starting FASTQ statistics generation for '{}' using TBB pipeline.",
                       options_.inputFastqPath);
+
+    // 生成内部配置
+    auto internalConfig = processing::InternalConfig::fromOptions(options_.processing);
 
     FqStatisticResult finalResult;
 
-    const size_t threadCount = std::max<size_t>(1, static_cast<size_t>(options_.threadCount));
+    const size_t threadCount = std::max<size_t>(1, options_.processing.threadCount);
     tbb::global_control globalLimit(tbb::global_control::max_allowed_parallelism, threadCount);
 
-    const size_t maxLiveTokens = resolveMaxInFlightBatches(options_.maxInFlightBatches,
-                                                           options_.memoryLimitBytes,
-                                                           options_.batchCapacityBytes,
-                                                           threadCount);
+    const size_t maxLiveTokens = fq::common::resolveMaxInFlightBatches(
+        internalConfig.maxInFlightBatches,
+        options_.processing.memoryLimitBytes.value_or(0),
+        internalConfig.batchCapacityBytes,
+        threadCount);
 
     fq::io::FastqReaderOptions readerOptions;
-    readerOptions.readChunkBytes = options_.readChunkBytes;
-    readerOptions.zlibBufferBytes = options_.zlibBufferBytes;
-    readerOptions.maxBufferBytes = options_.batchCapacityBytes;
+    readerOptions.readChunkBytes = internalConfig.readChunkBytes;
+    readerOptions.zlibBufferBytes = internalConfig.zlibBufferBytes;
+    readerOptions.maxBufferBytes = internalConfig.batchCapacityBytes;
 
     // Shared reader for serial stage
     auto reader = std::make_shared<fq::io::FastqReader>(options_.inputFastqPath, readerOptions);
@@ -138,27 +133,20 @@ void FastqStatisticCalculator::run() {
         throw std::runtime_error("Failed to open input file: " + options_.inputFastqPath);
     }
 
-    std::shared_ptr<fq::io::FastqBatchPool> batchPool;
-    switch (options_.memoryResourcePolicy) {
-        case fq::processing::MemoryResourcePolicy::ObjectPool:
-            batchPool = fq::io::createFastqBatchPool(maxLiveTokens, maxLiveTokens * 2);
-            break;
-    }
-    if (!batchPool) {
-        throw std::invalid_argument("Unsupported memory resource policy for statistic calculator.");
-    }
+    // 使用 ObjectPool 作为内存资源策略
+    auto batchPool = fq::io::createFastqBatchPool(maxLiveTokens, maxLiveTokens * 2);
 
     tbb::parallel_pipeline(
         maxLiveTokens,
         // Stage 1: Input Filter (Serial)
         tbb::make_filter<void, std::shared_ptr<fq::io::FastqBatch>>(
             tbb::filter_mode::serial_in_order,
-            [reader, batchPool, this](
+            [reader, batchPool, this, &internalConfig](
                 tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
                 auto batch = batchPool->acquire();
-                batch->buffer().reserve(options_.batchCapacityBytes);
-                batch->records().reserve(static_cast<size_t>(options_.batchSize));
-                if (reader->nextBatch(*batch, static_cast<size_t>(options_.batchSize))) {
+                batch->buffer().reserve(internalConfig.batchCapacityBytes);
+                batch->records().reserve(options_.processing.batchSize);
+                if (reader->nextBatch(*batch, options_.processing.batchSize)) {
                     return batch;
                 } else {
                     fc.stop();
@@ -205,12 +193,6 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
     writerOptions.inputFastqPath = options_.inputFastqPath;
     writerOptions.qualityEncoding = options_.qualityEncoding;
     writerOptions.duplicateEstimateSampleModulo = options_.duplicateEstimateSampleModulo;
-    writerOptions.allocationTelemetryEnabled = options_.allocationTelemetryEnabled;
-    writerOptions.memoryResourcePolicy = options_.memoryResourcePolicy;
-    writerOptions.maxInFlightBatches = options_.maxInFlightBatches;
-    writerOptions.memoryLimitBytes = options_.memoryLimitBytes;
-    writerOptions.batchCapacityBytes = options_.batchCapacityBytes;
-    writerOptions.threadCount = options_.threadCount;
     writerOptions.signatureReportPath = options_.signatureReportPath;
     writerOptions.maxReportedSignatures = options_.maxReportedSignatures;
 

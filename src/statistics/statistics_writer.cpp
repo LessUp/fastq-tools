@@ -5,7 +5,6 @@
 
 #include "fqtools/statistics/statistics_writer.h"
 
-#include "fqtools/common/common.h"
 #include "fqtools/logging.h"
 
 #include <algorithm>
@@ -56,14 +55,6 @@ auto estimateDuplicates(uint64_t duplicateSampledReads, size_t sampleModulo) -> 
     return duplicateSampledReads * std::max<size_t>(1, sampleModulo);
 }
 
-auto memoryPolicyName(fq::processing::MemoryResourcePolicy policy) -> const char* {
-    switch (policy) {
-        case fq::processing::MemoryResourcePolicy::ObjectPool:
-            return "objectPool";
-    }
-    return "unknown";
-}
-
 }  // namespace
 
 StatisticsWriter::StatisticsWriter(const StatisticsWriterOptions& options) : options_(options) {}
@@ -89,17 +80,6 @@ void StatisticsWriter::write(std::ostream& os, const FqStatisticResult& result) 
     os << "#DuplicateEstimateRate\t"
        << 100.0 * static_cast<double>(duplicateEstimate) / static_cast<double>(result.readCount)
        << "%\n";
-
-    if (options_.allocationTelemetryEnabled) {
-        os << "#MemoryPolicy\t" << memoryPolicyName(options_.memoryResourcePolicy) << "\n";
-        os << "#MaxInFlightBatches\t"
-           << fq::common::resolveMaxInFlightBatches(
-                  options_.maxInFlightBatches,
-                  options_.memoryLimitBytes,
-                  options_.batchCapacityBytes,
-                  std::max<size_t>(1, static_cast<size_t>(options_.threadCount)))
-           << "\n";
-    }
 
     os << "#MaxReadLength\t" << result.maxReadLength << "\n";
     os << "#BaseCount\t" << result.totalBases << "\n";

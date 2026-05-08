@@ -4,6 +4,8 @@ add_library(fq_cli STATIC
     commands/stat_command.cpp
     commands/stat_command.h
     commands/command_interface.h
+    common_options.cpp
+    common_options.h
 )
 
 target_link_libraries(fq_cli

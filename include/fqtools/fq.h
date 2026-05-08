@@ -18,10 +18,9 @@
 #include "fqtools/io/writer_interface.h"
 
 // 处理管道
-#include "fqtools/processing/execution_backend.h"
-#include "fqtools/processing/memory_resource_policy.h"
 #include "fqtools/processing/mutators.h"
 #include "fqtools/processing/predicates.h"
+#include "fqtools/processing/processing_options.h"
 #include "fqtools/processing/processing_pipeline_interface.h"
 #include "fqtools/processing/read_mutator_interface.h"
 #include "fqtools/processing/read_predicate_interface.h"

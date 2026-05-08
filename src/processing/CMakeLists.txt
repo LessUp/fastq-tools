@@ -1,5 +1,6 @@
 add_library(fq_processing STATIC
     factory.cpp
+    internal_config.cpp
     processing_pipeline.cpp
     processing_statistics.cpp
     mutators/quality_trimmer.cpp

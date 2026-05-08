@@ -1,3 +1,15 @@
+/**
+ * @file processing_pipeline.cpp
+ * @brief 处理管道实现
+ * @details 实现 FastQ 数据处理管道的串行和并行处理逻辑
+ *
+ * @author FastQTools Team
+ * @date 2026
+ * @version 2.0
+ * @copyright Copyright (c) 2026 FastQTools
+ * @license MIT License
+ */
+
 #include "processing/processing_pipeline.h"
 
 #include "fqtools/common/common.h"
@@ -16,19 +28,13 @@
 
 namespace fq::processing {
 
-namespace {
-
-// 保留原有函数名作为别名，便于后续迁移
-using fq::common::resolveMaxInFlightBatches;
-
-}  // namespace
-
 ProcessingPipeline::ProcessingPipeline() = default;
 ProcessingPipeline::~ProcessingPipeline() = default;
 
 void ProcessingPipeline::setInputPath(const std::string& inputPath) {
     inputPath_ = inputPath;
 }
+
 void ProcessingPipeline::setOutputPath(const std::string& outputPath) {
     outputPath_ = outputPath;
 }
@@ -41,12 +47,15 @@ void ProcessingPipeline::setWriter(std::unique_ptr<fq::io::IWriter> writer) {
     customWriter_ = std::move(writer);
 }
 
-void ProcessingPipeline::setProcessingConfig(const ProcessingConfig& config) {
-    config_ = config;
+void ProcessingPipeline::setProcessingOptions(const ProcessingOptions& options) {
+    options_ = options;
+    internalConfig_ = InternalConfig::fromOptions(options);
 }
+
 void ProcessingPipeline::addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator) {
     mutators_.push_back(std::move(mutator));
 }
+
 void ProcessingPipeline::addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicate) {
     predicates_.push_back(std::move(predicate));
 }
@@ -58,22 +67,15 @@ auto ProcessingPipeline::run() -> ProcessingStatistics {
         return processSequential();
     }
 
-    switch (config_.executionBackend) {
-        case ExecutionBackend::OneTbb:
-            if (config_.threadCount > 1) {
-                return processWithTBB();
-            }
-            return processSequential();
+    // 根据 threadCount 决定使用并行还是串行
+    if (options_.threadCount > 1) {
+        return processWithTBB();
     }
-
-    throw std::invalid_argument("Unsupported execution backend for processing pipeline.");
+    return processSequential();
 }
 
 auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
     ProcessingStatistics stats;
-    stats.allocationTelemetryEnabled = config_.allocationTelemetryEnabled;
-    stats.memoryResourcePolicy = config_.memoryResourcePolicy;
-    stats.resolvedMaxInFlightBatches = 1;
 
     try {
         // 创建或使用自定义 Reader
@@ -82,9 +84,9 @@ auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
 
         if (!reader) {
             fq::io::FastqReaderOptions readerOptions;
-            readerOptions.readChunkBytes = config_.readChunkBytes;
-            readerOptions.zlibBufferBytes = config_.zlibBufferBytes;
-            readerOptions.maxBufferBytes = config_.batchCapacityBytes;
+            readerOptions.readChunkBytes = internalConfig_.readChunkBytes;
+            readerOptions.zlibBufferBytes = internalConfig_.zlibBufferBytes;
+            readerOptions.maxBufferBytes = internalConfig_.batchCapacityBytes;
 
             fileReader = std::make_unique<fq::io::FastqReader>(inputPath_, readerOptions);
             if (!fileReader->isOpen()) {
@@ -99,8 +101,8 @@ auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
 
         if (!writer) {
             fq::io::FastqWriterOptions writerOptions;
-            writerOptions.zlibBufferBytes = config_.zlibBufferBytes;
-            writerOptions.outputBufferBytes = config_.writerBufferBytes;
+            writerOptions.zlibBufferBytes = internalConfig_.zlibBufferBytes;
+            writerOptions.outputBufferBytes = internalConfig_.writerBufferBytes;
 
             fileWriter = std::make_unique<fq::io::FastqWriter>(outputPath_, writerOptions);
             if (!fileWriter->isOpen()) {
@@ -109,7 +111,7 @@ auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
             writer = fileWriter.get();
         }
 
-        fq::io::FastqBatch batch(config_.batchCapacityBytes, config_.batchSize);
+        fq::io::FastqBatch batch(internalConfig_.batchCapacityBytes, options_.batchSize);
         auto startTime = std::chrono::steady_clock::now();
 
         while (reader->nextBatch(batch)) {
@@ -122,6 +124,7 @@ auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
             std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
         stats.elapsedMs = static_cast<uint64_t>(duration);
         stats.processingTimeMs = static_cast<double>(stats.elapsedMs);
+
         // 注意：自定义 writer 可能没有 totalUncompressedBytes 方法
         if (fileWriter) {
             stats.outputBytes = fileWriter->totalUncompressedBytes();
@@ -194,47 +197,37 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
 
 auto ProcessingPipeline::processWithTBB() -> ProcessingStatistics {
     ProcessingStatistics finalStats;
-    finalStats.allocationTelemetryEnabled = config_.allocationTelemetryEnabled;
-    finalStats.memoryResourcePolicy = config_.memoryResourcePolicy;
     auto startTime = std::chrono::steady_clock::now();
 
-    const size_t threadCount = std::max<size_t>(1, config_.threadCount);
+    const size_t threadCount = std::max<size_t>(1, options_.threadCount);
     tbb::global_control globalLimit(tbb::global_control::max_allowed_parallelism, threadCount);
 
     fq::io::FastqReaderOptions readerOptions;
-    readerOptions.readChunkBytes = config_.readChunkBytes;
-    readerOptions.zlibBufferBytes = config_.zlibBufferBytes;
-    readerOptions.maxBufferBytes = config_.batchCapacityBytes;
+    readerOptions.readChunkBytes = internalConfig_.readChunkBytes;
+    readerOptions.zlibBufferBytes = internalConfig_.zlibBufferBytes;
+    readerOptions.maxBufferBytes = internalConfig_.batchCapacityBytes;
 
     auto reader = std::make_shared<fq::io::FastqReader>(inputPath_, readerOptions);
     if (!reader->isOpen())
         throw std::runtime_error("Failed to open input file: " + inputPath_);
 
     fq::io::FastqWriterOptions writerOptions;
-    writerOptions.zlibBufferBytes = config_.zlibBufferBytes;
-    writerOptions.outputBufferBytes = config_.writerBufferBytes;
+    writerOptions.zlibBufferBytes = internalConfig_.zlibBufferBytes;
+    writerOptions.outputBufferBytes = internalConfig_.writerBufferBytes;
 
     fq::io::FastqWriter writer(outputPath_, writerOptions);
     if (!writer.isOpen())
         throw std::runtime_error("Failed to open output file: " + outputPath_);
 
     try {
-        size_t maxTokens = resolveMaxInFlightBatches(config_.maxInFlightBatches,
-                                                     config_.memoryLimitBytes,
-                                                     config_.batchCapacityBytes,
-                                                     threadCount);
-        finalStats.resolvedMaxInFlightBatches = maxTokens;
+        // 计算最大并行批次数
+        size_t maxTokens = internalConfig_.maxInFlightBatches;
+        if (maxTokens == 0) {
+            maxTokens = fq::common::resolveMaxInFlightBatches(0, 0, internalConfig_.batchCapacityBytes, threadCount);
+        }
 
-        std::shared_ptr<fq::io::FastqBatchPool> batchPool;
-        switch (config_.memoryResourcePolicy) {
-            case MemoryResourcePolicy::ObjectPool:
-                batchPool = fq::io::createFastqBatchPool(maxTokens, maxTokens * 2);
-                break;
-        }
-        if (!batchPool) {
-            throw std::invalid_argument(
-                "Unsupported memory resource policy for processing pipeline.");
-        }
+        // 使用 ObjectPool 作为内存资源策略
+        auto batchPool = fq::io::createFastqBatchPool(maxTokens, maxTokens * 2);
 
         tbb::parallel_pipeline(
             maxTokens,
@@ -244,7 +237,7 @@ auto ProcessingPipeline::processWithTBB() -> ProcessingStatistics {
                 [reader, batchPool, this](
                     tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
                     auto batch = batchPool->acquire();
-                    if (reader->nextBatch(*batch, config_.batchSize)) {
+                    if (reader->nextBatch(*batch, options_.batchSize)) {
                         return batch;
                     }
                     fc.stop();
