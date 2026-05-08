@@ -1,0 +1,17 @@
+# Conan Profile for CI Clang + libstdc++
+# Usage: conan install . -pr:h config/conan/profile-clang-ci --build=missing
+
+[settings]
+arch=x86_64
+build_type=Release
+compiler=clang
+compiler.cppstd=23
+compiler.libcxx=libstdc++11
+compiler.version=21
+os=Linux
+
+[conf]
+tools.build:compiler_executables={"c": "clang", "cpp": "clang++"}
+tools.build:cxxflags=["-Wno-deprecated-declarations"]
+tools.build:exelinkflags=["-fuse-ld=lld","-Wl,--undefined-version"]
+tools.build:sharedlinkflags=["-fuse-ld=lld","-Wl,--undefined-version"]

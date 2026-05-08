@@ -97,21 +97,21 @@ jobs:
       matrix:
         include:
           - name: GCC Release
-            preset: gcc-release
             compiler: gcc
+            build_command: ./scripts/core/build --preset gcc-release --no-lto
             test_command: ./scripts/core/test --preset gcc-release --timeout 180
           - name: Clang Release
-            preset: clang-release
             compiler: clang
-            test_command: ./scripts/core/test --preset clang-release --timeout 180
+            build_command: ./scripts/core/build --compiler clang --type Release --build-dir build/ci-clang-release --conan-profile config/conan/profile-clang-ci --no-lto
+            test_command: ./scripts/core/test --build-dir build/ci-clang-release --timeout 180
           - name: Clang ASan
-            preset: clang-asan
             compiler: clang
-            test_command: ctest --preset clang-asan --exclude-regex 'cmake_package_consumer'
+            build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer asan --build-dir build/ci-clang-asan --conan-profile config/conan/profile-clang-ci --no-lto
+            test_command: ctest --test-dir build/ci-clang-asan --exclude-regex 'cmake_package_consumer'
           - name: Clang TSan
-            preset: clang-tsan
             compiler: clang
-            test_command: ctest --preset clang-tsan --exclude-regex 'cmake_package_consumer'
+            build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer tsan --build-dir build/ci-clang-tsan --conan-profile config/conan/profile-clang-ci --no-lto
+            test_command: ctest --test-dir build/ci-clang-tsan --exclude-regex 'cmake_package_consumer'
 
     steps:
       - name: Checkout
@@ -135,7 +135,7 @@ jobs:
           compiler: ${{ matrix.compiler }}
 
       - name: Build preset
-        run: ./scripts/core/build --preset ${{ matrix.preset }} --no-lto
+        run: ${{ matrix.build_command }}
 
       - name: Run tests
         run: ${{ matrix.test_command }}

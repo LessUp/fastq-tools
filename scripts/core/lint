@@ -286,10 +286,50 @@ run_tidy() {
     
     log_info "使用编译数据库: ${BUILD_DIR}/compile_commands.json"
     
-    # 收集源文件
+    local python_cmd=""
+    if command -v python3 &>/dev/null; then
+        python_cmd="python3"
+    elif command -v python &>/dev/null; then
+        python_cmd="python"
+    else
+        log_error "运行 clang-tidy 需要 python3 或 python 来解析 compile_commands.json"
+        return 1
+    fi
+
+    # 仅分析当前编译数据库中的翻译单元，避免扫描未进入当前构建图的源文件。
     local files
-    files=$(find src -type f \( -name "*.cpp" -o -name "*.h" \) 2>/dev/null)
-    
+    files=$("${python_cmd}" - "${BUILD_DIR}/compile_commands.json" <<'PY'
+import json
+import os
+import sys
+
+project_root = os.getcwd()
+compile_commands_path = sys.argv[1]
+
+with open(compile_commands_path, encoding="utf-8") as handle:
+    compile_commands = json.load(handle)
+
+seen = set()
+selected = []
+for entry in compile_commands:
+    file_path = entry.get("file")
+    if not file_path:
+        continue
+    absolute_path = os.path.abspath(file_path)
+    if not absolute_path.startswith(os.path.join(project_root, "src") + os.sep):
+        continue
+    if not absolute_path.endswith((".c", ".cc", ".cpp", ".cxx")):
+        continue
+    if absolute_path in seen:
+        continue
+    seen.add(absolute_path)
+    selected.append(os.path.relpath(absolute_path, project_root))
+
+for file_path in selected:
+    print(file_path)
+PY
+)
+
     if [[ -z "$files" ]]; then
         log_warning "未找到需要分析的文件"
         return 0

@@ -49,6 +49,7 @@ add_test(
         -DFQTOOLS_BINARY_DIR=${CMAKE_BINARY_DIR}
         -DFQTOOLS_CONSUMER_BINARY_DIR=${FQTOOLS_CMAKE_CONSUMER_BINARY_DIR}
         -DFQTOOLS_INSTALL_DIR=${FQTOOLS_CMAKE_CONSUMER_INSTALL_DIR}
+        -DFQTOOLS_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -P ${CMAKE_SOURCE_DIR}/tests/cmake_package_consumer/verify_consumer.cmake
 )
 set_tests_properties(cmake_package_consumer PROPERTIES

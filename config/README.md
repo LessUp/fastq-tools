@@ -7,7 +7,8 @@ This directory contains all configuration files for the FastQTools project, orga
 ```
 config/
 ├── conan/              # Conan compiler profiles
-│   ├── profile-clang   # Clang + libc++（脚本可按本机版本覆盖，CI 使用 libstdc++）
+│   ├── profile-clang   # Clang + libc++（本地开发）
+│   ├── profile-clang-ci# Clang + libstdc++（CI）
 │   └── profile-gcc     # GCC 15 + libstdc++
 ├── cppcheck/           # Cppcheck static analysis
 │   ├── cppcheck.cfg    # Project configuration (paths, defines, platform)
@@ -33,6 +34,7 @@ config/
 
 ```bash
 conan install config/dependencies/ -pr:h config/conan/profile-clang --build=missing
+conan install config/dependencies/ -pr:h config/conan/profile-clang-ci --build=missing
 conan install config/dependencies/ -pr:h config/conan/profile-gcc   --build=missing
 ```
 

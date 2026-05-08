@@ -35,6 +35,7 @@ JOBS=$(get_cpu_cores)
 
 BUILD_DIR_DEFAULTED=false
 CONAN_COMPILER_VERSION_OVERRIDE=""
+CONAN_PROFILE_OVERRIDE=""
 COMPILER_EXPLICIT=false
 BUILD_TYPE_EXPLICIT=false
 ACTIVE_PRESET=""
@@ -59,6 +60,7 @@ print_usage() {
   -C, --coverage            启用代码覆盖率
   --static-analysis         启用静态分析 (clang-tidy)
   --conan-compiler-version VERSION  覆盖 Conan 使用的编译器版本
+  --conan-profile PATH      显式指定 Conan host profile
   --no-lto                  禁用链接时优化
   --clean                   构建前清理构建目录
   -p, --preset NAME         使用 CMake preset (覆盖其他选项)
@@ -126,6 +128,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --conan-compiler-version)
             CONAN_COMPILER_VERSION_OVERRIDE="$2"
+            shift 2
+            ;;
+        --conan-profile)
+            CONAN_PROFILE_OVERRIDE="$2"
             shift 2
             ;;
         --no-lto)
@@ -408,13 +414,20 @@ if command -v conan &>/dev/null; then
             CONAN_BUILD_TYPE="Debug"
         fi
 
-        CONAN_PROFILE=""
-        CONAN_ARCH="$(uname -m 2>/dev/null || true)"
-        if [[ "${CONAN_ARCH}" == "x86_64" ]]; then
-            if [[ "${COMPILER}" == "clang" ]]; then
-                CONAN_PROFILE="config/conan/profile-clang"
-            elif [[ "${COMPILER}" == "gcc" ]]; then
-                CONAN_PROFILE="config/conan/profile-gcc"
+        CONAN_PROFILE="${CONAN_PROFILE_OVERRIDE}"
+        if [[ -n "${CONAN_PROFILE}" ]]; then
+            if [[ ! -f "${CONAN_PROFILE}" ]]; then
+                log_error "指定的 Conan profile 不存在: ${CONAN_PROFILE}"
+                exit 1
+            fi
+        else
+            CONAN_ARCH="$(uname -m 2>/dev/null || true)"
+            if [[ "${CONAN_ARCH}" == "x86_64" ]]; then
+                if [[ "${COMPILER}" == "clang" ]]; then
+                    CONAN_PROFILE="config/conan/profile-clang"
+                elif [[ "${COMPILER}" == "gcc" ]]; then
+                    CONAN_PROFILE="config/conan/profile-gcc"
+                fi
             fi
         fi
 
