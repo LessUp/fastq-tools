@@ -11,12 +11,10 @@
 
 #include "statistics/fq_statistic.h"
 
-#include "fqtools/common/common.h"
 #include "fqtools/io/fastq_batch_pool.h"
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/logging.h"
 #include "fqtools/statistics/statistics_writer.h"
-#include "processing/internal_config.h"
 
 #include <algorithm>
 #include <cmath>
@@ -28,6 +26,7 @@
 #include <numeric>
 #include <vector>
 
+#include "processing/runtime_policy.h"
 #include "statistics/fq_statistic_worker.h"
 #include <tbb/global_control.h>
 #include <tbb/parallel_pipeline.h>
@@ -109,23 +108,17 @@ void FastqStatisticCalculator::run() {
                       options_.inputFastqPath);
 
     // 生成内部配置
-    auto internalConfig = processing::InternalConfig::fromOptions(options_.processing);
+    const auto runtimePolicy = processing::deriveRuntimePolicy(options_.processing);
 
     FqStatisticResult finalResult;
 
     const size_t threadCount = std::max<size_t>(1, options_.processing.threadCount);
     tbb::global_control globalLimit(tbb::global_control::max_allowed_parallelism, threadCount);
 
-    const size_t maxLiveTokens = fq::common::resolveMaxInFlightBatches(
-        internalConfig.maxInFlightBatches,
-        options_.processing.memoryLimitBytes.value_or(0),
-        internalConfig.batchCapacityBytes,
-        threadCount);
-
     fq::io::FastqReaderOptions readerOptions;
-    readerOptions.readChunkBytes = internalConfig.readChunkBytes;
-    readerOptions.zlibBufferBytes = internalConfig.zlibBufferBytes;
-    readerOptions.maxBufferBytes = internalConfig.batchCapacityBytes;
+    readerOptions.readChunkBytes = runtimePolicy.readChunkBytes;
+    readerOptions.zlibBufferBytes = runtimePolicy.zlibBufferBytes;
+    readerOptions.maxBufferBytes = runtimePolicy.batchCapacityBytes;
 
     // Shared reader for serial stage
     auto reader = std::make_shared<fq::io::FastqReader>(options_.inputFastqPath, readerOptions);
@@ -134,17 +127,18 @@ void FastqStatisticCalculator::run() {
     }
 
     // 使用 ObjectPool 作为内存资源策略
-    auto batchPool = fq::io::createFastqBatchPool(maxLiveTokens, maxLiveTokens * 2);
+    auto batchPool =
+        fq::io::createFastqBatchPool(runtimePolicy.maxLiveTokens, runtimePolicy.maxLiveTokens * 2);
 
     tbb::parallel_pipeline(
-        maxLiveTokens,
+        runtimePolicy.maxLiveTokens,
         // Stage 1: Input Filter (Serial)
         tbb::make_filter<void, std::shared_ptr<fq::io::FastqBatch>>(
             tbb::filter_mode::serial_in_order,
-            [reader, batchPool, this, &internalConfig](
+            [reader, batchPool, this, &runtimePolicy](
                 tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
                 auto batch = batchPool->acquire();
-                batch->buffer().reserve(internalConfig.batchCapacityBytes);
+                batch->buffer().reserve(runtimePolicy.batchCapacityBytes);
                 batch->records().reserve(options_.processing.batchSize);
                 if (reader->nextBatch(*batch, options_.processing.batchSize)) {
                     return batch;

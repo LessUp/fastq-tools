@@ -33,16 +33,16 @@ namespace fq::cli {
 struct CommonCliOptions {
     /// @name 基本参数
     /// @{
-    std::string inputPath;                               ///< 输入文件路径
-    std::string outputPath;                              ///< 输出文件路径
-    size_t threadCount = 1;                              ///< 线程数
-    size_t batchSize = 10000;                            ///< 批处理大小
+    std::string inputPath;     ///< 输入文件路径
+    std::string outputPath;    ///< 输出文件路径
+    size_t threadCount = 1;    ///< 线程数
+    size_t batchSize = 10000;  ///< 批处理大小
     processing::ProcessingProfile profile = processing::ProcessingProfile::Default;  ///< 性能预设
     /// @}
 
     /// @name 高级参数（可选）
     /// @{
-    std::optional<size_t> memoryLimitGb;                 ///< 内存限制（GB）
+    std::optional<size_t> memoryLimitGb;  ///< 内存限制（GB）
     /// @}
 
     /**

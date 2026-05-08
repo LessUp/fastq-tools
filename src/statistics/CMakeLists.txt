@@ -2,6 +2,7 @@ add_library(fq_statistics STATIC
     factory.cpp
     fq_statistic.cpp
     fq_statistic_worker.cpp
+    statistics_report.cpp
     statistics_writer.cpp
 )
 

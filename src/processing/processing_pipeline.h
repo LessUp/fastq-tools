@@ -1,12 +1,14 @@
 #pragma once
 
 #include "fqtools/processing/processing_pipeline_interface.h"
-#include "processing/internal_config.h"
 
 #include <atomic>
 #include <chrono>
 #include <memory>
 #include <vector>
+
+#include "processing/pipeline_execution_plan.h"
+#include "processing/runtime_policy.h"
 
 namespace fq::processing {
 
@@ -61,7 +63,7 @@ private:
      * @brief 并行处理模式（使用 TBB）
      * @details 使用 Intel TBB 库进行并行处理，适用于大文件
      */
-    auto processWithTBB() -> ProcessingStatistics;
+    auto processWithTBB(const PipelineExecutionPlan& executionPlan) -> ProcessingStatistics;
 
     /**
      * @brief 处理数据批次
@@ -69,11 +71,11 @@ private:
      */
     auto processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats) -> bool;
 
-    std::string inputPath_;                                            ///< 输入文件路径
-    std::string outputPath_;                                           ///< 输出文件路径
-    ProcessingOptions options_;                                        ///< 用户可见的处理选项
-    InternalConfig internalConfig_;                                    ///< 内部配置
-    std::vector<std::unique_ptr<ReadMutatorInterface>> mutators_;      ///< 数据修改器列表
+    std::string inputPath_;                                        ///< 输入文件路径
+    std::string outputPath_;                                       ///< 输出文件路径
+    ProcessingOptions options_;                                    ///< 用户可见的处理选项
+    RuntimePolicy runtimePolicy_;                                  ///< 运行时策略
+    std::vector<std::unique_ptr<ReadMutatorInterface>> mutators_;  ///< 数据修改器列表
     std::vector<std::unique_ptr<ReadPredicateInterface>> predicates_;  ///< 数据过滤器列表
     std::unique_ptr<fq::io::IReader> customReader_;  ///< 自定义读取器（测试用）
     std::unique_ptr<fq::io::IWriter> customWriter_;  ///< 自定义写入器（测试用）

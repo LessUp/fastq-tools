@@ -25,7 +25,7 @@ namespace fq::processing {
  * @return 最大并行批次数（0 表示自动）
  */
 [[nodiscard]] auto calculateMaxInFlightBatches(size_t memoryLimitBytes,
-                                                size_t batchCapacityBytes,
-                                                size_t threadCount) -> size_t;
+                                               size_t batchCapacityBytes,
+                                               size_t threadCount) -> size_t;
 
 }  // namespace fq::processing

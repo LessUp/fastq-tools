@@ -32,14 +32,14 @@ namespace fq::statistic {
 struct StatisticOptions {
     /// @name 文件路径
     /// @{
-    std::string inputFastqPath;                   ///< 输入 FASTQ 文件路径
-    std::string outputStatPath;                   ///< 输出统计结果路径（文本报告）
-    std::string signatureReportPath;              ///< 可选的 signature sidecar 路径（TSV）
+    std::string inputFastqPath;       ///< 输入 FASTQ 文件路径
+    std::string outputStatPath;       ///< 输出统计结果路径（文本报告）
+    std::string signatureReportPath;  ///< 可选的 signature sidecar 路径（TSV）
     /// @}
 
     /// @name 处理选项
     /// @{
-    fq::processing::ProcessingOptions processing; ///< 处理管道选项
+    fq::processing::ProcessingOptions processing;  ///< 处理管道选项
     /// @}
 
     /// @name 统计特定参数

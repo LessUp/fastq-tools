@@ -11,23 +11,27 @@
 
 #include "common_options.h"
 
-#include <cxxopts.hpp>
 #include <stdexcept>
+
+#include <cxxopts.hpp>
 
 namespace fq::cli {
 
 void CommonCliOptions::addOptions(cxxopts::Options& options) {
-    options.add_options()
-        ("i,input", "Input FASTQ file", cxxopts::value<std::string>())
-        ("o,output", "Output file", cxxopts::value<std::string>())
-        ("t,threads", "Number of threads (default: 1)",
-         cxxopts::value<size_t>()->default_value("1"))
-        ("batch-size", "Batch size (reads per batch, default: 10000)",
-         cxxopts::value<size_t>()->default_value("10000"))
-        ("profile", "Performance profile: default|lowMemory|highThroughput",
-         cxxopts::value<std::string>()->default_value("default"))
-        ("memory-limit-gb", "Memory limit in GB (0=unlimited)",
-         cxxopts::value<size_t>()->default_value("0"));
+    options.add_options()("i,input", "Input FASTQ file", cxxopts::value<std::string>())(
+        "o,output", "Output file", cxxopts::value<std::string>())(
+        "t,threads",
+        "Number of threads (default: 1)",
+        cxxopts::value<size_t>()->default_value("1"))(
+        "batch-size",
+        "Batch size (reads per batch, default: 10000)",
+        cxxopts::value<size_t>()->default_value("10000"))(
+        "profile",
+        "Performance profile: default|lowMemory|highThroughput",
+        cxxopts::value<std::string>()->default_value("default"))(
+        "memory-limit-gb",
+        "Memory limit in GB (0=unlimited)",
+        cxxopts::value<size_t>()->default_value("0"));
 }
 
 auto CommonCliOptions::parse(const cxxopts::ParseResult& result) -> CommonCliOptions {

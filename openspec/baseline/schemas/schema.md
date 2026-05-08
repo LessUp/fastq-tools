@@ -137,14 +137,8 @@ Required:
 Runtime:
   -t, --threads N
   --batch-size N
-  --read-chunk-bytes N
-  --batch-capacity-bytes N
-  --zlib-buffer-bytes N
-  --in-flight N
+  --profile {default|lowMemory|highThroughput}
   --memory-limit-gb N
-  --execution-backend oneTbb
-  --memory-policy objectPool
-  --allocation-telemetry
   --quality-encoding {33|64}
 
  Optional sidecar:
@@ -167,15 +161,8 @@ Required:
 Runtime:
   -t, --threads N
   --batch-size N
-  --read-chunk-bytes N
-  --batch-capacity-bytes N
-  --zlib-buffer-bytes N
-  --writer-buffer-bytes N
-  --in-flight N
+  --profile {default|lowMemory|highThroughput}
   --memory-limit-gb N
-  --execution-backend oneTbb
-  --memory-policy objectPool
-  --allocation-telemetry
   --quality-encoding {33|64}
 
 Predicates:
@@ -260,8 +247,8 @@ The sidecar is additive and bounded: `head_kmer` rows are limited by `--signatur
 2. `threadCount` must be positive when supplied through CLI or runtime config.
 3. `qualityEncoding` is currently expected to be `33` or `64`.
 4. `trim-mode` is currently one of `both`, `five`, or `three`.
-5. `execution-backend` currently accepts `oneTbb` only.
-6. `memory-policy` currently accepts `objectPool` only.
+5. `profile` currently accepts `default`, `lowMemory`, and `highThroughput`.
+6. `memory-limit-gb` remains an optional override layered on top of the selected profile.
 7. `duplicate-sample-modulo` must be a positive integer.
 8. Supported maintained compression mode is gzip; no schema contract is made for bzip2/xz.
 

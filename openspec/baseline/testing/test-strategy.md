@@ -324,8 +324,8 @@ TEST(FastqReaderTest, ThrowsOnInvalidFormat) {
 
 The maintained fast regression matrix for current runtime slices and next-gen baseline additions SHALL include:
 
-1. `filter` with `--execution-backend oneTbb`
-2. `stat` with `--memory-policy objectPool --allocation-telemetry`
+1. `filter` with `--profile highThroughput`
+2. `stat` with `--profile lowMemory --memory-limit-gb 1`
 3. `filter` with adapter trimming and poly-tail trimming enabled
 4. `stat` with `--signature-report` enabled, including duplicate estimate and bounded `head_kmer` rows
 

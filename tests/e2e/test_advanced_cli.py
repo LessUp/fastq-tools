@@ -132,62 +132,57 @@ class TestFastQToolsCLI(unittest.TestCase):
         content = self._read_fastq_content(output_fastq)
         self.assertIn("\nGT\n+\nII\n", content)
 
-    def test_filter_accepts_execution_backend_option(self):
-        output_fastq = os.path.join(self.test_dir, "backend.fastq")
+    def test_filter_accepts_profile_option(self):
+        output_fastq = os.path.join(self.test_dir, "profile.fastq")
         result = self.run_cmd([
             "filter",
             "--input", self.sample_fastq,
             "--output", output_fastq,
             "--threads", "2",
-            "--execution-backend", "oneTbb",
+            "--profile", "highThroughput",
         ])
 
         self.assertEqual(result.returncode, 0)
         self.assertTrue(os.path.exists(output_fastq))
 
-    def test_stat_accepts_execution_backend_option(self):
-        output_stats = os.path.join(self.test_dir, "backend-stats.txt")
+    def test_stat_accepts_profile_option(self):
+        output_stats = os.path.join(self.test_dir, "profile-stats.txt")
         result = self.run_cmd([
             "stat",
             "--input", self.sample_fastq,
             "--output", output_stats,
             "--threads", "2",
-            "--execution-backend", "oneTbb",
+            "--profile", "lowMemory",
         ])
 
         self.assertEqual(result.returncode, 0)
         self.assertTrue(os.path.exists(output_stats))
 
-    def test_filter_accepts_memory_policy_option(self):
-        output_fastq = os.path.join(self.test_dir, "memory-policy.fastq")
+    def test_filter_accepts_memory_limit_option(self):
+        output_fastq = os.path.join(self.test_dir, "memory-limit.fastq")
         result = self.run_cmd([
             "filter",
             "--input", self.sample_fastq,
             "--output", output_fastq,
             "--threads", "2",
-            "--memory-policy", "objectPool",
+            "--memory-limit-gb", "1",
         ])
 
         self.assertEqual(result.returncode, 0)
         self.assertTrue(os.path.exists(output_fastq))
 
-    def test_stat_writes_memory_telemetry_when_requested(self):
-        output_stats = os.path.join(self.test_dir, "memory-telemetry.txt")
+    def test_stat_accepts_memory_limit_option(self):
+        output_stats = os.path.join(self.test_dir, "memory-limit-stats.txt")
         result = self.run_cmd([
             "stat",
             "--input", self.sample_fastq,
             "--output", output_stats,
             "--threads", "2",
-            "--memory-policy", "objectPool",
-            "--allocation-telemetry",
+            "--memory-limit-gb", "1",
         ])
 
         self.assertEqual(result.returncode, 0)
         self.assertTrue(os.path.exists(output_stats))
-        with open(output_stats, "r") as f:
-            content = f.read()
-        self.assertIn("#MemoryPolicy\tobjectPool", content)
-        self.assertIn("#MaxInFlightBatches\t", content)
 
     def test_filter_accepts_adapter_and_poly_tail_options(self):
         input_fastq = os.path.join(self.test_dir, "preprocess.fastq")

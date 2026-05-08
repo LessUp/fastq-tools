@@ -48,8 +48,8 @@ enum class ProcessingProfile : std::uint8_t {
 struct ProcessingOptions {
     /// @name 业务参数
     /// @{
-    size_t batchSize = 10000;      ///< 批处理大小（每个批次的读取数量）
-    size_t threadCount = 1;        ///< 线程数量（1 表示串行处理）
+    size_t batchSize = 10000;  ///< 批处理大小（每个批次的读取数量）
+    size_t threadCount = 1;    ///< 线程数量（1 表示串行处理）
     ProcessingProfile profile = ProcessingProfile::Default;  ///< 性能预设
     /// @}
 
@@ -73,8 +73,8 @@ struct ProcessingOptions {
 struct InternalConfig {
     /// @name 读取器配置
     /// @{
-    size_t readChunkBytes = 1 * 1024 * 1024;      ///< 读取块大小（字节）
-    size_t zlibBufferBytes = 128 * 1024;          ///< zlib 内部缓冲区大小
+    size_t readChunkBytes = 1 * 1024 * 1024;  ///< 读取块大小（字节）
+    size_t zlibBufferBytes = 128 * 1024;      ///< zlib 内部缓冲区大小
     /// @}
 
     /// @name 批处理配置
@@ -84,17 +84,17 @@ struct InternalConfig {
 
     /// @name 写入器配置
     /// @{
-    size_t writerBufferBytes = 128 * 1024;        ///< 写入器缓冲区大小
+    size_t writerBufferBytes = 128 * 1024;  ///< 写入器缓冲区大小
     /// @}
 
     /// @name 并行配置
     /// @{
-    size_t maxInFlightBatches = 0;                ///< 最大并行批次（0 表示自动）
+    size_t maxInFlightBatches = 0;  ///< 最大并行批次（0 表示自动）
     /// @}
 
     /// @name 调试配置
     /// @{
-    bool allocationTelemetryEnabled = false;      ///< 是否启用内存遥测
+    bool allocationTelemetryEnabled = false;  ///< 是否启用内存遥测
     /// @}
 
     /**

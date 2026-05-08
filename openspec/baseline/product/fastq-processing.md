@@ -25,7 +25,7 @@ Generate a tabular quality-control report for one FASTQ file, with an optional l
 **Current contract**
 
 - Required inputs: `--input`, `--output`
-- Runtime controls: threads, batch size, execution backend, memory policy, memory limit, chunk size, quality encoding
+- Runtime controls: threads, batch size, performance profile, memory limit, quality encoding
 - Output: a text report with summary lines and per-position metrics; optional signature sidecar for duplicate estimation and head-kmer summaries
 - Supported inputs: plain FASTQ and gzip-compressed FASTQ (`.gz`)
 
@@ -44,7 +44,7 @@ Filter and optionally trim reads in a single pass.
 - Required inputs: `--input`, `--output`
 - Supported predicates: minimum average quality, minimum length, maximum length, maximum N ratio
 - Supported mutators: quality trimming, adapter trimming, polyG tail trimming, bounded polyX tail trimming
-- Runtime controls: threads, batch size, execution backend, memory policy, memory limit, buffer sizing, quality encoding
+- Runtime controls: threads, batch size, performance profile, memory limit, quality encoding
 - Supported I/O: plain FASTQ and gzip-compressed FASTQ (`.gz`)
 
 **Representative usage**

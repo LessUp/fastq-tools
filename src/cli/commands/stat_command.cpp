@@ -11,10 +11,9 @@
 
 #include "stat_command.h"
 
-#include "common_options.h"
-
 #include <iostream>
 
+#include "common_options.h"
 #include <cxxopts.hpp>
 
 #include <fqtools/logging.h>
@@ -29,18 +28,21 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
     CommonCliOptions::addOptions(options);
 
     // 2. 添加 stat 特有参数
-    options.add_options()
-        ("signature-report", "Write optional signature sidecar report (TSV)",
-         cxxopts::value<std::string>())
-        ("signature-kmer-size", "Head k-mer size for signature report",
-         cxxopts::value<size_t>()->default_value("15"))
-        ("signature-limit", "Maximum signature rows to emit",
-         cxxopts::value<size_t>()->default_value("20"))
-        ("duplicate-sample-modulo", "Sampling modulo for duplicate estimation (1 = exact in tests)",
-         cxxopts::value<size_t>()->default_value("1024"))
-        ("quality-encoding", "Quality encoding offset (33 or 64)",
-         cxxopts::value<int>()->default_value("33"))
-        ("h,help", "Print usage");
+    options.add_options()("signature-report",
+                          "Write optional signature sidecar report (TSV)",
+                          cxxopts::value<std::string>())(
+        "signature-kmer-size",
+        "Head k-mer size for signature report",
+        cxxopts::value<size_t>()->default_value("15"))(
+        "signature-limit",
+        "Maximum signature rows to emit",
+        cxxopts::value<size_t>()->default_value("20"))(
+        "duplicate-sample-modulo",
+        "Sampling modulo for duplicate estimation (1 = exact in tests)",
+        cxxopts::value<size_t>()->default_value("1024"))(
+        "quality-encoding",
+        "Quality encoding offset (33 or 64)",
+        cxxopts::value<int>()->default_value("33"))("h,help", "Print usage");
 
     if (argc == 1) {
         std::cout << options.help() << '\n';

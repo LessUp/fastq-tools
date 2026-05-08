@@ -1,4 +1,6 @@
 add_library(fq_cli STATIC
+    filter_plan.cpp
+    filter_plan.h
     commands/filter_command.cpp
     commands/filter_command.h
     commands/stat_command.cpp
