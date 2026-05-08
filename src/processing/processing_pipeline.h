@@ -7,8 +7,7 @@
 #include <memory>
 #include <vector>
 
-#include "processing/pipeline_execution_plan.h"
-#include "processing/runtime_policy.h"
+#include "processing/resolved_runtime_config.h"
 
 namespace fq::processing {
 
@@ -63,7 +62,7 @@ private:
      * @brief 并行处理模式（使用 TBB）
      * @details 使用 Intel TBB 库进行并行处理，适用于大文件
      */
-    auto processWithTBB(const PipelineExecutionPlan& executionPlan) -> ProcessingStatistics;
+    auto processWithTBB() -> ProcessingStatistics;
 
     /**
      * @brief 处理数据批次
@@ -74,7 +73,7 @@ private:
     std::string inputPath_;                                        ///< 输入文件路径
     std::string outputPath_;                                       ///< 输出文件路径
     ProcessingOptions options_;                                    ///< 用户可见的处理选项
-    RuntimePolicy runtimePolicy_;                                  ///< 运行时策略
+    ResolvedRuntimeConfig runtimeConfig_;                          ///< 解析后的运行时配置
     std::vector<std::unique_ptr<ReadMutatorInterface>> mutators_;  ///< 数据修改器列表
     std::vector<std::unique_ptr<ReadPredicateInterface>> predicates_;  ///< 数据过滤器列表
     std::unique_ptr<fq::io::IReader> customReader_;  ///< 自定义读取器（测试用）

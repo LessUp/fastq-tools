@@ -65,13 +65,4 @@ struct CommonCliOptions {
     [[nodiscard]] auto toProcessingOptions() const -> processing::ProcessingOptions;
 };
 
-/**
- * @brief 解析性能预设字符串
- * @param value 预设名称（default, lowMemory, highThroughput）
- * @return ProcessingProfile 枚举值
- * @throws std::invalid_argument 如果值无效
- */
-[[nodiscard]] auto parseProcessingProfile(const std::string& value)
-    -> processing::ProcessingProfile;
-
 }  // namespace fq::cli

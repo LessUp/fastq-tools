@@ -1,10 +1,9 @@
 /**
  * @file processing_options.h
  * @brief 处理管道配置选项
- * @details 定义用户可见的处理选项和内部配置结构，实现配置分层：
+ * @details 定义用户可见的处理选项和预设配置：
  *          - ProcessingOptions: 用户可见的简明配置
  *          - ProcessingProfile: 预设性能配置
- *          - InternalConfig: 内部使用的详细配置
  *
  * @author LessUp
  * @date 2026-05-08
@@ -63,46 +62,6 @@ struct ProcessingOptions {
      * @throws std::invalid_argument 如果配置无效
      */
     void validate() const;
-};
-
-/**
- * @brief 内部使用的详细配置
- * @details 由 ProcessingOptions 和 ProcessingProfile 自动生成，
- *          不暴露给用户，仅在实现层使用。
- */
-struct InternalConfig {
-    /// @name 读取器配置
-    /// @{
-    size_t readChunkBytes = 1 * 1024 * 1024;  ///< 读取块大小（字节）
-    size_t zlibBufferBytes = 128 * 1024;      ///< zlib 内部缓冲区大小
-    /// @}
-
-    /// @name 批处理配置
-    /// @{
-    size_t batchCapacityBytes = 4 * 1024 * 1024;  ///< 批次缓冲区容量（字节）
-    /// @}
-
-    /// @name 写入器配置
-    /// @{
-    size_t writerBufferBytes = 128 * 1024;  ///< 写入器缓冲区大小
-    /// @}
-
-    /// @name 并行配置
-    /// @{
-    size_t maxInFlightBatches = 0;  ///< 最大并行批次（0 表示自动）
-    /// @}
-
-    /// @name 调试配置
-    /// @{
-    bool allocationTelemetryEnabled = false;  ///< 是否启用内存遥测
-    /// @}
-
-    /**
-     * @brief 从用户选项生成内部配置
-     * @param opts 用户可见的处理选项
-     * @return 内部配置实例
-     */
-    [[nodiscard]] static auto fromOptions(const ProcessingOptions& opts) -> InternalConfig;
 };
 
 }  // namespace fq::processing

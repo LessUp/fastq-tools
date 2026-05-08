@@ -6,8 +6,12 @@ add_library(fq_cli STATIC
     commands/stat_command.cpp
     commands/stat_command.h
     commands/command_interface.h
+    command_registry.cpp
+    command_registry.h
     common_options.cpp
     common_options.h
+    enum_parser.cpp
+    enum_parser.h
 )
 
 target_link_libraries(fq_cli

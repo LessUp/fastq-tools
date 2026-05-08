@@ -10,7 +10,7 @@ add_fq_test(test_error      "unit" 60  error/test_exceptions.cpp error/test_erro
 
 # --- 核心功能 ---
 add_fq_test(test_io         "unit" 60  io/test_fastq_reader.cpp io/test_writer.cpp)
-add_fq_test(test_processing "unit" 60  processing/test_pipeline_smoke.cpp processing/test_runtime_policy.cpp processing/test_pipeline_execution_plan.cpp)
+add_fq_test(test_processing "unit" 60  processing/test_pipeline_smoke.cpp processing/test_resolved_runtime_config.cpp)
 add_fq_test(test_cli        "unit" 60  cli/test_filter_plan.cpp)
 target_link_libraries(test_cli PRIVATE fq_cli cxxopts::cxxopts)
 add_fq_test(test_predicates "unit" 60  processing/test_predicates.cpp)

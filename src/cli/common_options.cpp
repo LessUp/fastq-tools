@@ -1,7 +1,6 @@
 /**
  * @file common_options.cpp
  * @brief CLI 共享参数实现
- * @details 实现共享参数的解析和转换逻辑
  *
  * @author LessUp
  * @date 2026-05-08
@@ -13,6 +12,7 @@
 
 #include <stdexcept>
 
+#include "enum_parser.h"
 #include <cxxopts.hpp>
 
 namespace fq::cli {
@@ -73,21 +73,6 @@ auto CommonCliOptions::toProcessingOptions() const -> processing::ProcessingOpti
     }
 
     return opts;
-}
-
-auto parseProcessingProfile(const std::string& value) -> processing::ProcessingProfile {
-    if (value == "default") {
-        return processing::ProcessingProfile::Default;
-    }
-    if (value == "lowMemory") {
-        return processing::ProcessingProfile::LowMemory;
-    }
-    if (value == "highThroughput") {
-        return processing::ProcessingProfile::HighThroughput;
-    }
-
-    throw std::invalid_argument("Invalid profile: " + value +
-                                ". Valid options: default, lowMemory, highThroughput");
 }
 
 }  // namespace fq::cli

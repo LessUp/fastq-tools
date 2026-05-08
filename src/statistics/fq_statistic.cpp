@@ -26,7 +26,7 @@
 #include <numeric>
 #include <vector>
 
-#include "processing/runtime_policy.h"
+#include "processing/resolved_runtime_config.h"
 #include "statistics/fq_statistic_worker.h"
 #include <tbb/global_control.h>
 #include <tbb/parallel_pipeline.h>
@@ -107,8 +107,7 @@ void FastqStatisticCalculator::run() {
     fq::logging::info("Starting FASTQ statistics generation for '{}' using TBB pipeline.",
                       options_.inputFastqPath);
 
-    // 生成内部配置
-    const auto runtimePolicy = processing::deriveRuntimePolicy(options_.processing);
+    const auto runtimeConfig = processing::resolveRuntimeConfig(options_.processing);
 
     FqStatisticResult finalResult;
 
@@ -116,29 +115,26 @@ void FastqStatisticCalculator::run() {
     tbb::global_control globalLimit(tbb::global_control::max_allowed_parallelism, threadCount);
 
     fq::io::FastqReaderOptions readerOptions;
-    readerOptions.readChunkBytes = runtimePolicy.readChunkBytes;
-    readerOptions.zlibBufferBytes = runtimePolicy.zlibBufferBytes;
-    readerOptions.maxBufferBytes = runtimePolicy.batchCapacityBytes;
+    readerOptions.readChunkBytes = runtimeConfig.readChunkBytes;
+    readerOptions.zlibBufferBytes = runtimeConfig.zlibBufferBytes;
+    readerOptions.maxBufferBytes = runtimeConfig.batchCapacityBytes;
 
-    // Shared reader for serial stage
     auto reader = std::make_shared<fq::io::FastqReader>(options_.inputFastqPath, readerOptions);
     if (!reader->isOpen()) {
         throw std::runtime_error("Failed to open input file: " + options_.inputFastqPath);
     }
 
-    // 使用 ObjectPool 作为内存资源策略
     auto batchPool =
-        fq::io::createFastqBatchPool(runtimePolicy.maxLiveTokens, runtimePolicy.maxLiveTokens * 2);
+        fq::io::createFastqBatchPool(runtimeConfig.maxLiveTokens, runtimeConfig.maxLiveTokens * 2);
 
     tbb::parallel_pipeline(
-        runtimePolicy.maxLiveTokens,
-        // Stage 1: Input Filter (Serial)
+        runtimeConfig.maxLiveTokens,
         tbb::make_filter<void, std::shared_ptr<fq::io::FastqBatch>>(
             tbb::filter_mode::serial_in_order,
-            [reader, batchPool, this, &runtimePolicy](
+            [reader, batchPool, this, &runtimeConfig](
                 tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
                 auto batch = batchPool->acquire();
-                batch->buffer().reserve(runtimePolicy.batchCapacityBytes);
+                batch->buffer().reserve(runtimeConfig.batchCapacityBytes);
                 batch->records().reserve(options_.processing.batchSize);
                 if (reader->nextBatch(*batch, options_.processing.batchSize)) {
                     return batch;
@@ -147,7 +143,6 @@ void FastqStatisticCalculator::run() {
                     return nullptr;
                 }
             }) &
-            // Stage 2: Processing Filter (Parallel)
             tbb::make_filter<std::shared_ptr<fq::io::FastqBatch>, FqStatisticResult>(
                 tbb::filter_mode::parallel,
                 [this](const std::shared_ptr<fq::io::FastqBatch>& batch) -> FqStatisticResult {
@@ -158,13 +153,10 @@ void FastqStatisticCalculator::run() {
                                              options_.signatureKmerSize,
                                              options_.duplicateEstimateSampleModulo);
                     FqStatisticResult result;
-                    // 预分配典型 Illumina read length (150bp) 的容量，
-                    // 避免 ensureCapacity 在处理每条 read 时反复 resize
                     result.ensureCapacity(150);
                     result = worker.calculateStats(*batch);
                     return result;
                 }) &
-            // Stage 3: Aggregation Filter (Serial)
             tbb::make_filter<FqStatisticResult, void>(
                 tbb::filter_mode::serial_in_order,
                 [&finalResult](const FqStatisticResult& partialResult) {

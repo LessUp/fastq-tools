@@ -3,21 +3,9 @@
 #include <string>
 #include <vector>
 
+#include "enum_parser.h"
+
 namespace fq::cli {
-
-namespace {
-
-auto parseTrimMode(const std::string& mode) -> fq::processing::QualityTrimmer::TrimMode {
-    if (mode == "five") {
-        return fq::processing::QualityTrimmer::TrimMode::FivePrime;
-    }
-    if (mode == "three") {
-        return fq::processing::QualityTrimmer::TrimMode::ThreePrime;
-    }
-    return fq::processing::QualityTrimmer::TrimMode::Both;
-}
-
-}  // namespace
 
 auto FilterPlan::applyTo(fq::processing::ProcessingPipelineInterface& pipeline) -> void {
     pipeline.setInputPath(inputPath);

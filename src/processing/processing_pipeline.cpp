@@ -48,7 +48,8 @@ void ProcessingPipeline::setWriter(std::unique_ptr<fq::io::IWriter> writer) {
 
 void ProcessingPipeline::setProcessingOptions(const ProcessingOptions& options) {
     options_ = options;
-    runtimePolicy_ = deriveRuntimePolicy(options);
+    runtimeConfig_ = resolveRuntimeConfig(
+        options, static_cast<bool>(customReader_), static_cast<bool>(customWriter_));
 }
 
 void ProcessingPipeline::addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator) {
@@ -60,13 +61,8 @@ void ProcessingPipeline::addReadPredicate(std::unique_ptr<ReadPredicateInterface
 }
 
 auto ProcessingPipeline::run() -> ProcessingStatistics {
-    const auto executionPlan = derivePipelineExecutionPlan(options_,
-                                                           runtimePolicy_,
-                                                           static_cast<bool>(customReader_),
-                                                           static_cast<bool>(customWriter_));
-
-    if (executionPlan.mode == PipelineExecutionMode::Parallel) {
-        return processWithTBB(executionPlan);
+    if (runtimeConfig_.executionMode == ExecutionMode::Parallel) {
+        return processWithTBB();
     }
     return processSequential();
 }
@@ -81,9 +77,9 @@ auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
 
         if (!reader) {
             fq::io::FastqReaderOptions readerOptions;
-            readerOptions.readChunkBytes = runtimePolicy_.readChunkBytes;
-            readerOptions.zlibBufferBytes = runtimePolicy_.zlibBufferBytes;
-            readerOptions.maxBufferBytes = runtimePolicy_.batchCapacityBytes;
+            readerOptions.readChunkBytes = runtimeConfig_.readChunkBytes;
+            readerOptions.zlibBufferBytes = runtimeConfig_.zlibBufferBytes;
+            readerOptions.maxBufferBytes = runtimeConfig_.batchCapacityBytes;
 
             fileReader = std::make_unique<fq::io::FastqReader>(inputPath_, readerOptions);
             if (!fileReader->isOpen()) {
@@ -98,8 +94,8 @@ auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
 
         if (!writer) {
             fq::io::FastqWriterOptions writerOptions;
-            writerOptions.zlibBufferBytes = runtimePolicy_.zlibBufferBytes;
-            writerOptions.outputBufferBytes = runtimePolicy_.writerBufferBytes;
+            writerOptions.zlibBufferBytes = runtimeConfig_.zlibBufferBytes;
+            writerOptions.outputBufferBytes = runtimeConfig_.writerBufferBytes;
 
             fileWriter = std::make_unique<fq::io::FastqWriter>(outputPath_, writerOptions);
             if (!fileWriter->isOpen()) {
@@ -108,7 +104,7 @@ auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
             writer = fileWriter.get();
         }
 
-        fq::io::FastqBatch batch(runtimePolicy_.batchCapacityBytes, options_.batchSize);
+        fq::io::FastqBatch batch(runtimeConfig_.batchCapacityBytes, options_.batchSize);
         auto startTime = std::chrono::steady_clock::now();
 
         while (reader->nextBatch(batch)) {
@@ -192,36 +188,33 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
     return true;
 }
 
-auto ProcessingPipeline::processWithTBB(const PipelineExecutionPlan& executionPlan)
-    -> ProcessingStatistics {
+auto ProcessingPipeline::processWithTBB() -> ProcessingStatistics {
     ProcessingStatistics finalStats;
     auto startTime = std::chrono::steady_clock::now();
 
     tbb::global_control globalLimit(tbb::global_control::max_allowed_parallelism,
-                                    executionPlan.threadCount);
+                                    runtimeConfig_.threadCount);
 
     fq::io::FastqReaderOptions readerOptions;
-    readerOptions.readChunkBytes = runtimePolicy_.readChunkBytes;
-    readerOptions.zlibBufferBytes = runtimePolicy_.zlibBufferBytes;
-    readerOptions.maxBufferBytes = runtimePolicy_.batchCapacityBytes;
+    readerOptions.readChunkBytes = runtimeConfig_.readChunkBytes;
+    readerOptions.zlibBufferBytes = runtimeConfig_.zlibBufferBytes;
+    readerOptions.maxBufferBytes = runtimeConfig_.batchCapacityBytes;
 
     auto reader = std::make_shared<fq::io::FastqReader>(inputPath_, readerOptions);
     if (!reader->isOpen())
         throw std::runtime_error("Failed to open input file: " + inputPath_);
 
     fq::io::FastqWriterOptions writerOptions;
-    writerOptions.zlibBufferBytes = runtimePolicy_.zlibBufferBytes;
-    writerOptions.outputBufferBytes = runtimePolicy_.writerBufferBytes;
+    writerOptions.zlibBufferBytes = runtimeConfig_.zlibBufferBytes;
+    writerOptions.outputBufferBytes = runtimeConfig_.writerBufferBytes;
 
     fq::io::FastqWriter writer(outputPath_, writerOptions);
     if (!writer.isOpen())
         throw std::runtime_error("Failed to open output file: " + outputPath_);
 
     try {
-        // 计算最大并行批次数
-        const size_t maxTokens = executionPlan.maxLiveTokens;
+        const size_t maxTokens = runtimeConfig_.maxLiveTokens;
 
-        // 使用 ObjectPool 作为内存资源策略
         auto batchPool = fq::io::createFastqBatchPool(maxTokens, maxTokens * 2);
 
         tbb::parallel_pipeline(
