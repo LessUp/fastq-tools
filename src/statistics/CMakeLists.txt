@@ -20,6 +20,7 @@ target_link_libraries(fq_statistics
         fq_error
         fq_modern_io
     PRIVATE
+        fq_processing
         spdlog::spdlog
         TBB::tbb
 )

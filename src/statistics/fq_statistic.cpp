@@ -11,13 +11,10 @@
 
 #include "statistics/fq_statistic.h"
 
-#include "fqtools/io/fastq_batch_pool.h"
-#include "fqtools/io/fastq_reader.h"
 #include "fqtools/logging.h"
 #include "fqtools/statistics/statistics_writer.h"
 
 #include <algorithm>
-#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -26,10 +23,8 @@
 #include <numeric>
 #include <vector>
 
-#include "processing/resolved_runtime_config.h"
+#include "processing/execution_runtime.h"
 #include "statistics/fq_statistic_worker.h"
-#include <tbb/global_control.h>
-#include <tbb/parallel_pipeline.h>
 
 namespace fq::statistic {
 
@@ -81,22 +76,6 @@ auto FqStatisticResult::operator+=(const FqStatisticResult& other) -> FqStatisti
     return *this;
 }
 
-// Helper function: 计算单个位置的错误率
-// qualSlot 指向该位置的 kMaxQual 个质量分数槽位（扁平化布局）
-[[nodiscard]] static auto calculateErrorPerPosition(const uint64_t* qualSlot,
-                                                    uint64_t readCount) -> double {
-    if (readCount == 0) {
-        return 0.0;
-    }
-
-    double errPerPos = 0.0;
-    for (int i = 0; i < kMaxQual; ++i) {
-        errPerPos +=
-            static_cast<double>(qualSlot[i]) * std::pow(10.0, -0.1 * static_cast<double>(i));
-    }
-    return errPerPos / static_cast<double>(readCount);
-}
-
 FastqStatisticCalculator::FastqStatisticCalculator(const StatisticOptions& options)
     : options_(options) {
     // 验证配置
@@ -104,66 +83,27 @@ FastqStatisticCalculator::FastqStatisticCalculator(const StatisticOptions& optio
 }
 
 void FastqStatisticCalculator::run() {
-    fq::logging::info("Starting FASTQ statistics generation for '{}' using TBB pipeline.",
+    fq::logging::info("Starting FASTQ statistics generation for '{}' using execution runtime.",
                       options_.inputFastqPath);
 
-    const auto runtimeConfig = processing::resolveRuntimeConfig(options_.processing);
+    processing::ExecutionRuntime runtime;
+    processing::ExecutionRuntimePlan plan;
+    plan.inputPath = options_.inputFastqPath;
+    plan.options = options_.processing;
 
-    FqStatisticResult finalResult;
+    auto finalResult = runtime.run<FqStatisticResult>(
+        plan,
+        [this](fq::io::FastqBatch& batch) {
+            FqStatisticWorker worker(options_.qualityEncoding,
+                                     options_.signatureKmerSize,
+                                     options_.duplicateEstimateSampleModulo);
+            return worker.calculateStats(batch);
+        },
+        [](FqStatisticResult& total, FqStatisticResult partial) { total += partial; },
+        [](FqStatisticResult&, std::uint64_t) {},
+        FqStatisticResult{});
 
-    const size_t threadCount = std::max<size_t>(1, options_.processing.threadCount);
-    tbb::global_control globalLimit(tbb::global_control::max_allowed_parallelism, threadCount);
-
-    fq::io::FastqReaderOptions readerOptions;
-    readerOptions.readChunkBytes = runtimeConfig.readChunkBytes;
-    readerOptions.zlibBufferBytes = runtimeConfig.zlibBufferBytes;
-    readerOptions.maxBufferBytes = runtimeConfig.batchCapacityBytes;
-
-    auto reader = std::make_shared<fq::io::FastqReader>(options_.inputFastqPath, readerOptions);
-    if (!reader->isOpen()) {
-        throw std::runtime_error("Failed to open input file: " + options_.inputFastqPath);
-    }
-
-    auto batchPool =
-        fq::io::createFastqBatchPool(runtimeConfig.maxLiveTokens, runtimeConfig.maxLiveTokens * 2);
-
-    tbb::parallel_pipeline(
-        runtimeConfig.maxLiveTokens,
-        tbb::make_filter<void, std::shared_ptr<fq::io::FastqBatch>>(
-            tbb::filter_mode::serial_in_order,
-            [reader, batchPool, this, &runtimeConfig](
-                tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
-                auto batch = batchPool->acquire();
-                batch->buffer().reserve(runtimeConfig.batchCapacityBytes);
-                batch->records().reserve(options_.processing.batchSize);
-                if (reader->nextBatch(*batch, options_.processing.batchSize)) {
-                    return batch;
-                } else {
-                    fc.stop();
-                    return nullptr;
-                }
-            }) &
-            tbb::make_filter<std::shared_ptr<fq::io::FastqBatch>, FqStatisticResult>(
-                tbb::filter_mode::parallel,
-                [this](const std::shared_ptr<fq::io::FastqBatch>& batch) -> FqStatisticResult {
-                    if (!batch) {
-                        return FqStatisticResult();
-                    }
-                    FqStatisticWorker worker(options_.qualityEncoding,
-                                             options_.signatureKmerSize,
-                                             options_.duplicateEstimateSampleModulo);
-                    FqStatisticResult result;
-                    result.ensureCapacity(150);
-                    result = worker.calculateStats(*batch);
-                    return result;
-                }) &
-            tbb::make_filter<FqStatisticResult, void>(
-                tbb::filter_mode::serial_in_order,
-                [&finalResult](const FqStatisticResult& partialResult) {
-                    finalResult += partialResult;
-                }));
-
-    fq::logging::info("TBB pipeline finished. Aggregated results from all batches.");
+    fq::logging::info("Execution runtime finished. Aggregated results from all batches.");
     writeResult(finalResult);
     fq::logging::info("Statistics report saved to '{}'", options_.outputStatPath);
 }

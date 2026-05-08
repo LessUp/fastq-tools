@@ -83,7 +83,7 @@ Uses default triage label vocabulary: `needs-triage`, `needs-info`, `ready-for-a
 
 ### Domain docs
 
-Single-context layout. Domain language in `CONTEXT.md` (to be created), ADRs in `openspec/baseline/architecture/`. See `docs/agents/domain.md`.
+Single-context layout. Domain language in `CONTEXT.md`, ADRs in `openspec/baseline/architecture/`. See `docs/agents/domain.md`.
 
 ## 相关文档
 

@@ -106,6 +106,39 @@ TEST_F(PipelineIntegrationTest, PipelineRunsWithMultipleThreads) {
     EXPECT_TRUE(std::filesystem::exists(output));
 }
 
+TEST_F(PipelineIntegrationTest, PipelineReportsModifiedReadsAcrossRuntimeBatches) {
+    const auto input = tempDir_.path() / "input.fastq";
+    const auto output = tempDir_.path() / "output.fastq";
+
+    {
+        std::ofstream out(input);
+        out << "@read1\n"
+            << "ACGT\n"
+            << "+\n"
+            << "!!II\n"
+            << "@read2\n"
+            << "TTTT\n"
+            << "+\n"
+            << "IIII\n";
+    }
+
+    auto pipeline = fq::processing::createProcessingPipeline();
+    pipeline->setInputPath(input.string());
+    pipeline->setOutputPath(output.string());
+
+    fq::processing::ProcessingOptions options;
+    options.threadCount = 2;
+    options.batchSize = 1;
+    pipeline->setProcessingOptions(options);
+    pipeline->addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20.0));
+
+    const auto stats = pipeline->run();
+
+    EXPECT_EQ(stats.totalReads, 2);
+    EXPECT_EQ(stats.modifiedReads, 1);
+    EXPECT_NE(FixtureLoader::loadTextFile(output).find("@read1\nGT\n+\nII\n"), std::string::npos);
+}
+
 TEST_F(PipelineIntegrationTest, StatisticCalculatorRunsWithMultipleThreads) {
     const auto input = tempDir_.path() / "input.fastq";
     const auto output = tempDir_.path() / "stats.txt";
@@ -133,6 +166,39 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorRunsWithMultipleThreads) {
 
     const auto content = FixtureLoader::loadTextFile(output);
     EXPECT_NE(content.find("#ReadNum\t2\n"), std::string::npos);
+}
+
+TEST_F(PipelineIntegrationTest, StatisticCalculatorAggregatesAcrossRuntimeBatches) {
+    const auto input = tempDir_.path() / "input.fastq";
+    const auto output = tempDir_.path() / "stats.txt";
+
+    {
+        std::ofstream out(input);
+        out << "@read1\n"
+            << "A\n"
+            << "+\n"
+            << "I\n"
+            << "@read2\n"
+            << "T\n"
+            << "+\n"
+            << "I\n"
+            << "@read3\n"
+            << "G\n"
+            << "+\n"
+            << "I\n";
+    }
+
+    fq::statistic::StatisticOptions options;
+    options.inputFastqPath = input.string();
+    options.outputStatPath = output.string();
+    options.processing.batchSize = 1;
+    options.processing.threadCount = 2;
+
+    auto calculator = fq::statistic::createStatisticCalculator(options);
+    calculator->run();
+
+    const auto content = FixtureLoader::loadTextFile(output);
+    EXPECT_NE(content.find("#ReadNum\t3\n"), std::string::npos);
 }
 
 TEST_F(PipelineIntegrationTest, PipelineRunsInLowMemoryMode) {

@@ -12,18 +12,12 @@
 
 #include "processing/processing_pipeline.h"
 
-#include "fqtools/io/fastq_batch_pool.h"
-#include "fqtools/io/fastq_reader.h"
-#include "fqtools/io/fastq_writer.h"
 #include "fqtools/logging.h"
 #include "fqtools/processing/read_mutator_interface.h"
 #include "fqtools/processing/read_predicate_interface.h"
 
-#include <algorithm>
+#include <chrono>
 #include <stdexcept>
-
-#include <tbb/global_control.h>
-#include <tbb/parallel_pipeline.h>
 
 namespace fq::processing {
 
@@ -43,13 +37,11 @@ void ProcessingPipeline::setReader(std::unique_ptr<fq::io::IReader> reader) {
 }
 
 void ProcessingPipeline::setWriter(std::unique_ptr<fq::io::IWriter> writer) {
-    customWriter_ = std::move(writer);
+    customWriter_ = std::shared_ptr<fq::io::IWriter>(std::move(writer));
 }
 
 void ProcessingPipeline::setProcessingOptions(const ProcessingOptions& options) {
     options_ = options;
-    runtimeConfig_ = resolveRuntimeConfig(
-        options, static_cast<bool>(customReader_), static_cast<bool>(customWriter_));
 }
 
 void ProcessingPipeline::addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator) {
@@ -61,77 +53,54 @@ void ProcessingPipeline::addReadPredicate(std::unique_ptr<ReadPredicateInterface
 }
 
 auto ProcessingPipeline::run() -> ProcessingStatistics {
-    if (runtimeConfig_.executionMode == ExecutionMode::Parallel) {
-        return processWithTBB();
-    }
-    return processSequential();
-}
-
-auto ProcessingPipeline::processSequential() -> ProcessingStatistics {
-    ProcessingStatistics stats;
-
     try {
-        // 创建或使用自定义 Reader
-        std::unique_ptr<fq::io::FastqReader> fileReader;
-        fq::io::IReader* reader = customReader_.get();
+        ExecutionRuntimePlan runtimePlan;
+        runtimePlan.inputPath = inputPath_;
+        if (!outputPath_.empty()) {
+            runtimePlan.outputPath = outputPath_;
+        }
+        runtimePlan.options = options_;
 
-        if (!reader) {
-            fq::io::FastqReaderOptions readerOptions;
-            readerOptions.readChunkBytes = runtimeConfig_.readChunkBytes;
-            readerOptions.zlibBufferBytes = runtimeConfig_.zlibBufferBytes;
-            readerOptions.maxBufferBytes = runtimeConfig_.batchCapacityBytes;
-
-            fileReader = std::make_unique<fq::io::FastqReader>(inputPath_, readerOptions);
-            if (!fileReader->isOpen()) {
-                throw std::runtime_error("Failed to open input file: " + inputPath_);
-            }
-            reader = fileReader.get();
+        runtime_.setCustomReader(std::move(customReader_));
+        if (customWriter_) {
+            runtime_.setCustomWriter(customWriter_);
         }
 
-        // 创建或使用自定义 Writer
-        std::unique_ptr<fq::io::FastqWriter> fileWriter;
-        fq::io::IWriter* writer = customWriter_.get();
-
-        if (!writer) {
-            fq::io::FastqWriterOptions writerOptions;
-            writerOptions.zlibBufferBytes = runtimeConfig_.zlibBufferBytes;
-            writerOptions.outputBufferBytes = runtimeConfig_.writerBufferBytes;
-
-            fileWriter = std::make_unique<fq::io::FastqWriter>(outputPath_, writerOptions);
-            if (!fileWriter->isOpen()) {
-                throw std::runtime_error("Failed to open output file: " + outputPath_);
-            }
-            writer = fileWriter.get();
-        }
-
-        fq::io::FastqBatch batch(runtimeConfig_.batchCapacityBytes, options_.batchSize);
         auto startTime = std::chrono::steady_clock::now();
-
-        while (reader->nextBatch(batch)) {
-            processBatch(batch, stats);
-            writer->write(batch);
-        }
+        auto stats = runtime_.run<ProcessingStatistics>(
+            runtimePlan,
+            [this](fq::io::FastqBatch& batch) {
+                ProcessingStatistics partial;
+                processBatch(batch, partial);
+                return partial;
+            },
+            [](ProcessingStatistics& total, ProcessingStatistics partial) {
+                total.totalReads += partial.totalReads;
+                total.passedReads += partial.passedReads;
+                total.filteredReads += partial.filteredReads;
+                total.modifiedReads += partial.modifiedReads;
+                total.inputBytes += partial.inputBytes;
+                total.outputBytes += partial.outputBytes;
+            },
+            [](ProcessingStatistics& partial, std::uint64_t committedBytes) {
+                partial.outputBytes += committedBytes;
+            },
+            ProcessingStatistics{});
 
         auto endTime = std::chrono::steady_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
         stats.elapsedMs = static_cast<uint64_t>(duration);
         stats.processingTimeMs = static_cast<double>(stats.elapsedMs);
-
-        // 注意：自定义 writer 可能没有 totalUncompressedBytes 方法
-        if (fileWriter) {
-            stats.outputBytes = fileWriter->totalUncompressedBytes();
-        }
         if (stats.elapsedMs > 0) {
             stats.throughputMbps = (static_cast<double>(stats.outputBytes) / 1024.0 / 1024.0) /
                 (static_cast<double>(stats.elapsedMs) / 1000.0);
         }
+        return stats;
     } catch (const std::exception& e) {
-        fq::logging::error("Error in sequential processing: {}", e.what());
+        fq::logging::error("Error in processing pipeline: {}", e.what());
         throw;
     }
-
-    return stats;
 }
 
 auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
@@ -187,94 +156,4 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
 
     return true;
 }
-
-auto ProcessingPipeline::processWithTBB() -> ProcessingStatistics {
-    ProcessingStatistics finalStats;
-    auto startTime = std::chrono::steady_clock::now();
-
-    tbb::global_control globalLimit(tbb::global_control::max_allowed_parallelism,
-                                    runtimeConfig_.threadCount);
-
-    fq::io::FastqReaderOptions readerOptions;
-    readerOptions.readChunkBytes = runtimeConfig_.readChunkBytes;
-    readerOptions.zlibBufferBytes = runtimeConfig_.zlibBufferBytes;
-    readerOptions.maxBufferBytes = runtimeConfig_.batchCapacityBytes;
-
-    auto reader = std::make_shared<fq::io::FastqReader>(inputPath_, readerOptions);
-    if (!reader->isOpen())
-        throw std::runtime_error("Failed to open input file: " + inputPath_);
-
-    fq::io::FastqWriterOptions writerOptions;
-    writerOptions.zlibBufferBytes = runtimeConfig_.zlibBufferBytes;
-    writerOptions.outputBufferBytes = runtimeConfig_.writerBufferBytes;
-
-    fq::io::FastqWriter writer(outputPath_, writerOptions);
-    if (!writer.isOpen())
-        throw std::runtime_error("Failed to open output file: " + outputPath_);
-
-    try {
-        const size_t maxTokens = runtimeConfig_.maxLiveTokens;
-
-        auto batchPool = fq::io::createFastqBatchPool(maxTokens, maxTokens * 2);
-
-        tbb::parallel_pipeline(
-            maxTokens,
-
-            tbb::make_filter<void, std::shared_ptr<fq::io::FastqBatch>>(
-                tbb::filter_mode::serial_in_order,
-                [reader, batchPool, this](
-                    tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
-                    auto batch = batchPool->acquire();
-                    if (reader->nextBatch(*batch, options_.batchSize)) {
-                        return batch;
-                    }
-                    fc.stop();
-                    return nullptr;
-                }) &
-
-                tbb::make_filter<
-                    std::shared_ptr<fq::io::FastqBatch>,
-                    std::pair<std::shared_ptr<fq::io::FastqBatch>, ProcessingStatistics>>(
-                    tbb::filter_mode::parallel,
-                    [this](std::shared_ptr<fq::io::FastqBatch> batch) {
-                        ProcessingStatistics batchStats;
-                        this->processBatch(*batch, batchStats);
-                        return std::make_pair(batch, batchStats);
-                    }) &
-
-                tbb::make_filter<
-                    std::pair<std::shared_ptr<fq::io::FastqBatch>, ProcessingStatistics>,
-                    void>(
-                    tbb::filter_mode::serial_in_order,
-                    [&writer, &finalStats](const std::pair<std::shared_ptr<fq::io::FastqBatch>,
-                                                           ProcessingStatistics>& pair) {
-                        const auto before = writer.totalUncompressedBytes();
-                        writer.write(*pair.first);
-                        const auto after = writer.totalUncompressedBytes();
-                        finalStats.totalReads += pair.second.totalReads;
-                        finalStats.passedReads += pair.second.passedReads;
-                        finalStats.filteredReads += pair.second.filteredReads;
-                        finalStats.modifiedReads += pair.second.modifiedReads;
-                        finalStats.inputBytes += pair.second.inputBytes;
-                        finalStats.outputBytes += (after - before);
-                    }));
-
-        auto endTime = std::chrono::steady_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
-        finalStats.elapsedMs = static_cast<uint64_t>(duration);
-        finalStats.processingTimeMs = static_cast<double>(finalStats.elapsedMs);
-        if (finalStats.elapsedMs > 0) {
-            finalStats.throughputMbps =
-                (static_cast<double>(finalStats.outputBytes) / 1024.0 / 1024.0) /
-                (static_cast<double>(finalStats.elapsedMs) / 1000.0);
-        }
-    } catch (const std::exception& e) {
-        fq::logging::error("TBB pipeline failed: {}", e.what());
-        throw;
-    }
-
-    return finalStats;
-}
-
 }  // namespace fq::processing
