@@ -1,16 +1,40 @@
 #include "processing/execution_runtime.h"
 
+#include <deque>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace fq::processing {
 namespace {
 
-auto makeBatch(std::string id, std::string seq) -> fq::io::FastqBatch {
-    fq::io::FastqBatch batch(1024, 1);
-    batch.records().push_back(fq::io::FastqRecord{std::move(id), {}, std::move(seq), "IIII", "+"});
-    return batch;
-}
+// Test helper: storage for FASTQ record strings that outlives batch usage
+// Uses deque to prevent pointer invalidation on insertion
+struct TestRecordStorage {
+    std::deque<std::string> ids;
+    std::deque<std::string> seqs;
+    std::deque<std::string> quals;
+    std::deque<std::string> pluses;
+    
+    auto makeBatch(std::string id, std::string seq) -> fq::io::FastqBatch {
+        ids.push_back(std::move(id));
+        seqs.push_back(std::move(seq));
+        quals.push_back("IIII");
+        pluses.push_back("+");
+        
+        const size_t idx = ids.size() - 1;
+        
+        fq::io::FastqBatch batch(1024, 1);
+        batch.records().push_back(fq::io::FastqRecord{
+            ids[idx],
+            {},
+            seqs[idx],
+            quals[idx],
+            pluses[idx]
+        });
+        return batch;
+    }
+};
 
 class DeterministicAdapter final : public ExecutionRuntimeAdapter {
 public:
@@ -39,8 +63,9 @@ private:
 }  // namespace
 
 TEST(ExecutionRuntimeTest, DeterministicAdapterVisitsBatchesInOrder) {
+    TestRecordStorage storage;
     auto adapter = std::make_unique<DeterministicAdapter>(
-        std::vector<fq::io::FastqBatch>{makeBatch("read1", "ACGT"), makeBatch("read2", "TTTT")});
+        std::vector<fq::io::FastqBatch>{storage.makeBatch("read1", "ACGT"), storage.makeBatch("read2", "TTTT")});
     ExecutionRuntime runtime(std::move(adapter));
 
     ExecutionRuntimePlan plan;
@@ -63,8 +88,9 @@ TEST(ExecutionRuntimeTest, DeterministicAdapterVisitsBatchesInOrder) {
 }
 
 TEST(ExecutionRuntimeTest, ForwardsBatchSizeToAdapter) {
+    TestRecordStorage storage;
     auto adapter = std::make_unique<DeterministicAdapter>(
-        std::vector<fq::io::FastqBatch>{makeBatch("read1", "ACGT"), makeBatch("read2", "TTTT")});
+        std::vector<fq::io::FastqBatch>{storage.makeBatch("read1", "ACGT"), storage.makeBatch("read2", "TTTT")});
     auto* adapterPtr = adapter.get();
     ExecutionRuntime runtime(std::move(adapter));
 
@@ -88,8 +114,9 @@ TEST(ExecutionRuntimeTest, RequiresNonNullAdapter) {
 }
 
 TEST(ExecutionRuntimeTest, ValidatesProcessingOptionsBeforeRun) {
+    TestRecordStorage storage;
     auto adapter = std::make_unique<DeterministicAdapter>(
-        std::vector<fq::io::FastqBatch>{makeBatch("read1", "ACGT")});
+        std::vector<fq::io::FastqBatch>{storage.makeBatch("read1", "ACGT")});
     ExecutionRuntime runtime(std::move(adapter));
 
     ExecutionRuntimePlan plan;
@@ -107,8 +134,9 @@ TEST(ExecutionRuntimeTest, ValidatesProcessingOptionsBeforeRun) {
 }
 
 TEST(ExecutionRuntimeTest, ValidatesThreadCountBeforeRun) {
+    TestRecordStorage storage;
     auto adapter = std::make_unique<DeterministicAdapter>(
-        std::vector<fq::io::FastqBatch>{makeBatch("read1", "ACGT")});
+        std::vector<fq::io::FastqBatch>{storage.makeBatch("read1", "ACGT")});
     ExecutionRuntime runtime(std::move(adapter));
 
     ExecutionRuntimePlan plan;
@@ -126,8 +154,9 @@ TEST(ExecutionRuntimeTest, ValidatesThreadCountBeforeRun) {
 }
 
 TEST(ExecutionRuntimeTest, CallbackSequencingIsCorrect) {
+    TestRecordStorage storage;
     auto adapter = std::make_unique<DeterministicAdapter>(
-        std::vector<fq::io::FastqBatch>{makeBatch("read1", "ACGT"), makeBatch("read2", "TTTT")});
+        std::vector<fq::io::FastqBatch>{storage.makeBatch("read1", "ACGT"), storage.makeBatch("read2", "TTTT")});
     ExecutionRuntime runtime(std::move(adapter));
 
     ExecutionRuntimePlan plan;
