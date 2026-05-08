@@ -1,0 +1,187 @@
+#include "processing/execution_runtime.h"
+
+#include <deque>
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+namespace fq::processing {
+namespace {
+
+// Test helper: storage for FASTQ record strings that outlives batch usage
+// Uses deque to prevent pointer invalidation on insertion
+struct TestRecordStorage {
+    std::deque<std::string> ids;
+    std::deque<std::string> seqs;
+    std::deque<std::string> quals;
+    std::deque<std::string> pluses;
+    
+    auto makeBatch(std::string id, std::string seq) -> fq::io::FastqBatch {
+        ids.push_back(std::move(id));
+        seqs.push_back(std::move(seq));
+        quals.push_back("IIII");
+        pluses.push_back("+");
+        
+        const size_t idx = ids.size() - 1;
+        
+        fq::io::FastqBatch batch(1024, 1);
+        batch.records().push_back(fq::io::FastqRecord{
+            ids[idx],
+            {},
+            seqs[idx],
+            quals[idx],
+            pluses[idx]
+        });
+        return batch;
+    }
+};
+
+class DeterministicAdapter final : public ExecutionRuntimeAdapter {
+public:
+    explicit DeterministicAdapter(std::vector<fq::io::FastqBatch> batches)
+        : batches_(std::move(batches)) {}
+
+    auto nextBatch(fq::io::FastqBatch& batch, size_t maxRecords) -> bool override {
+        if (cursor_ >= batches_.size()) {
+            return false;
+        }
+        receivedBatchSizes_.push_back(maxRecords);
+        batch = std::move(batches_[cursor_++]);
+        return true;
+    }
+
+    auto commit(const fq::io::FastqBatch&) -> std::uint64_t override { return 0; }
+
+    auto getReceivedBatchSizes() const -> const std::vector<size_t>& { return receivedBatchSizes_; }
+
+private:
+    std::vector<fq::io::FastqBatch> batches_;
+    std::vector<size_t> receivedBatchSizes_;
+    size_t cursor_ = 0;
+};
+
+}  // namespace
+
+TEST(ExecutionRuntimeTest, DeterministicAdapterVisitsBatchesInOrder) {
+    TestRecordStorage storage;
+    auto adapter = std::make_unique<DeterministicAdapter>(
+        std::vector<fq::io::FastqBatch>{storage.makeBatch("read1", "ACGT"), storage.makeBatch("read2", "TTTT")});
+    ExecutionRuntime runtime(std::move(adapter));
+
+    ExecutionRuntimePlan plan;
+    plan.options.batchSize = 1;
+    plan.options.threadCount = 2;
+
+    std::vector<std::string> seenIds;
+    const auto totalReads = runtime.run<size_t>(
+        plan,
+        [&](fq::io::FastqBatch& batch) {
+            seenIds.push_back(std::string(batch.records().front().id));
+            return batch.records().size();
+        },
+        [](size_t& total, size_t partial) { total += partial; },
+        [](size_t&, std::uint64_t) {},
+        size_t{0});
+
+    EXPECT_EQ(totalReads, 2U);
+    EXPECT_THAT(seenIds, ::testing::ElementsAre("read1", "read2"));
+}
+
+TEST(ExecutionRuntimeTest, ForwardsBatchSizeToAdapter) {
+    TestRecordStorage storage;
+    auto adapter = std::make_unique<DeterministicAdapter>(
+        std::vector<fq::io::FastqBatch>{storage.makeBatch("read1", "ACGT"), storage.makeBatch("read2", "TTTT")});
+    auto* adapterPtr = adapter.get();
+    ExecutionRuntime runtime(std::move(adapter));
+
+    ExecutionRuntimePlan plan;
+    plan.options.batchSize = 42;
+
+    runtime.run<size_t>(
+        plan,
+        [](fq::io::FastqBatch&) { return size_t{1}; },
+        [](size_t& total, size_t partial) { total += partial; },
+        [](size_t&, std::uint64_t) {},
+        size_t{0});
+
+    const auto& received = adapterPtr->getReceivedBatchSizes();
+    EXPECT_THAT(received, ::testing::Each(42));
+    EXPECT_EQ(received.size(), 2U);
+}
+
+TEST(ExecutionRuntimeTest, RequiresNonNullAdapter) {
+    EXPECT_THROW(ExecutionRuntime runtime(nullptr), std::invalid_argument);
+}
+
+TEST(ExecutionRuntimeTest, ValidatesProcessingOptionsBeforeRun) {
+    TestRecordStorage storage;
+    auto adapter = std::make_unique<DeterministicAdapter>(
+        std::vector<fq::io::FastqBatch>{storage.makeBatch("read1", "ACGT")});
+    ExecutionRuntime runtime(std::move(adapter));
+
+    ExecutionRuntimePlan plan;
+    plan.options.batchSize = 0;  // Invalid: batchSize must be > 0
+    plan.options.threadCount = 1;
+
+    EXPECT_THROW(
+        runtime.run<size_t>(
+            plan,
+            [](fq::io::FastqBatch&) { return size_t{1}; },
+            [](size_t& total, size_t partial) { total += partial; },
+            [](size_t&, std::uint64_t) {},
+            size_t{0}),
+        std::invalid_argument);
+}
+
+TEST(ExecutionRuntimeTest, ValidatesThreadCountBeforeRun) {
+    TestRecordStorage storage;
+    auto adapter = std::make_unique<DeterministicAdapter>(
+        std::vector<fq::io::FastqBatch>{storage.makeBatch("read1", "ACGT")});
+    ExecutionRuntime runtime(std::move(adapter));
+
+    ExecutionRuntimePlan plan;
+    plan.options.batchSize = 100;
+    plan.options.threadCount = 0;  // Invalid: threadCount must be > 0
+
+    EXPECT_THROW(
+        runtime.run<size_t>(
+            plan,
+            [](fq::io::FastqBatch&) { return size_t{1}; },
+            [](size_t& total, size_t partial) { total += partial; },
+            [](size_t&, std::uint64_t) {},
+            size_t{0}),
+        std::invalid_argument);
+}
+
+TEST(ExecutionRuntimeTest, CallbackSequencingIsCorrect) {
+    TestRecordStorage storage;
+    auto adapter = std::make_unique<DeterministicAdapter>(
+        std::vector<fq::io::FastqBatch>{storage.makeBatch("read1", "ACGT"), storage.makeBatch("read2", "TTTT")});
+    ExecutionRuntime runtime(std::move(adapter));
+
+    ExecutionRuntimePlan plan;
+    plan.options.batchSize = 1;
+    plan.options.threadCount = 1;
+
+    std::vector<std::string> callOrder;
+
+    runtime.run<size_t>(
+        plan,
+        [&](fq::io::FastqBatch&) {
+            callOrder.push_back("batchWork");
+            return size_t{1};
+        },
+        [&](size_t& total, size_t partial) {
+            callOrder.push_back("reduce");
+            total += partial;
+        },
+        [&](size_t&, std::uint64_t) { callOrder.push_back("afterCommit"); },
+        size_t{0});
+
+    // Expected order per batch: batchWork -> commit (implicit) -> afterCommit -> reduce
+    EXPECT_THAT(callOrder,
+                ::testing::ElementsAre("batchWork", "afterCommit", "reduce", "batchWork",
+                                       "afterCommit", "reduce"));
+}
+
+}  // namespace fq::processing

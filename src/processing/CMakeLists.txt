@@ -1,4 +1,5 @@
 add_library(fq_processing STATIC
+    execution_runtime.cpp
     factory.cpp
     resolved_runtime_config.cpp
     processing_options.cpp
