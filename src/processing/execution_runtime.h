@@ -27,7 +27,7 @@ public:
 
 class ExecutionRuntime {
 public:
-    explicit ExecutionRuntime(std::unique_ptr<ExecutionRuntimeAdapter> adapter = nullptr);
+    explicit ExecutionRuntime(std::unique_ptr<ExecutionRuntimeAdapter> adapter);
 
     template <typename Final, typename BatchWork, typename Reduce, typename AfterCommit>
     auto run(const ExecutionRuntimePlan& plan,
