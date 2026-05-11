@@ -37,14 +37,14 @@ export function LanguageSelector() {
       const browserLang = navigator.language.toLowerCase()
       if (browserLang.startsWith('zh')) {
         sessionStorage.setItem('fqt-language-selected', 'true')
-        router.push('/fastq-tools/zh')
+        router.push('/zh')
       }
     }
   }, [router])
 
   const handleSelect = (code: string) => {
     sessionStorage.setItem('fqt-language-selected', 'true')
-    router.push(`/fastq-tools/${code}`)
+    router.push(`/${code}`)
   }
 
   return (
