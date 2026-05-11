@@ -60,8 +60,10 @@ cascade/
 
 # ===== OpenSpec CLI（Node.js） =====
 node_modules/
-package-lock.json
 openspec.local.yaml
+# package-lock.json 仅在 docs/website 中提交
+package-lock.json
+!docs/website/package-lock.json
 
 # ===== OS 特定文件 =====
 .DS_Store
