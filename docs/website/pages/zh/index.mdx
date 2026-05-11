@@ -10,9 +10,9 @@ import { Zap, Database, Target, Cpu, Shield, ArrowRight } from 'lucide-react'
 
 export default function HomePage() {
   const stats = [
-    { value: '170万', label: 'reads/秒', color: 'text-primary-600 dark:text-primary-400' },
-    { value: '零拷贝', label: 'String view 设计', color: 'text-bio-600 dark:text-bio-400' },
-    { value: 'C++23', label: '现代标准', color: 'text-purple-600 dark:text-purple-400' },
+    { value: '170万', label: 'reads/秒', color: 'text-blue-600 dark:text-blue-400' },
+    { value: '零拷贝', label: 'String view 设计', color: 'text-purple-600 dark:text-purple-400' },
+    { value: 'C++23', label: '现代标准', color: 'text-green-600 dark:text-green-400' },
   ]
 
   const codeTabs = [
@@ -59,7 +59,7 @@ for (auto record : fq::io::Reader("reads.fastq")) {
     },
     {
       icon: Database,
-      iconColor: 'bg-primary-500',
+      iconColor: 'bg-blue-500',
       title: '零拷贝设计',
       description: '所有记录处理使用 std::string_view。最小化分配与缺页。',
       href: '/fastq-tools/zh/core-concepts/architecture'
@@ -120,7 +120,7 @@ for (auto record : fq::io::Reader("reads.fastq")) {
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             性能对比
           </h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-bio-600 mx-auto mb-8 rounded-full" />
+          <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-purple-600 mx-auto mb-8 rounded-full" />
 
           <div className="overflow-x-auto">
             <table className="perf-table w-full">
@@ -135,25 +135,25 @@ for (auto record : fq::io::Reader("reads.fastq")) {
               <tbody>
                 <tr>
                   <td>吞吐量</td>
-                  <td className="font-semibold text-primary-600">170 万 reads/s</td>
+                  <td className="font-semibold text-blue-600">170 万 reads/s</td>
                   <td>~50 万 reads/s</td>
                   <td>~80 万 reads/s</td>
                 </tr>
                 <tr>
                   <td>内存模型</td>
-                  <td className="font-semibold text-primary-600">零拷贝</td>
+                  <td className="font-semibold text-blue-600">零拷贝</td>
                   <td>缓冲区</td>
                   <td>自适应</td>
                 </tr>
                 <tr>
                   <td>并行度</td>
-                  <td className="font-semibold text-primary-600">TBB 流水线</td>
+                  <td className="font-semibold text-blue-600">TBB 流水线</td>
                   <td>单线程</td>
                   <td>多线程</td>
                 </tr>
                 <tr>
                   <td>C++ API</td>
-                  <td className="font-semibold text-primary-600">有</td>
+                  <td className="font-semibold text-blue-600">有</td>
                   <td>无</td>
                   <td>无</td>
                 </tr>
@@ -172,7 +172,7 @@ for (auto record : fq::io::Reader("reads.fastq")) {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
             开源 & MIT 许可
           </h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-bio-600 mx-auto mb-8 rounded-full" />
+          <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-purple-600 mx-auto mb-8 rounded-full" />
 
           <div className="text-center text-gray-600 dark:text-gray-400 mb-10">
             <p className="mb-4">

@@ -24,7 +24,7 @@ export function CodeShowcase({ title, tabs }: CodeShowcaseProps) {
   return (
     <div className="container mx-auto px-4 py-16">
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{title}</h2>
-      <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-bio-600 mx-auto mb-12 rounded-full" />
+      <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-purple-600 mx-auto mb-12 rounded-full" />
 
       <div className="max-w-4xl mx-auto">
         <div className="code-block">

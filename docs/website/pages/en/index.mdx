@@ -10,9 +10,9 @@ import { Zap, Database, Target, Cpu, Shield, ArrowRight } from 'lucide-react'
 
 export default function HomePage() {
   const stats = [
-    { value: '1.7M', label: 'Reads per second', color: 'text-primary-600 dark:text-primary-400' },
-    { value: 'Zero-copy', label: 'String view design', color: 'text-bio-600 dark:text-bio-400' },
-    { value: 'C++23', label: 'Modern standard', color: 'text-purple-600 dark:text-purple-400' },
+    { value: '1.7M', label: 'Reads per second', color: 'text-blue-600 dark:text-blue-400' },
+    { value: 'Zero-copy', label: 'String view design', color: 'text-purple-600 dark:text-purple-400' },
+    { value: 'C++23', label: 'Modern standard', color: 'text-green-600 dark:text-green-400' },
   ]
 
   const codeTabs = [
@@ -59,7 +59,7 @@ for (auto record : fq::io::Reader("reads.fastq")) {
     },
     {
       icon: Database,
-      iconColor: 'bg-primary-500',
+      iconColor: 'bg-blue-500',
       title: 'Zero-Copy Design',
       description: 'All record processing uses std::string_view. Minimize allocations and page faults.',
       href: '/fastq-tools/en/core-concepts/architecture'
@@ -120,7 +120,7 @@ for (auto record : fq::io::Reader("reads.fastq")) {
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Performance Comparison
           </h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-bio-600 mx-auto mb-8 rounded-full" />
+          <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-purple-600 mx-auto mb-8 rounded-full" />
 
           <div className="overflow-x-auto">
             <table className="perf-table w-full">
@@ -135,25 +135,25 @@ for (auto record : fq::io::Reader("reads.fastq")) {
               <tbody>
                 <tr>
                   <td>Throughput</td>
-                  <td className="font-semibold text-primary-600">1.7M reads/s</td>
+                  <td className="font-semibold text-blue-600">1.7M reads/s</td>
                   <td>~500K reads/s</td>
                   <td>~800K reads/s</td>
                 </tr>
                 <tr>
                   <td>Memory Model</td>
-                  <td className="font-semibold text-primary-600">Zero-copy</td>
+                  <td className="font-semibold text-blue-600">Zero-copy</td>
                   <td>Buffer-based</td>
                   <td>Adaptive</td>
                 </tr>
                 <tr>
                   <td>Parallelism</td>
-                  <td className="font-semibold text-primary-600">TBB pipeline</td>
+                  <td className="font-semibold text-blue-600">TBB pipeline</td>
                   <td>Single-threaded</td>
                   <td>Multi-threaded</td>
                 </tr>
                 <tr>
                   <td>C++ API</td>
-                  <td className="font-semibold text-primary-600">Yes</td>
+                  <td className="font-semibold text-blue-600">Yes</td>
                   <td>No</td>
                   <td>No</td>
                 </tr>
@@ -172,7 +172,7 @@ for (auto record : fq::io::Reader("reads.fastq")) {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
             Open Source & MIT Licensed
           </h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-bio-600 mx-auto mb-8 rounded-full" />
+          <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-purple-600 mx-auto mb-8 rounded-full" />
 
           <div className="text-center text-gray-600 dark:text-gray-400 mb-10">
             <p className="mb-4">

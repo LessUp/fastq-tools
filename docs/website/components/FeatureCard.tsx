@@ -44,7 +44,7 @@ export function FeatureGrid({ title, features }: FeatureGridProps) {
   return (
     <div className="container mx-auto px-4 py-16">
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{title}</h2>
-      <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-bio-600 mx-auto mb-12 rounded-full" />
+      <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-purple-600 mx-auto mb-12 rounded-full" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {features.map((feature, index) => (
