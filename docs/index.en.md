@@ -130,7 +130,7 @@ FastQTools 从设计之初就采用**规范驱动**方法。每个公开 API、�
 ---
 
 <p style="text-align: center; color: var(--md-default-fg-color--light);">
-  <a href="index.md">中文</a> ·
+  <a href="index.md">中文版</a> ·
   <a href="https://github.com/LessUp/fastq-tools">GitHub</a> ·
   <a href="https://github.com/LessUp/fastq-tools/blob/master/LICENSE">MIT 许可证</a>
 </p>

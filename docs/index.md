@@ -130,7 +130,7 @@ FastQTools is **specification-driven** from the ground up. Every public API, fil
 ---
 
 <p style="text-align: center; color: var(--md-default-fg-color--light);">
-  <a href="index.en.md">中文版</a> ·
+  <a href="index.en.md">English</a> ·
   <a href="https://github.com/LessUp/fastq-tools">GitHub</a> ·
   <a href="https://github.com/LessUp/fastq-tools/blob/master/LICENSE">MIT License</a>
 </p>
