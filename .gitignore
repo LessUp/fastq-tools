@@ -89,6 +89,8 @@ Testing/
 # ===== 自动生成的文档 =====
 docs/generated/
 site/
+docs/.site/
+docs/website/.next/
 
 # ===== 缓存 =====
 .cache/
