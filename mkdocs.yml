@@ -56,6 +56,15 @@ theme:
     - content.action.edit
     - content.action.view
 
+extra:
+  alternate:
+    - name: 中文
+      link: /
+      lang: zh
+    - name: English
+      link: /index.en.html
+      lang: en
+
 extra_css:
   - assets/css/custom.css
 
