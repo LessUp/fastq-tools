@@ -1,0 +1,54 @@
+# Benchmarks
+
+FastQTools performance on standard hardware.
+
+## Test Environment
+
+- **CPU**: AMD Ryzen 9 5900X (12 cores / 24 threads)
+- **RAM**: 64 GB DDR4
+- **OS**: Ubuntu 22.04
+- **Data**: 100K reads × 150bp
+
+---
+
+## Throughput
+
+| Operation | Speed | Cores |
+|-----------|-------|-------|
+| FASTQ read | 1696 MB/s | 1× |
+| FASTQ write | 1.76M reads/s | 1× |
+| Full stat pass | 302 MB/s | parallel |
+| Combined filter | 1.67M reads/s | parallel |
+
+---
+
+## Comparison
+
+| Feature | FastQTools | seqtk | fastp |
+|---------|------------|-------|-------|
+| **Throughput** | 1.7M reads/s | ~500K reads/s | ~800K reads/s |
+| **Memory model** | Zero-copy, bounded pool | Buffer-based | Adaptive |
+| **Parallelism** | TBB pipeline (auto-scale) | Single-threaded | Multi-threaded |
+| **QC sidecar** | ✅ Built-in | ❌ | ✅ HTML report |
+| **Quality trimming** | ✅ AVX2 optimized | ✅ Basic | ✅ Built-in |
+| **Adapter trimming** | ✅ | ❌ | ✅ Auto-detect |
+| **C++ API** | ✅ Public headers | ❌ | ❌ |
+| **Spec-driven** | ✅ Full baseline | ❌ | ❌ |
+
+---
+
+## Scaling
+
+The parallel pipeline automatically scales to available cores:
+
+```
+Threads | Throughput (reads/s)
+--------|---------------------
+   1    |    450,000
+   2    |    820,000
+   4    |  1,420,000
+   8    |  1,670,000
+  12    |  1,720,000
+```
+
+Diminishing returns beyond ~8 threads due to I/O bottlenecks.

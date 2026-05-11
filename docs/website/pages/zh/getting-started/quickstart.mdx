@@ -1,0 +1,112 @@
+# 快速开始
+
+本指南帮助你在最短时间内设置 FastQTools 并运行第一条命令。
+
+## 系统要求
+
+### 运行时（最低）
+
+- Ubuntu 20.04+ 或 Debian 11+
+- 1GB 内存 / 100MB 磁盘
+
+### 开发（推荐）
+
+- Ubuntu 22.04+ 或 Debian 12+
+- 4GB 内存 / 2GB 磁盘
+- 多核 CPU（加速并行构建）
+
+---
+
+## 安装依赖
+
+```bash
+# 开发环境（编译器、构建工具、调试工具）
+./scripts/core/install-deps
+
+# 仅运行时（生产部署）
+./scripts/core/install-deps --runtime
+
+# 显示帮助
+./scripts/core/install-deps --help
+```
+
+**开发依赖包括：**
+
+- GCC 15（如可用）或 GCC 11+
+- Clang 开发工具链
+- CMake、Ninja 构建系统
+- Conan 2.x 包管理器
+- GDB、Valgrind 调试工具
+
+**运行时依赖包括：**
+
+- libtbb12（Intel TBB 并行库）
+- zlib（gzip 支持）
+- libdeflate（高性能 gzip 解压/压缩）
+
+---
+
+## 构建
+
+```bash
+# 默认构建（Clang + Release）
+./scripts/core/build
+
+# 开发模式（Debug + 详细输出）
+./scripts/core/build --dev
+
+# 指定编译器和构建类型
+./scripts/core/build --compiler gcc --type Debug
+```
+
+构建成功后，可执行文件位于 `build/clang-release/FastQTools`。
+
+---
+
+## 验证安装
+
+```bash
+# 显示帮助
+./build/clang-release/FastQTools --help
+
+# 运行测试
+./scripts/core/test
+```
+
+---
+
+## 第一个示例
+
+### 1. 准备测试数据
+
+```bash
+# 生成测试 FASTQ 文件
+python3 tools/data/gen_fastq.py -o test_data.fastq --reads 5000 --min-len 80 --max-len 150
+```
+
+### 2. 统计分析
+
+```bash
+FastQTools stat -i test_data.fastq -o stats.txt --threads 4
+```
+
+输出包括：总读段数、最大读长、总碱基数、碱基组成（A/T/C/G/N）、GC 含量、Q20/Q30 百分比以及位置质量/错误摘要。
+
+### 3. 质量过滤
+
+```bash
+FastQTools filter -i test_data.fastq -o filtered.fastq \
+  --min-quality 20 \
+  --min-length 50 \
+  --max-n-ratio 0.1 \
+  --trim-quality 20 \
+  --trim-mode both
+```
+
+---
+
+## 下一步
+
+- [CLI 使用](/fastq-tools/zh/getting-started/cli-usage) — 完整命令行用法
+- [架构](/fastq-tools/zh/core-concepts/architecture) — 理解设计理念
+- [API 概览](/fastq-tools/zh/api/overview) — C++ API 集成

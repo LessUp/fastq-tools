@@ -1,0 +1,51 @@
+# API Overview
+
+FastQTools provides a C++ API for integrating FASTQ processing into your pipelines.
+
+## Installation
+
+Include the public headers from `include/fqtools/`:
+
+```cpp
+#include <fqtools/io.hpp>
+#include <fqtools/processing.hpp>
+#include <fqtools/statistics.hpp>
+```
+
+Link against the library:
+
+```bash
+g++ -std=c++23 -I/path/to/fqtools/include -lfqtools -ltbb my_app.cpp
+```
+
+---
+
+## Quick Example
+
+```cpp
+#include <fqtools/io.hpp>
+#include <fqtools/statistics.hpp>
+#include <iostream>
+
+int main() {
+  // Zero-copy FASTQ reading
+  fq::statistics::Collector stats;
+
+  for (auto record : fq::io::Reader("reads.fastq")) {
+    stats.add_record(record);
+  }
+
+  std::cout << "Total reads: " << stats.read_count() << '\n';
+  std::cout << "GC content: " << stats.gc_content() << "%\n";
+
+  return 0;
+}
+```
+
+---
+
+## Modules
+
+- [IO Module](/fastq-tools/en/api/io) — FASTQ reading and writing
+- [Processing](/fastq-tools/en/api/processing) — Filter and trim operations
+- [Statistics](/fastq-tools/en/api/statistics) — Statistical computation

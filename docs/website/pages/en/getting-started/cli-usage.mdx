@@ -1,0 +1,74 @@
+# CLI Usage
+
+Complete command-line reference for FastQTools.
+
+## `stat` — Statistical Analysis
+
+Compute statistics from FASTQ files in a single streaming pass.
+
+```bash
+FastQTools stat -i <input> [-o <output>] [options]
+```
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-i, --input` | Input FASTQ file (required) | - |
+| `-o, --output` | Output file for statistics | stdout |
+| `--threads` | Number of threads | auto |
+| `--sidecar` | Generate QC sidecar file | false |
+
+### Output Fields
+
+- Total read count
+- Maximum read length
+- Total bases
+- Base composition (A/T/C/G/N)
+- GC content percentage
+- Q20/Q30 percentages
+- Per-position quality summaries
+
+---
+
+## `filter` — Quality Filtering
+
+Filter and trim reads based on quality, length, and N-ratio thresholds.
+
+```bash
+FastQTools filter -i <input> -o <output> [options]
+```
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-i, --input` | Input FASTQ file (required) | - |
+| `-o, --output` | Output FASTQ file (required) | - |
+| `--min-quality` | Minimum average quality | 0 |
+| `--min-length` | Minimum read length | 1 |
+| `--max-n-ratio` | Maximum N ratio | 1.0 |
+| `--trim-quality` | Quality threshold for trimming | 0 |
+| `--trim-mode` | Trimming mode: both, left, right | both |
+| `--threads` | Number of threads | auto |
+
+### Example
+
+```bash
+FastQTools filter -i reads.fastq -o filtered.fastq \
+  --min-quality 20 \
+  --min-length 50 \
+  --max-n-ratio 0.1 \
+  --trim-quality 20 \
+  --trim-mode both
+```
+
+---
+
+## Global Options
+
+| Option | Description |
+|--------|-------------|
+| `-h, --help` | Show help message |
+| `-v, --version` | Show version |
+| `--verbose` | Enable verbose output |

@@ -1,0 +1,49 @@
+# IO 模块
+
+零拷贝 FASTQ 输入/输出操作。
+
+## Reader
+
+```cpp
+#include <fqtools/io.hpp>
+
+// 遍历记录
+for (auto record : fq::io::Reader("reads.fastq")) {
+  std::string_view header = record.header();
+  std::string_view sequence = record.sequence();
+  std::string_view quality = record.quality();
+}
+```
+
+### 支持格式
+
+- 普通 FASTQ（`.fastq`、`.fq`）
+- Gzip 压缩（`.fastq.gz`、`.fq.gz`）
+
+---
+
+## Writer
+
+```cpp
+#include <fqtools/io.hpp>
+
+fq::io::Writer writer("output.fastq");
+
+writer.write_record(header, sequence, quality);
+writer.close();
+```
+
+---
+
+## 记录视图
+
+`Record` 类型提供零拷贝访问：
+
+```cpp
+struct Record {
+  std::string_view header() const;   // @header 行
+  std::string_view sequence() const; // 序列碱基
+  std::string_view quality() const;  // 质量分数
+  size_t length() const;             // 序列长度
+};
+```

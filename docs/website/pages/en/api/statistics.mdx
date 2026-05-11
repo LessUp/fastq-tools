@@ -1,0 +1,47 @@
+# Statistics
+
+Statistical computation for FASTQ data.
+
+## Collector
+
+```cpp
+#include <fqtools/statistics.hpp>
+
+fq::statistics::Collector stats;
+
+for (auto record : reader) {
+  stats.add_record(record);
+}
+
+// Get results
+size_t count = stats.read_count();
+size_t bases = stats.total_bases();
+double gc = stats.gc_content();
+double q20 = stats.q20_percentage();
+double q30 = stats.q30_percentage();
+```
+
+---
+
+## Available Metrics
+
+| Metric | Method | Description |
+|--------|--------|-------------|
+| Read count | `read_count()` | Total number of reads |
+| Max length | `max_length()` | Maximum read length |
+| Total bases | `total_bases()` | Total base count |
+| GC content | `gc_content()` | GC percentage |
+| Q20 | `q20_percentage()` | % bases ≥ Q20 |
+| Q30 | `q30_percentage()` | % bases ≥ Q30 |
+| Base composition | `base_comp()` | A/T/C/G/N counts |
+
+---
+
+## Per-Position Quality
+
+```cpp
+auto quality_profile = stats.quality_profile();
+for (size_t i = 0; i < quality_profile.size(); ++i) {
+  std::cout << "Pos " << i << ": " << quality_profile[i] << '\n';
+}
+```

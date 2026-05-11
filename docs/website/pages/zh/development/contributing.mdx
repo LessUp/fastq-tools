@@ -1,0 +1,45 @@
+# 参与贡献
+
+欢迎参与 FastQTools 开发！
+
+## 开发环境设置
+
+```bash
+# 克隆仓库
+git clone https://github.com/LessUp/fastq-tools.git
+cd fastq-tools
+
+# 安装依赖
+./scripts/core/install-deps
+
+# 构建
+./scripts/core/build --dev
+
+# 运行测试
+./scripts/core/test
+```
+
+---
+
+## 代码风格
+
+- C++23 标准
+- 遵循 `.clang-format` 和 `.clang-tidy` 配置
+- 提交前运行 `./scripts/core/lint format`
+
+---
+
+## Pull Request 流程
+
+1. 从 `master` 创建特性分支
+2. 进行更改
+3. 运行测试：`./scripts/core/test`
+4. 运行检查：`./scripts/core/lint check`
+5. 提交 Pull Request
+
+---
+
+## 沟通渠道
+
+- **问题反馈**: [GitHub Issues](https://github.com/LessUp/fastq-tools/issues)
+- **讨论**: [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions)

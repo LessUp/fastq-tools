@@ -1,0 +1,49 @@
+# IO Module
+
+Zero-copy FASTQ input/output operations.
+
+## Reader
+
+```cpp
+#include <fqtools/io.hpp>
+
+// Iterate over records
+for (auto record : fq::io::Reader("reads.fastq")) {
+  std::string_view header = record.header();
+  std::string_view sequence = record.sequence();
+  std::string_view quality = record.quality();
+}
+```
+
+### Supported Formats
+
+- Plain FASTQ (`.fastq`, `.fq`)
+- Gzip compressed (`.fastq.gz`, `.fq.gz`)
+
+---
+
+## Writer
+
+```cpp
+#include <fqtools/io.hpp>
+
+fq::io::Writer writer("output.fastq");
+
+writer.write_record(header, sequence, quality);
+writer.close();
+```
+
+---
+
+## Record View
+
+The `Record` type provides zero-copy access:
+
+```cpp
+struct Record {
+  std::string_view header() const;   // @header line
+  std::string_view sequence() const; // Sequence bases
+  std::string_view quality() const;  // Quality scores
+  size_t length() const;             // Sequence length
+};
+```

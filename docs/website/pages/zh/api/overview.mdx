@@ -1,0 +1,51 @@
+# API 概览
+
+FastQTools 提供 C++ API 用于将 FASTQ 处理集成到您的流程中。
+
+## 安装
+
+从 `include/fqtools/` 包含公开头文件：
+
+```cpp
+#include <fqtools/io.hpp>
+#include <fqtools/processing.hpp>
+#include <fqtools/statistics.hpp>
+```
+
+链接库：
+
+```bash
+g++ -std=c++23 -I/path/to/fqtools/include -lfqtools -ltbb my_app.cpp
+```
+
+---
+
+## 快速示例
+
+```cpp
+#include <fqtools/io.hpp>
+#include <fqtools/statistics.hpp>
+#include <iostream>
+
+int main() {
+  // 零拷贝 FASTQ 读取
+  fq::statistics::Collector stats;
+
+  for (auto record : fq::io::Reader("reads.fastq")) {
+    stats.add_record(record);
+  }
+
+  std::cout << "总读段数: " << stats.read_count() << '\n';
+  std::cout << "GC 含量: " << stats.gc_content() << "%\n";
+
+  return 0;
+}
+```
+
+---
+
+## 模块
+
+- [IO 模块](/fastq-tools/zh/api/io) — FASTQ 读写
+- [处理](/fastq-tools/zh/api/processing) — 过滤和修剪操作
+- [统计](/fastq-tools/zh/api/statistics) — 统计计算
