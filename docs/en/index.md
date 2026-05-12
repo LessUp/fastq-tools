@@ -1,49 +1,102 @@
 ---
 layout: home
-
-hero:
-  name: FastQTools
-  text: High-Performance FASTQ Toolkit
-  tagline: Process FASTQ files at 1.7M reads/sec with zero-copy design, specification-driven, easy to audit and integrate.
-  actions:
-    - theme: brand
-      text: Get Started
-      link: /en/guide/getting-started
-    - theme: alt
-      text: GitHub
-      link: https://github.com/LessUp/fastq-tools
-    - theme: alt
-      text: Benchmarks
-      link: /en/performance/benchmark-report
-    - theme: alt
-      text: API Docs
-      link: /en/api/overview
-
-features:
-  - icon: ⚡
-    title: Extreme Performance
-    details: 1.7M reads/sec on standard hardware. Intel oneTBB lock-free parallel pipeline. Minimize allocations and page faults.
-  - icon: 📖
-    title: Zero-Copy Design
-    details: All record processing uses std::string_view. Minimal overhead on large FASTQ files or streaming buffers.
-  - icon: 📋
-    title: Specification-Driven
-    details: Every API decision and file format is documented in openspec/baseline. Easy to audit, predict, and integrate.
 ---
 
-## What You Can Do
+<div class="home-header">
+  <div class="home-header-left">
+    <div class="home-logo">FQ</div>
+    <div>
+      <span class="home-title">FastQTools</span>
+      <span class="home-subtitle">High-Performance FASTQ Toolkit</span>
+    </div>
+  </div>
+  <div class="home-nav">
+    <a href="./guide/getting-started">Guide</a>
+    <a href="https://github.com/LessUp/fastq-tools">GitHub</a>
+    <a href="../">中文</a>
+  </div>
+</div>
 
-| Task | Description |
-|------|-------------|
-| **Inspect FASTQ quality in one pass** | `FastQTools stat` computes read counts, max read length, total bases, base composition, GC content, quality summaries, and optional lightweight QC sidecars in a single streaming pass. |
-| **Filter and trim raw data** | `FastQTools filter` combines quality, length, and N-ratio thresholds, then trims low-quality ends in one tool without intermediate files. |
-| **Embed in C++ pipelines** | Reuse public API zero-copy FASTQ primitives without reimplementing basic processing logic. |
+<div class="home-intro-row">
+  <div class="home-intro">
+    High-performance FASTQ processing CLI toolkit for bioinformatics QC workflows. Process FASTQ files at 1.7M reads/sec on standard hardware, with zero-copy design, specification-driven, easy to audit and integrate.
+  </div>
+  <div class="home-stats">
+    <span><strong>C++23</strong> native</span>
+    <span><strong>Zero-copy</strong> design</span>
+    <span><strong>TBB</strong> parallel</span>
+  </div>
+</div>
 
-## Architecture Overview
+## Features
 
-![FastQTools Architecture](/assets/images/architecture.svg)
+<div class="feature-map">
+  <div class="feature-card">
+    <div class="feature-card-title">⚡ Extreme Performance</div>
+    <div class="feature-card-desc">
+      1.7M reads/sec on standard hardware. Intel oneTBB lock-free parallel pipeline. Minimize allocations and page faults.
+    </div>
+    <div class="feature-tags">
+      <a href="./performance/benchmark-report" class="feature-tag">Benchmarks</a>
+      <a href="./dev/architecture" class="feature-tag">Architecture</a>
+    </div>
+  </div>
 
-The pipeline uses Intel oneTBB for lock-free parallelism, with zero-copy `std::string_view` throughout. Records flow from I/O through processing stages without allocation overhead.
+  <div class="feature-card">
+    <div class="feature-card-title">📖 Zero-Copy Design</div>
+    <div class="feature-card-desc">
+      All record processing uses std::string_view. Minimal overhead on large FASTQ files or streaming buffers.
+    </div>
+    <div class="feature-tags">
+      <a href="./api/overview" class="feature-tag">API</a>
+      <a href="./dev/design" class="feature-tag">Design</a>
+    </div>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title">📋 Specification-Driven</div>
+    <div class="feature-card-desc">
+      Every API decision and file format is documented in openspec/baseline. Easy to audit, predict, and integrate.
+    </div>
+    <div class="feature-tags">
+      <a href="https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline" class="feature-tag">Specs</a>
+      <a href="https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline/architecture" class="feature-tag">ADRs</a>
+    </div>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title">📊 One-Pass QC Stats</div>
+    <div class="feature-card-desc">
+      <code>FastQTools stat</code> computes read counts, base composition, GC content, quality summaries, and optional lightweight QC sidecars in a single streaming pass.
+    </div>
+    <div class="feature-tags">
+      <a href="./guide/cli-reference" class="feature-tag">CLI Reference</a>
+      <a href="./guide/getting-started" class="feature-tag">Getting Started</a>
+    </div>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title">🔧 Flexible Filtering</div>
+    <div class="feature-card-desc">
+      <code>FastQTools filter</code> combines quality, length, and N-ratio thresholds, then trims low-quality ends in one tool without intermediate files.
+    </div>
+    <div class="feature-tags">
+      <a href="./guide/configuration" class="feature-tag">Configuration</a>
+      <a href="./guide/cli-reference" class="feature-tag">Usage</a>
+    </div>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-title">🚀 C++ Library Integration</div>
+    <div class="feature-card-desc">
+      Reuse public API zero-copy FASTQ primitives without reimplementing basic processing logic.
+    </div>
+    <div class="feature-tags">
+      <a href="./api/overview" class="feature-tag">API</a>
+      <a href="./guide/deployment" class="feature-tag">Integration</a>
+    </div>
+  </div>
+</div>
 
 ## Performance Comparison
 
@@ -54,8 +107,6 @@ The pipeline uses Intel oneTBB for lock-free parallelism, with zero-copy `std::s
 | **Parallelism** | TBB pipeline (auto-scale) | Single-threaded | Multi-threaded |
 | **QC sidecar** | ✅ Built-in | ❌ | ✅ HTML report |
 | **Quality trimming** | ✅ AVX2 optimized | ✅ Basic | ✅ Built-in |
-| **Adapter trimming** | ✅ | ❌ | ✅ Auto-detect |
-| **Signature stats** | ✅ k-mer signatures | ❌ | ❌ |
 | **C++ API** | ✅ Public headers | ❌ | ❌ |
 | **Spec-driven** | ✅ Full baseline | ❌ | ❌ |
 
@@ -63,16 +114,15 @@ The pipeline uses Intel oneTBB for lock-free parallelism, with zero-copy `std::s
 AMD Ryzen 9 5900X, 100K reads × 150bp, single-threaded read/write, parallel processing.
 :::
 
-## Quick Stats
-
-| Operation | Speed | Cores |
-|-----------|-------|-------|
-| FASTQ read | 1696 MB/s | 1× |
-| FASTQ write | 1.76M reads/s | 1× |
-| Full stat pass | 302 MB/s | parallel |
-| Combined filter | 1.67M reads/s | parallel |
-
-See [full benchmarks](performance/benchmark-report) for methodology and hardware details.
+<div class="quick-start">
+  <div class="quick-start-title">Quick Start</div>
+  <div class="quick-start-content">
+    <div class="command-block">
+      <code>./scripts/core/build && ./build/fastq-tools stat input.fastq</code>
+    </div>
+    After building, run <code>fastq-tools stat</code> or <code>fastq-tools filter</code>. See the <a href="./guide/getting-started">Getting Started Guide</a> for details.
+  </div>
+</div>
 
 ## Choose Your Path
 
@@ -83,11 +133,3 @@ See [full benchmarks](performance/benchmark-report) for methodology and hardware
 | Understand the benchmark methodology | [Benchmark Overview](performance/benchmark-report) |
 | Integrate the library in C++ | [API Overview](api/overview) |
 | Work on the project | [Developer Guide](dev/) |
-
-## Why Specifications Matter
-
-FastQTools is **specification-driven** from the ground up. Every public API, file format decision, and performance guarantee is documented in version-controlled specifications. This means:
-
-- **Easy to audit**: No hidden behavior. Read [`openspec/baseline/api/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline/api) for the exact API contract.
-- **Easy to extend**: Proposals go in [`openspec/changes/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/changes). Reviewers can see the impact before code is written.
-- **Easy to maintain**: Archived decisions in [`openspec/archive/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/archive). No re-discovering the "why" of old choices.

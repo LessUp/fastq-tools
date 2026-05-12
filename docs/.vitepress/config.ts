@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
+import llmstxt from 'vitepress-plugin-llms'
 
 const rawBase = process.env.VITEPRESS_BASE
 const base = rawBase
@@ -25,6 +26,7 @@ export default withMermaid(defineConfig({
           { text: 'API', link: '/api/overview', activeMatch: '/api/' },
           { text: '开发', link: '/dev/', activeMatch: '/dev/' },
           { text: '性能', link: '/performance/benchmark-report', activeMatch: '/performance/' },
+          { text: '发布说明', link: '/release-notes/changelog', activeMatch: '/release-notes/' },
           { text: 'Agent', link: '/agents/domain', activeMatch: '/agents/' },
         ],
         sidebar: {
@@ -87,6 +89,14 @@ export default withMermaid(defineConfig({
               ],
             },
           ],
+          '/release-notes/': [
+            {
+              text: '发布说明',
+              items: [
+                { text: '变更记录', link: '/release-notes/changelog' },
+              ],
+            },
+          ],
           '/archive/': [
             {
               text: '归档',
@@ -119,6 +129,7 @@ export default withMermaid(defineConfig({
           { text: 'API', link: '/en/api/overview', activeMatch: '/en/api/' },
           { text: 'Dev', link: '/en/dev/', activeMatch: '/en/dev/' },
           { text: 'Performance', link: '/en/performance/benchmark-report', activeMatch: '/en/performance/' },
+          { text: 'Release Notes', link: '/en/release-notes/changelog', activeMatch: '/en/release-notes/' },
           { text: 'Agent', link: '/en/agents/domain', activeMatch: '/en/agents/' },
         ],
         sidebar: {
@@ -181,6 +192,14 @@ export default withMermaid(defineConfig({
               ],
             },
           ],
+          '/en/release-notes/': [
+            {
+              text: 'Release Notes',
+              items: [
+                { text: 'Changelog', link: '/en/release-notes/changelog' },
+              ],
+            },
+          ],
           '/en/archive/': [
             {
               text: 'Archive',
@@ -209,6 +228,10 @@ export default withMermaid(defineConfig({
     socialLinks: [
       { icon: 'github', link: 'https://github.com/LessUp/fastq-tools' },
     ],
+  },
+
+  vite: {
+    plugins: [llmstxt()],
   },
 
   markdown: {
