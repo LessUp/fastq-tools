@@ -13,7 +13,7 @@ layout: home
   <div class="home-nav">
     <a href="./guide/getting-started">Guide</a>
     <a href="https://github.com/LessUp/fastq-tools">GitHub</a>
-    <a href="../">中文</a>
+    <a href="../zh/">中文</a>
   </div>
 </div>
 

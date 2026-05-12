@@ -17,7 +17,7 @@ const docsDir = join(__dirname, "..");
 const rootDir = join(docsDir, "..");
 
 const sourcePath = join(rootDir, "CHANGELOG.md");
-const zhTargetPath = join(docsDir, "release-notes/changelog.md");
+const zhTargetPath = join(docsDir, "zh/release-notes/changelog.md");
 const enTargetPath = join(docsDir, "en/release-notes/changelog.md");
 
 // Headers for each language

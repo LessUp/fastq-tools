@@ -15,94 +15,95 @@ export default withMermaid(defineConfig({
   description: 'High-performance FASTQ processing toolkit for sequencing QC',
 
   locales: {
-    root: {
+    zh: {
       label: '简体中文',
       lang: 'zh-CN',
+      link: '/zh/',
       title: 'FastQTools',
       description: '高性能 FASTQ 处理工具，面向生物信息学 QC 工作流',
       themeConfig: {
         nav: [
-          { text: '指南', link: '/guide/getting-started', activeMatch: '/guide/' },
-          { text: 'API', link: '/api/overview', activeMatch: '/api/' },
-          { text: '开发', link: '/dev/', activeMatch: '/dev/' },
-          { text: '性能', link: '/performance/benchmark-report', activeMatch: '/performance/' },
-          { text: '发布说明', link: '/release-notes/changelog', activeMatch: '/release-notes/' },
-          { text: 'Agent', link: '/agents/domain', activeMatch: '/agents/' },
+          { text: '指南', link: '/zh/guide/getting-started', activeMatch: '/zh/guide/' },
+          { text: 'API', link: '/zh/api/overview', activeMatch: '/zh/api/' },
+          { text: '开发', link: '/zh/dev/', activeMatch: '/zh/dev/' },
+          { text: '性能', link: '/zh/performance/benchmark-report', activeMatch: '/zh/performance/' },
+          { text: '发布说明', link: '/zh/release-notes/changelog', activeMatch: '/zh/release-notes/' },
+          { text: 'Agent', link: '/zh/agents/domain', activeMatch: '/zh/agents/' },
         ],
         sidebar: {
-          '/guide/': [
+          '/zh/guide/': [
             {
               text: '指南',
               items: [
-                { text: '快速开始', link: '/guide/getting-started' },
-                { text: 'CLI 参考', link: '/guide/cli-reference' },
-                { text: '配置', link: '/guide/configuration' },
-                { text: '部署', link: '/guide/deployment' },
+                { text: '快速开始', link: '/zh/guide/getting-started' },
+                { text: 'CLI 参考', link: '/zh/guide/cli-reference' },
+                { text: '配置', link: '/zh/guide/configuration' },
+                { text: '部署', link: '/zh/guide/deployment' },
               ],
             },
           ],
-          '/api/': [
+          '/zh/api/': [
             {
               text: 'API 参考',
               items: [
-                { text: '概览', link: '/api/overview' },
-                { text: 'IO 模块', link: '/api/io' },
-                { text: '处理模块', link: '/api/processing' },
-                { text: '统计模块', link: '/api/statistics' },
-                { text: '核心模块', link: '/api/core' },
+                { text: '概览', link: '/zh/api/overview' },
+                { text: 'IO 模块', link: '/zh/api/io' },
+                { text: '处理模块', link: '/zh/api/processing' },
+                { text: '统计模块', link: '/zh/api/statistics' },
+                { text: '核心模块', link: '/zh/api/core' },
               ],
             },
           ],
-          '/dev/': [
+          '/zh/dev/': [
             {
               text: '开发者指南',
               items: [
-                { text: '概览', link: '/dev/' },
-                { text: '架构设计', link: '/dev/architecture' },
-                { text: '核心设计', link: '/dev/design' },
-                { text: '构建指南', link: '/dev/build' },
-                { text: '测试策略', link: '/dev/testing' },
-                { text: '编码规范', link: '/dev/coding-standards' },
-                { text: '本地工具', link: '/dev/local-tooling' },
-                { text: '代码质量', link: '/dev/quality-tools' },
-                { text: 'Git 工作流', link: '/dev/git-guidelines' },
-                { text: 'DevContainer', link: '/dev/devcontainer' },
-                { text: 'Benchmark', link: '/dev/benchmark-guide' },
+                { text: '概览', link: '/zh/dev/' },
+                { text: '架构设计', link: '/zh/dev/architecture' },
+                { text: '核心设计', link: '/zh/dev/design' },
+                { text: '构建指南', link: '/zh/dev/build' },
+                { text: '测试策略', link: '/zh/dev/testing' },
+                { text: '编码规范', link: '/zh/dev/coding-standards' },
+                { text: '本地工具', link: '/zh/dev/local-tooling' },
+                { text: '代码质量', link: '/zh/dev/quality-tools' },
+                { text: 'Git 工作流', link: '/zh/dev/git-guidelines' },
+                { text: 'DevContainer', link: '/zh/dev/devcontainer' },
+                { text: 'Benchmark', link: '/zh/dev/benchmark-guide' },
               ],
             },
           ],
-          '/performance/': [
+          '/zh/performance/': [
             {
               text: '性能',
               items: [
-                { text: 'Benchmark 报告', link: '/performance/benchmark-report' },
+                { text: 'Benchmark 报告', link: '/zh/performance/benchmark-report' },
               ],
             },
           ],
-          '/agents/': [
+          '/zh/agents/': [
             {
               text: 'Agent',
               items: [
-                { text: '领域模型', link: '/agents/domain' },
-                { text: 'Issue Tracker', link: '/agents/issue-tracker' },
-                { text: '分类标签', link: '/agents/triage-labels' },
+                { text: '领域模型', link: '/zh/agents/domain' },
+                { text: 'Issue Tracker', link: '/zh/agents/issue-tracker' },
+                { text: '分类标签', link: '/zh/agents/triage-labels' },
               ],
             },
           ],
-          '/release-notes/': [
+          '/zh/release-notes/': [
             {
               text: '发布说明',
               items: [
-                { text: '变更记录', link: '/release-notes/changelog' },
+                { text: '变更记录', link: '/zh/release-notes/changelog' },
               ],
             },
           ],
-          '/archive/': [
+          '/zh/archive/': [
             {
               text: '归档',
               items: [
-                { text: '概览', link: '/archive/' },
-                { text: '迁移通知', link: '/archive/migration-notice-2026-04-17' },
+                { text: '概览', link: '/zh/archive/' },
+                { text: '迁移通知', link: '/zh/archive/migration-notice-2026-04-17' },
               ],
             },
           ],
@@ -232,11 +233,5 @@ export default withMermaid(defineConfig({
 
   vite: {
     plugins: [llmstxt()],
-  },
-
-  markdown: {
-    config: (md) => {
-      // mermaid is handled by vitepress-plugin-mermaid
-    },
   },
 }))
