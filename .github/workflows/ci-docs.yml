@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - ".github/workflows/ci-docs.yml"
-      - ".github/workflows/pages.yml"
+      - ".github/workflows/docs-pages.yml"
       - "docs/**"
       - "CHANGELOG.md"
   push:
@@ -12,7 +12,7 @@ on:
       - master
     paths:
       - ".github/workflows/ci-docs.yml"
-      - ".github/workflows/pages.yml"
+      - ".github/workflows/docs-pages.yml"
       - "docs/**"
       - "CHANGELOG.md"
 
