@@ -114,101 +114,61 @@ for (auto record : fq::io::Reader("reads.fastq")) {
         title="为什么选择 FastQTools？"
         features={features}
       />
-
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            性能对比
-          </h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-purple-600 mx-auto mb-8 rounded-full" />
-
-          <div className="overflow-x-auto">
-            <table className="perf-table w-full">
-              <thead>
-                <tr>
-                  <th>特性</th>
-                  <th>FastQTools</th>
-                  <th>seqtk</th>
-                  <th>fastp</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>吞吐量</td>
-                  <td className="font-semibold text-blue-600">170 万 reads/s</td>
-                  <td>~50 万 reads/s</td>
-                  <td>~80 万 reads/s</td>
-                </tr>
-                <tr>
-                  <td>内存模型</td>
-                  <td className="font-semibold text-blue-600">零拷贝</td>
-                  <td>缓冲区</td>
-                  <td>自适应</td>
-                </tr>
-                <tr>
-                  <td>并行度</td>
-                  <td className="font-semibold text-blue-600">TBB 流水线</td>
-                  <td>单线程</td>
-                  <td>多线程</td>
-                </tr>
-                <tr>
-                  <td>C++ API</td>
-                  <td className="font-semibold text-blue-600">有</td>
-                  <td>无</td>
-                  <td>无</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-            基准测试：AMD Ryzen 9 5900X，100K reads × 150bp
-          </p>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            开源 & MIT 许可
-          </h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-purple-600 mx-auto mb-8 rounded-full" />
-
-          <div className="text-center text-gray-600 dark:text-gray-400 mb-10">
-            <p className="mb-4">
-              FastQTools 以 <strong>MIT 许可证</strong>发布。
-            </p>
-            <p>
-              基于 C++23 标准构建，使用 Intel oneTBB 实现并行。
-            </p>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-4">
-            <a
-              href="https://github.com/LessUp/fastq-tools"
-              target="_blank"
-              rel="noreferrer"
-              className="btn-secondary"
-            >
-              GitHub 仓库
-            </a>
-            <a
-              href="/fastq-tools/zh/development/contributing"
-              className="btn-secondary"
-            >
-              参与贡献
-            </a>
-            <a
-              href="https://github.com/LessUp/fastq-tools/releases/latest"
-              target="_blank"
-              rel="noreferrer"
-              className="btn-secondary"
-            >
-              下载最新版
-            </a>
-          </div>
-        </div>
-      </div>
     </>
   )
 }
+
+## 架构概览
+
+FastQTools 采用基于 Intel oneTBB 的零拷贝并行流水线架构：
+
+```mermaid
+flowchart TB
+    subgraph CLI["CLI 层"]
+        stat["fqtools stat"]
+        filter["fqtools filter"]
+    end
+
+    subgraph CORE["核心流水线"]
+        reader["FastqReader<br/>(零拷贝)"]
+        processor["ProcessingPipeline<br/>(TBB 并行)"]
+        writer["FastqWriter"]
+    end
+
+    subgraph STATS["统计模块"]
+        calc["StatisticCalculator"]
+    end
+
+    stat --> calc
+    calc --> reader
+    filter --> processor
+    processor --> reader
+    processor --> writer
+
+    style CLI fill:#667eea,color:#fff
+    style CORE fill:#f093fb,color:#fff
+    style STATS fill:#43e97b,color:#000
+```
+
+流水线使用 Intel oneTBB 实现无锁并行，全程使用零拷贝 `std::string_view`。
+
+## 性能对比
+
+| 特性 | FastQTools | seqtk | fastp |
+|------|------------|-------|-------|
+| **吞吐量** | 170 万 reads/s | ~50 万 reads/s | ~80 万 reads/s |
+| **内存模型** | 零拷贝 | 缓冲区 | 自适应 |
+| **并行度** | TBB 流水线 | 单线程 | 多线程 |
+| **C++ API** | ✅ | ❌ | ❌ |
+
+*基准测试：AMD Ryzen 9 5900X，100K reads × 150bp*
+
+## 开源 & MIT 许可
+
+FastQTools 以 **MIT 许可证**发布。
+
+基于 C++23 标准构建，使用 Intel oneTBB 实现并行。
+
+- [GitHub 仓库](https://github.com/LessUp/fastq-tools)
+- [参与贡献](/fastq-tools/zh/development/contributing)
+- [下载最新版](https://github.com/LessUp/fastq-tools/releases/latest)

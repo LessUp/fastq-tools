@@ -26,10 +26,30 @@ This design minimizes:
 
 FastQTools uses Intel oneTBB `tbb::parallel_pipeline` for lock-free parallelism:
 
-```
-[Input Stage] → [Filter Stage] → [Process Stage] → [Output Stage]
-     ↓               ↓                ↓               ↓
-  Serial         Parallel         Parallel         Serial
+```mermaid
+flowchart LR
+    subgraph SOURCE["Source (serial)"]
+        input["Input File"]
+        reader["FastqReader"]
+        batch["FastqBatch"]
+    end
+
+    subgraph PARALLEL["Processing (parallel)"]
+        filter["Predicates<br/>filter"]
+        trim["Mutators<br/>trim"]
+    end
+
+    subgraph SINK["Sink (serial)"]
+        writer["FastqWriter"]
+        output["Output File"]
+    end
+
+    input --> reader --> batch
+    batch --> filter --> trim --> writer --> output
+
+    style SOURCE fill:#4facfe,color:#fff
+    style PARALLEL fill:#f093fb,color:#fff
+    style SINK fill:#43e97b,color:#000
 ```
 
 The pipeline automatically scales to available cores, with minimal idle overhead between stages.

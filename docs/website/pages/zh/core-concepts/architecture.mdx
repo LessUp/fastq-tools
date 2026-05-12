@@ -26,10 +26,30 @@ for (auto record : fq::io::Reader("reads.fastq")) {
 
 FastQTools 使用 Intel oneTBB `tbb::parallel_pipeline` 实现无锁并行：
 
-```
-[输入阶段] → [过滤阶段] → [处理阶段] → [输出阶段]
-     ↓           ↓            ↓           ↓
-   串行        并行         并行        串行
+```mermaid
+flowchart LR
+    subgraph SOURCE["Source (串行)"]
+        input["输入文件"]
+        reader["FastqReader"]
+        batch["FastqBatch"]
+    end
+
+    subgraph PARALLEL["Processing (并行)"]
+        filter["Predicates<br/>过滤"]
+        trim["Mutators<br/>修剪"]
+    end
+
+    subgraph SINK["Sink (串行)"]
+        writer["FastqWriter"]
+        output["输出文件"]
+    end
+
+    input --> reader --> batch
+    batch --> filter --> trim --> writer --> output
+
+    style SOURCE fill:#4facfe,color:#fff
+    style PARALLEL fill:#f093fb,color:#fff
+    style SINK fill:#43e97b,color:#000
 ```
 
 流水线自动扩展到可用核心，阶段间空闲开销最小。

@@ -114,101 +114,61 @@ for (auto record : fq::io::Reader("reads.fastq")) {
         title="Why FastQTools?"
         features={features}
       />
-
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Performance Comparison
-          </h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-purple-600 mx-auto mb-8 rounded-full" />
-
-          <div className="overflow-x-auto">
-            <table className="perf-table w-full">
-              <thead>
-                <tr>
-                  <th>Feature</th>
-                  <th>FastQTools</th>
-                  <th>seqtk</th>
-                  <th>fastp</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Throughput</td>
-                  <td className="font-semibold text-blue-600">1.7M reads/s</td>
-                  <td>~500K reads/s</td>
-                  <td>~800K reads/s</td>
-                </tr>
-                <tr>
-                  <td>Memory Model</td>
-                  <td className="font-semibold text-blue-600">Zero-copy</td>
-                  <td>Buffer-based</td>
-                  <td>Adaptive</td>
-                </tr>
-                <tr>
-                  <td>Parallelism</td>
-                  <td className="font-semibold text-blue-600">TBB pipeline</td>
-                  <td>Single-threaded</td>
-                  <td>Multi-threaded</td>
-                </tr>
-                <tr>
-                  <td>C++ API</td>
-                  <td className="font-semibold text-blue-600">Yes</td>
-                  <td>No</td>
-                  <td>No</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-            Benchmark: AMD Ryzen 9 5900X, 100K reads × 150bp
-          </p>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            Open Source & MIT Licensed
-          </h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-primary-600 to-purple-600 mx-auto mb-8 rounded-full" />
-
-          <div className="text-center text-gray-600 dark:text-gray-400 mb-10">
-            <p className="mb-4">
-              FastQTools is released under the <strong>MIT License</strong>.
-            </p>
-            <p>
-              Built on C++23 standard with Intel oneTBB for parallelism.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-4">
-            <a
-              href="https://github.com/LessUp/fastq-tools"
-              target="_blank"
-              rel="noreferrer"
-              className="btn-secondary"
-            >
-              GitHub Repository
-            </a>
-            <a
-              href="/fastq-tools/en/development/contributing"
-              className="btn-secondary"
-            >
-              Contributing
-            </a>
-            <a
-              href="https://github.com/LessUp/fastq-tools/releases/latest"
-              target="_blank"
-              rel="noreferrer"
-              className="btn-secondary"
-            >
-              Download Latest
-            </a>
-          </div>
-        </div>
-      </div>
     </>
   )
 }
+
+## Architecture Overview
+
+FastQTools uses a zero-copy parallel pipeline architecture built on Intel oneTBB:
+
+```mermaid
+flowchart TB
+    subgraph CLI["CLI Layer"]
+        stat["fqtools stat"]
+        filter["fqtools filter"]
+    end
+
+    subgraph CORE["Core Pipeline"]
+        reader["FastqReader<br/>(zero-copy)"]
+        processor["ProcessingPipeline<br/>(TBB parallel)"]
+        writer["FastqWriter"]
+    end
+
+    subgraph STATS["Statistics"]
+        calc["StatisticCalculator"]
+    end
+
+    stat --> calc
+    calc --> reader
+    filter --> processor
+    processor --> reader
+    processor --> writer
+
+    style CLI fill:#667eea,color:#fff
+    style CORE fill:#f093fb,color:#fff
+    style STATS fill:#43e97b,color:#000
+```
+
+The pipeline uses Intel oneTBB for lock-free parallelism, with zero-copy `std::string_view` throughout.
+
+## Performance Comparison
+
+| Feature | FastQTools | seqtk | fastp |
+|---------|------------|-------|-------|
+| **Throughput** | 1.7M reads/s | ~500K reads/s | ~800K reads/s |
+| **Memory Model** | Zero-copy | Buffer-based | Adaptive |
+| **Parallelism** | TBB pipeline | Single-threaded | Multi-threaded |
+| **C++ API** | ✅ | ❌ | ❌ |
+
+*Benchmark: AMD Ryzen 9 5900X, 100K reads × 150bp*
+
+## Open Source & MIT Licensed
+
+FastQTools is released under the **MIT License**.
+
+Built on C++23 standard with Intel oneTBB for parallelism.
+
+- [GitHub Repository](https://github.com/LessUp/fastq-tools)
+- [Contributing](/fastq-tools/en/development/contributing)
+- [Download Latest](https://github.com/LessUp/fastq-tools/releases/latest)
