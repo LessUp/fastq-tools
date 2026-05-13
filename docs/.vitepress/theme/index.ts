@@ -60,7 +60,7 @@ export default {
       const lang = getLangPreference() || detectBrowserLang()
       const target = base.replace(/\/$/, '') + '/' + lang + '/'
 
-      router.go(target)
+      window.location.replace(target)
     }
 
     // 立即执行（在 hydration 之前，减少闪烁）
