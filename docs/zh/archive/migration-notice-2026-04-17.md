@@ -1,22 +1,23 @@
-# Documentation Migration Notice
+# 文档迁移通知
 
-> **Historical note**
-> This file is kept as a stable landing page for old links.
+> **历史说明**
+> 本页作为旧链接的稳定落点保留。
 
-## Current State
+## 当前状态
 
-The repository no longer uses `docs/` for authoritative specifications.
+仓库已经不再将 `docs/` 用作权威规范目录。
 
-- Current baseline specs live in [`openspec/baseline/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline)
-- Active change proposals live in `openspec/changes/`
-- Historical docs-era notes remain indexed in [this archive landing page](index.md).
+- 当前维护中的 baseline 规范位于 [`openspec/baseline/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline)
+- 当前实现与维护历史记录在仓库 changelog 与 release notes 中
+- 持续中的工作项与 PRD 式跟踪位于 [GitHub Issues](https://github.com/LessUp/fastq-tools/issues)
+- 文档时代遗留资料仍收录在[本归档索引页](index.md)
 
-## What This Archive Contains
+## 本归档包含什么
 
-The 2026-04-17 archive preserves the last documentation-era snapshot of:
+2026-04-17 归档保留了文档时代最后一版快照，包括：
 
-- architecture and toolchain notes
-- benchmark and memory-pool spec drafts
-- project assessment and optimization notes
+- 架构与工具链说明
+- benchmark 与 memory-pool 规范草稿
+- 项目评估与优化笔记
 
-Use it for historical lookup only. Do not treat archived files here as the current source of truth.
+这里只适合做历史查阅。不要把这里的归档文件当成当前事实来源。

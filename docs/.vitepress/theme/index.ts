@@ -1,75 +1,115 @@
 import DefaultTheme from 'vitepress/theme'
 import { inBrowser } from 'vitepress'
-import type { EnhanceAppContext } from 'vitepress'
+import type { EnhanceAppContext, Theme } from 'vitepress'
+import SiteHeroPanel from './components/SiteHeroPanel.vue'
+import EvidenceStrip from './components/EvidenceStrip.vue'
+import PillarGrid from './components/PillarGrid.vue'
+import KnowledgeMap from './components/KnowledgeMap.vue'
+import WorkflowPaths from './components/WorkflowPaths.vue'
+import ResourceHub from './components/ResourceHub.vue'
 import './style.css'
 
 const LANG_KEY = 'vitepress:lang-pref'
 
-/** 大小写不敏感的浏览器语言检测 */
-function detectBrowserLang(): 'zh' | 'en' {
+type SupportedLocale = 'zh' | 'en'
+
+function detectBrowserLang(): SupportedLocale {
   const navLang = inBrowser
-    ? (navigator.language || (navigator as any).userLanguage || '').toLowerCase()
+    ? (navigator.language || (navigator as Navigator & { userLanguage?: string }).userLanguage || '').toLowerCase()
     : ''
   return navLang.startsWith('zh') ? 'zh' : 'en'
 }
 
-/** 读取 localStorage 中的语言偏好 */
-function getLangPreference(): 'zh' | 'en' | null {
+function getLangPreference(): SupportedLocale | null {
   if (!inBrowser) return null
   try {
     const stored = localStorage.getItem(LANG_KEY)
-    return (stored === 'zh' || stored === 'en') ? stored : null
+    return stored === 'zh' || stored === 'en' ? stored : null
   } catch {
-    return null // 无痕模式等
+    return null
   }
 }
 
-/** 保存语言偏好到 localStorage */
-function setLangPreference(lang: 'zh' | 'en'): void {
+function setLangPreference(lang: SupportedLocale): void {
   if (!inBrowser) return
   try {
     localStorage.setItem(LANG_KEY, lang)
   } catch {
-    // localStorage 不可用时静默失败
+    // localStorage may be unavailable.
   }
 }
 
-export default {
-  extends: DefaultTheme,
+function normalizeBase(base: string): string {
+  if (base === '/') return ''
+  return base.replace(/\/$/, '')
+}
 
-  enhanceApp({ router, siteData }: EnhanceAppContext) {
-    if (!inBrowser) return
+function resolveLocaleFromPath(path: string, base: string): SupportedLocale | null {
+  const normalizedBase = normalizeBase(base)
+  const relativePath = normalizedBase && path.startsWith(normalizedBase)
+    ? path.slice(normalizedBase.length) || '/'
+    : path
 
-    const base = siteData.value.base || '/'
+  if (relativePath === '/zh' || relativePath === '/zh/' || relativePath.startsWith('/zh/')) return 'zh'
+  if (relativePath === '/en' || relativePath === '/en/' || relativePath.startsWith('/en/')) return 'en'
+  return null
+}
 
-    // ---- 首次访问根路径时自动跳转 ----
-    const checkAndRedirect = () => {
-      const path = window.location.pathname
-      const basePath = base === '/' ? '/' : base.replace(/\/$/, '')
+function isRootPath(path: string, base: string): boolean {
+  const normalizedBase = normalizeBase(base)
 
-      // 判断是否在根路径（多种变体）
-      const isRoot = path === '/' ||
-        path === '/index.html' ||
-        path === basePath ||
-        path === basePath + '/' ||
-        path === basePath + '/index.html'
+  return path === '/' ||
+    path === '/index.html' ||
+    path === normalizedBase ||
+    path === `${normalizedBase}/` ||
+    path === `${normalizedBase}/index.html`
+}
 
-      if (!isRoot) return
+function installLanguagePreference({ router, siteData }: EnhanceAppContext): void {
+  if (!inBrowser) return
 
-      // 优先使用存储的偏好，其次检测浏览器语言
-      const lang = getLangPreference() || detectBrowserLang()
-      const target = base.replace(/\/$/, '') + '/' + lang + '/'
+  const base = siteData.value.base || '/'
+  const updatePreferenceFromPath = (path: string) => {
+    const locale = resolveLocaleFromPath(path, base)
+    if (locale) setLangPreference(locale)
+  }
 
+  updatePreferenceFromPath(window.location.pathname)
+
+  if (isRootPath(window.location.pathname, base)) {
+    const targetLocale = getLangPreference() || detectBrowserLang()
+    const target = `${normalizeBase(base)}/${targetLocale}/`
+    window.location.replace(target)
+    return
+  }
+
+  const previousAfterRouteChanged = router.onAfterRouteChanged
+  router.onAfterRouteChanged = (to: string) => {
+    previousAfterRouteChanged?.(to)
+    if (isRootPath(to, base)) {
+      const targetLocale = getLangPreference() || detectBrowserLang()
+      const target = `${normalizeBase(base)}/${targetLocale}/`
       window.location.replace(target)
+      return
     }
+    updatePreferenceFromPath(to)
+  }
+}
 
-    // 立即执行（在 hydration 之前，减少闪烁）
-    checkAndRedirect()
+const theme: Theme = {
+  extends: DefaultTheme,
+  enhanceApp(ctx) {
+    DefaultTheme.enhanceApp?.(ctx)
 
-    // ---- 监听路由变化，保存语言偏好 ----
-    router.onAfterRouteChanged = (to: string) => {
-      if (to.includes('/zh/')) setLangPreference('zh')
-      else if (to.includes('/en/')) setLangPreference('en')
-    }
+    ctx.app.component('SiteHeroPanel', SiteHeroPanel)
+    ctx.app.component('EvidenceStrip', EvidenceStrip)
+    ctx.app.component('PillarGrid', PillarGrid)
+    ctx.app.component('KnowledgeMap', KnowledgeMap)
+    ctx.app.component('WorkflowPaths', WorkflowPaths)
+    ctx.app.component('ResourceHub', ResourceHub)
+
+    installLanguagePreference(ctx)
   },
 }
+
+export default theme
