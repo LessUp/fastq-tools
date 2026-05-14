@@ -142,5 +142,9 @@ export default withMermaid(defineConfig({
 
   vite: {
     plugins: [llmstxt()],
+    build: {
+      // Increase chunk size warning limit for mermaid plugin
+      chunkSizeWarningLimit: 700,
+    },
   },
 }))
