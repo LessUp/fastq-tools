@@ -42,7 +42,7 @@ test('tokens layer preserves foundational color schemes and theme tokens', () =>
 
 test('diagrams layer keeps diagram and mermaid styling hooks', () => {
   for (const selector of ['.diagram-frame', '.mermaid']) {
-    assert.match(diagramsSource, new RegExp(selector.replace('.', '\\.')))
+    assert.match(diagramsSource, new RegExp(selector.replace(/\./g, '\\.')))
   }
 })
 

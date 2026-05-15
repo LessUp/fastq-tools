@@ -6,7 +6,3 @@
   margin: 1.5rem 0;
   text-align: center;
 }
-
-.dark .mermaid {
-  /* Mermaid handles dark mode via its own config. */
-}
