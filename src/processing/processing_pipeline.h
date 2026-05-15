@@ -5,8 +5,6 @@
 #include <memory>
 #include <vector>
 
-#include "processing/execution_runtime.h"
-
 namespace fq::processing {
 
 class ReadMutatorInterface;
@@ -56,7 +54,6 @@ private:
      */
     auto processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats) -> bool;
 
-    ExecutionRuntime runtime_;
     std::string inputPath_;                                        ///< 输入文件路径
     std::string outputPath_;                                       ///< 输出文件路径
     ProcessingOptions options_;                                    ///< 用户可见的处理选项
@@ -64,6 +61,7 @@ private:
     std::vector<std::unique_ptr<ReadPredicateInterface>> predicates_;  ///< 数据过滤器列表
     std::unique_ptr<fq::io::IReader> customReader_;  ///< 自定义读取器（测试用）
     std::shared_ptr<fq::io::IWriter> customWriter_;  ///< 自定义写入器（测试用）
+    bool customReaderConfigured_ = false;
 };
 
 }  // namespace fq::processing

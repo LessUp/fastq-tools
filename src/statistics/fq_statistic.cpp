@@ -28,6 +28,43 @@
 
 namespace fq::statistic {
 
+namespace {
+
+class StatisticRuntimeAdapter {
+public:
+    using result_type = FqStatisticResult;
+
+    StatisticRuntimeAdapter(int qualityEncoding,
+                            size_t signatureKmerSize,
+                            size_t duplicateEstimateSampleModulo)
+        : qualityEncoding_(qualityEncoding),
+          signatureKmerSize_(signatureKmerSize),
+          duplicateEstimateSampleModulo_(duplicateEstimateSampleModulo) {}
+
+    auto makeResult() const -> result_type {
+        return {};
+    }
+
+    auto processBatch(fq::io::FastqBatch& batch) const -> result_type {
+        FqStatisticWorker worker(
+            qualityEncoding_, signatureKmerSize_, duplicateEstimateSampleModulo_);
+        return worker.calculateStats(batch);
+    }
+
+    void afterCommit(result_type&, std::uint64_t) const {}
+
+    void merge(result_type& total, result_type partial) const {
+        total += partial;
+    }
+
+private:
+    int qualityEncoding_;
+    size_t signatureKmerSize_;
+    size_t duplicateEstimateSampleModulo_;
+};
+
+}  // namespace
+
 /**
  * @brief 统计结果累加操作符重载
  */
@@ -91,17 +128,11 @@ void FastqStatisticCalculator::run() {
     plan.inputPath = options_.inputFastqPath;
     plan.options = options_.processing;
 
-    auto finalResult = runtime.run<FqStatisticResult>(
-        plan,
-        [this](fq::io::FastqBatch& batch) {
-            FqStatisticWorker worker(options_.qualityEncoding,
-                                     options_.signatureKmerSize,
-                                     options_.duplicateEstimateSampleModulo);
-            return worker.calculateStats(batch);
-        },
-        [](FqStatisticResult& total, FqStatisticResult partial) { total += partial; },
-        [](FqStatisticResult&, std::uint64_t) {},
-        FqStatisticResult{});
+    auto outcome = runtime.execute(plan,
+                                   StatisticRuntimeAdapter{options_.qualityEncoding,
+                                                           options_.signatureKmerSize,
+                                                           options_.duplicateEstimateSampleModulo});
+    auto finalResult = std::move(outcome.result);
 
     fq::logging::info("Execution runtime finished. Aggregated results from all batches.");
     writeResult(finalResult);

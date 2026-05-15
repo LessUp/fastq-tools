@@ -17,9 +17,51 @@
 #include "fqtools/processing/read_predicate_interface.h"
 
 #include <chrono>
+#include <functional>
 #include <stdexcept>
 
+#include "processing/execution_runtime.h"
+
 namespace fq::processing {
+
+namespace {
+
+class FilterRuntimeAdapter {
+public:
+    using result_type = ProcessingStatistics;
+
+    using ProcessBatchFn = std::function<result_type(fq::io::FastqBatch&)>;
+    using AfterCommitFn = std::function<void(result_type&, std::uint64_t)>;
+    using MergeFn = std::function<void(result_type&, result_type)>;
+
+    FilterRuntimeAdapter(ProcessBatchFn processBatch, AfterCommitFn afterCommit, MergeFn merge)
+        : processBatch_(std::move(processBatch)),
+          afterCommit_(std::move(afterCommit)),
+          merge_(std::move(merge)) {}
+
+    auto makeResult() const -> result_type {
+        return {};
+    }
+
+    auto processBatch(fq::io::FastqBatch& batch) -> result_type {
+        return processBatch_(batch);
+    }
+
+    void afterCommit(result_type& partial, std::uint64_t committedBytes) const {
+        afterCommit_(partial, committedBytes);
+    }
+
+    void merge(result_type& total, result_type partial) const {
+        merge_(total, std::move(partial));
+    }
+
+private:
+    ProcessBatchFn processBatch_;
+    AfterCommitFn afterCommit_;
+    MergeFn merge_;
+};
+
+}  // namespace
 
 ProcessingPipeline::ProcessingPipeline() = default;
 ProcessingPipeline::~ProcessingPipeline() = default;
@@ -33,6 +75,7 @@ void ProcessingPipeline::setOutputPath(const std::string& outputPath) {
 }
 
 void ProcessingPipeline::setReader(std::unique_ptr<fq::io::IReader> reader) {
+    customReaderConfigured_ = static_cast<bool>(reader);
     customReader_ = std::move(reader);
 }
 
@@ -54,6 +97,11 @@ void ProcessingPipeline::addReadPredicate(std::unique_ptr<ReadPredicateInterface
 
 auto ProcessingPipeline::run() -> ProcessingStatistics {
     try {
+        if (customReaderConfigured_ && !customReader_) {
+            throw std::invalid_argument(
+                "ProcessingPipeline: custom reader must be reset before rerunning");
+        }
+
         ExecutionRuntimePlan runtimePlan;
         runtimePlan.inputPath = inputPath_;
         if (!outputPath_.empty()) {
@@ -61,31 +109,29 @@ auto ProcessingPipeline::run() -> ProcessingStatistics {
         }
         runtimePlan.options = options_;
 
-        runtime_.setCustomReader(std::move(customReader_));
-        if (customWriter_) {
-            runtime_.setCustomWriter(customWriter_);
-        }
+        ExecutionRuntime runtime(std::move(customReader_), customWriter_);
+
+        auto adapter =
+            FilterRuntimeAdapter{[this](fq::io::FastqBatch& batch) {
+                                     ProcessingStatistics partial;
+                                     processBatch(batch, partial);
+                                     return partial;
+                                 },
+                                 [](ProcessingStatistics& partial, std::uint64_t committedBytes) {
+                                     partial.outputBytes += committedBytes;
+                                 },
+                                 [](ProcessingStatistics& total, ProcessingStatistics partial) {
+                                     total.totalReads += partial.totalReads;
+                                     total.passedReads += partial.passedReads;
+                                     total.filteredReads += partial.filteredReads;
+                                     total.modifiedReads += partial.modifiedReads;
+                                     total.inputBytes += partial.inputBytes;
+                                     total.outputBytes += partial.outputBytes;
+                                 }};
 
         auto startTime = std::chrono::steady_clock::now();
-        auto stats = runtime_.run<ProcessingStatistics>(
-            runtimePlan,
-            [this](fq::io::FastqBatch& batch) {
-                ProcessingStatistics partial;
-                processBatch(batch, partial);
-                return partial;
-            },
-            [](ProcessingStatistics& total, ProcessingStatistics partial) {
-                total.totalReads += partial.totalReads;
-                total.passedReads += partial.passedReads;
-                total.filteredReads += partial.filteredReads;
-                total.modifiedReads += partial.modifiedReads;
-                total.inputBytes += partial.inputBytes;
-                total.outputBytes += partial.outputBytes;
-            },
-            [](ProcessingStatistics& partial, std::uint64_t committedBytes) {
-                partial.outputBytes += committedBytes;
-            },
-            ProcessingStatistics{});
+        auto outcome = runtime.execute(runtimePlan, adapter);
+        auto stats = std::move(outcome.result);
 
         auto endTime = std::chrono::steady_clock::now();
         auto duration =

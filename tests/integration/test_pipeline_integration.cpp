@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <fstream>
+#include <deque>
 #include <string>
 
 #include "fixture_loader.h"
@@ -9,6 +10,47 @@
 #include <gtest/gtest.h>
 
 namespace fq::test {
+
+namespace {
+
+struct TestRecordStorage {
+    std::deque<std::string> ids;
+    std::deque<std::string> seqs;
+    std::deque<std::string> quals;
+    std::deque<std::string> pluses;
+
+    auto makeBatch(std::string id, std::string seq) -> fq::io::FastqBatch {
+        ids.push_back(std::move(id));
+        seqs.push_back(std::move(seq));
+        quals.push_back("IIII");
+        pluses.push_back("+");
+
+        const size_t idx = ids.size() - 1;
+        fq::io::FastqBatch batch(1024, 1);
+        batch.records().push_back(
+            fq::io::FastqRecord{ids[idx], {}, seqs[idx], quals[idx], pluses[idx]});
+        return batch;
+    }
+};
+
+class VectorReader final : public fq::io::IReader {
+public:
+    explicit VectorReader(std::vector<fq::io::FastqBatch> batches) : batches_(std::move(batches)) {}
+
+    auto nextBatch(fq::io::FastqBatch& batch) -> bool override {
+        if (cursor_ >= batches_.size()) {
+            return false;
+        }
+        batch = std::move(batches_[cursor_++]);
+        return true;
+    }
+
+private:
+    std::vector<fq::io::FastqBatch> batches_;
+    size_t cursor_ = 0;
+};
+
+}  // namespace
 
 class PipelineIntegrationTest : public FastQToolsTest {};
 
@@ -227,6 +269,23 @@ TEST_F(PipelineIntegrationTest, PipelineRunsInLowMemoryMode) {
 
     EXPECT_EQ(stats.totalReads, 1);
     EXPECT_EQ(stats.passedReads, 1);
+}
+
+TEST_F(PipelineIntegrationTest, PipelineRequiresResettingCustomReaderBeforeRerun) {
+    TestRecordStorage storage;
+    auto pipeline = fq::processing::createProcessingPipeline();
+
+    fq::processing::ProcessingOptions options;
+    options.threadCount = 1;
+    options.batchSize = 1;
+    pipeline->setProcessingOptions(options);
+    pipeline->setReader(std::make_unique<VectorReader>(
+        std::vector<fq::io::FastqBatch>{storage.makeBatch("read1", "ACGT")}));
+
+    const auto firstRunStats = pipeline->run();
+    EXPECT_EQ(firstRunStats.totalReads, 1);
+
+    EXPECT_THROW(static_cast<void>(pipeline->run()), std::invalid_argument);
 }
 
 TEST_F(PipelineIntegrationTest, StatisticCalculatorRunsInHighThroughputMode) {
