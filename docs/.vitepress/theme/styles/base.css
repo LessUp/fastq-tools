@@ -1,3 +1,4 @@
+/* Global document */
 html {
   scroll-behavior: smooth;
 }
@@ -6,6 +7,7 @@ body {
   background: var(--vp-c-bg);
 }
 
+/* Navigation */
 .VPNav {
   background: color-mix(in srgb, var(--vp-c-bg) 82%, transparent);
   border-bottom: 1px solid var(--vp-c-border);
@@ -28,6 +30,7 @@ body {
   justify-content: flex-end;
 }
 
+/* Sidebar */
 .VPSidebar {
   padding: 1.5rem 1rem 6rem;
   background: linear-gradient(180deg, color-mix(in srgb, var(--vp-c-bg-alt) 55%, transparent), transparent 24rem);
@@ -63,6 +66,7 @@ body {
   box-shadow: inset 2px 0 0 var(--vp-c-brand-1);
 }
 
+/* Hero */
 .VPHero {
   padding: calc(var(--vp-nav-height) + 3rem) 1.5rem 3.5rem;
 }
@@ -125,6 +129,7 @@ body {
   color: var(--vp-c-text-1);
 }
 
+/* Content */
 .VPDoc {
   padding: 2.25rem 1.5rem 6rem;
 }
@@ -251,6 +256,7 @@ body {
   background: color-mix(in srgb, var(--vp-c-bg-soft) 78%, transparent);
 }
 
+/* Search modal */
 .VPLocalSearchBox {
   backdrop-filter: blur(18px);
 }
@@ -265,6 +271,7 @@ body {
   box-shadow: 0 32px 60px -30px var(--fq-c-shadow-strong);
 }
 
+/* Footer */
 .VPFooter {
   padding: 2.5rem 1.5rem;
   border-top: 1px solid var(--vp-c-border);
@@ -277,6 +284,7 @@ body {
   color: var(--vp-c-text-3);
 }
 
+/* Print */
 @media print {
   .VPNav,
   .VPSidebar,
@@ -323,6 +331,7 @@ body {
   }
 }
 
+/* Responsive */
 @media (max-width: 1100px) {
   .VPHero {
     padding-top: calc(var(--vp-nav-height) + 2.5rem);
