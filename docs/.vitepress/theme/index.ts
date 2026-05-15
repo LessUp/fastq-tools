@@ -7,6 +7,9 @@ import PillarGrid from './components/PillarGrid.vue'
 import KnowledgeMap from './components/KnowledgeMap.vue'
 import WorkflowPaths from './components/WorkflowPaths.vue'
 import ResourceHub from './components/ResourceHub.vue'
+import CitationStrip from './components/CitationStrip.vue'
+import DiagramFrame from './components/DiagramFrame.vue'
+import SectionLandingGrid from './components/SectionLandingGrid.vue'
 import './style.css'
 
 const LANG_KEY = 'vitepress:lang-pref'
@@ -107,6 +110,9 @@ const theme: Theme = {
     ctx.app.component('KnowledgeMap', KnowledgeMap)
     ctx.app.component('WorkflowPaths', WorkflowPaths)
     ctx.app.component('ResourceHub', ResourceHub)
+    ctx.app.component('CitationStrip', CitationStrip)
+    ctx.app.component('DiagramFrame', DiagramFrame)
+    ctx.app.component('SectionLandingGrid', SectionLandingGrid)
 
     installLanguagePreference(ctx)
   },

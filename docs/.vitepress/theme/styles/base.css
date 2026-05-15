@@ -1,0 +1,4 @@
+body {
+  background: var(--fq-c-canvas);
+  color: var(--fq-c-text-main);
+}

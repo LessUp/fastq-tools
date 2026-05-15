@@ -1,0 +1,17 @@
+:root {
+  --fq-c-canvas: #f4f8f7;
+  --fq-c-surface: #ffffff;
+  --fq-c-text-main: #16211f;
+  --fq-c-text-muted: #48615d;
+  --fq-c-brand: #157a6e;
+  --fq-c-research: #6246d2;
+}
+
+.dark {
+  --fq-c-canvas: #071311;
+  --fq-c-surface: #0c1c19;
+  --fq-c-text-main: #e5f3f0;
+  --fq-c-text-muted: #afcbc5;
+  --fq-c-brand: #4ac0ae;
+  --fq-c-research: #9f8cff;
+}
