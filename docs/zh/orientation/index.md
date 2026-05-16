@@ -1,15 +1,28 @@
 ---
 title: 导读
-description: 从这里快速理解 FastQTools 文档站的分层与阅读入口。
+description: 先建立阅读框架，再进入 FastQTools 的白皮书、学院与参考材料。
 layout: doc
 ---
 
 <SectionLandingGrid locale="zh" section="orientation" />
 
-## 这一节适合什么时候读
+# 导读
 
-当你还在判断“应该先读哪一层文档”时，先看导读最省时间。
+## 项目定位
 
-- 通过[知识地图](../knowledge-map/)按任务意图选入口。
-- 转到[白皮书](../whitepaper/)了解定位与架构原因。
-- 如果你已经需要具体命令或接口，直接进入[参考导航](../reference/)。
+FastQTools 是一个面向 FASTQ 质控核心环节的工程化工具包，而不是试图覆盖整个生信工作流的平台。
+
+## 阅读路径
+
+1. 先读 [`为什么选择 FastQTools`](../why-fastqtools/)
+2. 再读 [`技术白皮书`](../whitepaper/)
+3. 最后按角色进入 [`学院`](../academy/) 与 [`参考导航`](../reference/)
+
+## 术语表
+
+- `stat`：面向质控统计与证据建立
+- `filter`：面向过滤、裁剪与预处理
+
+## 下一步
+
+如果你还在判断项目值不值得试，继续阅读 [`为什么选择 FastQTools`](../why-fastqtools/)；如果你已经想系统理解叙事主线，直接进入 [`技术白皮书`](../whitepaper/)。

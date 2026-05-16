@@ -1,15 +1,27 @@
 ---
-title: 白皮书
-description: 在进入执行细节前，先阅读 FastQTools 的定位、论证与架构背景。
+title: 技术白皮书
+description: 用系统边界、执行模型和证据框架理解 FastQTools，而不是只看命令列表。
 layout: doc
 ---
 
 <SectionLandingGrid locale="zh" section="whitepaper" />
 
-## 这一节提供什么
+# 技术白皮书
 
-白皮书层负责说明 FastQTools 为什么存在、性能主张来自哪里，以及这些设计如何服务测序 QC 工作流。
+## 系统全景
 
-- 从[为什么选择 FastQTools](../why-fastqtools/)开始理解项目定位。
-- 阅读[架构](../architecture/)把握系统级设计背景。
-- 阅读[性能总览](../performance/)查看吞吐与证据。
+本栏目解释 FastQTools 的系统边界、性能假设、执行模型和维护约束。
+
+## 阅读建议
+
+- 架构与执行模型：[`架构`](../architecture/)
+- 证据与 benchmark：[`性能总览`](../performance/)
+- 开发者延伸材料：[`开发者文档`](../dev/)
+
+## 这一层回答什么问题
+
+白皮书层重点回答三类问题：它解决哪一段 FASTQ 质控工作、这些性能主张建立在什么结构上、以及项目如何把证据与维护边界写成可审查材料。
+
+## 建议阅读顺序
+
+先看 [`为什么选择 FastQTools`](../why-fastqtools/) 建立采用判断，再用 [`架构`](../architecture/) 理解系统分层，最后回到 [`性能总览`](../performance/) 对照 benchmark 与风险边界。
