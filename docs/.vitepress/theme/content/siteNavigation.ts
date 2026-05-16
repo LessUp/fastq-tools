@@ -313,7 +313,7 @@ export const whitepaperSidebarGroups = [
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const academySidebarGroups = [
-  { headingKey: 'academyHub', items: ['academyNav', 'workflows', 'gettingStarted', 'cliReference', 'configuration', 'deployment'] },
+  { headingKey: 'academyHub', items: ['academyNav', 'workflows', 'referenceNav'] },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const referenceSidebarGroups = [
@@ -328,7 +328,7 @@ export const referenceSidebarGroups = [
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const researchSidebarGroups = [
-  { headingKey: 'researchHub', items: ['researchNav', 'performance', 'benchmarkReport', 'resourcesOverview', 'contributing', 'changelog'] },
+  { headingKey: 'researchHub', items: ['researchNav', 'performance', 'benchmarkReport', 'resourcesOverview', 'contributing'] },
   { headingKey: 'agents', items: ['agentsDomain', 'issueTracker', 'triageLabels'] },
   { headingKey: 'archive', items: ['archiveOverview', 'migrationNotice'] },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]

@@ -77,7 +77,7 @@ const createTopNavActiveMatches = (locale: LocaleKey) => ({
   whitepaperNav: `^/${locale}/(whitepaper|why-fastqtools|architecture)/`,
   academyNav: `^/${locale}/(academy|workflows)/`,
   referenceNav: `^/${locale}/(reference|guide|api|dev|release-notes)/`,
-  researchNav: `^/${locale}/(research|performance|resources|agents|archive|contributing)`,
+  researchNav: `^/${locale}/(research|performance|resources|agents|archive|contributing)(/|$)`,
 } as const satisfies Record<(typeof topNavLinkIds)[number], string>)
 
 const createLocaleThemeConfig = (locale: LocaleKey) => ({
@@ -105,7 +105,7 @@ const createLocaleThemeConfig = (locale: LocaleKey) => ({
     [`/${locale}/dev/`]: createReferenceSidebar(locale),
     [`/${locale}/release-notes/`]: createReferenceSidebar(locale),
     [`/${locale}/resources/`]: createResearchSidebar(locale),
-    [`/${locale}/contributing`]: createResearchSidebar(locale),
+    [`/${locale}/contributing/`]: createResearchSidebar(locale),
     [`/${locale}/agents/`]: createResearchSidebar(locale),
     [`/${locale}/archive/`]: createResearchSidebar(locale),
   },
