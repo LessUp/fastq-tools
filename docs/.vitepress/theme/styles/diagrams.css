@@ -6,7 +6,7 @@
 
 .dark {
   --fq-diagram-bg: var(--fq-c-surface-alt);
-  --fq-diagram-stroke: #6dd7c7;
+  --fq-diagram-stroke: var(--vp-c-brand-2);
   --fq-diagram-text: var(--fq-c-text-main);
 }
 

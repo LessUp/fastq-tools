@@ -25,6 +25,7 @@ test('diagram css defines shared light and dark tokens', () => {
     assert.match(diagramCss, new RegExp(token))
   }
   assert.match(diagramCss, /\.dark[^{]*\{/)
+  assert.match(diagramCss, /\.dark[^{]*\{[^}]*--fq-diagram-stroke:\s*var\(--vp-c-brand-2\);/s)
 })
 
 test('shared svg assets use theme-friendly colors', () => {
@@ -42,9 +43,14 @@ test('diagram frame is wired to inline raw svg assets', () => {
   assert.match(diagramFrameSource, /v-html=/)
 })
 
+test('diagram frame renders a caption when the prop or named slot is present', () => {
+  assert.match(diagramFrameSource, /const hasCaptionSlot = computed\(\(\) => Boolean\(slots\.caption\)\)/)
+  assert.match(diagramFrameSource, /<figcaption v-if="caption \|\| hasCaptionSlot">/)
+})
+
 test('adopted pages reference shared diagram assets through DiagramFrame props', () => {
   for (const page of adoptedPages) {
-    assert.match(page.source, /<DiagramFrame\b[^>]*\b(asset|diagram)=["'][^"']+["'][^>]*>/)
+    assert.match(page.source, /<DiagramFrame\b[^>]*\basset=["'][^"']+["'][^>]*>/)
     assert.doesNotMatch(page.source, /<img[^>]+assets\/diagrams\/(?:architecture-overview|execution-model|reading-map)\.svg/)
   }
 })
