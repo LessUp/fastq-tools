@@ -8,6 +8,10 @@ FastQTools uses a layered structure of **CLI / command layer / public library in
 
 That means it is neither a disposable script with commands but no real core, nor a pure SDK with no operational entry point. It brings user-facing entry points and the engineering core under the same design principles.
 
+<DiagramFrame caption="Architecture overview: layered entry points feed a bounded source → processing → sink execution path.">
+  <img src="../../assets/diagrams/architecture-overview.svg" alt="FastQTools architecture overview diagram showing the CLI, command layer, public API, implementation modules, and bounded processing pipeline." />
+</DiagramFrame>
+
 ## Top-down view: who is responsible for what?
 
 | Layer | How to think about it | Read more |

@@ -8,6 +8,10 @@ FastQTools 采用的是 **CLI / 命令层 / 公共库接口 / 具体实现** 的
 
 这意味着它既不是“只有命令没有内核”的一次性脚本，也不是“只有库没有操作入口”的纯 SDK，而是把用户入口和工程内核收敛到同一套设计原则里。
 
+<DiagramFrame caption="架构总览：上层入口映射到同一套公共 API 与有界 source → processing → sink 执行路径。">
+  <img src="../../assets/diagrams/architecture-overview.svg" alt="FastQTools 架构总览图，展示 CLI、命令层、公共 API、实现模块以及有界处理流水线。" />
+</DiagramFrame>
+
 ## 从上到下看：谁负责什么
 
 | 层次 | 你应该如何理解它 | 深入阅读 |

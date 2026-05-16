@@ -15,6 +15,10 @@ FastQTools 把性能文档放在叙事层，不是为了“营销数字”，而
 
 进一步的数字与上下文，请看 [`英文 Benchmark 报告`](./benchmark-report)。
 
+<DiagramFrame caption="执行模型：代表性性能数字来自 source → processing → sink 路径及其有界验证闭环。">
+  <img src="../../assets/diagrams/execution-model.svg" alt="FastQTools 执行模型图，展示 source、processing、sink 与性能验证层之间的关系。" />
+</DiagramFrame>
+
 ## 这页应该如何使用
 
 ### 你在做采用评估时

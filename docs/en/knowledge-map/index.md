@@ -15,6 +15,10 @@ If you think of the whole site as a technical whitepaper:
 3. the reference pages make the work actionable;
 4. the resources pages connect site-local material to outside knowledge.
 
+<DiagramFrame caption="Reading map: start with a narrative question, then move into execution details and supporting resources.">
+  <img src="../../assets/diagrams/reading-map.svg" alt="FastQTools reading map showing narrative, execution, and resource layers with evaluation, running, integration, and maintenance entry points." />
+</DiagramFrame>
+
 ## Read by problem domain
 
 ### 1. Evaluation: is this project a fit for my FASTQ QC scenario?

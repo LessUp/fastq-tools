@@ -15,6 +15,10 @@ FastQTools 文档站现在分成三层：**叙事层讲判断与导航，执行�
 3. 参考页负责让你真正落地；
 4. 资源页负责把站内材料和站外知识连起来。
 
+<DiagramFrame caption="阅读地图：先回答叙事问题，再进入执行细节，最后回到资源层补充背景。">
+  <img src="../../assets/diagrams/reading-map.svg" alt="FastQTools 阅读地图，展示叙事层、执行层、资源层以及评估、运行、集成、维护四类入口。" />
+</DiagramFrame>
+
 ## 按问题域阅读
 
 ### 1. 评估：这个项目是否适合我的 FASTQ QC 场景？
