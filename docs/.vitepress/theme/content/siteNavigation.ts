@@ -262,7 +262,7 @@ const sharedLinks = {
     labels: { zh: localeText.zh.sidebar.resourcesOverview, en: localeText.en.sidebar.resourcesOverview },
   },
   contributing: {
-    path: 'contributing',
+    path: 'contributing/',
     labels: { zh: localeText.zh.sidebar.contributing, en: localeText.en.sidebar.contributing },
   },
   changelog: {
