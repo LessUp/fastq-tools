@@ -353,15 +353,6 @@ export const workflowPathLinks = {
   contribute: { primary: 'build', secondary: 'testing' },
 } as const satisfies Record<string, { primary: SharedLinkId; secondary: SharedLinkId }>
 
-export const homepageActionLinkIds = {
-  primary: 'why',
-  secondary: 'gettingStarted',
-} as const satisfies Record<string, SharedLinkId>
-
-export const homepageEvidenceLinkIds = {
-  performance: 'performance',
-} as const satisfies Record<string, SharedLinkId>
-
 export type ResourceHubItem =
   | { type: 'doc'; id: SharedLinkId }
   | { type: 'external'; href: string; labels: Record<LocaleKey, string> }
