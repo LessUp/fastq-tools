@@ -2,36 +2,19 @@
   <title id="title">FastQTools reading map</title>
   <desc id="desc">A map showing the narrative, execution, and resource layers, plus the evaluation, running, integration, and maintenance reading paths.</desc>
   <style>
-    :root {
-      --fq-diagram-bg: #f8fbfb;
-      --fq-diagram-panel: #ffffff;
-      --fq-diagram-stroke: #16525b;
-      --fq-diagram-text: #12313a;
-      --fq-diagram-accent: #2b8c7f;
-      color: var(--fq-diagram-stroke);
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --fq-diagram-bg: #0f1d22;
-        --fq-diagram-panel: #14272d;
-        --fq-diagram-stroke: #6dd7c7;
-        --fq-diagram-text: #e6fffb;
-        --fq-diagram-accent: #9be7dc;
-      }
-    }
     text {
       font-family: Inter, "Segoe UI", sans-serif;
       fill: var(--fq-diagram-text);
     }
     .panel {
-      fill: var(--fq-diagram-panel);
+      fill: currentColor;
+      fill-opacity: 0.04;
       stroke: currentColor;
       stroke-width: 2;
       rx: 18;
     }
     .accent {
-      fill: rgba(43, 140, 127, 0.12);
-      stroke: var(--fq-diagram-accent);
+      fill-opacity: 0.12;
     }
     .arrow {
       fill: none;

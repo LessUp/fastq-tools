@@ -30,6 +30,9 @@ test('diagram css defines shared light and dark tokens', () => {
 test('shared svg assets use theme-friendly colors', () => {
   for (const file of ['architecture-overview.svg', 'execution-model.svg', 'reading-map.svg']) {
     const source = readFileSync(new URL(`../assets/diagrams/${file}`, import.meta.url), 'utf8')
+    assert.doesNotMatch(source, /@media/)
+    assert.doesNotMatch(source, /prefers-color-scheme/)
+    assert.doesNotMatch(source, /:root\s*\{/)
     assert.match(source, /(currentColor|var\(--fq-diagram-)/)
   }
 })
