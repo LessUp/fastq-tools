@@ -15,9 +15,10 @@ Those numbers first answer one question: **does FastQTools operate at the throug
 
 For more detail and context, see the [`Benchmark Report`](./benchmark-report).
 
-<DiagramFrame caption="Execution model: representative performance numbers come from the source → processing → sink path and its bounded verification loop.">
-  <img src="../../assets/diagrams/execution-model.svg" alt="FastQTools execution model diagram showing source, processing, sink, and verification layers for performance analysis." />
-</DiagramFrame>
+<DiagramFrame
+  asset="execution-model"
+  caption="Execution model: representative performance numbers come from the source → processing → sink path and its bounded verification loop."
+/>
 
 ## How this page should be used
 
