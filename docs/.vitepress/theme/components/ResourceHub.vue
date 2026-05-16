@@ -15,7 +15,7 @@ const props = defineProps<{ locale: LocaleKey }>()
 const copy = {
   en: {
     title: 'Resource hub',
-    intro: 'Everything outside the primary homepage narrative stays grouped here: deep reference, collaboration entry points, automation docs, and historical material.',
+    intro: 'Everything outside the primary reading narrative stays grouped here: deep reference, collaboration entry points, automation docs, and historical material.',
     groups: {
       reference: { title: 'Deep reference', summary: 'Move directly into guide, API, and developer material when you already know what you need.', linkLabel: 'Open reference hub' },
       collaboration: { title: 'Collaboration', summary: 'Contribution guidance, release notes, and the repository itself for teams planning active adoption.', linkLabel: 'Open resources hub' },
@@ -25,7 +25,7 @@ const copy = {
   },
   zh: {
     title: '资源中心',
-    intro: '凡是不属于首页主叙事的内容，都统一归到这里：深度参考、协作入口、自动化文档与历史资料。',
+    intro: '凡是不属于主阅读叙事的内容，都统一归到这里：深度参考、协作入口、自动化文档与历史资料。',
     groups: {
       reference: { title: '深度参考', summary: '当你已经知道自己要找什么时，可以直接跳到指南、API 与开发资料。', linkLabel: '打开参考导航' },
       collaboration: { title: '协作入口', summary: '适合准备正式采用项目的团队：贡献说明、发布记录与仓库入口都在这里。', linkLabel: '打开资源中心' },

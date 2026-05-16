@@ -2,13 +2,11 @@
 import { computed } from 'vue'
 import { withBase } from 'vitepress'
 import { ArrowRight, BookOpen, Languages, ShieldCheck } from 'lucide-vue-next'
-import { getSharedLinkHref, homepageActionLinkIds, type LocaleKey } from '../content/siteNavigation'
-
-type ActionLinkId = (typeof homepageActionLinkIds)[keyof typeof homepageActionLinkIds]
+import { getSharedLinkHref, type LocaleKey, type SharedLinkId } from '../content/siteNavigation'
 
 type Action = {
   label: string
-  linkId: ActionLinkId
+  linkId: SharedLinkId
   variant: 'primary' | 'secondary'
 }
 
@@ -22,53 +20,53 @@ const props = defineProps<{ locale: LocaleKey }>()
 
 const copy = {
   en: {
-    eyebrow: 'FastQTools docs',
-    title: 'A bilingual technical whitepaper hub for FASTQ evaluation and adoption.',
-    summary: 'Start with the story, validate the evidence, then drop into commands, APIs, and developer entry points.',
+    eyebrow: 'FastQTools technical whitepaper',
+    title: 'Choose the reading path that fits your FASTQ evaluation stage.',
+    summary: 'Start with orientation, move through the technical whitepaper, then continue into academy guidance or research evidence when you need deeper validation.',
     actions: [
-      { label: 'Why FastQTools', linkId: homepageActionLinkIds.primary, variant: 'primary' },
-      { label: 'Get started', linkId: homepageActionLinkIds.secondary, variant: 'secondary' },
+      { label: 'Start with orientation', linkId: 'orientationNav', variant: 'primary' },
+      { label: 'Read the whitepaper', linkId: 'whitepaperNav', variant: 'secondary' },
     ] satisfies Action[],
     signals: [
       {
-        title: 'Two focused workflows',
-        detail: 'The maintained product surface stays intentionally narrow: stat for QC reports and filter for single-pass preprocessing.',
+        title: 'orientation for first-pass triage',
+        detail: 'Use orientation when you need the fastest explanation of section boundaries, audience fit, and where to read next.',
         icon: BookOpen,
       },
       {
-        title: 'Spec-driven maintenance',
-        detail: 'Current behavior is anchored in openspec baseline documents so evaluators can trace decisions back to maintained source material.',
+        title: 'technical whitepaper for decision reviews',
+        detail: 'Positioning, architectural rationale, and benchmark claims stay together so adoption reviews can cite one coherent narrative.',
         icon: ShieldCheck,
       },
       {
-        title: 'Built for bilingual reading',
-        detail: 'Chinese and English narrative paths stay aligned so teams can review the same evidence in either language.',
+        title: 'research-ready follow-up',
+        detail: 'Performance evidence, resources, and maintenance context remain close by whenever research, procurement, or implementation planning needs more proof.',
         icon: Languages,
       },
     ] satisfies Signal[],
   },
   zh: {
-    eyebrow: 'FastQTools 文档',
-    title: '面向 FASTQ 评估与采用决策的双语技术白皮书入口。',
-    summary: '先理解项目定位，再核对性能与工作流证据，最后进入命令、API 与开发者入口。',
+    eyebrow: 'FastQTools 技术白皮书',
+    title: '为 FASTQ 采用评估选择合适的阅读路径。',
+    summary: '先从导读进入，再阅读技术白皮书；当你需要更深的落地说明时，再转向学院或研究证据。',
     actions: [
-      { label: '为什么选择 FastQTools', linkId: homepageActionLinkIds.primary, variant: 'primary' },
-      { label: '快速开始', linkId: homepageActionLinkIds.secondary, variant: 'secondary' },
+      { label: '从导读开始', linkId: 'orientationNav', variant: 'primary' },
+      { label: '阅读白皮书', linkId: 'whitepaperNav', variant: 'secondary' },
     ] satisfies Action[],
     signals: [
       {
-        title: '聚焦两个核心工作流',
-        detail: '当前维护的产品面保持克制：stat 用于质控报告，filter 用于单次过滤与预处理。',
+        title: '导读负责第一次分流',
+        detail: '当你需要最快理解分区边界、适合对象与下一步阅读建议时，先看导读最省时间。',
         icon: BookOpen,
       },
       {
-        title: '规范驱动维护',
-        detail: '当前行为以 openspec baseline 为准，方便评估者追溯决策依据与维护边界。',
+        title: '技术白皮书负责做出判断',
+        detail: '项目定位、架构理由与 benchmark 主张被放在同一条叙事里，方便用于采用评审与技术答辩。',
         icon: ShieldCheck,
       },
       {
-        title: '双语阅读路径同步',
-        detail: '中文与英文首页保持一致的信息架构，便于团队在不同语言环境下共用同一组证据。',
+        title: '研究层负责补齐证据',
+        detail: '当研究、采购或实施规划需要更多依据时，性能证据、资源入口与维护背景都可以继续向下追踪。',
         icon: Languages,
       },
     ] satisfies Signal[],
@@ -76,7 +74,7 @@ const copy = {
 } as const
 
 const content = computed(() => copy[props.locale])
-const resolve = (linkId: ActionLinkId) => withBase(getSharedLinkHref(props.locale, linkId))
+const resolve = (linkId: SharedLinkId) => withBase(getSharedLinkHref(props.locale, linkId))
 </script>
 
 <template>
