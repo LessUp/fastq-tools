@@ -7,7 +7,7 @@
     "dev": "npm run sync && vitepress dev",
     "build": "npm run sync && vitepress build",
     "test:foundation": "node --test tests/theme-foundation.test.mjs",
-    "test": "node --test tests/theme-foundation.test.mjs tests/navigation-ia.test.mjs tests/homepage-contract.test.mjs tests/diagram-contract.test.mjs tests/research-contract.test.mjs tests/zh-page-matrix.test.mjs tests/en-mirror-matrix.test.mjs",
+    "test": "node --test tests/theme-foundation.test.mjs tests/navigation-ia.test.mjs tests/homepage-contract.test.mjs tests/diagram-contract.test.mjs tests/research-contract.test.mjs tests/zh-page-matrix.test.mjs tests/en-mirror-matrix.test.mjs tests/publication-cleanup.test.mjs",
     "preview": "vitepress preview"
   },
   "devDependencies": {
