@@ -59,7 +59,11 @@
 `filter` 负责把质量阈值、长度阈值、修剪与预处理策略应用到输入数据上。
 
 ```bash
-./build/clang-debug/FastQTools filter -i reads.fastq.gz -o filtered.fastq.gz           --min-quality 20           --min-length 50           --trim-quality 20           --trim-mode both
+./build/clang-debug/FastQTools filter -i reads.fastq.gz -o filtered.fastq.gz \
+    --min-quality 20 \
+    --min-length 50 \
+    --trim-quality 20 \
+    --trim-mode both
 ```
 
 上面两条命令不要求你现在就记住全部参数；真正的目标是让你知道项目的使用节奏通常是“先看证据，再决定过滤与部署策略”。
