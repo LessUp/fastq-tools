@@ -30,7 +30,9 @@ FastQTools --log-level debug stat -i reads.fastq.gz -o stats.txt
 ```bash
 FastQTools stat -i reads.fastq.gz -o stats.txt
 FastQTools stat -i reads.fastq.gz -o stats.txt -t 8
-FastQTools stat -i reads.fastq.gz -o stats.txt     --signature-report signatures.tsv     --signature-kmer-size 15
+FastQTools stat -i reads.fastq.gz -o stats.txt \
+    --signature-report signatures.tsv \
+    --signature-kmer-size 15
 ```
 
 You would typically call it when you want to:
@@ -52,7 +54,12 @@ You would typically call it when you want to:
 Example:
 
 ```bash
-FastQTools filter -i reads.fastq.gz -o clean.fastq.gz     --min-quality 20     --min-length 50     --max-n-ratio 0.1     --trim-quality 20     --trim-mode both
+FastQTools filter -i reads.fastq.gz -o clean.fastq.gz \
+    --min-quality 20 \
+    --min-length 50 \
+    --max-n-ratio 0.1 \
+    --trim-quality 20 \
+    --trim-mode both
 ```
 
 ## Recommended workflow fragments

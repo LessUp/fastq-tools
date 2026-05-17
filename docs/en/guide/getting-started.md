@@ -59,7 +59,11 @@ You should see the global logging options and the two core subcommands, `stat` a
 `filter` applies quality thresholds, length thresholds, trimming, and preprocessing policy to the input data.
 
 ```bash
-./build/clang-debug/FastQTools filter -i reads.fastq.gz -o filtered.fastq.gz     --min-quality 20     --min-length 50     --trim-quality 20     --trim-mode both
+./build/clang-debug/FastQTools filter -i reads.fastq.gz -o filtered.fastq.gz \
+    --min-quality 20 \
+    --min-length 50 \
+    --trim-quality 20 \
+    --trim-mode both
 ```
 
 The goal is not to memorize every flag now. The goal is to learn the normal usage rhythm: inspect first, then decide on filtering and deployment strategy.
