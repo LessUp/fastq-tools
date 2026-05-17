@@ -1,15 +1,27 @@
 ---
 title: Whitepaper
-description: Read the narrative case for FastQTools before choosing an execution path.
+description: Understand FastQTools through system boundaries, execution model, and evidence framing instead of a command list alone.
 layout: doc
 ---
 
 <SectionLandingGrid locale="en" section="whitepaper" />
 
-## What you will find here
+# Whitepaper
 
-Whitepaper pages explain why FastQTools exists, where its performance claims come from, and how the architecture supports sequencing QC workflows.
+## System overview
 
-- Read [Why FastQTools](../why-fastqtools/) for project positioning.
-- Read [Architecture](../architecture/) for system-level design context.
-- Read [Performance](../performance/) when throughput and evidence matter to adoption.
+This section explains the system boundary, performance assumptions, execution model, and maintenance constraints behind FastQTools.
+
+## Reading path
+
+- Architecture and execution model: [`Architecture`](../architecture/)
+- Evidence and benchmarks: [`Performance`](../performance/)
+- Developer deep dives: [`Developer Guide`](../dev/)
+
+## What this layer answers
+
+The whitepaper layer answers three questions: which part of FASTQ QC the project covers, what structural basis supports its performance claims, and how evidence and maintenance boundaries are turned into reviewable material.
+
+## Suggested reading order
+
+Start with [`Why FastQTools`](../why-fastqtools/) to frame the adoption decision, then read [`Architecture`](../architecture/) to understand the layered system, and finally return to [`Performance`](../performance/) to compare the benchmark evidence with the stated risk boundaries.

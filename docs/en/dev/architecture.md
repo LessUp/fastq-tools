@@ -1,86 +1,40 @@
-# Architecture
+# Developer Architecture
 
-## Core Design Principles
+This page is for people modifying the implementation. Its concern is not a marketing diagram. It is the structural contract that has to remain stable during maintenance: how modules are layered, how data moves, and which breakpoints would directly harm performance or maintainability.
 
-- **Performance First**: Maximize processing throughput and resource utilization
-- **Modern C++**: Full adoption of C++23 standard features
-- **High Cohesion, Low Coupling**: Clear module boundaries and interface design
+## System layers
 
-## Technology Stack
+FastQTools can be read as four layers:
 
-| Area | Technology | Rationale |
-|------|-----------|-----------|
-| **Language** | C++23 | Modern features, excellent performance |
-| **Build** | CMake | C++ project standard |
-| **Dependencies** | Conan | Automated third-party library management |
-| **Concurrency** | Intel TBB | High-performance parallel computing |
-| **CLI** | cxxopts | Lightweight command-line parsing |
-| **Logging** | spdlog | High-performance logging library |
-| **Testing** | GoogleTest | Powerful testing framework |
+1. **CLI layer**: parses arguments, organizes logging, and turns external input into explicit commands.
+2. **Application command layer**: maps user intent such as `stat` and `filter` into internal configuration.
+3. **Public API layer**: exposes stable interfaces through `include/fqtools/`.
+4. **Implementation layer**: performs the actual read, processing, and statistics work under `src/io/`, `src/processing/`, `src/statistics/`, and related directories.
 
-## Architecture Layers
+The most important maintenance rule is to keep the external boundary narrow while letting internals evolve without tangling the CLI, public headers, and implementation detail together.
 
-```
-User / Caller
-    ↓
-CLI Layer (src/cli/)
-    ↓
-Application Command Layer (src/cli/commands/)
-    ↓
-Core Library Layer (include/fqtools/)
-    ↓
-Implementation Layer (src/pipeline/, src/modules/)
-```
+## Execution model
 
-### 1. CLI Layer
-- Entry point: `src/cli/main.cpp`
-- Responsibilities: Argument parsing, command dispatch, logging initialization
-- Uses: cxxopts + spdlog
+The core execution model is `source → processing → sink`.
 
-### 2. Application Command Layer
-- Interface: `CommandInterface` (`command_interface.h`)
-- Implementations: `StatCommand`, `FilterCommand`
-- Responsibilities: Argument validation, business logic invocation
+- `source`: reads input, decompresses, and parses FASTQ records.
+- `processing`: applies predicates, trimmers, and statistics to batches.
+- `sink`: writes outputs, aggregates statistics, and preserves required ordering.
 
-### 3. Core Library Layer
-- Public API: `include/fqtools/`
-- Key interfaces:
-  - `processing_pipeline.h`: `ProcessingPipelineInterface`
-  - `statistic_calculator.h`: `StatisticCalculatorInterface`
-  - `fq.h`: Aggregate header file
+On the parallel path, this is typically carried by `tbb::parallel_pipeline`. Maintainers need to keep the serial and concurrent boundaries clear, because many performance regressions come not from algorithm mistakes but from re-coupling work that used to be separated cleanly.
 
-### 4. Implementation Layer
-- Pipeline & processing: `src/processing/`
-- Statistics: `src/statistics/`
-- IO: `src/io/`
+## Why `FastqBatch` matters
 
-## Concurrency Model
+`FastqBatch` is a key entry point for understanding performance and memory behavior. It organizes records into reusable batch-sized memory units and minimizes unnecessary string copying.
 
-Uses `tbb::parallel_pipeline` for high-performance parallel processing:
+When you modify I/O, filters, or statistics, ask yourself:
 
-- **source**: Serial FASTQ record reading
-- **processing**: Parallel filtering and transformation
-- **sink**: Serial result writing
+- Does this change break the batch-processing boundary?
+- Does it introduce extra copying or lifetime risk?
+- Does it force a stage that used to be parallel back into serial execution?
 
-Built-in backpressure mechanism automatically balances I/O and computation speed.
+## Common maintainer decision points
 
-## Build System
-
-Modern CMake target decomposition:
-
-```cmake
-# Base modules
-fq_common
-fq_error
-fq_config
-fq_core
-fq_modern_io
- 
-# Core functionality
-fq_pipeline
- 
-# Application layer
-fq_cli
-```
-
-Dependencies flow bottom-up, ensuring modular design.
+- If you change user-visible behavior, check the CLI docs and API docs together.
+- If you change the execution path, check whether the benchmark narrative still holds.
+- If you change a module boundary, go back to the OpenSpec baseline and related ADRs to make sure you are not quietly changing an architectural commitment.

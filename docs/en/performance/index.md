@@ -1,87 +1,43 @@
 # Performance
 
-FastQTools puts performance docs in the narrative layer not to market numbers, but to help you judge **what those numbers mean, under what assumptions they hold, and when they are worth pursuing further.**
+The performance section is not just a place to display numbers. It helps you judge which architecture choices produced the results, under which assumptions they hold, and which boundaries can change the conclusion.
 
-## Read the conclusion first, then decide whether to drill down
+## Evidence summary
 
-The current representative results in active maintenance come from **100K reads / 150 bp / AMD Ryzen 9 5900X / Release build**:
+The representative snapshot currently cited by the whitepaper comes from a maintained standard scenario: **100K reads, 150 bp, AMD Ryzen 9 5900X, Release build**. Under that framing, the read path is about **1696 MB/s**, the write path about **1.76M reads/s**, combined filtering about **1.67M reads/s**, and full statistics about **302 MB/s**. The point of those numbers is not to prove the project is always that fast, but to show that FastQTools already operates at a throughput tier that matters for FASTQ QC, while keeping different paths, bottlenecks, and units separate.
 
-- FASTQ read throughput at about **1696 MB/s**
-- FASTQ write throughput at about **1.76M reads/s**
-- Combined filtering throughput at about **1.67M reads/s**
-- Full statistics throughput at about **302 MB/s**
-
-Those numbers first answer one question: **does FastQTools operate at the throughput tier you expect for FASTQ QC?** They are not a promise for every machine, every compression ratio, or every parameter combination, and they are not the whole answer to cross-tool benchmarking.
-
-For more detail and context, see the [`Benchmark Report`](./benchmark-report).
+The evidence is not a single table. This page explains why the numbers are credible, the [`Benchmark Report`](./benchmark-report) provides the representative snapshot, the [`Benchmark Guide`](../dev/benchmark-guide) explains how to reproduce it, and [`RFC-0003`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0003-benchmark-system.md) plus [`RFC-0006`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0006-benchmark-maintenance-policy.md) define the benchmark system and its maintenance boundary.
 
 <DiagramFrame
   asset="execution-model"
-  caption="Execution model: representative performance numbers come from the source → processing → sink path and its bounded verification loop."
+  caption="Execution model: performance evidence should be read together with execution path, methodology, and maintenance boundaries."
 />
 
-## How this page should be used
+## How to read the benchmark material
 
-### When you are evaluating adoption
+Read it in the order **narrative layer → results layer → method layer → specification layer**. Start here to understand which question the numbers are trying to answer, move to the [`Benchmark Report`](./benchmark-report) for representative results, continue to the [`Benchmark Guide`](../dev/benchmark-guide) for sampling, build mode, and script entry points, and finally use RFC-0003 / RFC-0006 to decide whether the results are one-off observations, actively maintained snapshots, or release-facing constraints.
 
-Your question is usually not “does it have benchmarks?” but:
+Do not stare only at the raw numbers. MB/s and reads/s are easy to flatten into a single conclusion even though reading, filtering, and statistics are different paths. It is also easy to miss input shape, thread settings, and release policy. For adopters, the better questions are usually whether the evidence covers a workload close to yours, whether the method is reproducible, whether the architecture explains the result, and whether the project defines regression and update policy.
 
-- do the benchmarks cover workloads similar to mine;
-- are the numbers produced by a reproducible method rather than a lucky one-off run;
-- does the architecture really explain the results;
-- when the numbers change, does the project have a maintenance policy instead of leaving outdated screenshots behind.
+## Risk boundaries
 
-That is why this page breaks performance evidence into four layers:
+Published results are **representative samples**, not universal constants. At minimum, pay attention to these boundary conditions:
 
-| Evidence layer | Purpose | Where to go |
-| --- | --- | --- |
-| Narrative layer | Decide whether the numbers are worth pursuing further | This page |
-| Results layer | See representative metrics and summary findings | [`Benchmark Report`](./benchmark-report) |
-| Method layer | See how benchmarks are run and how reports are produced | [`Benchmark Guide`](../dev/benchmark-guide) |
-| Specification layer | See how long-term maintenance, thresholds, and SLA-like expectations are defined | [`RFC-0003`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0003-benchmark-system.md), [`RFC-0006`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0006-benchmark-maintenance-policy.md) |
+- **Compression ratio and codec cost**: gzip level and input compressibility directly affect CPU cost in read and write stages.
+- **Storage I/O**: NVMe, network storage, container volumes, and shared filesystems can turn a benchmark into more of a disk test than a parsing test.
+- **Thread count and concurrency parameters**: single-thread and multi-thread pipeline results are not directly comparable, and too many threads can add contention, scheduling noise, and NUMA effects.
+- **Input distribution**: read length, quality distribution, predicate combinations, and pass rate all change the hotspots in the path.
+- **Machine topology**: CPU microarchitecture, cache hierarchy, memory bandwidth, SMT, and container limits all affect the final curve.
 
-## Why these results make sense architecturally
+So the numbers on this page are better for answering “is it worth evaluating further?” than for making capacity promises on your behalf. For migration or SLA decisions, go back to the project methodology and maintenance policy and reproduce the workload yourself.
 
-FastQTools does not present its performance story as isolated numbers. The claims are tied to the implementation path:
+## Recommended reading order
 
-- the **zero-copy batch model** reduces string copying during parsing;
-- the **oneTBB parallel pipeline** makes it easier to keep multicore processing busy;
-- the **bounded-resource model** lets high throughput and controlled memory usage be discussed together;
-- the **unified script entry points and benchmark maintenance policy** reduce the cost of explaining why something is fast locally, slower in CI, or outdated in documentation.
+1. Read this page first to understand the evidence framework.
+2. Then read the [`Benchmark Report`](./benchmark-report).
+3. When you need reproduction details, continue to the [`Benchmark Guide`](../dev/benchmark-guide).
+4. When you need the long-term maintenance framing, read [`RFC-0003`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0003-benchmark-system.md) and [`RFC-0006`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0006-benchmark-maintenance-policy.md).
 
-If you want to understand those reasons before looking at the benchmark numbers, start with [`Architecture`](../architecture/). If you arrived through the numbers first and only later want to inspect the design, that is equally valid.
+## Return to the whitepaper storyline
 
-## Where not to over-interpret the data
-
-FastQTools deliberately calls these pages “representative results” to avoid several common mistakes:
-
-1. **treating one hardware result as an SLA for every environment**;
-2. **mixing the statistics path and the filtering path into the same metric**;
-3. **ignoring how storage, compression, thread count, and data distribution affect throughput**;
-4. **using the page as marketing collateral instead of a decision aid.**
-
-If your real question is “can my environment reproduce these results,” go directly to:
-
-- [`Benchmark Guide`](../dev/benchmark-guide)
-- [`RFC-0006: Benchmark Maintenance and Release Policy`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0006-benchmark-maintenance-policy.md)
-
-## Typical reading paths
-
-### Scenario A: I want to decide whether it is worth trying
-
-[`Why FastQTools`](../why-fastqtools/) → [`Performance`](./) → [`Getting Started`](../guide/getting-started)
-
-### Scenario B: I want to validate a throughput claim
-
-[`Benchmark Report`](./benchmark-report) → [`Benchmark Guide`](../dev/benchmark-guide) → [`RFC-0003: Benchmark System`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0003-benchmark-system.md)
-
-### Scenario C: I want to know whether the performance comes from a credible architecture
-
-[`Architecture`](../architecture/) → [`Developer Architecture`](../dev/architecture) → [`Core Design`](../dev/design)
-
-## Next step
-
-- Want to return to the positioning question? [`Why FastQTools`](../why-fastqtools/)
-- Want to understand the structural reasons? [`Architecture`](../architecture/)
-- Want practical or API documentation next? [`Reference`](../reference/)
-- Want project-internal and external follow-up material? [`Resources`](../resources/)
+If you have not yet built the system mental model, go back to [`Architecture`](../architecture/). If you are already ready to act, continue to [`Workflows`](../workflows/) or [`Reference`](../reference/).

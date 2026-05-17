@@ -1,181 +1,38 @@
-# Testing Strategy
+# Testing
 
-FastQTools adopts a layered testing strategy, combining unit tests, integration tests, and end-to-end tests to ensure code correctness.
+Testing in FastQTools is not a cleanup step. It is part of the maintenance boundary. A change is only truly reviewable when the relevant behavior is expressed at the appropriate verification level.
 
----
+## Layered verification model
 
-## Testing Layers
+| Layer | Focus | Typical location |
+| --- | --- | --- |
+| Unit tests | Small logic, boundary cases, and error paths | `tests/unit/` |
+| Integration tests | Module collaboration, configuration, and I/O combinations | `tests/integration/` |
+| End-to-end tests | CLI behavior, help output, and real workflows | `tests/e2e/` |
+| Documentation tests | Site IA, page skeletons, and content contracts | `docs/tests/` |
 
-```
-        /\
-       /  \  E2E Tests (few, verify CLI integration)
-      /----\
-     /      \  Integration Tests (moderate, verify module collaboration)
-    /--------\
-   /          \  Unit Tests (many, verify independent logic)
-  /------------\
-```
+## Maintainer rhythm
 
-### Directory Structure
+1. Write a failing test first for the new behavior or fix.
+2. Make only the smallest implementation change needed to turn it green.
+3. Run the smallest relevant test set for the change.
+4. Then return to higher-level regression checks such as `./scripts/core/test` or the docs build.
 
-```
-tests/
-├── unit/                  # Unit tests (GTest)
-│   ├── common/
-│   ├── config/
-│   ├── error/
-│   ├── io/
-│   └── statistics/
-├── integration/           # Integration tests
-│   └── test_pipeline_integration.cpp
-├── e2e/                   # End-to-end tests
-│   ├── test_cli.sh        # Shell E2E
-│   └── test_advanced_cli.py  # Python E2E
-└── utils/                 # Test utilities library
-    ├── test_helpers.h
-    └── fixture_loader.h
-```
-
----
-
-## Running Tests
+## Common commands
 
 ```bash
-# All tests
 ./scripts/core/test
-
-# Unit tests only
-./scripts/core/test --type unit
-
-# Integration tests only
-./scripts/core/test --type integration
-
-# Filter specific tests
-./scripts/core/test --filter "*timer*"
-
-# Repeat execution
-./scripts/core/test --repeat 5
-
-# Verbose output
-./scripts/core/test --verbose
-
-# Coverage report
-./scripts/core/test --coverage
+./scripts/core/test --unit
+./scripts/core/test --integration
+./scripts/core/test --e2e
 ```
 
----
+If you change the docs site, run the relevant Node tests and docs build from `docs/`. If you change C++ code, pair the test run with formatting, clang-tidy, and the relevant CTest or GTest targets.
 
-## Unit Tests
+## A simple standard for enough testing
 
-Using Google Test framework, define test cases via `TEST` or `TEST_F` macros.
+- Does the test precisely express the behavior this change really promises?
+- When it fails, does it clearly say why?
+- When it passes, does it prove the target behavior rather than merely touch the code?
 
-### Example Structure
-
-```cpp
-class FastqReaderTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        // Create temporary FASTQ file
-    }
-    void TearDown() override {
-        // Cleanup resources
-    }
-};
-
-TEST_F(FastqReaderTest, ReadBasic) {
-    // Verify reader correctly parses records
-    EXPECT_EQ(records[0].id, "read1");
-}
-```
-
-### CMake Integration
-
-`tests/unit/CMakeLists.txt` provides the `add_unit_test` function, automatically linking GTest, `fq_lib`, and `test_utils`.
-
----
-
-## Test Utilities Library
-
-`tests/utils/` provides two core utility classes, compiled into `test_utils` static library:
-
-### FixtureLoader
-
-```cpp
-// Load predefined test data
-auto content = FixtureLoader::loadTextFile("sample.fastq");
-auto lines = FixtureLoader::loadLines("expected_output.txt");
-```
-
-### TestHelpers
-
-```cpp
-// Create temporary files/directories
-auto tmpFile = TestHelpers::createTempFile(content, ".fastq");
-auto tmpDir = TestHelpers::createTempDir();
-
-// Generate synthetic data
-auto records = TestHelpers::generateFastQRecords(1000, 150);
-auto dna = TestHelpers::generateRandomDNA(150);
-
-// File comparison
-bool same = TestHelpers::compareFiles(file1, file2);
-
-// Cleanup
-TestHelpers::cleanup();
-```
-
----
-
-## End-to-End Tests
-
-### Shell E2E (`tests/e2e/test_cli.sh`)
-
-Directly calls `FastQTools` executable, verifying:
-
-- `--help` outputs available commands
-- `filter --help` / `stat --help` display options
-- `--quiet` suppresses banner
-- `filter` / `stat` commands work correctly
-- Exit codes are correct
-
-Uses `mktemp -d` + `trap` to ensure temporary resources are automatically cleaned up.
-
-### Python E2E (`tests/e2e/test_advanced_cli.py`)
-
-More complex scenario testing, using Python subprocess calls.
-
----
-
-## Coverage
-
-```bash
-# Generate coverage report
-./scripts/core/test --coverage
-```
-
-Produces lcov HTML report, focus on:
-
-- Core module coverage
-- Uncovered branches and exception paths
-- Excludes `tests/`, `build/`, `build-*` directories
-
----
-
-## Writing New Tests Guide
-
-1. **Use utility library**: Create temporary files via `TestHelpers`, avoid manual management
-2. **Resource cleanup**: Release resources in `TearDown()` or `cleanup()`
-3. **Independence**: Each test uses independent temporary directory, avoid cross-test side effects
-4. **Boundary cases**: Focus on testing empty input, large files, illegal formats, etc.
-5. **Performance testing**: Run in Release mode, use `Timer` class for timing
-
----
-
-## Common Test Failure Troubleshooting
-
-| Symptom | Cause | Solution |
-|---------|-------|----------|
-| Fixture file not found | Incorrect working directory | Use `FixtureLoader::getFixturePath` for smart lookup |
-| Random failures on CI | Concurrent race | Ensure each test uses independent temporary directory |
-| `find_package(GTest)` failure | Dependencies not installed | Run `conan install config/dependencies/ --build=missing` |
-| Coverage tool missing | lcov not installed | `sudo apt install lcov` |
+Tests are not there to create more files. They are there to let maintainers change the same area again with more confidence later.

@@ -1,40 +1,32 @@
 # Contributing
 
-FastQTools welcomes focused improvements: bug reports, docs fixes, tests, benchmark work, and narrow code changes that keep the project easier to trust and easier to use.
+For FastQTools, a good contribution is not about packing in more features at once. It is about strengthening credibility at the right layer: make commands easier to explain, docs easier to follow, tests better at catching regressions, and benchmark conclusions easier to reproduce.
 
-## Good first contributions
+## Good directions for early contributions
 
-- Clarify setup steps or usage examples
-- Improve error-case documentation and troubleshooting notes
-- Add or tighten tests around existing behavior
-- Reproduce or document benchmark workflows
-- Review open issues and help confirm expected behavior
+- Fix broken reading paths, outdated commands, or unclear wording in the docs.
+- Add more precise tests and regression coverage around existing behavior.
+- Improve error messages, configuration explanations, and troubleshooting guidance.
+- Keep benchmark evidence, research references, and release-facing material aligned.
 
-## Before you open a pull request
+## Establish shared context before contributing
 
-1. Check whether the change affects public behavior, docs, or examples, and keep those in sync.
-2. Keep the scope small enough that reviewers can reason about it quickly.
-3. If the change affects externally visible behavior, align it with the relevant OpenSpec baseline first.
+1. Read the page or baseline directly related to what you want to change.
+2. If the change affects public behavior, interfaces, or specifications, confirm whether the OpenSpec material also needs updates.
+3. Keep the patch focused so reviewers can quickly understand why it changed, what changed, and how it was verified.
 
-## Local validation
+## Minimal local validation
 
 ```bash
-# Format code when needed
 ./scripts/core/lint format
-
-# Run the relevant checks
 ./scripts/core/test
-
-# Build the docs site when touching public docs
-mkdocs build --strict
 ```
 
-## Where to start
+If you are changing the docs site, also run the site tests and build from `docs/`. If you are changing the performance narrative, check that the related benchmark materials still align.
 
-- [Root CONTRIBUTING.md](https://github.com/LessUp/fastq-tools/blob/master/CONTRIBUTING.md) — full contribution process
-- [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) — bugs and scoped work items
-- [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions) — proposals and open-ended questions
+## Where to continue
 
-## Docs contributions are valuable
-
-A good documentation change is often the fastest way to improve the project for new users. README clarity, landing-page structure, command examples, and benchmark interpretation all directly affect whether people can adopt FastQTools confidently.
+- [`Developer Guide`](./dev/) — maintainer-facing architecture, build, and test material
+- [`Resources`](./resources/) — repository, issues, OpenSpec, and external background links
+- [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) — concrete tracked work
+- [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions) — open-ended discussion

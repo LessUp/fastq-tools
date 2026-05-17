@@ -1,71 +1,26 @@
 # Resources
 
-The resource hub gathers material that **does not belong in the main narrative, but still matters for both adoption and maintenance**: repository entry points, contribution paths, specification sources of truth, historical archives, and external references that provide background context.
+The resource hub collects entry points that sit outside the main reading path but still matter for collaboration and research: official sources of truth, contribution entry points, external background links, and references that help you understand the project’s context.
 
-## Internal entry points: from project facts to collaboration
+## Collaboration and fact sources
 
-### Project and collaboration
+- [`Contributing`](../contributing) — read this before submitting documentation, tests, or code changes.
+- [`Developer Guide`](../dev/) — maintainer-oriented build, test, and architecture material.
+- [OpenSpec baseline](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline) — the current specification source of truth.
+- [GitHub repository](https://github.com/LessUp/fastq-tools) — the main entry point for issues, discussions, releases, and source code.
 
-- [`Contributing`](../contributing) — for people preparing to submit documentation, test, or code changes;
-- [`Changelog (bilingual; English-first)`](../release-notes/changelog) — for recent landed work;
-- [GitHub repository](https://github.com/LessUp/fastq-tools) — the main source, issue, discussion, and release entry point;
-- [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) — for concrete tasks and bug tracking.
+## Research and background material
 
-### Specification and architecture sources of truth
+- [`Research appendix`](../research/) — on-site framing, references, and design-evolution notes.
+- [FASTQ format (Wikipedia)](https://en.wikipedia.org/wiki/FASTQ_format) — quick background on the file format.
+- [NCBI SRA submit formats](https://www.ncbi.nlm.nih.gov/sra/docs/submitformats/) — context for FASTQ as an exchange format.
+- [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) / [fastp](https://github.com/OpenGene/fastp) / [Cutadapt](https://cutadapt.readthedocs.io/en/stable/) — common QC and trimming context across the field.
 
-You may not need these on the first read, but they matter when you need to verify what the project has actually committed to over time. To avoid confusion with older naming, this page consistently cites the OpenSpec architecture documents as `RFC-000X`:
+## History and archives
 
-- [OpenSpec baseline overview](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline)
-- [RFC-0001: Core Architecture](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0001-core-architecture.md)
-- [RFC-0002: Toolchain Policy](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0002-toolchain-policy.md)
-- [RFC-0003: Benchmark System](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0003-benchmark-system.md)
-- [RFC-0006: Benchmark Maintenance Policy](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0006-benchmark-maintenance-policy.md)
+- [`Archive Overview`](../archive/) — explains what has been migrated and what remains for reference only.
+- [`Changelog`](../release-notes/changelog) — review the timeline of landed changes.
 
-### Automation and agent documentation
+## How to use these resources
 
-- [`Domain Model`](../agents/domain)
-- [`Issue Tracker`](../agents/issue-tracker)
-- [`Triage Labels`](../agents/triage-labels)
-
-These pages matter more for maintenance and automation workflows than for first-time users, but they are valuable for anyone taking long-term ownership of the repository.
-
-### Historical and migration material
-
-- [`Archive Overview`](../archive/)
-- [`Migration Notice`](../archive/migration-notice-2026-04-17)
-
-When you encounter old docs, old scripts, or historical discussions, this group of links helps you decide what is still valid and what has already been superseded by OpenSpec.
-
-## External background: understanding FASTQ and QC context
-
-### FASTQ reference basics
-
-- [FASTQ format (Wikipedia)](https://en.wikipedia.org/wiki/FASTQ_format) — for a quick refresh on the file structure and quality-score history;
-- [NCBI SRA submit formats](https://www.ncbi.nlm.nih.gov/sra/docs/submitformats/) — for practical background on FASTQ as an exchange format.
-
-### Quality-control and trimming context
-
-- [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/) — for the common QC-reporting vocabulary used across the field;
-- [Cutadapt documentation](https://cutadapt.readthedocs.io/en/stable/) — for adapter-trimming terminology and practice;
-- [fastp](https://github.com/OpenGene/fastp) — for comparison with an integrated FASTQ preprocessing tool.
-
-### Related tools and comparison reading
-
-- [seqtk](https://github.com/lh3/seqtk) — a lightweight FASTA/FASTQ processing tool;
-- [zlib-ng](https://github.com/zlib-ng/zlib-ng) / [libdeflate](https://github.com/ebiggers/libdeflate) — for the dependency choices behind the compression path;
-- [oneTBB](https://github.com/oneapi-src/oneTBB) — for the concurrency library behind the parallel pipeline.
-
-## Recommended ways to use this page
-
-| What you need right now | Best first click |
-| --- | --- |
-| I want to contribute to the project | [`Contributing`](../contributing) |
-| I want the official source of truth | OpenSpec baseline and related ADRs |
-| I want external background knowledge | The FASTQ / FastQC / Cutadapt / fastp links |
-| I want historical and migration context | [`Archive Overview`](../archive/) |
-
-## How this page relates to the other navigation hubs
-
-- If you want **site-internal reading paths**, start with [`Knowledge Map`](../knowledge-map/)
-- If you want **concrete execution manuals**, start with [`Reference`](../reference/)
-- If you want to understand **why the project exists**, return to [`Why FastQTools`](../why-fastqtools/)
+If you hit a question in the main docs like “where is the long-term commitment for this?”, “how is this concept described across the field?”, or “why is an old document no longer updated?”, the resource hub is usually the fastest next stop.

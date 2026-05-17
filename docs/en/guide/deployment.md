@@ -1,162 +1,50 @@
-# Deployment Guide
+# Deployment
 
-This document covers deployment options for FastQTools in Docker and production environments.
+The key to deploying FastQTools is not forcing every scenario into one platform abstraction. It is choosing the smallest maintainable option for the runtime boundary you actually have: local scripts, container packaging, or CI and batch pipelines.
 
----
+## Scenario 1: run directly on a local or shared node
 
-## Docker Deployment
-
-### Production Environment
+This is the most direct option and works well for development, debugging, and smaller-scale batch processing:
 
 ```bash
-# Build production image
-./scripts/tools/release/deploy --env production --action build
-
-# Run
-./scripts/tools/release/deploy --env production --action run
-
-# Or use docker-compose
-docker-compose -f docker/docker-compose.yml up -d prod
+./scripts/core/install-deps --runtime
+./scripts/core/build
+./build/clang-release/FastQTools --help
 ```
 
-### Development Environment
+The advantage is transparency and low debugging cost. The trade-off is that dependencies stay more tightly coupled to the host machine.
 
-```bash
-# Run development container
-./scripts/tools/release/deploy --env development --action run
+## Scenario 2: containerized delivery
 
-# Or use VS Code DevContainer
-# Ctrl+Shift+P → "Reopen in Container"
-```
+If you need a more stable runtime boundary, prefer the Docker entry points already in the repository:
 
-### CI/CD
+- `docker/Dockerfile.dev`: for development and debugging
+- `docker/Dockerfile.prod`: for a slim runtime
+- `docker/docker-compose.yml`: for common service and mount composition
 
-```bash
-# Build + Test
-./scripts/tools/release/deploy --env test --action run
+The normal pattern is to mount input directories read-only, mount output directories separately as writable, and keep the container command identical to the local CLI command.
 
-# Push to registry
-./scripts/tools/release/deploy --action push --registry your-registry.com/fastqtools --tag v3.1.0
-```
+## Scenario 3: CI and automation
 
----
+In CI, a useful default breakdown is:
 
-## Container Images
+1. Build: `./scripts/core/build` or `./scripts/core/build --dev`
+2. Verify: `./scripts/core/test`
+3. Documentation or release extras: benchmark, docs build, or image steps as needed
 
-### Production Image (`docker/Dockerfile.prod`)
+For pure data-processing pipelines, you often do not need another platform wrapper around the command itself. Using `FastQTools stat ...` or `FastQTools filter ...` directly as an auditable step is usually clearer.
 
-- **Base**: debian:bookworm-slim
-- **Size**: ~100MB
-- **Contents**: FastQTools binary + runtime libraries
-- **User**: Non-root (fastqtools:1000)
+## Decisions worth making before deployment
 
-### Development Image (`docker/Dockerfile.dev`)
+| Decision point | Question to answer |
+| --- | --- |
+| Input/output boundary | Where does data come from and where do results go? |
+| Concurrency policy | Is thread count controlled by the host, scheduler, or script? |
+| Logging policy | Do you need debug information or only error output? |
+| Evidence retention | Will you keep `stat` output, sidecar files, or benchmark records as well? |
 
-- **Base**: gcc:15.2-bookworm
-- **Size**: ~2GB
-- **Contents**: Full development toolchain
-- **User**: Non-root (developer:1000)
+## Relationship to other pages
 
----
-
-## Volume Mounts
-
-### Production
-
-```yaml
-volumes:
-  - ./data:/app/data:ro           # Read-only input
-  - ./output:/app/output          # Writable output
-```
-
-### Development
-
-```yaml
-volumes:
-  - ..:/workspace:cached          # Source code
-  - ~/.conan2:/home/developer/.conan2:cached  # Conan cache
-  - ~/.ccache:/home/developer/.ccache:cached  # Build cache
-```
-
----
-
-## Security
-
-### Production
-
-- Non-root user (UID 1000)
-- Minimal base image
-- Read-only input volume
-- Health check: `fastqtools --help || exit 1`
-
-### Development
-
-- Non-root + sudo
-- SSH Agent forwarding (for Git operations)
-- Git configuration persistence
-
----
-
-## Performance Optimization
-
-- **ccache**: Incremental build caching
-- **Ninja**: Parallel builds
-- **Conan cache**: Avoid recompiling dependencies
-- **Multi-stage builds**: Reduce image size
-- **Release builds**: `-O3 -march=native`
-
----
-
-## Health Checks and Logging
-
-```bash
-# Health check
-docker exec fastqtools-prod FastQTools --help
-
-# View logs
-docker logs fastqtools-prod
-docker logs -f fastqtools-prod  # Real-time tail
-```
-
----
-
-## Troubleshooting
-
-### Permission Denied
-
-```bash
-sudo chown -R 1000:1000 ./data ./output
-```
-
-### Missing Libraries
-
-```bash
-docker exec fastqtools-prod ldd /usr/local/bin/FastQTools
-```
-
-### Debug Mode
-
-```bash
-docker run -it --rm fastqtools:latest /bin/bash
-docker exec -it fastqtools-prod /bin/bash
-```
-
----
-
-## Version Updates
-
-1. Build new version image
-2. Stop old container
-3. Start new container with same volumes
-4. Verify functionality
-5. Remove old image
-
----
-
-## Best Practices
-
-- Use specific version tags, not `latest`
-- Set CPU/memory resource limits
-- Use read-only root filesystem where possible
-- Regularly update base images
-- Monitor container resource usage
+- If you have not run a command yet, go back to [`Getting Started`](./getting-started)
+- If you are looking up specific flags, return to [`CLI Reference`](./cli-reference)
+- If you care about build and test maintenance details, continue to [`Build Guide`](../dev/build) and [`Testing`](../dev/testing)

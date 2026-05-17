@@ -1,25 +1,22 @@
-# User Guide
+# Guide
 
-This guide covers end-to-end usage scenarios for FastQTools, from quick start to advanced configuration.
+The guide is the practical layer of the Academy path. It assumes you already understand FastQTools’ positioning and now need to turn that understanding into executable commands, configuration, and deployment work.
 
-## Table of Contents
+## Suggested learning order
 
-- [Getting Started](getting-started.md) - Installation and first commands
-- [CLI Reference](cli-reference.md) - Complete command-line reference
-- [Configuration](configuration.md) - Configuration files and environment variables
-- [Deployment](deployment.md) - Docker and production deployment
+| Stage | Question to answer | Recommended reading |
+| --- | --- | --- |
+| First step | How do I complete the first successful run? | [`Getting Started`](./getting-started) |
+| Second step | Which commands and parameters are available? | [`CLI Reference`](./cli-reference) |
+| Third step | How do parameters, environment variables, and defaults work together? | [`Configuration`](./configuration) |
+| Fourth step | How do I place it into containers, CI, or batch environments? | [`Deployment`](./deployment) |
 
-## Quick Navigation
+## What this group of pages solves
 
-| Topic | Description |
-|-------|-------------|
-| [Getting Started](getting-started.md) | Installation, basic commands, first FASTQ processing |
-| [CLI Reference](cli-reference.md) | All commands, flags, and examples |
-| [Configuration](configuration.md) | YAML configuration, environment variables, precedence |
-| [Deployment](deployment.md) | Docker images, production deployment, CI/CD integration |
+- It lets first-time readers complete one statistics or filtering task on the shortest path.
+- It helps current users quickly find command syntax, configuration precedence, and deployment cautions.
+- It gives maintainers user-facing workflow context before they move into developer documentation.
 
-## Next Steps
+## How to read it
 
-- New users: Start with [Getting Started](getting-started.md)
-- Advanced users: See [Configuration](configuration.md) for advanced options
-- Operators: Review [Deployment](deployment.md) for deployment best practices
+If all you need is to get it running today, read Getting Started and CLI Reference in order. If you plan to freeze commands into scripts or platforms, continue into Configuration and Deployment. If you are preparing to understand internals, treat this section as the prerequisite context before moving into the [`Developer Guide`](../dev/).
