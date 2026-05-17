@@ -43,7 +43,7 @@ Reference begins after that point.
 - [`Related projects`](../research/related-projects)
 - [`Evolution notes`](../research/evolution-notes)
 - [`Resources`](../resources/)
-- [`Contributing`](../contributing)
+- [`Contributing`](../contributing/)
 - [`Archive Overview`](../archive/)
 
 ## Internal anchors from the whitepaper redesign

@@ -9,7 +9,7 @@ The Developer Guide is for maintainers, contributors, and deep integrators. It n
 | Understand system boundaries | [`Developer Architecture`](./architecture) | [`Core Design`](./design) |
 | Set up or adjust local tooling | [`Build Guide`](./build) | [`Testing`](./testing) |
 | Explain performance numbers and evidence | [`Benchmark Guide`](./benchmark-guide) | [`Performance`](../performance/) |
-| Prepare a contribution | [`Contributing`](../contributing) | [`Resources`](../resources/) |
+| Prepare a contribution | [`Contributing`](../contributing/) | [`Resources`](../resources/) |
 
 ## What this layer covers
 

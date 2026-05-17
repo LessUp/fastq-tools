@@ -9,7 +9,7 @@
 | 理解系统边界 | [`架构设计`](./architecture) | [`核心设计`](./design) |
 | 搭建或调整本地工具链 | [`构建指南`](./build) | [`测试策略`](./testing) |
 | 解释性能数字与证据 | [`Benchmark 指南`](./benchmark-guide) | [`性能总览`](../performance/) |
-| 准备贡献补丁 | [`参与贡献`](../contributing) | [`资源中心`](../resources/) |
+| 准备贡献补丁 | [`参与贡献`](../contributing/) | [`资源中心`](../resources/) |
 
 ## 这一层的工作内容
 

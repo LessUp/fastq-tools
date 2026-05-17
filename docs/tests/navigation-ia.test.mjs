@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 
 const contentSource = readFileSync(new URL('../.vitepress/theme/content/siteContent.ts', import.meta.url), 'utf8')
 const navSource = readFileSync(new URL('../.vitepress/theme/content/siteNavigation.ts', import.meta.url), 'utf8')
@@ -56,6 +56,16 @@ test('research section route config keeps contributing slash-normalized', () => 
   assert.doesNotMatch(configSource, /researchNav: `\^\/\$\{locale\}\/\(research\|performance\|resources\|agents\|archive\|contributing\)\(\/\|\$\)`/)
   assert.match(navSource, /contributing:\s*\{\s*path: 'contributing\/'/)
   assert.doesNotMatch(navSource, /contributing:\s*\{\s*path: 'contributing'/)
+})
+
+test('contributing pages use directory index routes for GitHub Pages clean URLs', () => {
+  for (const nestedPath of ['../en/contributing/index.md', '../zh/contributing/index.md']) {
+    assert.equal(existsSync(new URL(nestedPath, import.meta.url)), true, `${nestedPath} should exist`)
+  }
+
+  for (const flatPath of ['../en/contributing.md', '../zh/contributing.md']) {
+    assert.equal(existsSync(new URL(flatPath, import.meta.url)), false, `${flatPath} should be replaced`)
+  }
 })
 
 test('algorithms sidebar stays scoped to algorithms-owned entry points', () => {

@@ -26,7 +26,7 @@ If you are changing the docs site, also run the site tests and build from `docs/
 
 ## Where to continue
 
-- [`Developer Guide`](./dev/) — maintainer-facing architecture, build, and test material
-- [`Resources`](./resources/) — repository, issues, OpenSpec, and external background links
+- [`Developer Guide`](../dev/) — maintainer-facing architecture, build, and test material
+- [`Resources`](../resources/) — repository, issues, OpenSpec, and external background links
 - [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) — concrete tracked work
 - [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions) — open-ended discussion

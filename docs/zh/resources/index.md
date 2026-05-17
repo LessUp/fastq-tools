@@ -4,7 +4,7 @@
 
 ## 协作与事实来源
 
-- [`参与贡献`](../contributing) —— 准备提交文档、测试或代码改动时先看这里；
+- [`参与贡献`](../contributing/) —— 准备提交文档、测试或代码改动时先看这里；
 - [`开发者文档`](../dev/) —— 面向维护者的构建、测试与架构材料；
 - [OpenSpec baseline](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline) —— 当前规范事实来源；
 - [GitHub 仓库](https://github.com/LessUp/fastq-tools) —— Issue、Discussion、Release 与源码总入口。

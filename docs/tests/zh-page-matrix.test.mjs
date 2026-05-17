@@ -49,6 +49,7 @@ test('chinese algorithms and research pages expose the approved section skeleton
   assert.match(algorithms, /## 过滤流水线/)
   assert.match(research, /# 研究附录/)
   assert.match(research, /## 参考文献/)
+  assert.match(research, /## 设计演进/)
   assert.match(reference, /# 参考导航/)
   assert.match(reference, /## CLI 与 API/)
 })

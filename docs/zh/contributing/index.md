@@ -26,7 +26,7 @@
 
 ## 从哪里继续
 
-- [`开发者文档`](./dev/) —— 进入维护者视角的架构、构建与测试材料；
-- [`资源中心`](./resources/) —— 查看仓库、Issue、OpenSpec 与外部背景链接；
+- [`开发者文档`](../dev/) —— 进入维护者视角的架构、构建与测试材料；
+- [`资源中心`](../resources/) —— 查看仓库、Issue、OpenSpec 与外部背景链接；
 - [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) —— 追踪具体问题；
 - [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions) —— 进行开放讨论。

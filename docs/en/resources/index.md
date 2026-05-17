@@ -4,7 +4,7 @@ The resource hub collects entry points that sit outside the main reading path bu
 
 ## Collaboration and fact sources
 
-- [`Contributing`](../contributing) — read this before submitting documentation, tests, or code changes.
+- [`Contributing`](../contributing/) — read this before submitting documentation, tests, or code changes.
 - [`Developer Guide`](../dev/) — maintainer-oriented build, test, and architecture material.
 - [OpenSpec baseline](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline) — the current specification source of truth.
 - [GitHub repository](https://github.com/LessUp/fastq-tools) — the main entry point for issues, discussions, releases, and source code.

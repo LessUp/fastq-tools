@@ -43,7 +43,7 @@ layout: doc
 - [`相关项目`](../research/related-projects)
 - [`演进说明`](../research/evolution-notes)
 - [`资源中心`](../resources/)
-- [`参与贡献`](../contributing)
+- [`参与贡献`](../contributing/)
 - [`归档概览`](../archive/)
 
 ## 白皮书重构后的站内锚点
