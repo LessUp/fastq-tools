@@ -59,3 +59,19 @@ test('top-level active matches keep performance and research nav states mutually
   assert.match('/en/resources/', researchActiveMatch)
   assert.doesNotMatch('/en/research/', performanceActiveMatch)
 })
+
+test('whitepaper nav stays active on locale homepages and whitepaper-owned pages', () => {
+  const enWhitepaperActiveMatch = getActiveMatchPattern('whitepaper', 'en')
+  const zhWhitepaperActiveMatch = getActiveMatchPattern('whitepaper', 'zh')
+
+  for (const route of ['/en/', '/en/whitepaper/', '/en/orientation/', '/en/why-fastqtools/']) {
+    assert.match(route, enWhitepaperActiveMatch)
+  }
+
+  for (const route of ['/zh/', '/zh/whitepaper/', '/zh/orientation/', '/zh/why-fastqtools/']) {
+    assert.match(route, zhWhitepaperActiveMatch)
+  }
+
+  assert.doesNotMatch('/en/architecture/', enWhitepaperActiveMatch)
+  assert.doesNotMatch('/zh/algorithms/', zhWhitepaperActiveMatch)
+})

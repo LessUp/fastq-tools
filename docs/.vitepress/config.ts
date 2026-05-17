@@ -60,7 +60,7 @@ const createReferenceSidebar = (locale: LocaleKey) => createSidebar(locale, refe
 const createResearchSidebar = (locale: LocaleKey) => createSidebar(locale, researchSidebarGroups)
 
 const createTopNavActiveMatches = (locale: LocaleKey) => ({
-  whitepaper: `^/${locale}/(whitepaper|orientation|why-fastqtools)(/|$)`,
+  whitepaper: `^/${locale}/($|(whitepaper|orientation|why-fastqtools)(/|$))`,
   architecture: `^/${locale}/(architecture|knowledge-map)(/|$)`,
   algorithms: `^/${locale}/(algorithms|academy|workflows)(/|$)`,
   performance: `^/${locale}/performance(/|$)`,
