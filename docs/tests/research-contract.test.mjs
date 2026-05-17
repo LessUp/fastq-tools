@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs'
 const readUtf8 = (relativePath) => readFileSync(new URL(relativePath, import.meta.url), 'utf8')
 
 const themeSource = readUtf8('../.vitepress/theme/index.ts')
+const referencesSource = readUtf8('../.vitepress/theme/content/references.ts')
 const packageJson = readUtf8('../package.json')
 
 const bilingualPages = [
@@ -47,6 +48,17 @@ test('theme registers the reusable reference components', () => {
     assert.match(themeSource, new RegExp(`import ${componentName} from ['"]./components/${componentName}\\.vue['"]`))
     assert.match(themeSource, new RegExp(`component\\(['"]${componentName}['"]`))
   }
+})
+
+test('site reference trail keeps the algorithms entry on the maintained algorithms route', () => {
+  assert.match(
+    referencesSource,
+    /id:\s*'workflow-operator-path'[\s\S]*docPath:\s*'algorithms\//,
+  )
+  assert.doesNotMatch(
+    referencesSource,
+    /id:\s*'workflow-operator-path'[\s\S]*docPath:\s*'academy\//,
+  )
 })
 
 test('whitepaper, algorithms, and research layers expose the approved bilingual depth', () => {

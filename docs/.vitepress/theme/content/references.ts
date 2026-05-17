@@ -39,7 +39,7 @@ export const referenceCatalog = [
   {
     id: 'workflow-operator-path',
     concept: 'algorithms',
-    docPath: 'academy/',
+    docPath: 'algorithms/',
     title: {
       zh: '算法与流程入口',
       en: 'Algorithm and workflow entry',
