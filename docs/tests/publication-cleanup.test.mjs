@@ -9,6 +9,13 @@ test('published docs exclude internal superpowers artifacts', () => {
   assert.match(configSource, /llmstxt\(\{\s*ignoreFiles:\s*\[[\s\S]*'superpowers\/\*\*'/)
 })
 
+test('published docs exclude internal asset maintenance readmes', () => {
+  assert.equal(existsSync(new URL('../assets/images/README.md', import.meta.url)), true)
+  assert.equal(existsSync(new URL('../assets/diagrams/README.md', import.meta.url)), true)
+  assert.match(configSource, /srcExclude:\s*\[[\s\S]*'assets\/\*\*\/README\.md'/)
+  assert.match(configSource, /llmstxt\(\{\s*ignoreFiles:\s*\[[\s\S]*'assets\/\*\*\/README\.md'/)
+})
+
 test('tracked whitepaper planning artifacts live outside docs', () => {
   assert.equal(
     existsSync(new URL('../superpowers/plans/2026-05-17-github-pages-whitepaper-redesign.md', import.meta.url)),

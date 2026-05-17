@@ -114,7 +114,7 @@ export default withMermaid(defineConfig({
   base,
   title: 'FastQTools',
   description: 'High-performance FASTQ processing toolkit for sequencing QC',
-  srcExclude: ['superpowers/**'],
+  srcExclude: ['superpowers/**', 'assets/**/README.md'],
 
   locales: {
     zh: {
@@ -145,7 +145,7 @@ export default withMermaid(defineConfig({
 
   vite: {
     plugins: [llmstxt({
-      ignoreFiles: ['superpowers/**'],
+      ignoreFiles: ['superpowers/**', 'assets/**/README.md'],
     })],
     build: {
       // Increase chunk size warning limit for mermaid plugin
