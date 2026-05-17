@@ -444,11 +444,10 @@ git add docs/assets/images/README.md changelog/2026-05-17-github-pages-whitepape
 git commit -m "docs: 完成交付级白皮书站点重构"
 ```
 
-- [ ] **Step 5: Push the branch**
+- [ ] **Step 5: Hand off final branch completion and push**
 
-```bash
-git push origin HEAD
-```
+Task 4 ends after the final docs delivery commit above. Final branch completion / push is handled
+afterward as a separate follow-up step, not inside Task 4 itself.
 
 ## Self-Review
 
