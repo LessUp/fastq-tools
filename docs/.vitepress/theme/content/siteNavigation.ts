@@ -1,21 +1,23 @@
 export const localeText = {
   zh: {
     nav: {
-      why: '为什么选择 FastQTools',
-      architecture: '架构',
-      workflows: '工作流',
-      knowledgeMap: '知识地图',
-      performance: '性能',
+      orientation: '导读',
+      whitepaper: '白皮书',
+      academy: '学院',
       reference: '参考',
-      resources: '资源',
+      research: '研究',
     },
     sidebar: {
-      storyHub: '叙事导览',
-      evidenceHub: '性能证据',
-      referenceHub: '参考总览',
-      resourceHub: '资源中心',
-      referenceOverview: '参考导航',
-      resourcesOverview: '资源导航',
+      orientationHub: '导读',
+      whitepaperHub: '白皮书',
+      academyHub: '学院',
+      referenceHub: '参考',
+      researchHub: '研究',
+      whyFastqtools: '为什么选择 FastQTools',
+      architecture: '架构',
+      knowledgeMap: '知识地图',
+      workflows: '工作流',
+      performance: '性能',
       benchmarkReport: 'Benchmark 报告',
       guide: '指南',
       guideOverview: '指南概览',
@@ -41,9 +43,11 @@ export const localeText = {
       gitWorkflow: 'Git 工作流',
       devcontainer: 'DevContainer',
       benchmarkGuide: 'Benchmark 指南',
+      referenceOverview: '参考概览',
+      resourcesOverview: '资源导航',
+      contributing: '参与贡献',
       releaseNotes: '发布说明',
       changelog: '变更记录',
-      contributing: '参与贡献',
       agents: 'Agent 文档',
       domain: '领域模型',
       issueTracker: 'Issue Tracker',
@@ -57,21 +61,23 @@ export const localeText = {
   },
   en: {
     nav: {
-      why: 'Why FastQTools',
-      architecture: 'Architecture',
-      workflows: 'Workflows',
-      knowledgeMap: 'Knowledge Map',
-      performance: 'Performance',
+      orientation: 'Orientation',
+      whitepaper: 'Whitepaper',
+      academy: 'Academy',
       reference: 'Reference',
-      resources: 'Resources',
+      research: 'Research',
     },
     sidebar: {
-      storyHub: 'Narrative Hub',
-      evidenceHub: 'Performance Evidence',
-      referenceHub: 'Reference Hub',
-      resourceHub: 'Resource Hub',
-      referenceOverview: 'Reference Overview',
-      resourcesOverview: 'Resources Overview',
+      orientationHub: 'Orientation',
+      whitepaperHub: 'Whitepaper',
+      academyHub: 'Academy',
+      referenceHub: 'Reference',
+      researchHub: 'Research',
+      whyFastqtools: 'Why FastQTools',
+      architecture: 'Architecture',
+      knowledgeMap: 'Knowledge Map',
+      workflows: 'Workflows',
+      performance: 'Performance',
       benchmarkReport: 'Benchmark Report',
       guide: 'Guide',
       guideOverview: 'Guide Overview',
@@ -97,9 +103,11 @@ export const localeText = {
       gitWorkflow: 'Git Workflow',
       devcontainer: 'DevContainer',
       benchmarkGuide: 'Benchmark Guide',
+      referenceOverview: 'Reference Overview',
+      resourcesOverview: 'Resources Overview',
+      contributing: 'Contributing',
       releaseNotes: 'Release Notes',
       changelog: 'Changelog',
-      contributing: 'Contributing',
       agents: 'Agent Docs',
       domain: 'Domain',
       issueTracker: 'Issue Tracker',
@@ -117,41 +125,45 @@ export type LocaleKey = keyof typeof localeText
 type SidebarTextKey = keyof typeof localeText.en.sidebar
 
 const sharedLinks = {
-  why: {
-    path: 'why-fastqtools/',
-    labels: { zh: localeText.zh.nav.why, en: localeText.en.nav.why },
+  orientationNav: {
+    path: 'orientation/',
+    labels: { zh: localeText.zh.nav.orientation, en: localeText.en.nav.orientation },
   },
-  architecture: {
-    path: 'architecture/',
-    labels: { zh: localeText.zh.nav.architecture, en: localeText.en.nav.architecture },
+  whitepaperNav: {
+    path: 'whitepaper/',
+    labels: { zh: localeText.zh.nav.whitepaper, en: localeText.en.nav.whitepaper },
   },
-  workflows: {
-    path: 'workflows/',
-    labels: { zh: localeText.zh.nav.workflows, en: localeText.en.nav.workflows },
-  },
-  knowledgeMap: {
-    path: 'knowledge-map/',
-    labels: { zh: localeText.zh.nav.knowledgeMap, en: localeText.en.nav.knowledgeMap },
-  },
-  performance: {
-    path: 'performance/',
-    labels: { zh: localeText.zh.nav.performance, en: localeText.en.nav.performance },
+  academyNav: {
+    path: 'academy/',
+    labels: { zh: localeText.zh.nav.academy, en: localeText.en.nav.academy },
   },
   referenceNav: {
     path: 'reference/',
     labels: { zh: localeText.zh.nav.reference, en: localeText.en.nav.reference },
   },
-  referenceOverview: {
-    path: 'reference/',
-    labels: { zh: localeText.zh.sidebar.referenceOverview, en: localeText.en.sidebar.referenceOverview },
+  researchNav: {
+    path: 'research/',
+    labels: { zh: localeText.zh.nav.research, en: localeText.en.nav.research },
   },
-  resourcesNav: {
-    path: 'resources/',
-    labels: { zh: localeText.zh.nav.resources, en: localeText.en.nav.resources },
+  why: {
+    path: 'why-fastqtools/',
+    labels: { zh: localeText.zh.sidebar.whyFastqtools, en: localeText.en.sidebar.whyFastqtools },
   },
-  resourcesOverview: {
-    path: 'resources/',
-    labels: { zh: localeText.zh.sidebar.resourcesOverview, en: localeText.en.sidebar.resourcesOverview },
+  architecture: {
+    path: 'architecture/',
+    labels: { zh: localeText.zh.sidebar.architecture, en: localeText.en.sidebar.architecture },
+  },
+  knowledgeMap: {
+    path: 'knowledge-map/',
+    labels: { zh: localeText.zh.sidebar.knowledgeMap, en: localeText.en.sidebar.knowledgeMap },
+  },
+  workflows: {
+    path: 'workflows/',
+    labels: { zh: localeText.zh.sidebar.workflows, en: localeText.en.sidebar.workflows },
+  },
+  performance: {
+    path: 'performance/',
+    labels: { zh: localeText.zh.sidebar.performance, en: localeText.en.sidebar.performance },
   },
   benchmarkReport: {
     path: 'performance/benchmark-report',
@@ -245,13 +257,17 @@ const sharedLinks = {
     path: 'dev/benchmark-guide',
     labels: { zh: localeText.zh.sidebar.benchmarkGuide, en: localeText.en.sidebar.benchmarkGuide },
   },
+  resourcesOverview: {
+    path: 'resources/',
+    labels: { zh: localeText.zh.sidebar.resourcesOverview, en: localeText.en.sidebar.resourcesOverview },
+  },
+  contributing: {
+    path: 'contributing/',
+    labels: { zh: localeText.zh.sidebar.contributing, en: localeText.en.sidebar.contributing },
+  },
   changelog: {
     path: 'release-notes/changelog',
     labels: { zh: localeText.zh.sidebar.changelog, en: localeText.en.sidebar.changelog },
-  },
-  contributing: {
-    path: 'contributing',
-    labels: { zh: localeText.zh.sidebar.contributing, en: localeText.en.sidebar.contributing },
   },
   agentsDomain: {
     path: 'agents/domain',
@@ -277,22 +293,31 @@ const sharedLinks = {
 
 export type SharedLinkId = keyof typeof sharedLinks
 
-export const narrativeLinkIds = [
-  'why',
-  'architecture',
-  'workflows',
-  'knowledgeMap',
-  'performance',
+export const topNavLinkIds = [
+  'orientationNav',
+  'whitepaperNav',
+  'academyNav',
   'referenceNav',
-  'resourcesNav',
+  'researchNav',
 ] as const satisfies readonly SharedLinkId[]
 
-export const topNavLinkIds = narrativeLinkIds
+export const orientationSidebarGroups = [
+  {
+    headingKey: 'orientationHub',
+    items: ['orientationNav', 'knowledgeMap', 'whitepaperNav', 'academyNav', 'referenceNav', 'researchNav'],
+  },
+] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
-export const performanceLinkIds = ['performance', 'benchmarkReport'] as const satisfies readonly SharedLinkId[]
+export const whitepaperSidebarGroups = [
+  { headingKey: 'whitepaperHub', items: ['whitepaperNav', 'why', 'architecture', 'performance'] },
+] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
+
+export const academySidebarGroups = [
+  { headingKey: 'academyHub', items: ['academyNav', 'workflows', 'referenceNav'] },
+] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const referenceSidebarGroups = [
-  { headingKey: 'referenceHub', items: ['referenceOverview'] },
+  { headingKey: 'referenceHub', items: ['referenceNav'] },
   { headingKey: 'guide', items: ['guideOverview', 'gettingStarted', 'cliReference', 'configuration', 'deployment'] },
   { headingKey: 'api', items: ['apiOverview', 'ioModule', 'processing', 'statistics', 'core'] },
   {
@@ -302,8 +327,8 @@ export const referenceSidebarGroups = [
   { headingKey: 'releaseNotes', items: ['changelog'] },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
-export const resourceSidebarGroups = [
-  { headingKey: 'resourceHub', items: ['resourcesOverview', 'contributing', 'changelog'] },
+export const researchSidebarGroups = [
+  { headingKey: 'researchHub', items: ['researchNav', 'performance', 'benchmarkReport', 'resourcesOverview', 'contributing'] },
   { headingKey: 'agents', items: ['agentsDomain', 'issueTracker', 'triageLabels'] },
   { headingKey: 'archive', items: ['archiveOverview', 'migrationNotice'] },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
@@ -312,13 +337,13 @@ export const homepagePillarLinkIds = {
   performance: 'performance',
   workflows: 'workflows',
   architecture: 'architecture',
-  reference: 'referenceOverview',
+  reference: 'referenceNav',
 } as const satisfies Record<string, SharedLinkId>
 
 export const knowledgeMapSections = [
   { id: 'evaluate', href: 'why', items: ['why', 'architecture', 'performance'] },
   { id: 'operate', href: 'workflows', items: ['workflows', 'gettingStarted', 'cliReference'] },
-  { id: 'reference', href: 'referenceOverview', items: ['referenceOverview', 'apiOverview', 'developerGuide'] },
+  { id: 'reference', href: 'referenceNav', items: ['referenceNav', 'apiOverview', 'developerGuide'] },
   { id: 'extend', href: 'resourcesOverview', items: ['resourcesOverview', 'contributing', 'agentsDomain'] },
 ] as const satisfies readonly { id: string; href: SharedLinkId; items: readonly SharedLinkId[] }[]
 
@@ -328,15 +353,6 @@ export const workflowPathLinks = {
   contribute: { primary: 'build', secondary: 'testing' },
 } as const satisfies Record<string, { primary: SharedLinkId; secondary: SharedLinkId }>
 
-export const homepageActionLinkIds = {
-  primary: 'why',
-  secondary: 'gettingStarted',
-} as const satisfies Record<string, SharedLinkId>
-
-export const homepageEvidenceLinkIds = {
-  performance: 'performance',
-} as const satisfies Record<string, SharedLinkId>
-
 export type ResourceHubItem =
   | { type: 'doc'; id: SharedLinkId }
   | { type: 'external'; href: string; labels: Record<LocaleKey, string> }
@@ -344,7 +360,7 @@ export type ResourceHubItem =
 export const resourceHubGroups = [
   {
     id: 'reference',
-    href: 'referenceOverview',
+    href: 'referenceNav',
     items: [{ type: 'doc', id: 'gettingStarted' }, { type: 'doc', id: 'apiOverview' }, { type: 'doc', id: 'developerGuide' }],
   },
   {

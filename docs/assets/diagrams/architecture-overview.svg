@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">FastQTools architecture overview</title>
+  <desc id="desc">A layered diagram showing CLI and command entry points, the public API, implementation modules, and a bounded source to processing to sink pipeline.</desc>
+  <style>
+    text {
+      font-family: Inter, "Segoe UI", sans-serif;
+      fill: var(--fq-diagram-text);
+    }
+    .panel {
+      fill: currentColor;
+      fill-opacity: 0.04;
+      stroke: currentColor;
+      stroke-width: 2;
+      rx: 18px;
+    }
+    .accent {
+      fill-opacity: 0.12;
+    }
+    .arrow {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .label {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .copy {
+      font-size: 16px;
+    }
+  </style>
+  <rect width="960" height="420" fill="var(--fq-diagram-bg)" rx="24" />
+  <rect class="panel" x="40" y="48" width="180" height="98" />
+  <text class="label" x="130" y="92" text-anchor="middle">CLI</text>
+  <text class="copy" x="130" y="118" text-anchor="middle">stat / filter</text>
+
+  <rect class="panel" x="280" y="48" width="200" height="98" />
+  <text class="label" x="380" y="92" text-anchor="middle">Command layer</text>
+  <text class="copy" x="380" y="118" text-anchor="middle">validation + orchestration</text>
+
+  <rect class="panel accent" x="540" y="48" width="180" height="98" />
+  <text class="label" x="630" y="92" text-anchor="middle">Public API</text>
+  <text class="copy" x="630" y="118" text-anchor="middle">include/fqtools</text>
+
+  <path class="arrow" d="M220 97 H280" />
+  <path class="arrow" d="M480 97 H540" />
+
+  <rect class="panel" x="110" y="220" width="740" height="142" />
+  <text class="label" x="480" y="260" text-anchor="middle">Bounded execution path</text>
+
+  <rect class="panel" x="160" y="282" width="170" height="52" />
+  <rect class="panel" x="395" y="282" width="170" height="52" />
+  <rect class="panel" x="630" y="282" width="170" height="52" />
+  <text class="copy" x="245" y="314" text-anchor="middle">Source / read</text>
+  <text class="copy" x="480" y="314" text-anchor="middle">Processing / oneTBB</text>
+  <text class="copy" x="715" y="314" text-anchor="middle">Sink / write or stats</text>
+  <path class="arrow" d="M330 308 H395" />
+  <path class="arrow" d="M565 308 H630" />
+
+  <text class="copy" x="480" y="355" text-anchor="middle">Zero-copy batches + deterministic boundaries + OpenSpec guardrails</text>
+</svg>

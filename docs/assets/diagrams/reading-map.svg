@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" role="img" aria-labelledby="title desc">
+  <title id="title">FastQTools reading map</title>
+  <desc id="desc">A map showing the narrative, execution, and resource layers, plus the evaluation, running, integration, and maintenance reading paths.</desc>
+  <style>
+    text {
+      font-family: Inter, "Segoe UI", sans-serif;
+      fill: var(--fq-diagram-text);
+    }
+    .panel {
+      fill: currentColor;
+      fill-opacity: 0.04;
+      stroke: currentColor;
+      stroke-width: 2;
+      rx: 18px;
+    }
+    .accent {
+      fill-opacity: 0.12;
+    }
+    .arrow {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .label {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .copy {
+      font-size: 16px;
+    }
+  </style>
+  <rect width="960" height="460" fill="var(--fq-diagram-bg)" rx="24" />
+  <text class="label" x="480" y="54" text-anchor="middle">Docs reading map</text>
+
+  <rect class="panel accent" x="70" y="106" width="240" height="114" />
+  <text class="label" x="190" y="148" text-anchor="middle">Narrative layer</text>
+  <text class="copy" x="190" y="178" text-anchor="middle">why / architecture / performance</text>
+
+  <rect class="panel" x="360" y="106" width="240" height="114" />
+  <text class="label" x="480" y="148" text-anchor="middle">Execution layer</text>
+  <text class="copy" x="480" y="178" text-anchor="middle">workflows / guide / API / dev</text>
+
+  <rect class="panel" x="650" y="106" width="240" height="114" />
+  <text class="label" x="770" y="148" text-anchor="middle">Resource layer</text>
+  <text class="copy" x="770" y="178" text-anchor="middle">resources / archive / agents</text>
+
+  <path class="arrow" d="M310 163 H360" />
+  <path class="arrow" d="M600 163 H650" />
+
+  <rect class="panel" x="96" y="288" width="176" height="92" />
+  <rect class="panel" x="304" y="288" width="176" height="92" />
+  <rect class="panel" x="512" y="288" width="176" height="92" />
+  <rect class="panel" x="720" y="288" width="176" height="92" />
+  <text class="copy" x="184" y="332" text-anchor="middle">Evaluation</text>
+  <text class="copy" x="392" y="332" text-anchor="middle">Running</text>
+  <text class="copy" x="600" y="332" text-anchor="middle">Integration</text>
+  <text class="copy" x="808" y="332" text-anchor="middle">Maintenance</text>
+  <text class="copy" x="184" y="356" text-anchor="middle">fit and evidence</text>
+  <text class="copy" x="392" y="356" text-anchor="middle">commands and setup</text>
+  <text class="copy" x="600" y="356" text-anchor="middle">API and module paths</text>
+  <text class="copy" x="808" y="356" text-anchor="middle">specs and history</text>
+
+  <path class="arrow" d="M190 220 V288" />
+  <path class="arrow" d="M480 220 V288" />
+  <path class="arrow" d="M770 220 V288" />
+  <path class="arrow" d="M480 220 C480 252 600 250 600 288" />
+</svg>

@@ -1,96 +1,50 @@
 # Why FastQTools
 
-FastQTools is not just another collection of FASTQ utilities. It turns the part of FASTQ quality-control work that is most repetitive, most likely to become a throughput bottleneck, and most in need of auditable results into a modern C++ toolkit that is explainable, embeddable, and maintainable.
+FastQTools is aimed at the part of FASTQ quality control that is most common, most sensitive to stable throughput, and most in need of auditable output. It is not trying to rebuild the entire bioinformatics pipeline as a platform.
 
-If you are evaluating whether it is worth adopting, this page answers three questions first: **what problem it is trying to solve, how it differs from common alternatives, and where to go next to verify those claims.**
+## What problem it is trying to solve
 
-## The real question is not “can it process FASTQ,” but “can it process a lot of FASTQ reliably?”
+Many teams do not lack a command that can “process FASTQ.” What they actually lack is an engineering toolkit that explains adoption logic, performance assumptions, maintenance boundaries, and integration paths in one place.
 
-In real sequencing QC pipelines, FASTQ handling is usually not conceptually hard, but it is constant and high-frequency:
+The deciding questions are usually engineering questions like these:
 
-- upstream systems keep producing compressed or uncompressed reads;
-- downstream steps often need statistics, filtering, and trimming before alignment or assembly;
-- once data volume grows, the bottleneck is often not the algorithm itself, but **I/O, string copying, thread utilization, and whether results remain reproducible**.
+- **Can throughput be explained?** As FASTQ volume grows, bottlenecks usually come from I/O, string copying, thread utilization, and backpressure, not just the algorithm itself.
+- **Can results be audited?** Once filtering, trimming, and statistics enter production paths, resource boundaries, output consistency, and verification paths have to be clear.
+- **Is integration cost controllable?** Many teams validate with the CLI first, then embed the capability into a C++ program or an existing QC workflow. If the interfaces split, adoption cost rises quickly.
 
-For many teams, the real pain is not “we need one more command,” but problems like these:
+FastQTools brings those questions into one whitepaper narrative instead of scattering commands, benchmark numbers, and architectural trade-offs across disconnected pages. If you want the overall site map first, return to [`Orientation`](../orientation/) or the [`Knowledge Map`](../knowledge-map/).
 
-1. **A fragmented toolchain**: statistics, filtering, trimming, benchmarking, and release notes live across different scripts or different tools, so results become hard to explain consistently;
-2. **Unpredictable performance**: the same FASTQ workload behaves very differently across machines and parameters, but the documentation does not tell you when the published numbers apply;
-3. **High integration cost**: a CLI may be convenient, but once you need to embed it into a C++ program, an existing pipeline, or CI, stable interfaces are often missing;
-4. **Weak maintenance evidence**: a project may call itself “high performance,” but never connect its architecture choices, benchmark method, and maintenance policy into one auditable story.
+## Suitable scenarios
 
-FastQTools is positioned to make that stretch of the pipeline feel more like a **technical whitepaper for adoption decisions**: not just commands, but commands, architecture, performance evidence, and maintenance boundaries presented in one reading frame.
+- You need stable statistics, filtering, and trimming in the pre-alignment stage.
+- You need to process large FASTQ collections in batches and care about throughput and resource boundaries.
+- You want to validate through the CLI first and then embed the capability into a C++ application or an existing QC flow.
 
-## FastQTools stands out through engineering trade-offs, not feature count
+## How it differs from adjacent solutions
 
-### 1. Zero-copy FASTQ views are treated as a first-class design constraint
+The difference is not “a longer feature list.” It is that FastQTools writes **zero-copy batch processing, the parallel execution model, benchmark evidence, and long-term maintenance constraints** into one narrative chain so adopters can judge whether the claims are credible.
 
-The core of FastQTools is not simply that it ships `stat` and `filter`. It is that **`FastqBatch` owns contiguous buffers while `FastqRecord` exposes record views through `std::string_view`**. That means the project is intentionally avoiding unnecessary copies during parsing, so performance discussion is grounded in a concrete data model instead of the vague idea that “C++ is fast.”
+If you are evaluating why it may be worth adopting, focus on three follow-up pages:
 
-- Architecture summary: [`Architecture`](../architecture/)
-- Deeper detail: [`Developer Architecture`](../dev/architecture)
-- Related ADR: [`RFC-0001: Core Architecture`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0001-core-architecture.md)
+1. [`Architecture`](../architecture/) explains how `FastqBatch`, `std::string_view`, and the `source → processing → sink` path shape throughput and resource boundaries.
+2. [`Performance`](../performance/) does not just present results; it explains how to read the benchmarks and where the risk boundaries sit.
+3. [`Reference`](../reference/) and [`API Overview`](../api/overview) show that this is not only a one-off shell command layer, but something you can keep drilling into as library and developer material.
 
-### 2. Parallel pipelines are designed to be explainable by default
+That makes FastQTools closer to an **auditable engineering core** than to a generic command wrapper.
 
-The project explicitly uses oneTBB `parallel_pipeline` to organize a three-stage path for reading, processing, and writing, rather than hiding concurrency inside a black box. For adopters, that matters because you can clearly understand:
+## Who it is not for
 
-- which stage is sequential I/O;
-- which stage is parallel filtering or transformation;
-- why resource usage should remain bounded instead of scaling out of control with file size.
+FastQTools may not be the best fit if your need is closer to one of these cases:
 
-That kind of explanation directly affects whether you are comfortable putting it into a production QC pipeline or embedding it inside your own C++ service.
+- you need a **full-stack platform** that also covers alignment, quantification, variant calling, and later pipeline stages;
+- you care more about a script-plugin ecosystem than about a core implementation with explicit resource boundaries and a C++ API;
+- you just want a miscellaneous FASTQ helper and do not care about performance evidence, maintenance limits, or embeddability.
 
-### 3. Performance claims are turned into a traceable evidence chain
+In other words, it should not be misunderstood as an everything framework. It is more focused on doing the FASTQ QC fundamentals well, making them explainable, and keeping them integrable over the long term.
 
-FastQTools does not stop at publishing a benchmark table. It splits performance evidence into three layers:
+## How to verify these claims next
 
-- **Entry layer**: [`Performance`](../performance/) explains how to read the numbers;
-- **Evidence layer**: [`Benchmark Report`](../performance/benchmark-report) provides representative results;
-- **Method layer**: [`Benchmark Guide`](../dev/benchmark-guide) and the OpenSpec benchmark ADR explain how those results are generated and maintained.
-
-The value of this structure is simple: you do not have to blindly accept that it is “fast.” You can follow the links and decide whether that speed is relevant to your workload.
-
-### 4. It serves both CLI users and library integrators
-
-In many projects, the command-line tool and the library surface become two separate worlds. FastQTools is closer to “one core, two entry points”:
-
-- new users can start directly from [`Getting Started`](../guide/getting-started) and [`CLI Reference`](../guide/cli-reference);
-- teams that need deeper integration can enter through [`API Overview`](../api/overview) and then drill into `io`, `processing`, and `statistics`;
-- maintainers can continue down into [`Core Design`](../dev/design) and the related baseline / ADR material.
-
-## Who it fits best, and what it is not
-
-### Situations where it deserves serious evaluation
-
-- You need dependable statistics, filtering, and trimming in the **pre-alignment QC** stage;
-- You handle **large FASTQ collections or recurring batch jobs**, where throughput and resource boundaries matter more than flashy feature breadth;
-- You want to **embed FASTQ processing into an existing C++ application**, not stay forever at the shell-script layer;
-- You care whether the docs help new engineers understand why it is designed this way, where the numbers come from, and where the risk boundaries are.
-
-### What not to misunderstand it as
-
-FastQTools is not:
-
-- a do-everything bioinformatics workflow orchestrator;
-- a replacement for alignment, quantification, variant calling, or other downstream systems;
-- a framework optimized primarily for plugin ecosystem breadth.
-
-It is better understood as an **engineering core that does the FASTQ QC fundamentals well**: scoped tightly, backed by evidence, and practical to integrate.
-
-## Suggested reading path before adoption
-
-| The question you need answered | Read this first | Then continue with |
-| --- | --- | --- |
-| What problem is this project actually solving? | [`Why FastQTools`](./) | [`Knowledge Map`](../knowledge-map/) |
-| Why might these design choices lead to performance gains? | [`Architecture`](../architecture/) | [`Developer Architecture`](../dev/architecture), [`Core Design`](../dev/design) |
-| Are the benchmark numbers credible and relevant to my environment? | [`Performance`](../performance/) | [`Benchmark Report`](../performance/benchmark-report), [`Benchmark Guide`](../dev/benchmark-guide) |
-| I want to run it first and validate the CLI experience | [`Workflows`](../workflows/) | [`Getting Started`](../guide/getting-started), [`CLI Reference`](../guide/cli-reference) |
-| I need to integrate it into my own software | [`Reference`](../reference/) | [`API Overview`](../api/overview), [`Processing Module`](../api/processing) |
-
-## Next step
-
-- Want to inspect the core design trade-offs? Go to [`Architecture`](../architecture/)
-- Want a role-based path through the docs? Go to [`Workflows`](../workflows/)
-- Want to review the evidence directly? Go to [`Performance`](../performance/)
-- Want the fastest route to specific manuals? Go to [`Reference`](../reference/)
+- Read [`Architecture`](../architecture/) for the system layers and execution model.
+- Read [`Performance`](../performance/) for how the evidence should be interpreted.
+- Read [`Workflows`](../workflows/) to decide which execution path fits you next.
+- Read [`Developer Architecture`](../dev/architecture) and [`Core Design`](../dev/design) to inspect finer implementation trade-offs.

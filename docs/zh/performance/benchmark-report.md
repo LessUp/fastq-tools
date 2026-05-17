@@ -1,43 +1,28 @@
-# Benchmark Overview
+# Benchmark 报告
 
-FastQTools keeps a compact benchmark summary so users can estimate how the project fits common FASTQ QC workloads without reading raw CI artifacts first.
+这份报告提供当前维护的代表性 benchmark 快照，用来支撑白皮书里的性能叙事，而不是替代完整方法学说明。
 
-## Representative results
+## 报告用途
 
-These results are the current maintained snapshot for **100K reads (150 bp)** on an **AMD Ryzen 9 5900X** using a Release build.
+先回答“结果量级是否与我的场景相符”，再决定要不要继续查看脚本、方法或原始工件。
 
-| Workload | Representative result | What it represents |
+## 代表性结果
+
+以下结果基于维护中的代表性场景：100K reads、150 bp、AMD Ryzen 9 5900X、Release 构建。
+
+| 工作负载 | 代表结果 | 含义 |
 | --- | --- | --- |
-| FASTQ read path | 1696 MB/s | Parsing and ingest throughput |
-| FASTQ write path | 1.76M reads/s | Output-side throughput in the maintained benchmark set |
-| Combined filtering pass | 1.67M reads/s | A realistic QC pass with multiple predicates enabled |
-| Full statistics pass | 302 MB/s | End-to-end metrics collection |
+| FASTQ 读取路径 | 1696 MB/s | 解析与读入吞吐 |
+| FASTQ 写出路径 | 1.76M reads/s | 输出阶段吞吐 |
+| 组合过滤路径 | 1.67M reads/s | 多谓词 QC 流程下的代表性吞吐 |
+| 完整统计路径 | 302 MB/s | 端到端统计收集能力 |
 
-## How to read these numbers
+## 如何把它和白皮书一起读
 
-- They are **representative**, not guaranteed minima or maxima.
-- Actual throughput depends on storage, compression level, thread count, filter mix, and read length distribution.
-- The table is intentionally small: it is meant to answer “is this in the right performance range for my workload?” before you dive into deeper reports.
+- 回到 [`性能总览`](./) 理解这些数字的证据语境
+- 结合 [`架构`](../architecture/) 判断结果是否与执行模型一致
+- 需要方法细节时进入 [`Benchmark 指南`](../dev/benchmark-guide)
 
-## Benchmark workload
+## 方法学提醒
 
-- **Dataset shape**: synthetic FASTQ data, 100K reads, 150 bp per read
-- **Environment**: Linux on AMD Ryzen 9 5900X
-- **Build profile**: Release
-- **Focus**: routine FASTQ QC tasks, not cross-tool marketing comparisons
-
-## Benchmark artifacts and tooling
-
-- This page is the stable, curated overview for public readers.
-- CI-generated benchmark artifacts may be published under `docs/performance/benchmark-reports/` when available.
-- Benchmark tooling lives in `scripts/tools/performance/` inside the repository.
-
-## When benchmarks matter most
-
-Benchmarks are most useful when you are deciding whether FastQTools is a good fit for:
-
-1. pre-alignment filtering in existing QC pipelines,
-2. repeated batch statistics over many FASTQ files, or
-3. embedding FASTQ processing into a larger C++ application.
-
-If you need command syntax next, go to the [CLI Reference](../guide/cli-reference.md). If you need integration details, go to the [API Overview](../api/overview.md).
+这些数字是维护中的代表性快照，不是所有环境下的保证值。存储、压缩、线程数、过滤组合和数据分布都可能改变最终吞吐。

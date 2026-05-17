@@ -1,11 +1,13 @@
 ---
 title: FastQTools
-description: 面向 FASTQ 质控采用评估的技术白皮书入口
+description: 面向 FASTQ 采用评估、架构审查与工程入门的中文白皮书首页
 ---
 
 <SiteHeroPanel locale="zh" />
 <EvidenceStrip locale="zh" />
-<PillarGrid locale="zh" />
-<KnowledgeMap locale="zh" />
-<WorkflowPaths locale="zh" />
-<ResourceHub locale="zh" />
+<CitationStrip locale="zh" />
+<SectionLandingGrid locale="zh" section="orientation" />
+<SectionLandingGrid locale="zh" section="whitepaper" />
+<SectionLandingGrid locale="zh" section="academy" />
+<SectionLandingGrid locale="zh" section="reference" />
+<SectionLandingGrid locale="zh" section="research" />

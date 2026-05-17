@@ -1,190 +1,88 @@
 # CLI 参考
 
-FastQTools 提供 `stat` 和 `filter` 两个子命令，用于 FASTQ 文件的统计分析和质量过滤。
+FastQTools 的 CLI 只有少量核心概念：全局日志选项、`stat` 子命令，以及 `filter` 子命令。它刻意保持窄接口，让命令行成为可脚本化、可复现、也便于维护的外部边界。
 
----
-
-## 基本语法
+## 命令结构
 
 ```bash
 FastQTools [全局选项] <子命令> [子命令选项]
 ```
 
-> 全局选项必须位于子命令之前。
+一个重要约束是：**全局选项放在子命令之前**。如果你要调整日志级别，请这样写：
 
----
+```bash
+FastQTools --log-level debug stat -i reads.fastq.gz -o stats.txt
+```
 
 ## 全局选项
 
-| 选项 | 说明 |
-|------|------|
-| `-v, --verbose` | 启用调试日志（等价于 `--log-level=debug`） |
-| `-q, --quiet` | 仅输出错误（等价于 `--log-level=error`） |
-| `--log-level=LEVEL` | 设置日志级别：`trace`, `debug`, `info`, `warn`, `error` |
-| `--help` | 显示帮助信息 |
+| 选项 | 作用 | 适用场景 |
+| --- | --- | --- |
+| `-v`, `--verbose` | 提升日志细节 | 排障、局部验证 |
+| `-q`, `--quiet` | 只保留错误输出 | 批处理、CI |
+| `--log-level <level>` | 显式指定日志等级 | 与自动化脚本协同时更稳定 |
+| `--help` | 查看帮助 | 第一次接触命令或需要确认参数时 |
 
-默认日志级别为 `info`。
+## `stat`：统计与证据建立
 
----
-
-## stat 命令 — 统计分析
-
-对 FASTQ 文件进行全面的质量统计分析。
-
-### 用法
+`stat` 的职责不是修改输入，而是把输入数据解释成可比较、可追溯的质量证据。常见用法如下：
 
 ```bash
-FastQTools stat -i <input> -o <output> [选项]
+FastQTools stat -i reads.fastq.gz -o stats.txt
+FastQTools stat -i reads.fastq.gz -o stats.txt -t 8
+FastQTools stat -i reads.fastq.gz -o stats.txt \
+    --signature-report signatures.tsv \
+    --signature-kmer-size 15
 ```
 
-### 选项
+你通常会在以下情况下调用它：
 
-| 选项 | 说明 |
-|------|------|
-| `-i, --input <path>` | 输入 FASTQ 文件（支持 `.gz` 压缩） |
-| `-o, --output <path>` | 输出统计文件 |
-| `-t, --threads <N>` | 线程数（默认 `1`） |
-| `--batch-size <N>` | 每批处理的 reads 数量 |
-| `--execution-backend oneTbb` | 显式指定执行后端 |
-| `--memory-policy objectPool` | 显式指定内存资源策略 |
-| `--allocation-telemetry` | 在统计头部写出内存策略与 in-flight 上限 |
-| `--signature-report <path>` | 生成可选的 signature sidecar（TSV） |
-| `--signature-kmer-size <N>` | sidecar 中 head-kmer 的 k 值 |
-| `--signature-limit <N>` | sidecar 中最多输出的 signature 行数 |
-| `--duplicate-sample-modulo <N>` | duplicate estimate 的采样模数，默认 `1024`；`1` 可用于精确测试 |
+- 想快速知道输入的读长、GC、Q20/Q30 与质量分布；
+- 想在过滤前建立基线，避免凭感觉调阈值；
+- 想在自动化流程里留下一份可审阅的统计输出。
 
-### 输出指标
+## `filter`：过滤、修剪与预处理
 
-- **读段统计**：总读段数、最大读长、总碱基数
-- **质量分析**：Q20/Q30 碱基百分比
-- **碱基组成**：A/T/C/G/N 比例
-- **GC 含量**：整体和位置特异性
-- **逐位统计**：每个位点的碱基计数、平均质量与估计错误率
-- **轻量 sidecar**：可选输出 duplicate estimate 与 top head-kmer signature
+`filter` 负责把规则变成实际输出。典型参数可以分成三组：
 
-### 示例
+| 参数组 | 代表选项 | 说明 |
+| --- | --- | --- |
+| 输入输出 | `-i`, `-o`, `-t` | 指定文件与并发度 |
+| 过滤规则 | `--min-quality`, `--min-length`, `--max-n-ratio` | 定义什么样的读段应该被保留 |
+| 修剪规则 | `--trim-quality`, `--trim-mode`, `--adapter-seq`, `--trim-poly-g`, `--trim-poly-x` | 定义如何修改保留下来的读段 |
+
+示例：
 
 ```bash
-# 基本统计
-FastQTools stat -i reads.fq.gz -o analysis.txt
-
-# 多线程处理
-FastQTools stat -i reads.fq.gz -o analysis.txt -t 8
-
-# 输出 signature sidecar
-FastQTools stat -i reads.fq.gz -o analysis.txt \
-  --signature-report signatures.tsv --signature-kmer-size 15
-
-# 调试模式
-FastQTools -v stat -i reads.fq.gz -o analysis.txt
+FastQTools filter -i reads.fastq.gz -o clean.fastq.gz \
+    --min-quality 20 \
+    --min-length 50 \
+    --max-n-ratio 0.1 \
+    --trim-quality 20 \
+    --trim-mode both
 ```
 
----
+## 推荐工作流片段
 
-## filter 命令 — 过滤与修剪
-
-对原始测序数据进行清洗、过滤和质量修剪。
-
-### 用法
+### 先看统计，再决定过滤
 
 ```bash
-FastQTools filter -i <input> -o <output> [选项]
+FastQTools stat -i reads.fastq.gz -o stats.txt
+FastQTools filter -i reads.fastq.gz -o clean.fastq.gz --min-quality 20 --min-length 50
 ```
 
-### 过滤选项
-
-| 选项 | 说明 |
-|------|------|
-| `-i, --input <path>` | 输入 FASTQ 文件（支持 `.gz`） |
-| `-o, --output <path>` | 输出 FASTQ 文件（`.gz` 后缀自动压缩） |
-| `-t, --threads <N>` | 线程数 |
-| `--min-quality <float>` | 最小平均质量阈值 |
-| `--min-length <int>` | 最小读长 |
-| `--max-length <int>` | 最大读长 |
-| `--max-n-ratio <0.0-1.0>` | 最大 N 碱基比例 |
-
-### 修剪选项
-
-| 选项 | 说明 |
-|------|------|
-| `--trim-quality <float>` | 质量修剪阈值 |
-| `--trim-mode <mode>` | 修剪模式：`both`（两端）、`five`（5' 端）、`three`（3' 端） |
-| `--adapter-seq <seq>` | 3' 端 adapter 序列，可重复指定 |
-| `--adapter-min-overlap <N>` | adapter 命中最小重叠长度 |
-| `--adapter-max-mismatches <N>` | adapter 命中允许的最大错配数 |
-| `--trim-poly-g <N>` | 修剪长度大于等于 `N` 的 polyG 尾巴 |
-| `--trim-poly-x <N>` | 修剪长度大于等于 `N` 的低复杂度 polyX 尾巴 |
-
-### 运行时选项
-
-| 选项 | 说明 |
-|------|------|
-| `--execution-backend oneTbb` | 显式指定执行后端 |
-| `--memory-policy objectPool` | 显式指定内存资源策略 |
-| `--allocation-telemetry` | 在控制台统计中展示解析后的内存参数 |
-
-### 示例
+### 把日志控制交给自动化环境
 
 ```bash
-# 质量过滤
-FastQTools filter -i input.fq.gz -o filtered.fq.gz \
-  --min-quality 20 --min-length 50
-
-# 质量修剪（从 3' 端移除低质量碱基）
-FastQTools filter -i input.fq.gz -o trimmed.fq.gz \
-  --trim-quality 20 --trim-mode three
-
-# 组合过滤 + 修剪
-FastQTools filter -i input.fq.gz -o clean.fq.gz \
-  --min-quality 20 --min-length 50 --max-n-ratio 0.1 \
-  --trim-quality 20 --trim-mode both
-
-# 接头 + polyG/polyX 预处理
-FastQTools filter -i input.fq.gz -o clean.fq.gz \
-  --adapter-seq AGATCGGAAGAGC --adapter-min-overlap 6 \
-  --trim-poly-g 8 --trim-poly-x 8
-
-# 静默模式
-FastQTools -q filter -i input.fq.gz -o filtered.fq.gz --min-quality 20
+FastQTools --log-level error filter -i reads.fastq.gz -o clean.fastq.gz --min-quality 20
 ```
 
----
+### 用 sidecar 保留补充证据
 
-## 退出码
-
-| 退出码 | 含义 |
-|--------|------|
-| `0` | 成功 |
-| 非 `0` | 错误（未知子命令、参数错误、运行时异常等） |
-
----
-
-## 公共 API 集成
-
-FastQTools 也可作为 C++ 库使用：
-
-```cpp
-#include <fqtools/fq.h>
-
-// 统计分析
-fq::statistic::StatisticOptions options;
-options.inputFastqPath = "input.fastq.gz";
-options.outputStatPath = "output.stat.txt";
-options.signatureReportPath = "output.signatures.tsv";
-auto calculator = fq::statistic::createStatisticCalculator(options);
-calculator->run();
-
-// 过滤处理
-auto pipeline = fq::processing::createProcessingPipeline();
-pipeline->setInputPath("input.fq.gz");
-pipeline->setOutputPath("filtered.fq.gz");
-
-fq::processing::ProcessingConfig config;
-config.threadCount = 4;
-config.executionBackend = fq::processing::ExecutionBackend::OneTbb;
-pipeline->setProcessingConfig(config);
-
-auto stats = pipeline->run();
+```bash
+FastQTools stat -i reads.fastq.gz -o stats.txt --signature-report signatures.tsv
 ```
 
-详细 API 文档见 [API 参考](../api/overview.md)。
+## CLI 与 API 的关系
+
+CLI 是项目对外最直接的工程接口；如果你需要把能力嵌入 C++ 应用，而不是通过 shell 调用，请继续看[`API 概览`](../api/overview)与[`开发者架构设计`](../dev/architecture)。

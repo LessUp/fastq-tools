@@ -1,86 +1,40 @@
-# 架构设计
+# 开发者架构设计
 
-## 核心设计原则
+这页面向需要修改实现的人。它关心的不是营销式“大图”，而是维护时必须保持稳定的结构约束：模块如何分层、数据如何流动、哪些点一旦改坏就会直接影响性能或可维护性。
 
-- **性能优先**: 最大化处理吞吐量和资源利用率
-- **现代化 C++**: 全面使用 C++23 标准特性
-- **高内聚低耦合**: 清晰的模块边界和接口设计
+## 系统分层
 
-## 技术栈
+FastQTools 可以粗分为四层：
 
-| 领域 | 技术 | 理由 |
-|------|------|------|
-| **语言** | C++23 | 现代特性，性能卓越 |
-| **构建** | CMake | C++ 项目标准 |
-| **依赖** | Conan | 自动化第三方库管理 |
-| **并发** | Intel TBB | 高性能并行计算 |
-| **CLI** | cxxopts | 轻量级命令行解析 |
-| **日志** | spdlog | 高性能日志库 |
-| **测试** | GoogleTest | 功能强大的测试框架 |
+1. **CLI 层**：负责解析参数、组织日志、把外部输入转成明确命令；
+2. **应用命令层**：把 `stat` / `filter` 这样的用户意图映射到内部配置；
+3. **公共 API 层**：通过 `include/fqtools/` 暴露稳定接口；
+4. **实现层**：在 `src/io/`、`src/processing/`、`src/statistics/` 等目录中完成真正的读写、处理与统计。
 
-## 架构层次
+维护时最重要的原则是：外部边界尽量窄，内部实现可以演化，但不要让 CLI、公共头文件与内部细节纠缠在一起。
 
-```
-用户/调用者
-    ↓
-CLI 层 (src/cli/)
-    ↓
-应用命令层 (src/cli/commands/)
-    ↓
-核心库层 (include/fqtools/)
-    ↓
-实现层 (src/pipeline/, src/modules/)
-```
+## 执行模型
 
-### 1. CLI 层
-- 入口: `src/cli/main.cpp`
-- 职责: 参数解析、命令分发、日志初始化
-- 使用: cxxopts + spdlog
+项目的核心执行模型可以概括为：`source → processing → sink`。
 
-### 2. 应用命令层
-- 接口: `CommandInterface` (`command_interface.h`)
-- 实现: `StatCommand`, `FilterCommand`
-- 职责: 参数验证、业务逻辑调用
+- `source`：读取输入、解压与解析 FASTQ 记录；
+- `processing`：对批次应用谓词、修剪器、统计器等实际计算；
+- `sink`：写出结果、汇总统计，并保持必要的顺序约束。
 
-### 3. 核心库层
-- 公共 API: `include/fqtools/`
-- 主要接口:
-  - `processing_pipeline.h`: `ProcessingPipelineInterface`
-  - `statistic_calculator.h`: `StatisticCalculatorInterface`
-  - `fq.h`: 聚合头文件
+在并行路径中，这个模型通常由 `tbb::parallel_pipeline` 承载。维护者需要特别关注串行边界与并发边界是否仍然清晰，因为很多性能问题并不是算法错误，而是把本该分层的工作重新耦合在一起。
 
-### 4. 实现层
-- 流水线与处理: `src/processing/`
-- 统计: `src/statistics/`
-- IO: `src/io/`
+## `FastqBatch` 为什么重要
 
-## 并发模型
+`FastqBatch` 是理解项目性能与内存行为的关键入口。它把一批记录组织为可批量搬运、可复用的内存单元，并尽量减少不必要的字符串复制。
 
-使用 `tbb::parallel_pipeline` 实现高性能并行处理：
+当你修改 I/O、过滤器或统计逻辑时，应该优先问自己：
 
-- **source**: 串行读取 FASTQ 记录
-- **processing**: 并行过滤和变换
-- **sink**: 串行写入结果
+- 这次改动是否破坏了批处理边界？
+- 是否引入了额外的拷贝或生命周期风险？
+- 是否让原本可以并行的阶段被串行化？
 
-内置背压机制，自动平衡 I/O 和计算速度。
+## 维护时常见的判断题
 
-## 构建系统
-
-采用现代 CMake 目标拆分：
-
-```cmake
-# 基础模块
-fq_common
-fq_error
-fq_config
-fq_core
-fq_modern_io
- 
-# 核心功能
-fq_pipeline
- 
-# 应用层
-fq_cli
-```
-
-依赖方向保持自下而上，确保模块化设计。
+- 如果你改的是用户可见行为，要同步检查 CLI 文档与 API 文档；
+- 如果你改的是执行路径，要同步检查 benchmark 叙事是否仍然成立；
+- 如果你改的是模块边界，要回看 OpenSpec baseline 与相关 ADR，确认不是在局部修补中悄悄改变架构承诺。

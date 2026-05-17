@@ -1,13 +1,21 @@
-# Archived Documents
+# Archive Overview
 
-This directory is no longer maintained. All **specifications, proposals, and historical records** have been migrated to the OpenSpec framework in the project root.
+The archive does not answer “what pages are here?” It answers “which materials have left the main path, why they left, and where the current facts live now.”
 
-## 📍 Current Source of Truth
+## Why there is an archive layer
 
-- **Specification Baseline**: [`openspec/baseline/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline)
-- **Active Proposals**: [`openspec/changes/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/changes)
-- **Landed Changes**: [`openspec/archive/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/archive)
-- **Changelog**: [`changelog/`](https://github.com/LessUp/fastq-tools/tree/master/changelog)
-- **Development Guidelines**: [`AGENTS.md`](https://github.com/LessUp/fastq-tools/blob/master/AGENTS.md)
+As the project adopted OpenSpec and the new documentation information architecture, some older documents, historical notes, and migration notices no longer belonged on the main reading path but still kept background value. The archive therefore has two jobs:
 
-Files in this directory are retained for reference only and should not be relied upon.
+- preserve historical context so readers can understand how the project evolved;
+- clearly state which materials are no longer current sources of truth.
+
+## Where the current facts live
+
+- Current specification baseline: `openspec/baseline/`
+- Active proposals: `openspec/changes/`
+- Landed history: `openspec/archive/`
+- Project change timeline: [`Changelog`](../release-notes/changelog)
+
+## How to read archive material
+
+If all you need is “what should I do now?”, you usually do not need to stay in the archive. Go directly to the Academy, Reference, or Developer Guide instead. Return to archive material only when you need to explain a historical decision, a migration path, or whether information from an old link is outdated.

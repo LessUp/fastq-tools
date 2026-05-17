@@ -1,11 +1,13 @@
 ---
 title: FastQTools
-description: Entry point for the FASTQ quality control technical white paper in English
+description: English whitepaper homepage for FASTQ adoption review, architecture study, and engineering onboarding
 ---
 
 <SiteHeroPanel locale="en" />
 <EvidenceStrip locale="en" />
-<PillarGrid locale="en" />
-<KnowledgeMap locale="en" />
-<WorkflowPaths locale="en" />
-<ResourceHub locale="en" />
+<CitationStrip locale="en" />
+<SectionLandingGrid locale="en" section="orientation" />
+<SectionLandingGrid locale="en" section="whitepaper" />
+<SectionLandingGrid locale="en" section="academy" />
+<SectionLandingGrid locale="en" section="reference" />
+<SectionLandingGrid locale="en" section="research" />

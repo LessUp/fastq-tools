@@ -1,43 +1,28 @@
-# Benchmark Overview
+# Benchmark Report
 
-FastQTools keeps a compact benchmark summary so users can estimate how the project fits common FASTQ QC workloads without reading raw CI artifacts first.
+This report provides the representative benchmark snapshot currently maintained to support the whitepaper’s performance narrative. It is not a replacement for the full methodology.
+
+## Report purpose
+
+First answer whether the result scale looks relevant to your workload, then decide whether you need to go deeper into scripts, method, or raw artifacts.
 
 ## Representative results
 
-These results are the current maintained snapshot for **100K reads (150 bp)** on an **AMD Ryzen 9 5900X** using a Release build.
+The following results come from the maintained representative scenario: 100K reads, 150 bp, AMD Ryzen 9 5900X, Release build.
 
-| Workload | Representative result | What it represents |
+| Workload | Representative result | Meaning |
 | --- | --- | --- |
-| FASTQ read path | 1696 MB/s | Parsing and ingest throughput |
-| FASTQ write path | 1.76M reads/s | Output-side throughput in the maintained benchmark set |
-| Combined filtering pass | 1.67M reads/s | A realistic QC pass with multiple predicates enabled |
-| Full statistics pass | 302 MB/s | End-to-end metrics collection |
+| FASTQ reading path | 1696 MB/s | Parsing and ingest throughput |
+| FASTQ writing path | 1.76M reads/s | Output-stage throughput |
+| Combined filtering path | 1.67M reads/s | Representative throughput under a multi-predicate QC workflow |
+| Full statistics path | 302 MB/s | End-to-end statistics collection capability |
 
-## How to read these numbers
+## How to read it together with the whitepaper
 
-- They are **representative**, not guaranteed minima or maxima.
-- Actual throughput depends on storage, compression level, thread count, filter mix, and read length distribution.
-- The table is intentionally small: it is meant to answer “is this in the right performance range for my workload?” before you dive into deeper reports.
+- Return to [`Performance`](./) for the evidence framing around these numbers.
+- Read alongside [`Architecture`](../architecture/) to judge whether the results align with the execution model.
+- Continue to the [`Benchmark Guide`](../dev/benchmark-guide) when you need method detail.
 
-## Benchmark workload
+## Method reminder
 
-- **Dataset shape**: synthetic FASTQ data, 100K reads, 150 bp per read
-- **Environment**: Linux on AMD Ryzen 9 5900X
-- **Build profile**: Release
-- **Focus**: routine FASTQ QC tasks, not cross-tool marketing comparisons
-
-## Benchmark artifacts and tooling
-
-- This page is the stable, curated overview for public readers.
-- CI-generated benchmark artifacts may be published under `docs/performance/benchmark-reports/` when available.
-- Benchmark tooling lives in `scripts/tools/performance/` inside the repository.
-
-## When benchmarks matter most
-
-Benchmarks are most useful when you are deciding whether FastQTools is a good fit for:
-
-1. pre-alignment filtering in existing QC pipelines,
-2. repeated batch statistics over many FASTQ files, or
-3. embedding FASTQ processing into a larger C++ application.
-
-If you need command syntax next, go to the [CLI Reference](../guide/cli-reference.md). If you need integration details, go to the [API Overview](../api/overview.md).
+These numbers are maintained representative snapshots, not guaranteed values for every environment. Storage, compression, thread count, predicate combinations, and input distribution can all change the final throughput.

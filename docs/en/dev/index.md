@@ -1,34 +1,22 @@
 # Developer Guide
 
-This guide is intended for contributors who want to develop on the FastQTools project.
+The Developer Guide is for maintainers, contributors, and deep integrators. It no longer answers “what is this project?” It answers “why is it implemented this way, how do I modify it safely, and where do I look when something goes wrong?”
 
-## Table of Contents
+## Maintainer reading path
 
-- [Architecture](architecture.md) - High-level architecture overview
-- [Core Design](design.md) - Core module design decisions
-- [Build Guide](build.md) - Build system and toolchain
-- [Testing](testing.md) - Testing framework and conventions
-- [Coding Standards](coding-standards.md) - C++ coding standards
-- [Local Tooling Strategy](local-tooling.md) - clangd, MCP, and plugin boundaries
-- [Git Workflow](git-guidelines.md) - Branching strategy and commit conventions
-- [Quality Tools](quality-tools.md) - Linting, formatting, and static analysis
-- [Benchmark Guide](benchmark-guide.md) - Performance testing methodology
-- [DevContainer](devcontainer.md) - Containerized development environment
+| Goal | Recommended first stop | Then continue with |
+| --- | --- | --- |
+| Understand system boundaries | [`Developer Architecture`](./architecture) | [`Core Design`](./design) |
+| Set up or adjust local tooling | [`Build Guide`](./build) | [`Testing`](./testing) |
+| Explain performance numbers and evidence | [`Benchmark Guide`](./benchmark-guide) | [`Performance`](../performance/) |
+| Prepare a contribution | [`Contributing`](../contributing) | [`Resources`](../resources/) |
 
-## Quick Start
+## What this layer covers
 
-1. Read the [Architecture](architecture.md) to understand the overall structure
-2. Follow the [Build Guide](build.md) to set up your development environment
-3. Review the [Coding Standards](coding-standards.md) for code style
-4. Refer to the [Testing Strategy](testing.md) for writing tests
+- Explain module layering, the execution model, and key engineering trade-offs.
+- Gather build, test, and benchmark maintenance constraints.
+- Help contributors find the correct facts before changing code.
 
-## Development Workflow
+## Relationship to other layers
 
-```
-1. Sync the current branch → 2. Create a branch if needed → 3. Write code and tests →
-4. Run lint/test → 5. Commit → 6. Push
-```
-
-## Contributing
-
-Please see [CONTRIBUTING.md](https://github.com/LessUp/fastq-tools/blob/master/CONTRIBUTING.md) for how to contribute code.
+If you have not yet built the user-facing workflow context, go back to the [`Guide`](../guide/). If you want external references, history, and evolution context, continue to the [`Research appendix`](../research/).

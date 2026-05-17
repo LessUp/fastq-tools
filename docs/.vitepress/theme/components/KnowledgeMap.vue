@@ -20,7 +20,7 @@ const props = defineProps<{ locale: LocaleKey }>()
 const copy: Record<LocaleKey, Copy> = {
   en: {
     title: 'Knowledge map',
-    intro: 'The homepage routes readers into four stable knowledge domains so evaluation, operations, and implementation material stay easy to find.',
+    intro: 'The reading path routes readers into four stable knowledge domains so evaluation, operations, implementation, and research material stay easy to find.',
     sections: {
       evaluate: {
         title: 'Evaluate the fit',
@@ -46,7 +46,7 @@ const copy: Record<LocaleKey, Copy> = {
   },
   zh: {
     title: '知识地图',
-    intro: '首页把内容整理为四个稳定知识域，方便读者分别处理评估、操作、实现与协作场景。',
+    intro: '新的阅读路径把内容整理为四个稳定知识域，方便读者分别处理评估、操作、实现与研究场景。',
     sections: {
       evaluate: {
         title: '先判断是否适配',

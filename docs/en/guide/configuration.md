@@ -1,122 +1,54 @@
-# Configuration Management
+# Configuration
 
-FastQTools supports controlling runtime behavior through configuration files, environment variables, and command-line parameters. The priority from lowest to highest is:
+The configuration philosophy in FastQTools is simple: keep defaults, environment variables, and command-line parameters on one explicit override chain so users can always tell which setting wins.
 
-**Defaults → Config File → Environment Variables → Command-Line Parameters**
+## Configuration precedence
 
----
+From low to high priority:
 
-## Command Line Parameters
+**defaults → config file / environment injection → environment variables → command-line arguments**
+
+In practical use, that means:
+
+- defaults provide a safe starting point;
+- environment variables provide stable defaults for a given runtime environment;
+- command-line arguments make the final decision for the current task.
+
+## Command-line configuration
+
+The most explicit and most auditable way to control behavior is to place key parameters directly in the command:
 
 ```bash
-# Key-value format
-FastQTools stat --input=reads.fq.gz --output=stats.txt
-
-# Separate format
-FastQTools stat -i reads.fq.gz -o stats.txt
-
-# Short options
-FastQTools stat -i reads.fq.gz -o stats.txt -t 8
+FastQTools stat -i reads.fastq.gz -o stats.txt -t 8
+FastQTools filter -i reads.fastq.gz -o clean.fastq.gz --min-quality 20 --min-length 50
 ```
 
-### Short Option Mapping
+When a script is meant to live for a long time, keep the thresholds that directly affect results on the command line instead of hiding them in environment state.
 
-| Short | Long | Description |
-|-------|------|-------------|
-| `-i` | `--input` | Input file |
-| `-o` | `--output` | Output file |
-| `-t` | `--threads` | Number of threads |
-| `-v` | `--verbose` | Verbose logging |
-| `-q` | `--quiet` | Quiet mode |
+## Environment variable configuration
 
----
-
-## Environment Variables
-
-Environment variables prefixed with `FASTQTOOLS_` are automatically loaded as configuration items (prefix is removed and converted to lowercase):
+When multiple tasks share the same runtime environment, environment variables work well as environment-level defaults:
 
 ```bash
 export FASTQTOOLS_THREADS=8
 export FASTQTOOLS_BATCH_SIZE=100000
-
-FastQTools stat -i input.fastq -o output.txt
-# threads=8, batch_size=100000 are automatically applied
+FastQTools stat -i reads.fastq.gz -o stats.txt
 ```
 
-Command-line parameters can override environment variables:
+If the same command also passes `--threads 16`, the command-line argument should override the environment variable. That matters especially in CI and containerized environments.
 
-```bash
-export FASTQTOOLS_THREADS=8
-FastQTools stat -i input.fastq -o output.txt --threads 16
-# Actually uses threads=16
-```
+## Configuration boundaries for maintainers
 
----
+Maintainers usually need to protect two properties:
 
-## Configuration Validation
+1. **Explainable behavior**: a user should be able to read a command and infer the main runtime parameters.
+2. **Maintainable defaults**: when new options are added, they should not break the override chain or create contradictory defaults across entry points.
 
-`Configuration::validate()` performs the following checks:
+If you are designing new options or tuning entry points, pair this page with [`Developer Architecture`](../dev/architecture) and [`Core Design`](../dev/design) instead of only adjusting CLI wording.
 
-- Required keys (`input`, `output`) exist
-- Value ranges are valid (e.g., `threads` must be between 1–256)
-- Configuration consistency
+## Recommended practices
 
-Validation failures throw `fq::error::ConfigurationError` exception.
-
----
-
-## Build-Time Configuration
-
-### CMake Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `ENABLE_COVERAGE` | Enable code coverage | OFF |
-| `BUILD_BENCHMARKS` | Build benchmarks | OFF |
-| `BUILD_TESTING` | Build unit tests | ON |
-| `CMAKE_BUILD_TYPE` | Build type | Release |
-
-```bash
-cmake -B build -DENABLE_COVERAGE=ON -DBUILD_TESTING=ON
-```
-
-### Conan Dependencies
-
-Dependencies are defined in `config/dependencies/conanfile.py`:
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `cxxopts` | 3.1.1 | Command-line parsing |
-| `spdlog` | 1.17.0 | Logging |
-| `fmt` | 12.1.0 | Formatting |
-| `zlib-ng` | 2.3.2 | gzip compression |
-| `nlohmann_json` | 3.11.3 | JSON processing |
-| `onetbb` | 2022.3.0 | Parallel computing |
-| `libdeflate` | 1.25 | High-performance decompression |
-
----
-
-## Docker Environment Variables
-
-```bash
-# Production environment
-FASTQTOOLS_DATA_DIR=/app/data
-FASTQTOOLS_OUTPUT_DIR=/app/output
-
-# Development environment
-CC=clang
-CXX=clang++
-CONAN_HOME=/home/developer/.conan2
-CCACHE_DIR=/home/developer/.ccache
-```
-
----
-
-## Performance Tuning Recommendations
-
-| Parameter | Description | Recommendation |
-|-----------|-------------|----------------|
-| `threads` | Number of parallel threads | Set to CPU core count |
-| `batchSize` | Number of reads per batch | 10000–100000 |
-| `batchCapacityBytes` | Batch memory limit | Adjust based on available memory |
-| `maxInFlightBatches` | Pipeline concurrent batches | 2× threads |
+- Put result-affecting thresholds on the command line.
+- Put environment-shaped defaults such as thread count and batch size into environment variables.
+- Keep the same naming and precedence rules across containers, CI, and local scripts.
+- In team settings, document which layer owns which choice.

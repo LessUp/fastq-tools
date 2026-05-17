@@ -1,82 +1,43 @@
-# 性能
+# 性能总览
 
-FastQTools 把性能文档放在叙事层，不是为了“营销数字”，而是为了帮助你判断：**这些数字意味着什么、在什么前提下成立、什么时候值得继续追下去。**
+性能章节不只是展示一组数字，而是帮助你判断：这些结果来自哪些架构选择、在什么前提下成立、以及哪些边界会改变结论。
 
-## 先看结论，再决定是否下钻
+## 证据摘要
 
-当前维护中的代表性结果来自 **100K reads / 150 bp / AMD Ryzen 9 5900X / Release 构建**：
+当前白皮书引用的代表性快照来自维护中的标准场景：**100K reads、150 bp、AMD Ryzen 9 5900X、Release 构建**。在这个口径下，读入路径约 **1696 MB/s**、写出路径约 **1.76M reads/s**、组合过滤约 **1.67M reads/s**、完整统计约 **302 MB/s**。这些数字的价值不是“证明永远这么快”，而是说明 FastQTools 已经落在一个对 FASTQ QC 有意义的吞吐量级，并且不同路径的量纲、瓶颈和使用语境是分开的。
 
-- FASTQ 读取路径约 **1696 MB/s**
-- FASTQ 写出路径约 **1.76M reads/s**
-- 组合过滤路径约 **1.67M reads/s**
-- 完整统计路径约 **302 MB/s**
+证据并不只有一张结果表：本页负责解释这些数字为什么可信，[`Benchmark 报告`](./benchmark-report) 提供代表性结果摘要，[`Benchmark 指南`](../dev/benchmark-guide) 说明复现方法，[`RFC-0003`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0003-benchmark-system.md) 与 [`RFC-0006`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0006-benchmark-maintenance-policy.md) 则定义 benchmark 系统和维护边界。
 
-这些数字首先回答的是：**FastQTools 是否处在你预期的 FASTQ QC 吞吐量级上。** 它们不是对所有机器、所有压缩比、所有参数组合的承诺，更不是跨工具“跑分竞赛”的全部答案。
+<DiagramFrame
+  asset="execution-model"
+  caption="执行模型：性能证据需要和执行路径、方法学与维护边界一起理解。"
+/>
 
-进一步的数字与上下文，请看 [`英文 Benchmark 报告`](./benchmark-report)。
+## benchmark 如何解读
 
-## 这页应该如何使用
+建议按 **叙事层 → 结果层 → 方法层 → 规范层** 的顺序阅读：先在本页确认“这些数字想回答什么问题”，再到 [`Benchmark 报告`](./benchmark-report) 看代表性结果，接着去 [`Benchmark 指南`](../dev/benchmark-guide) 检查采样方式、构建模式和脚本入口，最后用 RFC-0003 / RFC-0006 判断这些结果是一次性观察、维护中的快照，还是发布口径下的约束。
 
-### 你在做采用评估时
+不要只盯着原始数字。单看 MB/s 或 reads/s，很容易把读取、过滤、统计这几条路径混成同一个结论，也容易忽略测试输入、线程设置和发布策略。对采用者来说，更重要的问题通常是：结果是否覆盖了和你相近的工作负载、方法是否可复现、架构是否能解释结果、项目是否定义了回归和更新策略。
 
-你的问题通常不是“有没有 benchmark”，而是：
+## 风险边界
 
-- benchmark 是否覆盖了与我相似的工作负载；
-- 数字是否来自可复现的方法，而不是一次偶然跑分；
-- 架构设计是否真的足以解释这些结果；
-- 当结果变化时，项目有没有维护策略，而不是只保留过时截图。
+公开结果是**代表性样本**，不是普适常数。至少要注意这些边界条件：
 
-因此，这一页把性能证据拆成四层：
+- **压缩比例与编解码成本**：gzip 压缩级别、输入可压缩性不同，会直接改变读写阶段的 CPU 开销。
+- **存储 I/O**：NVMe、网络盘、容器卷或共享文件系统的吞吐差异，可能让 benchmark 更像磁盘测试而不是解析测试。
+- **线程数与并发参数**：单线程结果和多线程流水线结果不能直接类比；线程过多也可能引入争用、调度噪声和 NUMA 影响。
+- **输入分布**：read 长度、质量分布、过滤谓词组合、通过率高低都会改变处理路径的热点。
+- **机器拓扑**：CPU 微架构、缓存层级、内存带宽、SMT/超线程和容器限制，都会影响“同一套代码”最终跑出的曲线。
 
-| 证据层 | 作用 | 去哪里看 |
-| --- | --- | --- |
-| 叙事层 | 判断数字是否值得继续追问 | 当前页面 |
-| 结果层 | 看代表性指标与结果摘要 | [`英文 Benchmark 报告`](./benchmark-report) |
-| 方法层 | 看 benchmark 如何运行、如何产出报告 | [`Benchmark 指南`](../dev/benchmark-guide) |
-| 规范层 | 看长期维护、阈值与 SLA 如何定义 | [`RFC-0003`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0003-benchmark-system.md)、[`RFC-0006`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0006-benchmark-maintenance-policy.md) |
+因此，页面里的数值更适合回答“是否值得继续评估”，而不是替你的生产环境做容量承诺。真正要做迁移或 SLA 判断时，应当回到项目提供的方法学与维护政策自行复现。
 
-## 为什么这些结果在架构上说得通
+## 推荐阅读顺序
 
-FastQTools 的性能主张并不是孤立数字，而是和它的实现路线绑定的：
+1. 先看本页理解证据框架
+2. 再读 [`Benchmark 报告`](./benchmark-report)
+3. 需要复现方法时再看 [`Benchmark 指南`](../dev/benchmark-guide)
+4. 需要核对长期维护口径时，看 [`RFC-0003`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0003-benchmark-system.md) / [`RFC-0006`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0006-benchmark-maintenance-policy.md)
 
-- **零拷贝批处理模型** 减少了解析阶段的字符串复制；
-- **oneTBB 并行流水线** 让处理阶段更容易吃满多核；
-- **有界资源模型** 让高吞吐与可控内存占用可以同时讨论；
-- **统一脚本入口与 benchmark 维护策略** 降低“本地快、CI 慢、文档过时”的解释成本。
+## 回到白皮书主线
 
-如果你想先理解这些性能理由，再看 benchmark 数字，建议先去 [`架构`](../architecture/)。如果你反过来已经先被数字吸引，再回看架构，也完全合理。
-
-## 不要过度解读的地方
-
-FastQTools 的 benchmark 页面刻意强调“代表性结果”，就是为了避免几种常见误用：
-
-1. **把单一硬件结果误当成所有环境 SLA**；
-2. **把统计路径与过滤路径混成同一指标**；
-3. **忽略存储、压缩、线程、数据分布对吞吐的影响**；
-4. **把它当成跨工具营销表，而不是决策参考。**
-
-如果你的问题是“我的环境能不能复现实测结果”，请直接进入：
-
-- [`Benchmark 指南`](../dev/benchmark-guide)
-- [`RFC-0006: Benchmark Maintenance and Release Policy`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0006-benchmark-maintenance-policy.md)
-
-## 典型阅读路径
-
-### 场景 A：我要判断是否值得试用
-
-[`为什么选择 FastQTools`](../why-fastqtools/) → [`性能总览`](./) → [`快速开始`](../guide/getting-started)
-
-### 场景 B：我要验证某个吞吐主张
-
-[`英文 Benchmark 报告`](./benchmark-report) → [`Benchmark 指南`](../dev/benchmark-guide) → [`RFC-0003: Benchmark System`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0003-benchmark-system.md)
-
-### 场景 C：我要理解性能是否来自靠谱的架构
-
-[`架构`](../architecture/) → [`开发者架构设计`](../dev/architecture) → [`核心设计`](../dev/design)
-
-## 下一步
-
-- 想先回到定位问题：[`为什么选择 FastQTools`](../why-fastqtools/)
-- 想理解结构原因：[`架构`](../architecture/)
-- 想找实操或接口文档：[`参考导航`](../reference/)
-- 想看项目内外部延伸资料：[`资源中心`](../resources/)
+如果你还没建立系统结构心智模型，先回到 [`架构`](../architecture/)；如果你已经准备行动，继续到 [`工作流`](../workflows/) 或 [`参考导航`](../reference/)。

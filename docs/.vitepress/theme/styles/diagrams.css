@@ -1,0 +1,48 @@
+:root {
+  --fq-diagram-bg: var(--fq-c-surface);
+  --fq-diagram-stroke: var(--fq-c-border-strong);
+  --fq-diagram-text: var(--fq-c-text-main);
+}
+
+.dark {
+  --fq-diagram-bg: var(--fq-c-surface-alt);
+  --fq-diagram-stroke: var(--vp-c-brand-2);
+  --fq-diagram-text: var(--fq-c-text-main);
+}
+
+.diagram-frame {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid var(--fq-diagram-stroke);
+  border-radius: 1rem;
+  background: var(--fq-diagram-bg);
+  color: var(--fq-diagram-text);
+  overflow-x: auto;
+}
+
+.diagram-frame :where(img, object, svg) {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.diagram-frame figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--fq-diagram-text);
+}
+
+.diagram-frame svg {
+  color: var(--fq-diagram-stroke);
+}
+
+.mermaid {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.mermaid svg {
+  color: var(--fq-diagram-stroke);
+}

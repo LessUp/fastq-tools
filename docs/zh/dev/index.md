@@ -1,34 +1,22 @@
-# 开发者指南
+# 开发者文档
 
-本指南面向希望在 FastQTools 项目上进行开发的贡献者。
+开发者文档面向维护者、贡献者与深度集成者。它不再回答“项目是什么”，而是回答“为什么这样实现、怎样安全修改、出了问题去哪里看”。
 
-## 目录
+## 维护者阅读路径
 
-- [架构设计](architecture.md) - 高层架构概览
-- [核心设计](design.md) - 核心模块设计决策
-- [构建指南](build.md) - 构建系统和工具链
-- [测试策略](testing.md) - 测试框架和约定
-- [编码规范](coding-standards.md) - C++ 编码标准
-- [本地工具策略](local-tooling.md) - clangd、MCP 与插件边界
-- [Git 工作流](git-guidelines.md) - 分支策略和提交约定
-- [代码质量工具](quality-tools.md) - Linting、格式化和静态分析
-- [Benchmark 指南](benchmark-guide.md) - 性能测试方法
-- [DevContainer](devcontainer.md) - 容器化开发环境
+| 目标 | 建议第一站 | 再继续阅读 |
+| --- | --- | --- |
+| 理解系统边界 | [`架构设计`](./architecture) | [`核心设计`](./design) |
+| 搭建或调整本地工具链 | [`构建指南`](./build) | [`测试策略`](./testing) |
+| 解释性能数字与证据 | [`Benchmark 指南`](./benchmark-guide) | [`性能总览`](../performance/) |
+| 准备贡献补丁 | [`参与贡献`](../contributing) | [`资源中心`](../resources/) |
 
-## 快速开始
+## 这一层的工作内容
 
-1. 阅读 [架构设计](architecture.md) 了解整体结构
-2. 按照 [构建指南](build.md) 设置开发环境
-3. 查看 [编码规范](coding-standards.md) 了解代码风格
-4. 参考 [测试策略](testing.md) 编写测试
+- 解释模块分层、执行模型与关键工程权衡；
+- 汇总构建、测试、benchmark 相关的维护约束；
+- 帮助贡献者在修改代码前找到正确的事实来源。
 
-## 开发流程
+## 与其他层的关系
 
-```
-1. 同步当前代码 → 2. 按需新建分支 → 3. 编写代码和测试 →
-4. 运行 lint/test → 5. 提交 commit → 6. 直接推送
-```
-
-## 贡献
-
-请参阅 [CONTRIBUTING.md](https://github.com/LessUp/fastq-tools/blob/master/CONTRIBUTING.md) 了解如何贡献代码。
+如果你还没有建立用户侧工作流上下文，请先回到[`学习指南`](../guide/)；如果你希望追溯外部资料、历史迁移与参考文献，请继续进入[`研究附录`](../research/)。

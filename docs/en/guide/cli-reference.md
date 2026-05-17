@@ -1,190 +1,88 @@
 # CLI Reference
 
-FastQTools provides two subcommands — `stat` and `filter` — for FASTQ file statistical analysis and quality filtering.
+FastQTools exposes only a small set of core CLI concepts: global logging options, the `stat` subcommand, and the `filter` subcommand. The interface stays intentionally narrow so the command line remains scriptable, reproducible, and maintainable as the external boundary.
 
----
-
-## Basic Syntax
+## Command structure
 
 ```bash
 FastQTools [global options] <subcommand> [subcommand options]
 ```
 
-> Global options must be placed before the subcommand.
-
----
-
-## Global Options
-
-| Option | Description |
-|--------|-------------|
-| `-v, --verbose` | Enable debug logging (equivalent to `--log-level=debug`) |
-| `-q, --quiet` | Errors only (equivalent to `--log-level=error`) |
-| `--log-level=LEVEL` | Set log level: `trace`, `debug`, `info`, `warn`, `error` |
-| `--help` | Show help message |
-
-Default log level is `info`.
-
----
-
-## stat Command — Statistical Analysis
-
-Performs comprehensive quality statistics on FASTQ files.
-
-### Usage
+One important rule is that **global options come before the subcommand**. If you need to adjust the log level, write it like this:
 
 ```bash
-FastQTools stat -i <input> -o <output> [options]
+FastQTools --log-level debug stat -i reads.fastq.gz -o stats.txt
 ```
 
-### Options
+## Global options
 
-| Option | Description |
-|--------|-------------|
-| `-i, --input <path>` | Input FASTQ file (supports `.gz` compression) |
-| `-o, --output <path>` | Output statistics file |
-| `-t, --threads <N>` | Number of threads (default `1`) |
-| `--batch-size <N>` | Number of reads per batch |
-| `--execution-backend oneTbb` | Explicit execution backend selection |
-| `--memory-policy objectPool` | Explicit memory resource policy |
-| `--allocation-telemetry` | Emit memory policy and resolved in-flight metadata |
-| `--signature-report <path>` | Write an optional signature sidecar (TSV) |
-| `--signature-kmer-size <N>` | Head-kmer size used in the sidecar |
-| `--signature-limit <N>` | Maximum number of signature rows in the sidecar |
-| `--duplicate-sample-modulo <N>` | Sampling modulo for duplicate estimation; default `1024`, and `1` is useful for exact tests |
+| Option | Purpose | Typical use |
+| --- | --- | --- |
+| `-v`, `--verbose` | Increase log detail | Troubleshooting and local validation |
+| `-q`, `--quiet` | Keep only error output | Batch jobs and CI |
+| `--log-level <level>` | Set the log level explicitly | Stable automation and scripting |
+| `--help` | Show help output | First use and parameter confirmation |
 
-### Output Metrics
+## `stat`: statistics and evidence building
 
-- **Read statistics**: Total reads, max read length, and total bases
-- **Quality analysis**: Q20/Q30 base percentages
-- **Base composition**: A/T/C/G/N ratios
-- **GC content**: Overall and position-specific
-- **Per-position table**: Base counts, average quality, and estimated error rate for each cycle
-- **Lightweight sidecar**: Optional duplicate estimate and top head-kmer signatures
-
-### Examples
+`stat` does not modify the input. Its job is to interpret the data as comparable, traceable quality evidence.
 
 ```bash
-# Basic statistics
-FastQTools stat -i reads.fq.gz -o analysis.txt
-
-# Multi-threaded processing
-FastQTools stat -i reads.fq.gz -o analysis.txt -t 8
-
-# Emit a signature sidecar
-FastQTools stat -i reads.fq.gz -o analysis.txt \
-  --signature-report signatures.tsv --signature-kmer-size 15
-
-# Debug mode
-FastQTools -v stat -i reads.fq.gz -o analysis.txt
+FastQTools stat -i reads.fastq.gz -o stats.txt
+FastQTools stat -i reads.fastq.gz -o stats.txt -t 8
+FastQTools stat -i reads.fastq.gz -o stats.txt \
+    --signature-report signatures.tsv \
+    --signature-kmer-size 15
 ```
 
----
+You would typically call it when you want to:
 
-## filter Command — Filtering & Trimming
+- inspect read length, GC, Q20/Q30, and quality distribution quickly;
+- establish a baseline before filtering instead of tuning by guesswork;
+- leave behind an auditable statistics output inside an automated workflow.
 
-Clean, filter, and quality-trim raw sequencing data.
+## `filter`: filtering, trimming, and preprocessing
 
-### Usage
+`filter` turns policy into actual output. Its options are easiest to think about in three groups:
+
+| Parameter group | Representative options | Meaning |
+| --- | --- | --- |
+| Input / output | `-i`, `-o`, `-t` | Select files and concurrency |
+| Filtering rules | `--min-quality`, `--min-length`, `--max-n-ratio` | Define which reads are kept |
+| Trimming rules | `--trim-quality`, `--trim-mode`, `--adapter-seq`, `--trim-poly-g`, `--trim-poly-x` | Define how retained reads are changed |
+
+Example:
 
 ```bash
-FastQTools filter -i <input> -o <output> [options]
+FastQTools filter -i reads.fastq.gz -o clean.fastq.gz \
+    --min-quality 20 \
+    --min-length 50 \
+    --max-n-ratio 0.1 \
+    --trim-quality 20 \
+    --trim-mode both
 ```
 
-### Filter Options
+## Recommended workflow fragments
 
-| Option | Description |
-|--------|-------------|
-| `-i, --input <path>` | Input FASTQ file (supports `.gz`) |
-| `-o, --output <path>` | Output FASTQ file (`.gz` suffix auto-compresses) |
-| `-t, --threads <N>` | Number of threads |
-| `--min-quality <float>` | Minimum average quality threshold |
-| `--min-length <int>` | Minimum read length |
-| `--max-length <int>` | Maximum read length |
-| `--max-n-ratio <0.0-1.0>` | Maximum N-base ratio |
-
-### Trimming Options
-
-| Option | Description |
-|--------|-------------|
-| `--trim-quality <float>` | Quality trimming threshold |
-| `--trim-mode <mode>` | Trimming mode: `both` (both ends), `five` (5' end), `three` (3' end) |
-| `--adapter-seq <seq>` | 3' adapter sequence, repeatable |
-| `--adapter-min-overlap <N>` | Minimum overlap for adapter trimming |
-| `--adapter-max-mismatches <N>` | Maximum mismatches allowed for adapter trimming |
-| `--trim-poly-g <N>` | Trim polyG tails with run length >= `N` |
-| `--trim-poly-x <N>` | Trim low-complexity polyX tails with run length >= `N` |
-
-### Runtime Options
-
-| Option | Description |
-|--------|-------------|
-| `--execution-backend oneTbb` | Explicit execution backend selection |
-| `--memory-policy objectPool` | Explicit memory resource policy |
-| `--allocation-telemetry` | Include resolved memory telemetry in processing stats |
-
-### Examples
+### Look at statistics before deciding on filtering
 
 ```bash
-# Quality filtering
-FastQTools filter -i input.fq.gz -o filtered.fq.gz \
-  --min-quality 20 --min-length 50
-
-# Quality trimming (remove low-quality bases from 3' end)
-FastQTools filter -i input.fq.gz -o trimmed.fq.gz \
-  --trim-quality 20 --trim-mode three
-
-# Combined filtering + trimming
-FastQTools filter -i input.fq.gz -o clean.fq.gz \
-  --min-quality 20 --min-length 50 --max-n-ratio 0.1 \
-  --trim-quality 20 --trim-mode both
-
-# Adapter + poly-tail preprocessing
-FastQTools filter -i input.fq.gz -o clean.fq.gz \
-  --adapter-seq AGATCGGAAGAGC --adapter-min-overlap 6 \
-  --trim-poly-g 8 --trim-poly-x 8
-
-# Quiet mode
-FastQTools -q filter -i input.fq.gz -o filtered.fq.gz --min-quality 20
+FastQTools stat -i reads.fastq.gz -o stats.txt
+FastQTools filter -i reads.fastq.gz -o clean.fastq.gz --min-quality 20 --min-length 50
 ```
 
----
+### Let automation own log control
 
-## Exit Codes
-
-| Exit Code | Meaning |
-|-----------|---------|
-| `0` | Success |
-| Non-`0` | Error (unknown subcommand, argument error, runtime exception, etc.) |
-
----
-
-## C++ API Integration
-
-FastQTools can also be used as a C++ library:
-
-```cpp
-#include <fqtools/fq.h>
-
-// Statistical analysis
-fq::statistic::StatisticOptions options;
-options.inputFastqPath = "input.fastq.gz";
-options.outputStatPath = "output.stat.txt";
-options.signatureReportPath = "output.signatures.tsv";
-auto calculator = fq::statistic::createStatisticCalculator(options);
-calculator->run();
-
-// Filtering
-auto pipeline = fq::processing::createProcessingPipeline();
-pipeline->setInputPath("input.fq.gz");
-pipeline->setOutputPath("filtered.fq.gz");
-
-fq::processing::ProcessingConfig config;
-config.threadCount = 4;
-config.executionBackend = fq::processing::ExecutionBackend::OneTbb;
-pipeline->setProcessingConfig(config);
-
-auto stats = pipeline->run();
+```bash
+FastQTools --log-level error filter -i reads.fastq.gz -o clean.fastq.gz --min-quality 20
 ```
 
-See [API Reference](../api/overview.md) for full API documentation.
+### Keep sidecar evidence
+
+```bash
+FastQTools stat -i reads.fastq.gz -o stats.txt --signature-report signatures.tsv
+```
+
+## Relationship between CLI and API
+
+The CLI is the most direct engineering interface the project exposes. If you need to embed the capability into a C++ application instead of invoking it through the shell, continue to [`API Overview`](../api/overview) and [`Developer Architecture`](../dev/architecture).

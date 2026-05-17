@@ -1,97 +1,37 @@
 # Build Guide
 
-## System Requirements
+The build system exists to keep local development, CI verification, and performance testing on the same set of entry points so individual contributors do not drift into incompatible command habits.
 
-- **Compiler**: GCC 11+ or Clang 12+; the repo keeps GCC 15 / Clang 21 as preferred profiles, but local builds use the actually installed toolchain
-- **CMake**: 3.28+
-- **Version Specification**: See `openspec/baseline/architecture/0002-toolchain-policy.md`
-- **Parallel Library**: Intel oneTBB (required, pipeline implementation depends on it)
-- **Compression Path**: maintained compressed I/O is centered on gzip, backed by zlib and libdeflate
-- **Memory**: Recommended 4GB+ RAM
-- **Storage**: 1GB+ available space
+## Recommended entry points
 
-## Quick Build
+Use `scripts/core/*` from the repository root:
 
 ```bash
-# One-command build (Clang + Release)
 ./scripts/core/build
-
-# Specify compiler and configuration
+./scripts/core/build --dev
 ./scripts/core/build --compiler gcc --type Debug
-
-# Enable sanitizers
-./scripts/core/build --sanitizer asan --dev
+./scripts/core/build --sanitizer asan
 ```
 
-## Dependency Management
+These scripts coordinate Conan, CMake presets, and the default build directories so maintainers do not need to remember low-level environment detail for routine work.
 
-```bash
-# Install dependencies (first-time setup)
-./scripts/core/install-deps
+## Common build scenarios
 
-# Rebuild (recommended: use script to manage build directory)
-./scripts/core/build
-```
+| Scenario | Recommended command | Meaning |
+| --- | --- | --- |
+| Daily validation | `./scripts/core/build --dev` | Produces a build better suited for debugging |
+| Pre-release check | `./scripts/core/build` | Default Release build |
+| Sanitizer debugging | `./scripts/core/build --sanitizer asan` | Helps locate memory and undefined-behavior issues |
+| Coverage work | `./scripts/core/build --coverage` | Pairs with the test scripts for coverage data |
 
-> Note: Early experiments with `mimalloc` as an allocator have been completed, but the build and runtime no longer depend on it—all configuration files have removed related requirements.
+## Directories and artifacts
 
-## Code Quality
+The default build directories follow `build/<preset>`, for example `build/clang-debug` and `build/clang-release`. Maintenance scripts, CI, and docs should reuse that convention instead of assuming custom paths.
 
-```bash
-# Format code
-./scripts/core/lint format
+## When to drop lower
 
-# Check formatting
-./scripts/core/lint check
+Only hand-write `conan install`, `cmake --preset`, or target-level build commands when debugging Conan, presets, or a specific target. Day-to-day work should prefer the script entry points because they are part of the repository’s standard workflow.
 
-# Static analysis
-./scripts/core/lint tidy
-```
+## What to do after a build
 
-## Testing
-
-```bash
-# Run tests
-./scripts/core/test
-
-# Coverage testing
-./scripts/core/build --coverage --dev
-./scripts/core/test --coverage
-```
-
-## Tools and Debugging
-
-### Sanitizers (Memory and Runtime Checks)
-
-FastQTools supports multiple LLVM/GCC Sanitizers for detecting memory errors and undefined behavior:
-
-- **AddressSanitizer (ASan)**: Detects memory leaks, buffer overflows, use-after-free, etc.
-- **UndefinedBehaviorSanitizer (USan)**: Detects integer overflow, invalid type conversions, null pointer dereferences, etc.
-- **ThreadSanitizer (TSan)**: Detects multi-thread data races.
-
-Usage:
-
-```bash
-# Enable ASan (recommended in Debug mode)
-./scripts/core/build --sanitizer asan --dev
-
-# Enable TSan (note: TSan cannot be used with ASan simultaneously)
-./scripts/core/build --sanitizer tsan --dev
-
-# Enable UBSan
-./scripts/core/build --sanitizer ubsan --dev
-```
-
-When running compiled programs (e.g., unit tests), Sanitizers automatically output error reports and terminate when issues are detected.
-
-### Static Analysis
-
-The project integrates `clang-tidy` for static code checking:
-
-```bash
-# Run clang-tidy static analysis
-./scripts/core/lint tidy
-
-# Run all checks (format + tidy + cppcheck)
-./scripts/core/lint all
-```
+A successful build only proves the code compiles. If the change affects behavior, continue with the relevant verification from [`Testing`](./testing). If it affects the performance narrative, review the [`Benchmark Guide`](./benchmark-guide) too.
