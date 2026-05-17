@@ -2,51 +2,74 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
-const zhHome = readFileSync(new URL('../zh/index.md', import.meta.url), 'utf8')
-const enHome = readFileSync(new URL('../en/index.md', import.meta.url), 'utf8')
-const heroSource = readFileSync(new URL('../.vitepress/theme/components/SiteHeroPanel.vue', import.meta.url), 'utf8')
+const readUtf8 = (relativePath) => readFileSync(new URL(relativePath, import.meta.url), 'utf8')
+
+const zhHome = readUtf8('../zh/index.md')
+const enHome = readUtf8('../en/index.md')
+const themeSource = readUtf8('../.vitepress/theme/index.ts')
 
 const homepageContracts = [
   {
     locale: 'zh',
     source: zhHome,
     expectedMarkup: [
-      '<SiteHeroPanel locale="zh" />',
-      '<EvidenceStrip locale="zh" />',
-      '<CitationStrip locale="zh" />',
-      '<SectionLandingGrid locale="zh" section="orientation" />',
-      '<SectionLandingGrid locale="zh" section="whitepaper" />',
-      '<SectionLandingGrid locale="zh" section="academy" />',
-      '<SectionLandingGrid locale="zh" section="reference" />',
-      '<SectionLandingGrid locale="zh" section="research" />',
+      '<WhitepaperHero locale="zh" />',
+      '<SystemSnapshot locale="zh" />',
+      '<AlgorithmPillars locale="zh" />',
+      '<EvidenceOverview locale="zh" />',
+      '<ReadingTracks locale="zh" />',
+      '<ResearchRail locale="zh" />',
     ],
   },
   {
     locale: 'en',
     source: enHome,
     expectedMarkup: [
-      '<SiteHeroPanel locale="en" />',
-      '<EvidenceStrip locale="en" />',
-      '<CitationStrip locale="en" />',
-      '<SectionLandingGrid locale="en" section="orientation" />',
-      '<SectionLandingGrid locale="en" section="whitepaper" />',
-      '<SectionLandingGrid locale="en" section="academy" />',
-      '<SectionLandingGrid locale="en" section="reference" />',
-      '<SectionLandingGrid locale="en" section="research" />',
+      '<WhitepaperHero locale="en" />',
+      '<SystemSnapshot locale="en" />',
+      '<AlgorithmPillars locale="en" />',
+      '<EvidenceOverview locale="en" />',
+      '<ReadingTracks locale="en" />',
+      '<ResearchRail locale="en" />',
     ],
   },
 ]
 
-test('homepages reference the new narrative components', () => {
+test('homepages use the new research-grade component stack', () => {
   for (const { locale, source, expectedMarkup } of homepageContracts) {
     for (const markup of expectedMarkup) {
-      assert.match(source, new RegExp(markup.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), `${locale} homepage should include ${markup}`)
+      assert.match(
+        source,
+        new RegExp(markup.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
+        `${locale} homepage should include ${markup}`,
+      )
     }
   }
 })
 
-test('hero copy speaks in whitepaper language', () => {
-  assert.match(heroSource, /technical whitepaper|技术白皮书/)
-  assert.match(heroSource, /orientation|导读/)
-  assert.match(heroSource, /research|研究/)
+test('theme registers the rebuilt homepage components', () => {
+  for (const componentName of [
+    'WhitepaperHero',
+    'SystemSnapshot',
+    'AlgorithmPillars',
+    'EvidenceOverview',
+    'ReadingTracks',
+    'ResearchRail',
+    'SystemArchitectureDiagram',
+  ]) {
+    assert.match(
+      themeSource,
+      new RegExp(`component\\(['"]${componentName}['"]`),
+      `theme should register ${componentName}`,
+    )
+  }
+})
+
+test('system architecture diagram is an inline theme-aware svg', () => {
+  assert.doesNotThrow(() => readUtf8('../.vitepress/theme/components/SystemArchitectureDiagram.vue'))
+  const diagramSource = readUtf8('../.vitepress/theme/components/SystemArchitectureDiagram.vue')
+
+  assert.match(diagramSource, /<svg[\s\S]*viewBox=/)
+  assert.match(diagramSource, /--fq-home-diagram-(?:surface|accent|signal|stroke|text)/)
+  assert.doesNotMatch(diagramSource, /#0[0-9a-f]{2,7}/i)
 })

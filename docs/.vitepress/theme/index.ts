@@ -10,6 +10,13 @@ import ResourceHub from './components/ResourceHub.vue'
 import CitationStrip from './components/CitationStrip.vue'
 import DiagramFrame from './components/DiagramFrame.vue'
 import SectionLandingGrid from './components/SectionLandingGrid.vue'
+import WhitepaperHero from './components/WhitepaperHero.vue'
+import SystemSnapshot from './components/SystemSnapshot.vue'
+import AlgorithmPillars from './components/AlgorithmPillars.vue'
+import EvidenceOverview from './components/EvidenceOverview.vue'
+import ReadingTracks from './components/ReadingTracks.vue'
+import ResearchRail from './components/ResearchRail.vue'
+import SystemArchitectureDiagram from './components/SystemArchitectureDiagram.vue'
 import { referenceCatalog } from './content/references'
 import { themeFoundation } from './content/siteContent'
 import './style.css'
@@ -117,6 +124,13 @@ const theme: Theme = {
     ctx.app.component('CitationStrip', CitationStrip)
     ctx.app.component('DiagramFrame', DiagramFrame)
     ctx.app.component('SectionLandingGrid', SectionLandingGrid)
+    ctx.app.component('WhitepaperHero', WhitepaperHero)
+    ctx.app.component('SystemSnapshot', SystemSnapshot)
+    ctx.app.component('AlgorithmPillars', AlgorithmPillars)
+    ctx.app.component('EvidenceOverview', EvidenceOverview)
+    ctx.app.component('ReadingTracks', ReadingTracks)
+    ctx.app.component('ResearchRail', ResearchRail)
+    ctx.app.component('SystemArchitectureDiagram', SystemArchitectureDiagram)
     ctx.app.provide(THEME_FOUNDATION_KEY, themeFoundation)
     ctx.app.provide(REFERENCE_CATALOG_KEY, referenceCatalog)
 
