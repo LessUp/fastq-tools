@@ -166,7 +166,7 @@ export const themeFoundation = {
       },
     },
     algorithms: {
-      path: 'academy/',
+      path: 'algorithms/',
       aliases: ['workflows/'],
       summary: {
         zh: '面向流程、算法与执行路径的学习入口。',

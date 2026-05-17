@@ -91,8 +91,8 @@ const copy: Record<LocaleKey, Record<SectionKey, SectionCopy>> = {
       eyebrow: 'Academy',
       title: 'Use guided learning paths before diving into full manuals.',
       summary: 'Academy translates the narrative into action: onboarding, repeatable workflows, and the shortest route to execution-focused docs.',
-      hubLinkId: 'academyNav',
-      hubLinkLabel: 'Open academy',
+      hubLinkId: 'algorithms',
+      hubLinkLabel: 'Open algorithms',
       cards: [
         {
           tag: 'Path',
@@ -243,8 +243,8 @@ const copy: Record<LocaleKey, Record<SectionKey, SectionCopy>> = {
       eyebrow: '学院',
       title: '先走学习路径，再进入完整手册。',
       summary: '学院层把叙事转成行动：如何上手、如何形成可重复工作流、以及何时进入执行细节文档。',
-      hubLinkId: 'academyNav',
-      hubLinkLabel: '进入学院',
+      hubLinkId: 'algorithms',
+      hubLinkLabel: '进入算法',
       cards: [
         {
           tag: '路径',

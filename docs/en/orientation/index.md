@@ -1,6 +1,6 @@
 ---
 title: Orientation
-description: Build the reading frame first, then move into the FastQTools whitepaper, academy, and reference materials.
+description: Build the reading frame first, then move into the FastQTools whitepaper, algorithms, and reference materials.
 layout: doc
 ---
 
@@ -16,7 +16,7 @@ FastQTools is an engineering-focused toolkit for the FASTQ QC core, not a workfl
 
 1. Start with [`Why FastQTools`](../why-fastqtools/)
 2. Continue to [`Whitepaper`](../whitepaper/)
-3. Move into [`Academy`](../academy/) and [`Reference`](../reference/)
+3. Move into [`Algorithms`](../algorithms/) and [`Reference`](../reference/)
 
 ## Terms
 

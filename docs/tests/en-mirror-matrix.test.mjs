@@ -6,7 +6,7 @@ test('english mirror pages expose the approved section skeletons', () => {
   const pages = {
     'en/orientation/index.md': ['# Orientation', '## Reading path', '## Terms'],
     'en/whitepaper/index.md': ['# Whitepaper', '## System overview', '## Reading path'],
-    'en/academy/index.md': ['# Academy', '## Learning tracks'],
+    'en/algorithms/index.md': ['# Algorithms', '## Filtering pipeline'],
     'en/research/index.md': ['# Research appendix', '## References', '## Design evolution'],
   }
 

@@ -1,6 +1,6 @@
 ---
 title: 导读
-description: 先建立阅读框架，再进入 FastQTools 的白皮书、学院与参考材料。
+description: 先建立阅读框架，再进入 FastQTools 的白皮书、算法与参考材料。
 layout: doc
 ---
 
@@ -16,7 +16,7 @@ FastQTools 是一个面向 FASTQ 质控核心环节的工程化工具包，而�
 
 1. 先读 [`为什么选择 FastQTools`](../why-fastqtools/)
 2. 再读 [`技术白皮书`](../whitepaper/)
-3. 最后按角色进入 [`学院`](../academy/) 与 [`参考导航`](../reference/)
+3. 最后按角色进入 [`算法`](../algorithms/) 与 [`参考导航`](../reference/)
 
 ## 术语表
 

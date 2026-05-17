@@ -27,10 +27,6 @@ const sharedLinks = {
     path: 'whitepaper/',
     labels: { zh: localeText.zh.nav.whitepaper, en: localeText.en.nav.whitepaper },
   },
-  academyNav: {
-    path: 'academy/',
-    labels: { zh: localeText.zh.nav.academy, en: localeText.en.nav.academy },
-  },
   referenceNav: {
     path: 'reference/',
     labels: { zh: localeText.zh.nav.reference, en: localeText.en.nav.reference },
@@ -206,17 +202,13 @@ export const architectureSidebarGroups = [
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const algorithmsSidebarGroups = [
-  { headingKey: 'algorithmsHub', items: ['algorithms', 'academyNav', 'workflows'] },
+  { headingKey: 'algorithmsHub', items: ['algorithms', 'workflows'] },
   { headingKey: 'operatorRoutes', items: ['gettingStarted', 'cliReference', 'performance', 'referenceNav'] },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const performanceSidebarGroups = [
   { headingKey: 'performanceHub', items: ['performance', 'benchmarkReport'] },
   { headingKey: 'evidenceTrail', items: ['whitepaper', 'architecture', 'researchNav'] },
-] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
-
-export const academySidebarGroups = [
-  { headingKey: 'academyHub', items: ['academyNav', 'algorithms', 'workflows', 'referenceNav'] },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const referenceSidebarGroups = [

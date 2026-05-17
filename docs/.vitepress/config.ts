@@ -4,7 +4,6 @@ import llmstxt from 'vitepress-plugin-llms'
 import {
   algorithmsSidebarGroups,
   architectureSidebarGroups,
-  academySidebarGroups,
   getSharedLink,
   localeText,
   orientationSidebarGroups,
@@ -28,8 +27,7 @@ const localeSidebarRoutes = {
     orientation: '/zh/orientation/',
     whitepaper: '/zh/whitepaper/',
     architecture: '/zh/architecture/',
-    algorithms: '/zh/academy/',
-    academy: '/zh/academy/',
+    algorithms: '/zh/algorithms/',
     performance: '/zh/performance/',
     reference: '/zh/reference/',
     research: '/zh/research/',
@@ -38,13 +36,12 @@ const localeSidebarRoutes = {
     orientation: '/en/orientation/',
     whitepaper: '/en/whitepaper/',
     architecture: '/en/architecture/',
-    algorithms: '/en/academy/',
-    academy: '/en/academy/',
+    algorithms: '/en/algorithms/',
     performance: '/en/performance/',
     reference: '/en/reference/',
     research: '/en/research/',
   },
-} as const satisfies Record<LocaleKey, Record<'orientation' | 'whitepaper' | 'architecture' | 'algorithms' | 'academy' | 'performance' | 'reference' | 'research', string>>
+} as const satisfies Record<LocaleKey, Record<'orientation' | 'whitepaper' | 'architecture' | 'algorithms' | 'performance' | 'reference' | 'research', string>>
 
 const createSidebar = (
   locale: LocaleKey,
@@ -58,7 +55,6 @@ const createOrientationSidebar = (locale: LocaleKey) => createSidebar(locale, or
 const createWhitepaperSidebar = (locale: LocaleKey) => createSidebar(locale, whitepaperSidebarGroups)
 const createArchitectureSidebar = (locale: LocaleKey) => createSidebar(locale, architectureSidebarGroups)
 const createAlgorithmsSidebar = (locale: LocaleKey) => createSidebar(locale, algorithmsSidebarGroups)
-const createAcademySidebar = (locale: LocaleKey) => createSidebar(locale, academySidebarGroups)
 const createPerformanceSidebar = (locale: LocaleKey) => createSidebar(locale, performanceSidebarGroups)
 const createReferenceSidebar = (locale: LocaleKey) => createSidebar(locale, referenceSidebarGroups)
 const createResearchSidebar = (locale: LocaleKey) => createSidebar(locale, researchSidebarGroups)
@@ -66,7 +62,7 @@ const createResearchSidebar = (locale: LocaleKey) => createSidebar(locale, resea
 const createTopNavActiveMatches = (locale: LocaleKey) => ({
   whitepaper: `^/${locale}/(whitepaper|orientation|why-fastqtools)(/|$)`,
   architecture: `^/${locale}/(architecture|knowledge-map)(/|$)`,
-  algorithms: `^/${locale}/(academy|workflows)(/|$)`,
+  algorithms: `^/${locale}/(algorithms|workflows)(/|$)`,
   performance: `^/${locale}/performance(/|$)`,
   referenceNav: `^/${locale}/(reference|guide|api|dev|release-notes)/`,
   researchNav: `^/${locale}/(research|resources|agents|archive|contributing)(/|$)`,
@@ -89,10 +85,10 @@ const createLocaleThemeConfig = (locale: LocaleKey) => ({
     [localeSidebarRoutes[locale].reference]: createReferenceSidebar(locale),
     [localeSidebarRoutes[locale].research]: createResearchSidebar(locale),
     [localeSidebarRoutes[locale].orientation]: createOrientationSidebar(locale),
-    [localeSidebarRoutes[locale].academy]: createAcademySidebar(locale),
+    [`/${locale}/academy/`]: createAlgorithmsSidebar(locale),
     [`/${locale}/why-fastqtools/`]: createWhitepaperSidebar(locale),
     [`/${locale}/architecture/`]: createArchitectureSidebar(locale),
-    [`/${locale}/workflows/`]: createAcademySidebar(locale),
+    [`/${locale}/workflows/`]: createAlgorithmsSidebar(locale),
     [`/${locale}/knowledge-map/`]: createArchitectureSidebar(locale),
     [`/${locale}/performance/`]: createPerformanceSidebar(locale),
     [`/${locale}/guide/`]: createReferenceSidebar(locale),

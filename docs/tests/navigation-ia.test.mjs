@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
+const contentSource = readFileSync(new URL('../.vitepress/theme/content/siteContent.ts', import.meta.url), 'utf8')
 const navSource = readFileSync(new URL('../.vitepress/theme/content/siteNavigation.ts', import.meta.url), 'utf8')
 const configSource = readFileSync(new URL('../.vitepress/config.ts', import.meta.url), 'utf8')
 const landingPages = [
@@ -9,8 +10,8 @@ const landingPages = [
   '../en/orientation/index.md',
   '../zh/whitepaper/index.md',
   '../en/whitepaper/index.md',
-  '../zh/academy/index.md',
-  '../en/academy/index.md',
+  '../zh/algorithms/index.md',
+  '../en/algorithms/index.md',
   '../zh/reference/index.md',
   '../en/reference/index.md',
   '../zh/research/index.md',
@@ -20,15 +21,26 @@ const landingPages = [
 const readDoc = (relativePath) => readFileSync(new URL(relativePath, import.meta.url), 'utf8')
 
 test('top navigation exposes the approved section labels', () => {
-  for (const label of ['orientation', 'whitepaper', 'academy', 'reference', 'research']) {
+  for (const label of ['orientation', 'whitepaper', 'algorithms', 'reference', 'research']) {
     assert.match(navSource, new RegExp(label, 'i'))
   }
 })
 
 test('config wires locale sidebars for the new section roots', () => {
-  for (const route of ['/zh/orientation/', '/zh/whitepaper/', '/zh/academy/', '/zh/reference/', '/zh/research/', '/en/orientation/', '/en/whitepaper/', '/en/academy/', '/en/reference/', '/en/research/']) {
+  for (const route of ['/zh/orientation/', '/zh/whitepaper/', '/zh/algorithms/', '/zh/reference/', '/zh/research/', '/en/orientation/', '/en/whitepaper/', '/en/algorithms/', '/en/reference/', '/en/research/']) {
     assert.match(configSource, new RegExp(route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   }
+})
+
+test('algorithms foundation stays canonical on algorithms routes', () => {
+  assert.match(contentSource, /algorithms:\s*\{[\s\S]*path: 'algorithms\/'/)
+  assert.doesNotMatch(contentSource, /algorithms:\s*\{[\s\S]*path: 'academy\/'/)
+  assert.match(configSource, /algorithms:\s*'\/zh\/algorithms\/'/)
+  assert.match(configSource, /algorithms:\s*'\/en\/algorithms\/'/)
+  assert.doesNotMatch(configSource, /algorithms:\s*'\/zh\/academy\/'/)
+  assert.doesNotMatch(configSource, /algorithms:\s*'\/en\/academy\/'/)
+  assert.match(configSource, /algorithms: `\^\/\$\{locale\}\/\(algorithms\|workflows\)\(\/\|\$\)`/)
+  assert.doesNotMatch(configSource, /algorithms: `\^\/\$\{locale\}\/\(academy\|workflows\)\(\/\|\$\)`/)
 })
 
 test('research section route config keeps contributing slash-normalized', () => {
@@ -40,15 +52,14 @@ test('research section route config keeps contributing slash-normalized', () => 
   assert.doesNotMatch(navSource, /contributing:\s*\{\s*path: 'contributing'/)
 })
 
-test('academy sidebar stays scoped to academy-owned entry points', () => {
-  const academySidebarBlock = navSource.match(/export const academySidebarGroups = \[(.*?)\] as const/s)?.[1] ?? ''
-  assert.match(academySidebarBlock, /academyNav/)
-  assert.match(academySidebarBlock, /workflows/)
+test('algorithms sidebar stays scoped to algorithms-owned entry points', () => {
+  const algorithmsSidebarBlock = navSource.match(/export const algorithmsSidebarGroups = \[(.*?)\] as const/s)?.[1] ?? ''
+  assert.match(algorithmsSidebarBlock, /algorithms/)
+  assert.match(algorithmsSidebarBlock, /workflows/)
+  assert.doesNotMatch(algorithmsSidebarBlock, /academyNav/)
 
-  for (const guideLinkId of ['gettingStarted', 'cliReference', 'configuration', 'deployment']) {
-    assert.doesNotMatch(academySidebarBlock, new RegExp(guideLinkId))
-    assert.match(navSource, new RegExp(`headingKey: 'guide'[\\s\\S]*${guideLinkId}`))
-  }
+  assert.match(algorithmsSidebarBlock, /gettingStarted/)
+  assert.match(algorithmsSidebarBlock, /cliReference/)
 })
 
 test('research sidebar excludes release note changelog links', () => {

@@ -40,13 +40,13 @@ test('chinese narrative pages expose the approved section skeletons', () => {
   }
 })
 
-test('chinese academy and research pages expose the approved section skeletons', () => {
-  const academy = readFileSync(new URL('../zh/academy/index.md', import.meta.url), 'utf8')
+test('chinese algorithms and research pages expose the approved section skeletons', () => {
+  const algorithms = readFileSync(new URL('../zh/algorithms/index.md', import.meta.url), 'utf8')
   const research = readFileSync(new URL('../zh/research/index.md', import.meta.url), 'utf8')
   const reference = readFileSync(new URL('../zh/reference/index.md', import.meta.url), 'utf8')
 
-  assert.match(academy, /# 学院/)
-  assert.match(academy, /## 学习路径/)
+  assert.match(algorithms, /# 算法/)
+  assert.match(algorithms, /## 过滤流水线/)
   assert.match(research, /# 研究附录/)
   assert.match(research, /## 参考文献/)
   assert.match(reference, /# 参考导航/)
