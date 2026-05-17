@@ -11,6 +11,8 @@ const landingPages = [
   '../en/whitepaper/index.md',
   '../zh/academy/index.md',
   '../en/academy/index.md',
+  '../zh/reference/index.md',
+  '../en/reference/index.md',
   '../zh/research/index.md',
   '../en/research/index.md',
 ]
@@ -24,7 +26,7 @@ test('top navigation exposes the approved section labels', () => {
 })
 
 test('config wires locale sidebars for the new section roots', () => {
-  for (const route of ['/zh/orientation/', '/zh/whitepaper/', '/zh/academy/', '/zh/research/', '/en/orientation/', '/en/whitepaper/', '/en/academy/', '/en/research/']) {
+  for (const route of ['/zh/orientation/', '/zh/whitepaper/', '/zh/academy/', '/zh/reference/', '/zh/research/', '/en/orientation/', '/en/whitepaper/', '/en/academy/', '/en/reference/', '/en/research/']) {
     assert.match(configSource, new RegExp(route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   }
 })

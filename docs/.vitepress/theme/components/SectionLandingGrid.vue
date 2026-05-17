@@ -4,7 +4,7 @@ import { withBase } from 'vitepress'
 import { ArrowRight } from 'lucide-vue-next'
 import { getSharedLinkHref, type LocaleKey, type SharedLinkId } from '../content/siteNavigation'
 
-type SectionKey = 'orientation' | 'whitepaper' | 'academy' | 'research'
+type SectionKey = 'orientation' | 'whitepaper' | 'academy' | 'reference' | 'research'
 
 type SectionCard = {
   tag: string
@@ -114,6 +114,36 @@ const copy: Record<LocaleKey, Record<SectionKey, SectionCopy>> = {
           summary: 'Once you know your workflow, move into exact flags, configuration details, and command behavior.',
           linkId: 'cliReference',
           linkLabel: 'Open CLI reference',
+        },
+      ],
+    },
+    reference: {
+      eyebrow: 'Reference',
+      title: 'Move directly to lookup material when the task is already clear.',
+      summary: 'Reference is the operational map for command syntax, APIs, developer internals, and the adjacent materials that support concrete execution.',
+      hubLinkId: 'referenceNav',
+      hubLinkLabel: 'Open reference',
+      cards: [
+        {
+          tag: 'CLI',
+          title: 'Find exact command behavior',
+          summary: 'Jump into flags, subcommands, and workflow fragments when you already know which execution detail you need.',
+          linkId: 'cliReference',
+          linkLabel: 'Open CLI reference',
+        },
+        {
+          tag: 'API',
+          title: 'Inspect public interfaces',
+          summary: 'Move from command usage into API surface and module-level boundaries when library integration matters.',
+          linkId: 'apiOverview',
+          linkLabel: 'Open API overview',
+        },
+        {
+          tag: 'Internals',
+          title: 'Trace developer-facing design',
+          summary: 'Use developer architecture material when the task requires build, testing, or implementation-level reasoning.',
+          linkId: 'devArchitecture',
+          linkLabel: 'Open developer architecture',
         },
       ],
     },
@@ -236,6 +266,36 @@ const copy: Record<LocaleKey, Record<SectionKey, SectionCopy>> = {
           summary: '当你已经明确要执行的流程，再查看精确参数、配置细节与命令行为。',
           linkId: 'cliReference',
           linkLabel: '打开 CLI 参考',
+        },
+      ],
+    },
+    reference: {
+      eyebrow: '参考',
+      title: '当任务已经明确时，直接进入查阅材料。',
+      summary: '参考层是命令语法、API、开发者内部设计与周边资料的执行地图，用来支持明确问题下的快速落点。',
+      hubLinkId: 'referenceNav',
+      hubLinkLabel: '进入参考导航',
+      cards: [
+        {
+          tag: 'CLI',
+          title: '查精确命令行为',
+          summary: '当你已经知道要解决什么执行问题时，直接进入参数、子命令与工作流片段。',
+          linkId: 'cliReference',
+          linkLabel: '打开 CLI 参考',
+        },
+        {
+          tag: 'API',
+          title: '查看公共接口',
+          summary: '当任务涉及库集成或模块边界时，从命令使用切换到 API 总览与模块接口。',
+          linkId: 'apiOverview',
+          linkLabel: '打开 API 概览',
+        },
+        {
+          tag: '内部设计',
+          title: '追踪开发者侧设计',
+          summary: '当问题进入构建、测试或实现层推理时，继续进入开发者架构材料。',
+          linkId: 'devArchitecture',
+          linkLabel: '打开开发者架构设计',
         },
       ],
     },

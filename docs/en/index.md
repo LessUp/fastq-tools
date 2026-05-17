@@ -9,4 +9,5 @@ description: English whitepaper homepage for FASTQ adoption review, architecture
 <SectionLandingGrid locale="en" section="orientation" />
 <SectionLandingGrid locale="en" section="whitepaper" />
 <SectionLandingGrid locale="en" section="academy" />
+<SectionLandingGrid locale="en" section="reference" />
 <SectionLandingGrid locale="en" section="research" />

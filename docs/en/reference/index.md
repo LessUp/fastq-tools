@@ -1,3 +1,11 @@
+---
+title: Reference
+description: When the task is already clear, use this page to jump straight to commands, APIs, developer material, and adjacent research.
+layout: doc
+---
+
+<SectionLandingGrid locale="en" section="reference" />
+
 # Reference
 
 Reference is not a narrative page. It maps “what do I need to look up?” to “which page should I open?” If the Academy sets learning order, Reference is where you land once the goal is already clear.

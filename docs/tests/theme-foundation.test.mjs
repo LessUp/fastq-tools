@@ -9,6 +9,7 @@ const tokensSource = readFileSync(new URL('tokens.css', stylesDirUrl), 'utf8')
 const diagramsSource = readFileSync(new URL('diagrams.css', stylesDirUrl), 'utf8')
 const packageSource = readFileSync(new URL('../package.json', import.meta.url), 'utf8')
 const ciSource = readFileSync(new URL('../../.github/workflows/ci-docs.yml', import.meta.url), 'utf8')
+const pagesWorkflowSource = readFileSync(new URL('../../.github/workflows/docs-pages.yml', import.meta.url), 'utf8')
 const changelogPath = new URL('../../changelog/2026-05-15-docs-whitepaper-rebuild.md', import.meta.url)
 
 test('theme style imports the four visual layers', () => {
@@ -63,6 +64,11 @@ test('docs package exposes a docs source verification command', () => {
 test('docs ci runs source tests before vitepress build', () => {
   assert.match(ciSource, /name:\s*Run docs source tests[\s\S]*run:\s*npm test/)
   assert.match(ciSource, /name:\s*Build docs[\s\S]*run:\s*npm run build/)
+})
+
+test('docs pages deploy runs source tests before build', () => {
+  assert.match(pagesWorkflowSource, /name:\s*Run docs source tests[\s\S]*run:\s*npm test/)
+  assert.match(pagesWorkflowSource, /name:\s*Build docs[\s\S]*run:\s*npm run build/)
 })
 
 test('whitepaper rebuild changelog record exists', () => {
