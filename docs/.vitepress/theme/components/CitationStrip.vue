@@ -6,16 +6,16 @@ import { getSharedLinkHref, getSharedLinkLabel, type LocaleKey, type SharedLinkI
 
 const props = defineProps<{ locale: LocaleKey }>()
 
-const links = ['performance', 'benchmarkReport', 'resourcesOverview'] as const satisfies readonly SharedLinkId[]
+const links = ['performance', 'bibliography', 'relatedProjects'] as const satisfies readonly SharedLinkId[]
 
 const copy = {
   en: {
     eyebrow: 'References stay in context',
-    summary: 'References, benchmark method notes, and related-project context appear alongside the narrative so readers can validate claims without leaving the reading path.',
+    summary: 'References, bibliography entries, and related-project context appear alongside the narrative so readers can validate claims without leaving the reading path.',
   },
   zh: {
     eyebrow: '引用与证据不再躲在附录',
-    summary: '参考文献、基准方法说明与相关项目背景会直接贴着叙事出现，方便读者在阅读路径中随时核对依据。',
+    summary: '参考文献、书目条目与相关项目背景会直接贴着叙事出现，方便读者在阅读路径中随时核对依据。',
   },
 } as const
 

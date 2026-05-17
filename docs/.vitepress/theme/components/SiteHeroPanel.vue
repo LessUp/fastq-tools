@@ -22,7 +22,7 @@ const copy = {
   en: {
     eyebrow: 'FastQTools technical whitepaper',
     title: 'Choose the reading path that fits your FASTQ evaluation stage.',
-    summary: 'Start with orientation, move through the technical whitepaper, then continue into academy guidance or research evidence when you need deeper validation.',
+    summary: 'Start with orientation, move through the technical whitepaper, then continue into algorithms guidance or research evidence when you need deeper validation.',
     actions: [
       { label: 'Start with orientation', linkId: 'orientationNav', variant: 'primary' },
       { label: 'Read the whitepaper', linkId: 'whitepaperNav', variant: 'secondary' },
@@ -48,7 +48,7 @@ const copy = {
   zh: {
     eyebrow: 'FastQTools 技术白皮书',
     title: '为 FASTQ 采用评估选择合适的阅读路径。',
-    summary: '先从导读进入，再阅读技术白皮书；当你需要更深的落地说明时，再转向学院或研究证据。',
+    summary: '先从导读进入，再阅读技术白皮书；当你需要更深的落地说明时，再转向算法层或研究证据。',
     actions: [
       { label: '从导读开始', linkId: 'orientationNav', variant: 'primary' },
       { label: '阅读白皮书', linkId: 'whitepaperNav', variant: 'secondary' },

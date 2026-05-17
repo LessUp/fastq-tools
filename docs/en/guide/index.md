@@ -1,6 +1,6 @@
 # Guide
 
-The guide is the practical layer of the Academy path. It assumes you already understand FastQTools’ positioning and now need to turn that understanding into executable commands, configuration, and deployment work.
+The guide is the practical layer of the Algorithms path. It assumes you already understand FastQTools’ positioning and now need to turn that understanding into executable commands, configuration, and deployment work.
 
 ## Suggested learning order
 

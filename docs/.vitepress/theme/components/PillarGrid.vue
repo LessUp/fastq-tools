@@ -30,7 +30,7 @@ const copy = {
       {
         title: 'Orientation before execution',
         summary: 'Readers can choose the right section root first, then move from onboarding to routine filter operations without digging through unrelated material.',
-        bullets: ['Orientation separates the narrative, learning, reference, and research layers.', 'Academy cards point directly to getting-started and workflow paths.'],
+        bullets: ['Orientation separates the narrative, learning, reference, and research layers.', 'Algorithms cards point directly to getting-started and workflow paths.'],
         linkId: 'workflows',
         linkLabel: 'Explore workflows',
         icon: BookOpen,
@@ -67,7 +67,7 @@ const copy = {
       {
         title: '先导读，再执行',
         summary: '读者先选对分区根节点，再从上手路线走到常规 filter 流程，中间不必穿过无关内容。',
-        bullets: ['导读把叙事、学习、参考与研究四层分开。', '学院卡片直接连接快速开始与工作流路径。'],
+        bullets: ['导读把叙事、学习、参考与研究四层分开。', '算法卡片直接连接快速开始与工作流路径。'],
         linkId: 'workflows',
         linkLabel: '浏览工作流',
         icon: BookOpen,

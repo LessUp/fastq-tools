@@ -1,32 +1,26 @@
----
-title: Academy
-description: Organize the English onboarding, reference, and maintenance material as a learnable path.
+title: Academy (legacy alias)
+description: Legacy route preserved for older links; the canonical learning layer now lives under Algorithms.
 layout: doc
 ---
 
 <SectionLandingGrid locale="en" section="academy" />
 
-# Academy
+# Academy (legacy alias)
 
-The Academy page answers “what should I read next?” It does not repeat every detail. Instead, it arranges the English documentation into a continuous learning path: complete the first run, understand commands and configuration, then move into maintenance and architecture depth.
+This route is kept for older bookmarks and inbound links, but the canonical learning surface is now [`Algorithms`](../algorithms/). Read that page first when you want the maintained entry point for filtering, statistics, execution model, and workflow-oriented reading.
 
-## Learning tracks
+## Use Algorithms as the primary hub
 
-- First use: [`Getting Started`](../guide/getting-started)
-- Commands and workflows: [`CLI Reference`](../guide/cli-reference)
-- Engineering maintenance: [`Developer Guide`](../dev/)
+- Canonical overview: [`Algorithms`](../algorithms/)
+- Workflow paths: [`Workflows`](../workflows/)
+- First-use route: [`Getting Started`](../guide/getting-started)
 
-## Recommended order
+## Why this alias still exists
 
-1. If you are still deciding whether the project fits your task, start with [`Orientation`](../orientation/) and the [`Whitepaper`](../whitepaper/).
-2. If you are ready to run commands, enter the [`Guide`](../guide/) and complete [`Getting Started`](../guide/getting-started).
-3. When you need stable operation, automation, or tuning, continue with [`Configuration`](../guide/configuration) and [`Deployment`](../guide/deployment).
-4. When you need to extend, debug, or contribute patches, move into the [`Developer Guide`](../dev/) and [`Reference`](../reference/).
+The repository previously used “Academy” as the learnable path label. The information architecture now centers `algorithms/` instead, so this page exists only as a compatibility alias and should always be read as a handoff into the Algorithms layer.
 
-## Academy boundaries
+## Where to go next
 
-- Academy focuses on how to learn usage and maintenance.
-- Reference focuses on where to look up concrete interfaces and commands.
-- Research appendix focuses on why the design holds together and where it may evolve.
-
-If you want to jump directly to the index of materials, go to [`Reference`](../reference/). If you want the background and external reading around those materials, continue to the [`Research appendix`](../research/).
+- For the maintained learning path, continue with [`Algorithms`](../algorithms/) and [`Workflows`](../workflows/).
+- For exact commands and APIs, go to [`Reference`](../reference/).
+- For bibliography, adjacent-project context, and historical rationale, continue to the [`Research appendix`](../research/).

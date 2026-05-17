@@ -51,6 +51,18 @@ const sharedLinks = {
     path: 'performance/benchmark-report',
     labels: { zh: localeText.zh.sidebar.benchmarkReport, en: localeText.en.sidebar.benchmarkReport },
   },
+  bibliography: {
+    path: 'research/bibliography',
+    labels: { zh: localeText.zh.sidebar.bibliography, en: localeText.en.sidebar.bibliography },
+  },
+  relatedProjects: {
+    path: 'research/related-projects',
+    labels: { zh: localeText.zh.sidebar.relatedProjects, en: localeText.en.sidebar.relatedProjects },
+  },
+  evolutionNotes: {
+    path: 'research/evolution-notes',
+    labels: { zh: localeText.zh.sidebar.evolutionNotes, en: localeText.en.sidebar.evolutionNotes },
+  },
   guideOverview: {
     path: 'guide/',
     labels: { zh: localeText.zh.sidebar.guideOverview, en: localeText.en.sidebar.guideOverview },
@@ -223,7 +235,7 @@ export const referenceSidebarGroups = [
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const researchSidebarGroups = [
-  { headingKey: 'researchHub', items: ['researchNav', 'performance', 'benchmarkReport', 'resourcesOverview', 'contributing'] },
+  { headingKey: 'researchHub', items: ['researchNav', 'bibliography', 'relatedProjects', 'evolutionNotes'] },
   { headingKey: 'agents', items: ['agentsDomain', 'issueTracker', 'triageLabels'] },
   { headingKey: 'archive', items: ['archiveOverview', 'migrationNotice'] },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
@@ -239,7 +251,7 @@ export const knowledgeMapSections = [
   { id: 'evaluate', href: 'whitepaper', items: ['whitepaper', 'why', 'architecture', 'performance'] },
   { id: 'operate', href: 'algorithms', items: ['algorithms', 'workflows', 'gettingStarted', 'cliReference'] },
   { id: 'reference', href: 'referenceNav', items: ['referenceNav', 'apiOverview', 'developerGuide'] },
-  { id: 'extend', href: 'resourcesOverview', items: ['resourcesOverview', 'contributing', 'agentsDomain'] },
+  { id: 'extend', href: 'researchNav', items: ['researchNav', 'bibliography', 'relatedProjects', 'evolutionNotes'] },
 ] as const satisfies readonly { id: string; href: SharedLinkId; items: readonly SharedLinkId[] }[]
 
 export const workflowPathLinks = {
@@ -260,10 +272,11 @@ export const resourceHubGroups = [
   },
   {
     id: 'collaboration',
-    href: 'resourcesOverview',
+    href: 'researchNav',
     items: [
-      { type: 'doc', id: 'contributing' },
-      { type: 'doc', id: 'changelog' },
+      { type: 'doc', id: 'bibliography' },
+      { type: 'doc', id: 'relatedProjects' },
+      { type: 'doc', id: 'evolutionNotes' },
       {
         type: 'external',
         href: 'https://github.com/LessUp/fastq-tools',

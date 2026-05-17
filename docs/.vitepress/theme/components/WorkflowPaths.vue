@@ -45,7 +45,7 @@ const pathCards: PathCard[] = [
 const copy: Record<LocaleKey, Copy> = {
   en: {
     title: 'Workflow paths',
-    intro: 'Academy exposes three recurring reading paths so evaluators, operators, and contributors can start from the page that matches their job.',
+    intro: 'Algorithms exposes three recurring reading paths so evaluators, operators, and contributors can start from the page that matches their job.',
     cards: {
       evaluate: {
         title: 'First-run evaluation',
@@ -75,7 +75,7 @@ const copy: Record<LocaleKey, Copy> = {
   },
   zh: {
     title: '工作流路径',
-    intro: '学院层把常见阅读路径整理成三类，方便评估者、操作者与贡献者从最贴近自己职责的入口开始。',
+    intro: '算法层把常见阅读路径整理成三类，方便评估者、操作者与贡献者从最贴近自己职责的入口开始。',
     cards: {
       evaluate: {
         title: '首次评估路径',

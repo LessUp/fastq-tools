@@ -32,7 +32,7 @@ const copy = {
       {
         title: 'Research and maintenance',
         summary: 'For readers validating evidence, contribution expectations, and long-tail support context.',
-        steps: ['researchNav', 'resourcesOverview', 'contributing'],
+        steps: ['researchNav', 'bibliography', 'evolutionNotes'],
       },
     ] satisfies Track[],
   },
@@ -55,7 +55,7 @@ const copy = {
       {
         title: '研究与维护',
         summary: '适合核验证据、贡献约束与长期维护语境的读者。',
-        steps: ['researchNav', 'resourcesOverview', 'contributing'],
+        steps: ['researchNav', 'bibliography', 'evolutionNotes'],
       },
     ] satisfies Track[],
   },

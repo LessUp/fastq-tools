@@ -62,7 +62,7 @@ const createResearchSidebar = (locale: LocaleKey) => createSidebar(locale, resea
 const createTopNavActiveMatches = (locale: LocaleKey) => ({
   whitepaper: `^/${locale}/(whitepaper|orientation|why-fastqtools)(/|$)`,
   architecture: `^/${locale}/(architecture|knowledge-map)(/|$)`,
-  algorithms: `^/${locale}/(algorithms|workflows)(/|$)`,
+  algorithms: `^/${locale}/(algorithms|academy|workflows)(/|$)`,
   performance: `^/${locale}/performance(/|$)`,
   referenceNav: `^/${locale}/(reference|guide|api|dev|release-notes)/`,
   researchNav: `^/${locale}/(research|resources|agents|archive|contributing)(/|$)`,

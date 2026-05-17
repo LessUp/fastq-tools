@@ -18,4 +18,4 @@ As the project adopted OpenSpec and the new documentation information architectu
 
 ## How to read archive material
 
-If all you need is “what should I do now?”, you usually do not need to stay in the archive. Go directly to the Academy, Reference, or Developer Guide instead. Return to archive material only when you need to explain a historical decision, a migration path, or whether information from an old link is outdated.
+If all you need is “what should I do now?”, you usually do not need to stay in the archive. Go directly to Algorithms, Reference, or the Developer Guide instead. Return to archive material only when you need to explain a historical decision, a migration path, or whether information from an old link is outdated.

@@ -17,7 +17,7 @@ const copy = {
     eyebrow: 'Research rail',
     title: 'Keep the adjacent material within one scroll of the homepage.',
     summary:
-      'The new ending section acts like a whitepaper appendix rail: references, collaboration context, historical notes, and benchmark method pages stay reachable without flattening them into another hero.',
+      'The new ending section acts like a whitepaper appendix rail: bibliography, adjacent-project context, and design history stay reachable without flattening them into another hero.',
     groups: [
       {
         title: 'Reference stack',
@@ -29,17 +29,17 @@ const copy = {
       },
       {
         title: 'Research material',
-        summary: 'Open resource maps, contribution expectations, and supporting context with the same locale routing.',
+        summary: 'Open bibliography, adjacent-project comparisons, and supporting context with the same locale routing.',
         links: [
-          { label: 'Resources', linkId: 'resourcesOverview' },
-          { label: 'Contributing', linkId: 'contributing' },
+          { label: 'Bibliography', linkId: 'bibliography' },
+          { label: 'Related projects', linkId: 'relatedProjects' },
         ],
       },
       {
         title: 'Maintenance history',
-        summary: 'Archive and release history remain visible for readers checking trajectory and governance.',
+        summary: 'Evolution notes and archive history remain visible for readers checking trajectory and governance.',
         links: [
-          { label: 'Changelog', linkId: 'changelog' },
+          { label: 'Evolution notes', linkId: 'evolutionNotes' },
           { label: 'Archive overview', linkId: 'archiveOverview' },
         ],
       },
@@ -49,7 +49,7 @@ const copy = {
     eyebrow: '研究轨道',
     title: '把相邻材料控制在首页的一次滚动范围内。',
     summary:
-      '新版收尾像白皮书附录轨道：引用、协作语境、历史说明与 benchmark 方法页始终可达，但不会再次被压扁成另一个 hero。',
+      '新版收尾像白皮书附录轨道：书目、同类项目语境与设计历史始终可达，但不会再次被压扁成另一个 hero。',
     groups: [
       {
         title: '参考栈',
@@ -61,17 +61,17 @@ const copy = {
       },
       {
         title: '研究材料',
-        summary: '资源地图、贡献要求与补充背景通过同一套 locale 路由暴露出来。',
+        summary: '书目、同类项目比较与补充背景通过同一套 locale 路由暴露出来。',
         links: [
-          { label: '资源导航', linkId: 'resourcesOverview' },
-          { label: '参与贡献', linkId: 'contributing' },
+          { label: '书目', linkId: 'bibliography' },
+          { label: '相关项目', linkId: 'relatedProjects' },
         ],
       },
       {
         title: '维护历史',
-        summary: '归档与发布历史持续可见，方便读者判断项目轨迹与治理方式。',
+        summary: '演进说明与归档历史持续可见，方便读者判断项目轨迹与治理方式。',
         links: [
-          { label: '变更记录', linkId: 'changelog' },
+          { label: '演进说明', linkId: 'evolutionNotes' },
           { label: '归档概览', linkId: 'archiveOverview' },
         ],
       },
