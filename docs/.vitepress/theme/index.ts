@@ -17,6 +17,8 @@ import EvidenceOverview from './components/EvidenceOverview.vue'
 import ReadingTracks from './components/ReadingTracks.vue'
 import ResearchRail from './components/ResearchRail.vue'
 import SystemArchitectureDiagram from './components/SystemArchitectureDiagram.vue'
+import ReferenceList from './components/ReferenceList.vue'
+import ReferenceBadge from './components/ReferenceBadge.vue'
 import { referenceCatalog } from './content/references'
 import { themeFoundation } from './content/siteContent'
 import './style.css'
@@ -131,6 +133,8 @@ const theme: Theme = {
     ctx.app.component('ReadingTracks', ReadingTracks)
     ctx.app.component('ResearchRail', ResearchRail)
     ctx.app.component('SystemArchitectureDiagram', SystemArchitectureDiagram)
+    ctx.app.component('ReferenceList', ReferenceList)
+    ctx.app.component('ReferenceBadge', ReferenceBadge)
     ctx.app.provide(THEME_FOUNDATION_KEY, themeFoundation)
     ctx.app.provide(REFERENCE_CATALOG_KEY, referenceCatalog)
 

@@ -1,52 +1,51 @@
 # Architecture
 
-This page helps you build the system mental model for FastQTools: which layers own the entry points, which layers own throughput, which constraints keep the performance story explainable, and which resource boundaries keep it from being just a slogan about being “fast.”
+Architecture is where the whitepaper stops being positioning language and becomes an inspectable systems model. The question here is not merely “what modules exist?” but “which boundaries keep FastQTools explainable when you move from adoption review into implementation review?”
 
-## System layers
+## Layers that matter during review
 
-FastQTools uses a layered structure of CLI / command orchestration / public API / concrete implementation so terminal entry points, library interfaces, and internal code keep clear boundaries.
+FastQTools keeps the CLI, command orchestration, public API, and concrete implementations intentionally separated so that each audience has one stable surface to reason about.
 
-- **CLI and command layer** handles argument parsing, task orchestration, logging, and the error boundary so the terminal interface does not couple directly to low-level implementation detail.
-- **Public API layer** exposes stable interfaces through `include/fqtools/`, letting the CLI, tests, and external C++ integrations depend on the same contract.
-- **Implementation layer** carries I/O, processing, statistics, configuration, and error management, where performance, correctness, and bounded resources actually land.
+- **CLI and command layer** owns argument parsing, task orchestration, logging, and the terminal-facing error boundary.
+- **Public API layer** keeps `include/fqtools/` as the maintained integration surface for tests, the CLI, and downstream C++ callers.
+- **Implementation layer** contains I/O, processing, statistics, configuration, and error handling where throughput and correctness are actually earned.
 
-The real value of this layering is not neat module names. It lets adopters answer whether they are using a throwaway command collection or an engineering core they can validate through the CLI and later embed into a program. For deeper drill-down, continue to [`API Overview`](../api/overview), [`Developer Architecture`](../dev/architecture), and [`Core Design`](../dev/design).
+The layered model defined by <ReferenceBadge kind="RFC" href="https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0001-core-architecture.md">RFC-0001</ReferenceBadge> is what lets FastQTools be reviewed first through the CLI and then through code-facing contracts without changing the mental model. That is also why the next narrative stop after this page is [`Algorithms`](../algorithms/) rather than an unstructured list of classes.
 
 <DiagramFrame
   asset="architecture-overview"
   caption="Architecture overview: entry points, public API, and execution path are organized around the same whitepaper narrative."
 />
 
-## Execution model
+## Execution path and control surfaces
 
-The system organizes data flow as `source → processing → sink`: reading and writing stay as clear boundaries, while the filtering, trimming, and statistics logic that benefits from parallelism lives in the middle processing stage.
+The maintained execution story is still `source → processing → sink`, but what matters architecturally is where control changes hands:
 
-The important point is not just that the project uses parallelism, but **how it does so and where the boundaries sit**:
+1. **Source** reads plain or gzip-compressed FASTQ into bounded batches.
+2. **Processing** applies maintained predicates, mutators, and statistics work to record views instead of detached string copies.
+3. **Sink** writes filtered records or summary output while preserving the final I/O and cleanup boundary.
 
-1. **source** reads input files into bounded batches; `FastqBatch` owns contiguous buffers so records do not need to be copied into separate strings.
-2. **processing** exposes record views through `std::string_view`, putting filtering, trimming, and statistics into the stage that can run in parallel.
-3. **sink** writes results or summary outputs back out, keeping I/O ordering, error handling, and resource cleanup easy to reason about.
+That is why the algorithm layer matters: [`Algorithms`](../algorithms/) explains what each stage actually does, while this page explains why the stage boundaries exist in the first place. The architecture claim is not “parallelism exists,” but that the project makes parallelism reviewable by keeping ownership transitions explicit.
 
-That means FastQTools is not a serial wrapper that reads a line, copies it, and rewrites it. It tries to minimize copying within the batch lifetime and then uses a staged pipeline so throughput and explainability live inside the same model. For the design basis behind that, continue to [`RFC-0001: Core Architecture`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0001-core-architecture.md) and [`RFC-0004: Memory Pool Optimization`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0004-memory-pool.md).
+## Memory discipline is architectural, not incidental
 
-## Key trade-offs
+The most important architectural trade-off is the decision to treat memory ownership as a first-class systems boundary:
 
-- Use a zero-copy batch model to reduce unnecessary copying, while strictly protecting `std::string_view` lifetimes.
-- Use a parallel pipeline to gain throughput, while keeping resources bounded and outputs explainable.
-- Use the public API to isolate the CLI from implementation detail, reducing later integration and maintenance cost.
+- `FastqBatch` owns contiguous storage for multiple records;
+- `std::string_view` keeps traversal cheap, but only while batch lifetime remains correct;
+- object-pool reuse keeps allocation churn bounded, but only if in-flight batches are explicitly controlled.
 
-Those trade-offs correspond to a few concrete correctness boundaries:
+That is the concern formalized in <ReferenceBadge kind="RFC" href="https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0004-memory-pool.md">RFC-0004</ReferenceBadge>. It is also why the whitepaper can talk about performance and memory in the same breath without turning either topic into marketing shorthand.
 
-- **Lifetime correctness**: `std::string_view` must not outlive its owning batch, and a batch cannot be reused while processing still depends on its buffer.
-- **Bounded resources**: in-flight batches, buffer reuse, and concurrency all need explicit limits so larger files do not imply uncontrolled memory growth.
-- **Explainable output**: source and sink stabilize the input/output boundary, and middle-stage parallelism must not change the meaning of results under the same configuration.
+## Verification ladder
 
-If you want to tie these claims back to long-term maintenance constraints, revisit:
+Architecture alone does not prove the system works; it tells you where to verify next:
 
-- [`RFC-0001: Core Architecture`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0001-core-architecture.md)
-- [`RFC-0002: Toolchain Policy`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0002-toolchain-policy.md)
-- [`RFC-0004: Memory Pool Optimization`](https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0004-memory-pool.md)
+- go back to [`Whitepaper`](../whitepaper/) when you need the product and review framing;
+- continue to [`Algorithms`](../algorithms/) to inspect filtering, statistics, execution, and memory behavior in maintained terms;
+- continue to [`Performance`](../performance/) to see how architecture claims are reflected in benchmark evidence;
+- use [`Research evolution notes`](../research/evolution-notes) when you want the historical reasons these boundaries were preserved.
 
 ## Continue drilling down
 
-If you want to connect this structure to benchmark evidence, go next to [`Performance`](../performance/). If you want a role-based path into action-oriented docs, continue to [`Workflows`](../workflows/). If you want to review implementation detail directly, move on to [`Developer Architecture`](../dev/architecture) and the [`IO Module`](../api/io).
+If you want to connect this structure directly to measurement, go next to [`Performance`](../performance/). If you want the maintained behavior behind the stages, read [`Algorithms`](../algorithms/). If you want implementation detail or code-level contracts, continue to [`Developer Architecture`](../dev/architecture), [`Core Design`](../dev/design), and the [`IO Module`](../api/io).

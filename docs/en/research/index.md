@@ -1,6 +1,6 @@
 ---
 title: Research appendix
-description: Add comparison reading, references, and design-evolution context to the English whitepaper.
+description: Collect bibliography, adjacent project context, and design evolution for the English whitepaper.
 layout: doc
 ---
 
@@ -8,22 +8,30 @@ layout: doc
 
 # Research appendix
 
-The research appendix is neither a product manual nor a contribution checklist. It is closer to the appendix of the whitepaper: a place for comparative reading, source material, historical context, and future-looking questions so readers can place FastQTools back into the broader FASTQ/QC landscape.
+The research appendix is the layer you open after the main whitepaper claims are already clear. It is not the place to learn the first command. It is the place to answer “what supports these claims?”, “how does this compare to nearby tools?”, and “why was the current boundary chosen?”
 
-## Related projects
+## What this layer contains
 
-Compare FastQTools with adjacent FASTQ/QC tools in terms of positioning, interface boundaries, and evidence style.
-
-The goal is not to build a winner board. It is to see how different tools choose their boundaries: some emphasize integrated preprocessing, some emphasize small portable commands, while FastQTools emphasizes an engineered pipeline, explainable performance evidence, and clear interface layers.
+- [`Bibliography`](./bibliography) collects the papers, specifications, RFCs, library docs, and project pages that support the current narrative.
+- [`Related projects`](./related-projects) compares FastQTools with FastQC, fastp, Cutadapt, and seqtk in terms of scope, interface boundary, and evidence style.
+- [`Evolution notes`](./evolution-notes) explains how architectural and benchmark policy decisions accumulated into the current system narrative.
 
 ## References
 
-List papers, standards, official docs, and key repositories.
+Use [`Bibliography`](./bibliography) when you need the source trail behind format claims, benchmark language, or adjacent-project comparisons.
 
-Start with three source groups: FASTQ format and quality-score background, the official docs of common QC and trimming tools, and FastQTools' own dependencies or comparison targets such as oneTBB, FastQC, fastp, Cutadapt, and seqtk. Together these sources make the terms, boundaries, and comparisons in the whitepaper credible.
+## How to use the research layer well
+
+Use the appendix when one of these situations appears:
+
+- you need to cite an external source or internal RFC instead of paraphrasing from memory;
+- you need to explain how FastQTools differs from adjacent QC or preprocessing tools without turning the comparison into a feature race;
+- you need historical context for why benchmark policy, memory policy, and documentation boundaries were made explicit.
+
+## Relationship to the rest of the docs
+
+If you still need the main product and architecture story, go back to [`Whitepaper`](../whitepaper/) and [`Architecture`](../architecture/). If you already know the question and need exact commands or APIs, go to [`Reference`](../reference/). The research layer is deliberately the place in between: technical context without pretending to be the operational manual.
 
 ## Design evolution
 
-Explain why the current architecture exists and how it might evolve.
-
-The current design works because the project intentionally separates the narrative layer, the reference layer, and the maintenance layer: first establish positioning, then provide operations, then collect maintenance knowledge. If the project expands into more commands, language bindings, or finer-grained benchmarks, it should keep evolving along that layered model rather than collapsing everything back into a single landing page.
+Use [`Evolution notes`](./evolution-notes) when the question is not “how do I run this?” but “why was this boundary chosen and maintained?”
