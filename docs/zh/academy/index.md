@@ -1,3 +1,4 @@
+---
 title: 学院（旧别名）
 description: 为旧链接保留的别名路由；规范学习入口已经收敛到 Algorithms / 算法层。
 layout: doc

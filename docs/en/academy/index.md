@@ -1,3 +1,4 @@
+---
 title: Academy (legacy alias)
 description: Legacy route preserved for older links; the canonical learning layer now lives under Algorithms.
 layout: doc
