@@ -69,7 +69,7 @@ const createTopNavActiveMatches = (locale: LocaleKey) => ({
   algorithms: `^/${locale}/(academy|workflows)(/|$)`,
   performance: `^/${locale}/performance(/|$)`,
   referenceNav: `^/${locale}/(reference|guide|api|dev|release-notes)/`,
-  researchNav: `^/${locale}/(research|performance|resources|agents|archive|contributing)(/|$)`,
+  researchNav: `^/${locale}/(research|resources|agents|archive|contributing)(/|$)`,
 } as const satisfies Record<(typeof topNavLinkIds)[number], string>)
 
 const createLocaleThemeConfig = (locale: LocaleKey) => ({

@@ -6,6 +6,15 @@ const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.me
 const navSource = readFileSync(new URL('../.vitepress/theme/content/siteNavigation.ts', import.meta.url), 'utf8')
 const configSource = readFileSync(new URL('../.vitepress/config.ts', import.meta.url), 'utf8')
 
+const getActiveMatchPattern = (id, locale = 'en') => {
+  const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const rawPattern = configSource.match(new RegExp(escapedId + ':\\s*`([^`]+)`'))?.[1]
+
+  assert.notEqual(rawPattern, undefined, `missing activeMatch pattern for ${id}`)
+
+  return new RegExp(rawPattern.replaceAll('${locale}', locale))
+}
+
 test('docs package exposes the theme foundation test through npm test', () => {
   assert.match(packageJson.scripts.test, /theme-foundation\.test\.mjs/)
 })
@@ -37,4 +46,16 @@ test('config active matches pivot around the new IA concepts', () => {
 
   assert.doesNotMatch(configSource, /orientationNav:/)
   assert.doesNotMatch(configSource, /academyNav:/)
+})
+
+test('top-level active matches keep performance and research nav states mutually exclusive', () => {
+  const performanceActiveMatch = getActiveMatchPattern('performance')
+  const researchActiveMatch = getActiveMatchPattern('researchNav')
+
+  assert.match('/en/performance/', performanceActiveMatch)
+  assert.doesNotMatch('/en/performance/', researchActiveMatch)
+
+  assert.match('/en/research/', researchActiveMatch)
+  assert.match('/en/resources/', researchActiveMatch)
+  assert.doesNotMatch('/en/research/', performanceActiveMatch)
 })

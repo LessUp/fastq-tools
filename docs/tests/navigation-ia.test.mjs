@@ -34,7 +34,8 @@ test('config wires locale sidebars for the new section roots', () => {
 test('research section route config keeps contributing slash-normalized', () => {
   assert.match(configSource, /\[`\/\$\{locale\}\/contributing\/`\]: createResearchSidebar\(locale\)/)
   assert.doesNotMatch(configSource, /\[`\/\$\{locale\}\/contributing`\]: createResearchSidebar\(locale\)/)
-  assert.match(configSource, /researchNav: `\^\/\$\{locale\}\/\(research\|performance\|resources\|agents\|archive\|contributing\)\(\/\|\$\)`/)
+  assert.match(configSource, /researchNav: `\^\/\$\{locale\}\/\(research\|resources\|agents\|archive\|contributing\)\(\/\|\$\)`/)
+  assert.doesNotMatch(configSource, /researchNav: `\^\/\$\{locale\}\/\(research\|performance\|resources\|agents\|archive\|contributing\)\(\/\|\$\)`/)
   assert.match(navSource, /contributing:\s*\{\s*path: 'contributing\/'/)
   assert.doesNotMatch(navSource, /contributing:\s*\{\s*path: 'contributing'/)
 })
