@@ -7,6 +7,10 @@ const diagramFrameSource = readFileSync(
   new URL('../.vitepress/theme/components/DiagramFrame.vue', import.meta.url),
   'utf8',
 )
+const systemArchitectureDiagramSource = readFileSync(
+  new URL('../.vitepress/theme/components/SystemArchitectureDiagram.vue', import.meta.url),
+  'utf8',
+)
 
 const adoptedPages = [
   '../en/architecture/index.md',
@@ -53,4 +57,16 @@ test('adopted pages reference shared diagram assets through DiagramFrame props',
     assert.match(page.source, /<DiagramFrame\b[^>]*\basset=["'][^"']+["'][^>]*>/)
     assert.doesNotMatch(page.source, /<img[^>]+assets\/diagrams\/(?:architecture-overview|execution-model|reading-map)\.svg/)
   }
+})
+
+test('homepage architecture diagram wraps narrow labels with tspans', () => {
+  assert.match(systemArchitectureDiagramSource, /<tspan\b/)
+  assert.match(
+    systemArchitectureDiagramSource,
+    /<tspan[\s\S]*v-for="\(\s*line,\s*index\s*\) in content\.pipelineDetail"/,
+  )
+  assert.match(
+    systemArchitectureDiagramSource,
+    /<tspan[\s\S]*v-for="\(\s*line,\s*index\s*\) in content\.outputsDetail"/,
+  )
 })

@@ -260,6 +260,12 @@ body {
   background: color-mix(in srgb, var(--vp-c-bg-elv) 94%, transparent);
 }
 
+.paper-grid-footer {
+  grid-column: 1 / -1;
+  padding-top: 0.1rem;
+  border-top: 1px solid color-mix(in srgb, var(--fq-home-panel-border) 82%, transparent);
+}
+
 .hero-brief,
 .diagram-frame-home {
   background: color-mix(in srgb, var(--vp-c-bg) 84%, transparent);

@@ -7,6 +7,8 @@ const readUtf8 = (relativePath) => readFileSync(new URL(relativePath, import.met
 const zhHome = readUtf8('../zh/index.md')
 const enHome = readUtf8('../en/index.md')
 const themeSource = readUtf8('../.vitepress/theme/index.ts')
+const snapshotSource = readUtf8('../.vitepress/theme/components/SystemSnapshot.vue')
+const themeStyles = readUtf8('../.vitepress/theme/style.css')
 
 const homepageContracts = [
   {
@@ -72,4 +74,10 @@ test('system architecture diagram is an inline theme-aware svg', () => {
   assert.match(diagramSource, /<svg[\s\S]*viewBox=/)
   assert.match(diagramSource, /--fq-home-diagram-(?:surface|accent|signal|stroke|text)/)
   assert.doesNotMatch(diagramSource, /#0[0-9a-f]{2,7}/i)
+})
+
+test('system snapshot promotes the CTA links into a full-width section footer', () => {
+  assert.match(snapshotSource, /<footer class="paper-grid-footer">/)
+  assert.match(snapshotSource, /<div class="section-actions compact">/)
+  assert.match(themeStyles, /\.paper-grid-footer\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;/s)
 })

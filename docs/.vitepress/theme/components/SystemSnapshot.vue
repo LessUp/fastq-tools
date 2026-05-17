@@ -83,17 +83,19 @@ const resolve = (linkId: SharedLinkId) => withBase(getSharedLinkHref(props.local
           <p>{{ card.detail }}</p>
         </article>
 
-        <div class="section-actions compact">
-          <a
-            v-for="link in content.links"
-            :key="link.linkId"
-            class="paper-link tertiary"
-            :href="resolve(link.linkId)"
-          >
-            <span>{{ link.label }}</span>
-            <ArrowRight :size="16" />
-          </a>
-        </div>
+        <footer class="paper-grid-footer">
+          <div class="section-actions compact">
+            <a
+              v-for="link in content.links"
+              :key="link.linkId"
+              class="paper-link tertiary"
+              :href="resolve(link.linkId)"
+            >
+              <span>{{ link.label }}</span>
+              <ArrowRight :size="16" />
+            </a>
+          </div>
+        </footer>
       </div>
 
       <figure class="paper-card diagram-frame-home">
