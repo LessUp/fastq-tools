@@ -1,13 +1,21 @@
-# 归档文档
+# 归档概览
 
-本目录不再维护。所有**规范、提案、历史记录**已迁移到项目根目录的 OpenSpec 框架中。
+归档页回答的问题不是“这里还有什么页面”，而是“哪些材料已经退出主线、为什么退出、现在应该去哪里找最新事实”。
 
-## 📍 当前事实来源
+## 为什么会有归档层
 
-- **规范基线**：[`openspec/baseline/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/baseline)
-- **活跃提案**：[`openspec/changes/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/changes)
-- **已落地历史**：[`openspec/archive/`](https://github.com/LessUp/fastq-tools/tree/master/openspec/archive)
-- **变更记录**：[`changelog/`](https://github.com/LessUp/fastq-tools/tree/master/changelog)
-- **开发规范**：[`AGENTS.md`](https://github.com/LessUp/fastq-tools/blob/master/AGENTS.md)
+随着项目采用 OpenSpec 与新的文档信息架构，一部分旧文档、历史说明或迁移通知不再适合继续放在主路径中，但它们仍然具有背景价值。归档层因此承担两个职责：
 
-本目录的文件仅保留供参考，不应依赖。
+- 保留历史语境，帮助读者理解项目怎样演进到今天；
+- 明确指出哪些内容已经不再是当前事实来源。
+
+## 现在的事实来源在哪里
+
+- 当前规范基线：`openspec/baseline/`
+- 活跃提案：`openspec/changes/`
+- 已落地历史：`openspec/archive/`
+- 项目变更时间线：[`变更记录`](../release-notes/changelog)
+
+## 如何阅读归档材料
+
+如果你只是想知道“现在应该怎么做”，通常不必停留在归档页；直接去学院、参考导航或开发者文档即可。只有在你需要解释历史决策、迁移原因，或在旧链接中辨别哪些信息已经过时时，再回到归档材料。

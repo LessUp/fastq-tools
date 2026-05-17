@@ -1,96 +1,37 @@
 # 构建指南
 
-## 系统要求
+构建系统的目标是把“本地开发”“CI 验证”“性能测试”尽量统一到同一套入口下，减少每个人各自拼装命令导致的漂移。
 
-- **编译器**: GCC 11+ 或 Clang 12+；仓库内保留 GCC 15 / Clang 21 作为首选 profile，但本地构建以实际已安装工具链为准
-- **CMake**: 3.28+
-- **版本规范**: 详见 `openspec/baseline/architecture/0002-toolchain-policy.md`
-- **并行库**: Intel oneTBB（必需，流水线实现依赖）
-- **压缩路径**: 维护中的压缩 I/O 以 gzip 为主，依赖 zlib 与 libdeflate
-- **内存**: 建议 4GB+ RAM
-- **存储**: 1GB+ 可用空间
+## 推荐入口
 
-## 快速构建
+在仓库根目录使用 `scripts/core/*`：
 
 ```bash
-# 一键构建（Clang + Release）
 ./scripts/core/build
-
-# 指定编译器和配置
+./scripts/core/build --dev
 ./scripts/core/build --compiler gcc --type Debug
-
-# 启用 sanitizers
-./scripts/core/build --sanitizer asan --dev
+./scripts/core/build --sanitizer asan
 ```
 
-## 依赖管理
+这些脚本会协调 Conan、CMake preset 与默认构建目录，避免维护者手动记忆过多环境细节。
 
-```bash
-# 安装依赖（首次配置）
-./scripts/core/install-deps
+## 常见构建场景
 
-# 重新构建（推荐：使用脚本统一管理构建目录）
-./scripts/core/build
-```
+| 场景 | 推荐命令 | 说明 |
+| --- | --- | --- |
+| 日常验证 | `./scripts/core/build --dev` | 生成更适合调试的构建 |
+| 发布前检查 | `./scripts/core/build` | 默认 Release 构建 |
+| Sanitizer 排障 | `./scripts/core/build --sanitizer asan` | 用于定位内存与未定义行为问题 |
+| 覆盖率 | `./scripts/core/build --coverage` | 配合测试脚本生成覆盖率数据 |
 
-> 说明：早期实验过 `mimalloc` 作为分配器，但目前构建和运行时已不再依赖它，所有配置文件均已移除相关要求。
+## 目录与产物
 
-## 代码质量
+默认构建目录遵循 `build/<preset>` 形式，例如 `build/clang-debug`、`build/clang-release`。维护脚本、CI 与文档应尽量引用这种统一约定，而不是各自假设一个单独路径。
 
-```bash
-# 格式化代码
-./scripts/core/lint format
+## 什么时候需要手动下钻
 
-# 检查格式
-./scripts/core/lint check
+只有在调试 Conan、preset 或特定 CMake 目标时，才建议直接手写 `conan install` / `cmake --preset` 命令。平时请优先使用脚本入口，因为它们同时也是仓库默认工作流的一部分。
 
-# 静态分析
-./scripts/core/lint tidy
-```
+## 构建之后要做什么
 
-## 测试
-
-```bash
-# 运行测试
-./scripts/core/test
-
-# 覆盖率测试
-./scripts/core/build --coverage --dev
-./scripts/core/test --coverage
-```
-## 工具与调试
-
-### Sanitizers (内存与运行时检查)
-
-FastQTools 支持多种 LLVM/GCC Sanitizers，用于检测内存错误和未定义行为：
-
-- **AddressSanitizer (ASan)**: 检测内存泄漏、缓冲区溢出、Use-after-free 等。
-- **UndefinedBehaviorSanitizer (USan)**: 检测整数溢出、无效类型转换、空指针解引用等。
-- **ThreadSanitizer (TSan)**: 检测多线程竞态条件 (Data Races)。
-
-使用方法：
-
-```bash
-# 启用 ASan（推荐在 Debug 模式下使用）
-./scripts/core/build --sanitizer asan --dev
-
-# 启用 TSan（注意：TSan 不能与 ASan 同时启用）
-./scripts/core/build --sanitizer tsan --dev
-
-# 启用 UBSan
-./scripts/core/build --sanitizer ubsan --dev
-```
-
-运行编译后的程序（如单元测试）时，Sanitizers 会在检测到问题时自动输出错误报告并终止程序。
-
-### 静态分析
-
-项目集成了 `clang-tidy` 进行静态代码检查：
-
-```bash
-# 运行 clang-tidy 静态分析
-./scripts/core/lint tidy
-
-# 运行所有检查（format + tidy + cppcheck）
-./scripts/core/lint all
-```
+构建成功只说明“能编译”。如果改动会影响行为，还需要继续运行[`测试策略`](./testing)中对应的验证；如果改动会影响性能叙事，还要补看[`Benchmark 指南`](./benchmark-guide)。

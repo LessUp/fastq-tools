@@ -1,63 +1,27 @@
-# 设计文档
+# 核心设计
 
-## 1. 设计原则
+核心设计页关注的是“为什么采用当前实现方式”，而不是逐个类列出接口。阅读它的最佳时机，是你已经看过架构页，准备进一步理解数据结构、配置面与优化取舍。
 
-- **测量驱动**：性能优化必须以 benchmark/数据为依据。
-- **低复杂度优先**：优先通过参数、数据结构、拷贝路径消除低效点。
-- **可复现工程化**：构建/测试/发布流程可在 CI 与本地一致复现。
+## 设计原则
 
-## 2. 数据模型与 IO
+- **测量先于优化**：没有 benchmark 或明确证据，就不要把复杂度永久写进实现；
+- **零拷贝意识**：围绕 FASTQ 记录视图与批处理边界设计，尽量避免热路径上的额外复制；
+- **工程一致性**：构建、测试、CLI、文档与基线规范要能互相印证，而不是各说各话。
 
-### 2.1 `FastqRecord` 与 `FastqBatch`
-- **目标**：减少字符串拷贝与频繁分配。
-- **实现**：
-  - `fq::io::FastqRecord` 使用 `std::string_view` 持有字段视图。
-  - `fq::io::FastqBatch` 维护一块连续 `buffer_`，以及 `records_` 元数据数组。
-  - Reader 将解析结果填入 `FastqBatch`，上游处理只读写 `FastqRecord`（视图）。
+## 数据与 I/O 设计
 
-### 2.2 Reader/Writer
-- Reader：批量读取与解析，关键参数：
-  - `readChunkBytes` / `zlibBufferBytes` / `maxBufferBytes`。
-- Writer：批量写出，关键参数：
-  - `zlibBufferBytes` / `outputBufferBytes`。
+项目围绕 FASTQ 记录视图、批处理缓存与读写器职责分离展开。Reader 负责把输入变成可消费的批次；Writer 负责把处理后的结果稳定输出；中间阶段则尽量只处理必要信息，而不是重新定义一套平行的数据模型。
 
-## 3. 处理流水线
+## 处理管线设计
 
-### 3.1 串行与并行实现
-- `SequentialProcessingPipeline::run()`：根据 `threadCount` 选择：
-  - `processSequential()`：单线程（便于调试、小文件）。
-  - `processWithTBB()`：`tbb::parallel_pipeline`。
+`filter` 与 `stat` 共享的是同一种工程思路：
 
-### 3.2 并行流水线形态（TBB）
-- **source（serial_in_order）**：读取下一批 `FastqBatch`。
-- **processing（parallel）**：对 batch 应用 predicates/mutators 并统计。
-- **sink（serial_in_order）**：按顺序写出，并合并统计。
+- 先把输入组织成可批量处理的单元；
+- 再在清晰的阶段边界上应用过滤、修剪或统计；
+- 最后输出结果与可追溯证据。
 
-### 3.3 调参入口（性能优先级）
-- 首选：
-  - `batchSize` / `batchCapacityBytes` / `maxInFlightBatches` / `threadCount`。
-- 次选（需要证据）：
-  - 专项算法优化、减少临界路径拷贝。
-- 不做默认目标：
-  - SIMD/预取/PGO 等高耦合优化。
+这意味着很多“方便的小改动”其实会破坏整体一致性，例如把业务特例硬塞进 CLI 解析、把调试逻辑写进热路径，或让某个模块同时负责配置解释与数据处理。
 
-## 4. 日志
+## 什么时候应该停下来补规范
 
-- 采用 `spdlog` 的**全局配置**（无需引入额外日志框架）。
-- 对外提供 `fq::logging::init()` / `setLevel()` 作为统一入口，CLI 解析 `--log-level` 后调用。
-
-## 5. 测试与质量
-
-### 5.1 覆盖率
-- `scripts/core/test --coverage`：生成 lcov 与 HTML。
-- CI：上传覆盖率 artifact。
-- 门禁阈值：保留为后续选项，避免“为了阈值刷覆盖率”。
-
-### 5.2 静态分析
-- 格式检查强制。
-- clang-tidy/cppcheck：先报告后收敛。
-
-## 6. 发布
-
-- `scripts/tools/package-release`：本地生成 `dist/*.tar.gz`。
-- `.github/workflows/release.yml`：tag 触发，执行打包并上传 GitHub Release。
+如果一项改动会影响公共 API、配置格式、行为边界或 benchmark 叙事，就不只是实现层问题。此时应回看 OpenSpec baseline / changes，而不是把变更藏进代码细节中。

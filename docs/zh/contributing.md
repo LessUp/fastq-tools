@@ -1,40 +1,32 @@
-# 贡献指南
+# 参与贡献
 
-FastQTools 欢迎聚焦明确的改进：bug 反馈、文档修订、测试补强、基准说明，以及范围清晰的代码变更。目标不是堆功能，而是让项目更可信、更易用。
+对 FastQTools 来说，好的贡献不是一次性塞进很多功能，而是在正确的层级上补齐可信度：让命令更可解释、让文档更连贯、让测试更能防回归、让 benchmark 结论更可复现。
 
-## 适合优先参与的内容
+## 适合优先贡献的方向
 
-- 补充更清楚的安装步骤或使用示例
-- 改进错误场景说明和排障信息
-- 为已有行为补测试、补边界条件
-- 复现实验或整理性能基准流程
-- 帮助核实 issue 中的问题是否可复现
+- 修正文档中的断裂阅读路径、过时命令或模糊表述；
+- 为已有行为补充更精确的测试与回归覆盖；
+- 改善错误提示、配置说明与排障体验；
+- 整理 benchmark 证据、研究参考与发布说明之间的一致性。
 
-## 提交 PR 前建议先做的事
+## 贡献前先建立共同上下文
 
-1. 如果改动会影响公开行为、文档或示例，请一起更新，避免信息分叉。
-2. 保持范围尽量小，让审阅者可以快速判断正确性。
-3. 如果变更影响外部可见行为，先确认是否与相关 OpenSpec baseline 一致。
+1. 阅读与你要修改内容直接相关的页面或 baseline；
+2. 如果改动影响公开行为、接口或规范，先确认是否需要同步更新 OpenSpec；
+3. 保持补丁聚焦，让审阅者能快速理解“为什么改、改了什么、如何验证”。
 
-## 本地验证
+## 最小本地验证
 
 ```bash
-# 需要时先格式化代码
 ./scripts/core/lint format
-
-# 运行相关检查
 ./scripts/core/test
-
-# 修改公开文档时，构建文档站点
-mkdocs build --strict
 ```
 
-## 从哪里开始
+如果你修改的是文档站，请在 `docs/` 目录额外运行站点测试与构建；如果你修改的是性能叙事，请同步检查 benchmark 相关材料是否仍然一致。
 
-- [仓库根目录 CONTRIBUTING.md](https://github.com/LessUp/fastq-tools/blob/master/CONTRIBUTING.md) — 完整贡献流程
-- [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) — bug 与可执行问题单
-- [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions) — 提案与开放讨论
+## 从哪里继续
 
-## 文档贡献同样重要
-
-很多时候，一次好的文档修改就是提升项目可用性的最快方式。README 是否清楚、首页是否好用、命令示例是否可信、性能数字是否解释得当，都会直接影响新用户是否愿意采用 FastQTools。
+- [`开发者文档`](./dev/) —— 进入维护者视角的架构、构建与测试材料；
+- [`资源中心`](./resources/) —— 查看仓库、Issue、OpenSpec 与外部背景链接；
+- [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) —— 追踪具体问题；
+- [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions) —— 进行开放讨论。
