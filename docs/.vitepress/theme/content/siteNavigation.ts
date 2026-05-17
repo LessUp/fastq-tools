@@ -1,130 +1,24 @@
-export const localeText = {
-  zh: {
-    nav: {
-      orientation: '导读',
-      whitepaper: '白皮书',
-      academy: '学院',
-      reference: '参考',
-      research: '研究',
-    },
-    sidebar: {
-      orientationHub: '导读',
-      whitepaperHub: '白皮书',
-      academyHub: '学院',
-      referenceHub: '参考',
-      researchHub: '研究',
-      whyFastqtools: '为什么选择 FastQTools',
-      architecture: '架构',
-      knowledgeMap: '知识地图',
-      workflows: '工作流',
-      performance: '性能',
-      benchmarkReport: 'Benchmark 报告',
-      guide: '指南',
-      guideOverview: '指南概览',
-      gettingStarted: '快速开始',
-      cliReference: 'CLI 参考',
-      configuration: '配置',
-      deployment: '部署',
-      api: 'API 参考',
-      apiOverview: 'API 概览',
-      ioModule: 'IO 模块',
-      processing: '处理模块',
-      statistics: '统计模块',
-      core: '核心模块',
-      developer: '开发者指南',
-      devOverview: '概览',
-      devArchitecture: '架构设计',
-      design: '核心设计',
-      build: '构建指南',
-      testing: '测试策略',
-      codingStandards: '编码规范',
-      localTooling: '本地工具',
-      qualityTools: '代码质量',
-      gitWorkflow: 'Git 工作流',
-      devcontainer: 'DevContainer',
-      benchmarkGuide: 'Benchmark 指南',
-      referenceOverview: '参考概览',
-      resourcesOverview: '资源导航',
-      contributing: '参与贡献',
-      releaseNotes: '发布说明',
-      changelog: '变更记录',
-      agents: 'Agent 文档',
-      domain: '领域模型',
-      issueTracker: 'Issue Tracker',
-      triageLabels: '分类标签',
-      archive: '归档',
-      archiveOverview: '归档概览',
-      migrationNotice: '迁移通知',
-    },
-    editLinkText: '在 GitHub 上编辑此页',
-    footerCopyright: '基于 VitePress 构建',
-  },
-  en: {
-    nav: {
-      orientation: 'Orientation',
-      whitepaper: 'Whitepaper',
-      academy: 'Academy',
-      reference: 'Reference',
-      research: 'Research',
-    },
-    sidebar: {
-      orientationHub: 'Orientation',
-      whitepaperHub: 'Whitepaper',
-      academyHub: 'Academy',
-      referenceHub: 'Reference',
-      researchHub: 'Research',
-      whyFastqtools: 'Why FastQTools',
-      architecture: 'Architecture',
-      knowledgeMap: 'Knowledge Map',
-      workflows: 'Workflows',
-      performance: 'Performance',
-      benchmarkReport: 'Benchmark Report',
-      guide: 'Guide',
-      guideOverview: 'Guide Overview',
-      gettingStarted: 'Getting Started',
-      cliReference: 'CLI Reference',
-      configuration: 'Configuration',
-      deployment: 'Deployment',
-      api: 'API Reference',
-      apiOverview: 'API Overview',
-      ioModule: 'IO Module',
-      processing: 'Processing',
-      statistics: 'Statistics',
-      core: 'Core',
-      developer: 'Developer Guide',
-      devOverview: 'Overview',
-      devArchitecture: 'Architecture',
-      design: 'Design',
-      build: 'Build',
-      testing: 'Testing',
-      codingStandards: 'Coding Standards',
-      localTooling: 'Local Tooling',
-      qualityTools: 'Quality Tools',
-      gitWorkflow: 'Git Workflow',
-      devcontainer: 'DevContainer',
-      benchmarkGuide: 'Benchmark Guide',
-      referenceOverview: 'Reference Overview',
-      resourcesOverview: 'Resources Overview',
-      contributing: 'Contributing',
-      releaseNotes: 'Release Notes',
-      changelog: 'Changelog',
-      agents: 'Agent Docs',
-      domain: 'Domain',
-      issueTracker: 'Issue Tracker',
-      triageLabels: 'Triage Labels',
-      archive: 'Archive',
-      archiveOverview: 'Overview',
-      migrationNotice: 'Migration Notice',
-    },
-    editLinkText: 'Edit this page on GitHub',
-    footerCopyright: 'Built with VitePress',
-  },
-} as const
+import { localeText, themeFoundation, type LocaleKey, type SidebarTextKey } from './siteContent'
 
-export type LocaleKey = keyof typeof localeText
-type SidebarTextKey = keyof typeof localeText.en.sidebar
+export { localeText, themeFoundation, type LocaleKey }
 
 const sharedLinks = {
+  whitepaper: {
+    path: themeFoundation.sections.whitepaper.path,
+    labels: { zh: localeText.zh.nav.whitepaper, en: localeText.en.nav.whitepaper },
+  },
+  architecture: {
+    path: themeFoundation.sections.architecture.path,
+    labels: { zh: localeText.zh.nav.architecture, en: localeText.en.nav.architecture },
+  },
+  algorithms: {
+    path: themeFoundation.sections.algorithms.path,
+    labels: { zh: localeText.zh.nav.algorithms, en: localeText.en.nav.algorithms },
+  },
+  performance: {
+    path: themeFoundation.sections.performance.path,
+    labels: { zh: localeText.zh.nav.performance, en: localeText.en.nav.performance },
+  },
   orientationNav: {
     path: 'orientation/',
     labels: { zh: localeText.zh.nav.orientation, en: localeText.en.nav.orientation },
@@ -149,10 +43,6 @@ const sharedLinks = {
     path: 'why-fastqtools/',
     labels: { zh: localeText.zh.sidebar.whyFastqtools, en: localeText.en.sidebar.whyFastqtools },
   },
-  architecture: {
-    path: 'architecture/',
-    labels: { zh: localeText.zh.sidebar.architecture, en: localeText.en.sidebar.architecture },
-  },
   knowledgeMap: {
     path: 'knowledge-map/',
     labels: { zh: localeText.zh.sidebar.knowledgeMap, en: localeText.en.sidebar.knowledgeMap },
@@ -160,10 +50,6 @@ const sharedLinks = {
   workflows: {
     path: 'workflows/',
     labels: { zh: localeText.zh.sidebar.workflows, en: localeText.en.sidebar.workflows },
-  },
-  performance: {
-    path: 'performance/',
-    labels: { zh: localeText.zh.sidebar.performance, en: localeText.en.sidebar.performance },
   },
   benchmarkReport: {
     path: 'performance/benchmark-report',
@@ -294,9 +180,10 @@ const sharedLinks = {
 export type SharedLinkId = keyof typeof sharedLinks
 
 export const topNavLinkIds = [
-  'orientationNav',
-  'whitepaperNav',
-  'academyNav',
+  'whitepaper',
+  'architecture',
+  'algorithms',
+  'performance',
   'referenceNav',
   'researchNav',
 ] as const satisfies readonly SharedLinkId[]
@@ -304,16 +191,32 @@ export const topNavLinkIds = [
 export const orientationSidebarGroups = [
   {
     headingKey: 'orientationHub',
-    items: ['orientationNav', 'knowledgeMap', 'whitepaperNav', 'academyNav', 'referenceNav', 'researchNav'],
+    items: ['orientationNav', 'whitepaper', 'architecture', 'algorithms', 'performance', 'referenceNav', 'researchNav'],
   },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const whitepaperSidebarGroups = [
-  { headingKey: 'whitepaperHub', items: ['whitepaperNav', 'why', 'architecture', 'performance'] },
+  { headingKey: 'whitepaperHub', items: ['whitepaper', 'orientationNav', 'whitepaperNav', 'why'] },
+  { headingKey: 'narrativeContext', items: ['architecture', 'algorithms', 'performance', 'referenceNav', 'researchNav'] },
+] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
+
+export const architectureSidebarGroups = [
+  { headingKey: 'architectureHub', items: ['architecture', 'knowledgeMap'] },
+  { headingKey: 'systemDesign', items: ['whitepaper', 'performance', 'referenceNav'] },
+] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
+
+export const algorithmsSidebarGroups = [
+  { headingKey: 'algorithmsHub', items: ['algorithms', 'academyNav', 'workflows'] },
+  { headingKey: 'operatorRoutes', items: ['gettingStarted', 'cliReference', 'performance', 'referenceNav'] },
+] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
+
+export const performanceSidebarGroups = [
+  { headingKey: 'performanceHub', items: ['performance', 'benchmarkReport'] },
+  { headingKey: 'evidenceTrail', items: ['whitepaper', 'architecture', 'researchNav'] },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const academySidebarGroups = [
-  { headingKey: 'academyHub', items: ['academyNav', 'workflows', 'referenceNav'] },
+  { headingKey: 'academyHub', items: ['academyNav', 'algorithms', 'workflows', 'referenceNav'] },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const referenceSidebarGroups = [
@@ -341,8 +244,8 @@ export const homepagePillarLinkIds = {
 } as const satisfies Record<string, SharedLinkId>
 
 export const knowledgeMapSections = [
-  { id: 'evaluate', href: 'why', items: ['why', 'architecture', 'performance'] },
-  { id: 'operate', href: 'workflows', items: ['workflows', 'gettingStarted', 'cliReference'] },
+  { id: 'evaluate', href: 'whitepaper', items: ['whitepaper', 'why', 'architecture', 'performance'] },
+  { id: 'operate', href: 'algorithms', items: ['algorithms', 'workflows', 'gettingStarted', 'cliReference'] },
   { id: 'reference', href: 'referenceNav', items: ['referenceNav', 'apiOverview', 'developerGuide'] },
   { id: 'extend', href: 'resourcesOverview', items: ['resourcesOverview', 'contributing', 'agentsDomain'] },
 ] as const satisfies readonly { id: string; href: SharedLinkId; items: readonly SharedLinkId[] }[]

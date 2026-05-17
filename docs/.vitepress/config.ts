@@ -2,10 +2,13 @@ import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 import llmstxt from 'vitepress-plugin-llms'
 import {
+  algorithmsSidebarGroups,
+  architectureSidebarGroups,
   academySidebarGroups,
   getSharedLink,
   localeText,
   orientationSidebarGroups,
+  performanceSidebarGroups,
   researchSidebarGroups,
   referenceSidebarGroups,
   topNavLinkIds,
@@ -24,58 +27,47 @@ const localeSidebarRoutes = {
   zh: {
     orientation: '/zh/orientation/',
     whitepaper: '/zh/whitepaper/',
+    architecture: '/zh/architecture/',
+    algorithms: '/zh/academy/',
     academy: '/zh/academy/',
+    performance: '/zh/performance/',
     reference: '/zh/reference/',
     research: '/zh/research/',
   },
   en: {
     orientation: '/en/orientation/',
     whitepaper: '/en/whitepaper/',
+    architecture: '/en/architecture/',
+    algorithms: '/en/academy/',
     academy: '/en/academy/',
+    performance: '/en/performance/',
     reference: '/en/reference/',
     research: '/en/research/',
   },
-} as const satisfies Record<LocaleKey, Record<'orientation' | 'whitepaper' | 'academy' | 'reference' | 'research', string>>
+} as const satisfies Record<LocaleKey, Record<'orientation' | 'whitepaper' | 'architecture' | 'algorithms' | 'academy' | 'performance' | 'reference' | 'research', string>>
 
-const createOrientationSidebar = (locale: LocaleKey) => {
-  return orientationSidebarGroups.map((group) => ({
-    text: localeText[locale].sidebar[group.headingKey],
-    items: group.items.map((id) => getSharedLink(locale, id)),
-  }))
-}
+const createSidebar = (
+  locale: LocaleKey,
+  groups: readonly { headingKey: keyof typeof localeText.en.sidebar; items: readonly Parameters<typeof getSharedLink>[1][] }[],
+) => groups.map((group) => ({
+  text: localeText[locale].sidebar[group.headingKey],
+  items: group.items.map((id) => getSharedLink(locale, id)),
+}))
 
-const createWhitepaperSidebar = (locale: LocaleKey) => {
-  return whitepaperSidebarGroups.map((group) => ({
-    text: localeText[locale].sidebar[group.headingKey],
-    items: group.items.map((id) => getSharedLink(locale, id)),
-  }))
-}
-
-const createAcademySidebar = (locale: LocaleKey) => {
-  return academySidebarGroups.map((group) => ({
-    text: localeText[locale].sidebar[group.headingKey],
-    items: group.items.map((id) => getSharedLink(locale, id)),
-  }))
-}
-
-const createReferenceSidebar = (locale: LocaleKey) => {
-  return referenceSidebarGroups.map((group) => ({
-    text: localeText[locale].sidebar[group.headingKey],
-    items: group.items.map((id) => getSharedLink(locale, id)),
-  }))
-}
-
-const createResearchSidebar = (locale: LocaleKey) => {
-  return researchSidebarGroups.map((group) => ({
-    text: localeText[locale].sidebar[group.headingKey],
-    items: group.items.map((id) => getSharedLink(locale, id)),
-  }))
-}
+const createOrientationSidebar = (locale: LocaleKey) => createSidebar(locale, orientationSidebarGroups)
+const createWhitepaperSidebar = (locale: LocaleKey) => createSidebar(locale, whitepaperSidebarGroups)
+const createArchitectureSidebar = (locale: LocaleKey) => createSidebar(locale, architectureSidebarGroups)
+const createAlgorithmsSidebar = (locale: LocaleKey) => createSidebar(locale, algorithmsSidebarGroups)
+const createAcademySidebar = (locale: LocaleKey) => createSidebar(locale, academySidebarGroups)
+const createPerformanceSidebar = (locale: LocaleKey) => createSidebar(locale, performanceSidebarGroups)
+const createReferenceSidebar = (locale: LocaleKey) => createSidebar(locale, referenceSidebarGroups)
+const createResearchSidebar = (locale: LocaleKey) => createSidebar(locale, researchSidebarGroups)
 
 const createTopNavActiveMatches = (locale: LocaleKey) => ({
-  orientationNav: `^/${locale}/(orientation|knowledge-map)/`,
-  whitepaperNav: `^/${locale}/(whitepaper|why-fastqtools|architecture)/`,
-  academyNav: `^/${locale}/(academy|workflows)/`,
+  whitepaper: `^/${locale}/(whitepaper|orientation|why-fastqtools)(/|$)`,
+  architecture: `^/${locale}/(architecture|knowledge-map)(/|$)`,
+  algorithms: `^/${locale}/(academy|workflows)(/|$)`,
+  performance: `^/${locale}/performance(/|$)`,
   referenceNav: `^/${locale}/(reference|guide|api|dev|release-notes)/`,
   researchNav: `^/${locale}/(research|performance|resources|agents|archive|contributing)(/|$)`,
 } as const satisfies Record<(typeof topNavLinkIds)[number], string>)
@@ -90,16 +82,19 @@ const createLocaleThemeConfig = (locale: LocaleKey) => ({
     }
   }),
   sidebar: {
-    [localeSidebarRoutes[locale].orientation]: createOrientationSidebar(locale),
     [localeSidebarRoutes[locale].whitepaper]: createWhitepaperSidebar(locale),
-    [localeSidebarRoutes[locale].academy]: createAcademySidebar(locale),
+    [localeSidebarRoutes[locale].architecture]: createArchitectureSidebar(locale),
+    [localeSidebarRoutes[locale].algorithms]: createAlgorithmsSidebar(locale),
+    [localeSidebarRoutes[locale].performance]: createPerformanceSidebar(locale),
     [localeSidebarRoutes[locale].reference]: createReferenceSidebar(locale),
     [localeSidebarRoutes[locale].research]: createResearchSidebar(locale),
+    [localeSidebarRoutes[locale].orientation]: createOrientationSidebar(locale),
+    [localeSidebarRoutes[locale].academy]: createAcademySidebar(locale),
     [`/${locale}/why-fastqtools/`]: createWhitepaperSidebar(locale),
-    [`/${locale}/architecture/`]: createWhitepaperSidebar(locale),
+    [`/${locale}/architecture/`]: createArchitectureSidebar(locale),
     [`/${locale}/workflows/`]: createAcademySidebar(locale),
-    [`/${locale}/knowledge-map/`]: createOrientationSidebar(locale),
-    [`/${locale}/performance/`]: createResearchSidebar(locale),
+    [`/${locale}/knowledge-map/`]: createArchitectureSidebar(locale),
+    [`/${locale}/performance/`]: createPerformanceSidebar(locale),
     [`/${locale}/guide/`]: createReferenceSidebar(locale),
     [`/${locale}/api/`]: createReferenceSidebar(locale),
     [`/${locale}/dev/`]: createReferenceSidebar(locale),

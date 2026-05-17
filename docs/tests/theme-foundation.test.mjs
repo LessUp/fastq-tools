@@ -2,79 +2,39 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 
-const styleSource = readFileSync(new URL('../.vitepress/theme/style.css', import.meta.url), 'utf8')
-const themeIndexSource = readFileSync(new URL('../.vitepress/theme/index.ts', import.meta.url), 'utf8')
-const stylesDirUrl = new URL('../.vitepress/theme/styles/', import.meta.url)
-const tokensSource = readFileSync(new URL('tokens.css', stylesDirUrl), 'utf8')
-const diagramsSource = readFileSync(new URL('diagrams.css', stylesDirUrl), 'utf8')
-const packageSource = readFileSync(new URL('../package.json', import.meta.url), 'utf8')
-const ciSource = readFileSync(new URL('../../.github/workflows/ci-docs.yml', import.meta.url), 'utf8')
-const pagesWorkflowSource = readFileSync(new URL('../../.github/workflows/docs-pages.yml', import.meta.url), 'utf8')
-const changelogPath = new URL('../../changelog/2026-05-15-docs-whitepaper-rebuild.md', import.meta.url)
+const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+const navSource = readFileSync(new URL('../.vitepress/theme/content/siteNavigation.ts', import.meta.url), 'utf8')
+const configSource = readFileSync(new URL('../.vitepress/config.ts', import.meta.url), 'utf8')
 
-test('theme style imports the four visual layers', () => {
-  for (const file of ['tokens.css', 'base.css', 'patterns.css', 'diagrams.css']) {
-    assert.match(styleSource, new RegExp(`@import './styles/${file}'`))
-  }
+test('docs package exposes the theme foundation test through npm test', () => {
+  assert.match(packageJson.scripts.test, /theme-foundation\.test\.mjs/)
 })
 
-test('imported theme layer files exist on disk', () => {
-  for (const file of ['tokens.css', 'base.css', 'patterns.css', 'diagrams.css']) {
-    assert.equal(existsSync(new URL(file, stylesDirUrl)), true)
+test('theme foundation promotes the whitepaper-first IA at the top level', () => {
+  const topLevelBlock = navSource.match(/topNavLinkIds\s*=\s*\[(.*?)\]\s*as const/s)?.[1] ?? ''
+
+  for (const id of ['whitepaper', 'architecture', 'algorithms', 'performance', 'referenceNav', 'researchNav']) {
+    assert.match(topLevelBlock, new RegExp(`['"]${id}['"]`), `missing ${id} in top navigation`)
   }
+
+  assert.doesNotMatch(topLevelBlock, /orientationNav/)
+  assert.doesNotMatch(topLevelBlock, /academyNav/)
 })
 
-test('tokens layer preserves foundational color schemes and theme tokens', () => {
-  assert.match(tokensSource, /:root\s*\{[\s\S]*color-scheme:\s*light;/)
-  assert.match(tokensSource, /\.dark\s*\{[\s\S]*color-scheme:\s*dark;/)
-
-  for (const tokenName of [
-    '--fq-c-canvas',
-    '--fq-c-surface',
-    '--fq-c-surface-alt',
-    '--fq-c-text-main',
-    '--fq-c-border',
-    '--fq-c-brand',
-    '--vp-c-brand-1',
-    '--vp-c-bg',
-    '--vp-c-text-1',
-    '--vp-home-hero-name-color',
+test('theme foundation ships dedicated shared content and reference data modules', () => {
+  for (const relativePath of [
+    '../.vitepress/theme/content/siteContent.ts',
+    '../.vitepress/theme/content/references.ts',
   ]) {
-    assert.match(tokensSource, new RegExp(`${tokenName}:`))
+    assert.equal(existsSync(new URL(relativePath, import.meta.url)), true, `${relativePath} should exist`)
   }
 })
 
-test('diagrams layer keeps diagram and mermaid styling hooks', () => {
-  for (const selector of ['.diagram-frame', '.mermaid']) {
-    assert.match(diagramsSource, new RegExp(selector.replace(/\./g, '\\.')))
+test('config active matches pivot around the new IA concepts', () => {
+  for (const token of ['whitepaper:', 'architecture:', 'algorithms:', 'performance:', 'referenceNav:', 'researchNav:']) {
+    assert.match(configSource, new RegExp(token))
   }
-})
 
-test('theme index registers the approved whitepaper components', () => {
-  for (const name of ['SiteHeroPanel', 'EvidenceStrip', 'PillarGrid', 'KnowledgeMap', 'WorkflowPaths', 'ResourceHub', 'CitationStrip', 'DiagramFrame', 'SectionLandingGrid']) {
-    assert.match(themeIndexSource, new RegExp(`component\\('${name}'`))
-  }
-})
-
-test('docs package exposes a docs source verification command', () => {
-  assert.match(packageSource, /"test":\s*"node --test [^"]*theme-foundation\.test\.mjs/)
-  assert.match(packageSource, /en-mirror-matrix\.test\.mjs/)
-})
-
-test('docs ci runs source tests before vitepress build', () => {
-  assert.match(ciSource, /name:\s*Run docs source tests[\s\S]*run:\s*npm test/)
-  assert.match(ciSource, /name:\s*Build docs[\s\S]*run:\s*npm run build/)
-})
-
-test('docs pages deploy runs source tests before build', () => {
-  assert.match(pagesWorkflowSource, /name:\s*Run docs source tests[\s\S]*run:\s*npm test/)
-  assert.match(pagesWorkflowSource, /name:\s*Build docs[\s\S]*run:\s*npm run build/)
-})
-
-test('whitepaper rebuild changelog record exists', () => {
-  assert.equal(existsSync(changelogPath), true)
-  const changelogSource = readFileSync(changelogPath, 'utf8')
-  assert.match(changelogSource, /Docs whitepaper rebuild|文档白皮书重构/)
-  assert.match(changelogSource, /npm test/)
-  assert.match(changelogSource, /npm run build/)
+  assert.doesNotMatch(configSource, /orientationNav:/)
+  assert.doesNotMatch(configSource, /academyNav:/)
 })

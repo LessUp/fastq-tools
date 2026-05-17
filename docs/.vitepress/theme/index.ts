@@ -10,9 +10,13 @@ import ResourceHub from './components/ResourceHub.vue'
 import CitationStrip from './components/CitationStrip.vue'
 import DiagramFrame from './components/DiagramFrame.vue'
 import SectionLandingGrid from './components/SectionLandingGrid.vue'
+import { referenceCatalog } from './content/references'
+import { themeFoundation } from './content/siteContent'
 import './style.css'
 
 const LANG_KEY = 'vitepress:lang-pref'
+const THEME_FOUNDATION_KEY = 'fq-theme-foundation'
+const REFERENCE_CATALOG_KEY = 'fq-reference-catalog'
 
 type SupportedLocale = 'zh' | 'en'
 
@@ -113,6 +117,8 @@ const theme: Theme = {
     ctx.app.component('CitationStrip', CitationStrip)
     ctx.app.component('DiagramFrame', DiagramFrame)
     ctx.app.component('SectionLandingGrid', SectionLandingGrid)
+    ctx.app.provide(THEME_FOUNDATION_KEY, themeFoundation)
+    ctx.app.provide(REFERENCE_CATALOG_KEY, referenceCatalog)
 
     installLanguagePreference(ctx)
   },

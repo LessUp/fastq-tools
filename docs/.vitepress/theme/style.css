@@ -2,3 +2,71 @@
 @import './styles/base.css';
 @import './styles/patterns.css';
 @import './styles/diagrams.css';
+
+:root {
+  --fq-site-shell-bg:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--fq-c-brand-soft) 92%, transparent), transparent 32%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--fq-c-info-soft) 90%, transparent), transparent 28%);
+  --fq-nav-pill-bg: color-mix(in srgb, var(--vp-c-bg-elv) 78%, transparent);
+  --fq-nav-pill-border: color-mix(in srgb, var(--vp-c-brand-1) 18%, var(--vp-c-border));
+}
+
+.dark {
+  --fq-site-shell-bg:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--fq-c-brand-soft) 88%, transparent), transparent 36%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--fq-c-info-soft) 82%, transparent), transparent 30%);
+  --fq-nav-pill-bg: color-mix(in srgb, var(--vp-c-bg-soft) 72%, transparent);
+  --fq-nav-pill-border: color-mix(in srgb, var(--vp-c-brand-1) 22%, var(--vp-c-border));
+}
+
+body {
+  background-image: var(--fq-site-shell-bg);
+  background-attachment: fixed;
+}
+
+.VPNavBar {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--vp-c-bg) 90%, transparent), color-mix(in srgb, var(--vp-c-bg) 74%, transparent)),
+    var(--fq-site-shell-bg);
+}
+
+.VPNavBarMenuLink,
+.VPNavBarMenuGroup .button {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+}
+
+.VPNavBarMenuLink:hover,
+.VPNavBarMenuGroup .button:hover {
+  border-color: var(--fq-nav-pill-border);
+  background: var(--fq-nav-pill-bg);
+  transform: translateY(-1px);
+}
+
+.VPNavBarMenuLink.active {
+  border-color: color-mix(in srgb, var(--vp-c-brand-1) 24%, var(--vp-c-border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fq-c-brand-soft) 95%, transparent), color-mix(in srgb, var(--vp-c-bg-elv) 92%, transparent));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--vp-c-brand-1) 16%, transparent);
+}
+
+.VPSidebar {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--vp-c-bg-alt) 72%, transparent), transparent 20rem),
+    radial-gradient(circle at top, color-mix(in srgb, var(--fq-c-brand-soft) 78%, transparent), transparent 42%);
+}
+
+.VPSidebarItem.is-active .indicator {
+  background: linear-gradient(180deg, var(--vp-c-brand-1), var(--fq-c-info));
+}
+
+.VPDoc .content-container,
+.VPDoc.has-aside .content-container {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--vp-c-bg-elv) 66%, transparent), transparent 32rem);
+}
+
+.VPDoc .content a {
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
