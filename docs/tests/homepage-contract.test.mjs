@@ -80,3 +80,14 @@ test('system snapshot promotes the CTA links into a full-width section footer', 
   assert.match(snapshotSource, /<div class="section-actions compact">/)
   assert.match(themeStyles, /\.paper-grid-footer\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;/s)
 })
+
+test('homepage grids size cards with responsive min widths instead of fixed three-column tracks', () => {
+  assert.match(
+    themeStyles,
+    /\.paper-grid,\s*\.paper-pillars,\s*\.evidence-grid,\s*(?:\.proof-dashboard-grid,\s*)?\.track-grid,\s*\.research-rail-grid\s*\{[\s\S]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(100%,\s*18rem\),\s*1fr\)\);/s,
+  )
+  assert.match(
+    themeStyles,
+    /@media \(max-width:\s*1100px\)\s*\{[\s\S]*\.publication-hero-grid,[\s\S]*\.proof-dashboard-grid,[\s\S]*\.system-atlas-grid,[\s\S]*grid-template-columns:\s*1fr;/s,
+  )
+})
