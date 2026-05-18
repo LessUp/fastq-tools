@@ -92,6 +92,17 @@ test('homepage grids size cards with responsive min widths instead of fixed thre
   )
 })
 
+test('system atlas gives the architecture diagram a full-width readable lane', () => {
+  assert.match(
+    themeStyles,
+    /\.system-atlas-grid\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s,
+  )
+  assert.match(
+    themeStyles,
+    /\.system-atlas-ledger\s*\{[\s\S]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(100%,\s*18rem\),\s*1fr\)\);/s,
+  )
+})
+
 test('homepage hero uses the specimen-sheet redesign vocabulary and rhythm', () => {
   const heroSource = readUtf8('../.vitepress/theme/components/PublicationHero.vue')
 

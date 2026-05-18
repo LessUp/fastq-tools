@@ -53,71 +53,71 @@ const content = computed(() => copy[props.locale])
 
 <template>
   <svg
-    viewBox="0 0 960 520"
-    class="publication-diagram"
+    viewBox="0 0 1120 640"
+    class="publication-diagram architecture-overview-diagram"
     role="img"
     :aria-labelledby="`architecture-overview-title-${props.locale} architecture-overview-desc-${props.locale}`"
   >
     <title :id="`architecture-overview-title-${props.locale}`">{{ content.title }}</title>
     <desc :id="`architecture-overview-desc-${props.locale}`">{{ content.desc }}</desc>
 
-    <rect x="24" y="24" width="912" height="472" rx="28" fill="var(--fq-diagram-bg)" />
+    <rect x="32" y="32" width="1056" height="576" rx="32" fill="var(--fq-diagram-bg)" />
     <g class="diagram-grid" stroke="var(--fq-diagram-grid)" stroke-width="1">
-      <path d="M120 48 V472" />
-      <path d="M300 48 V472" />
-      <path d="M480 48 V472" />
-      <path d="M660 48 V472" />
-      <path d="M840 48 V472" />
-      <path d="M48 220 H912" />
-      <path d="M48 380 H912" />
+      <path d="M176 56 V584" />
+      <path d="M384 56 V584" />
+      <path d="M560 56 V584" />
+      <path d="M736 56 V584" />
+      <path d="M944 56 V584" />
+      <path d="M56 272 H1064" />
+      <path d="M56 448 H1064" />
     </g>
-    <rect x="60" y="72" width="220" height="120" rx="24" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-stroke)" stroke-width="2" />
-    <rect x="370" y="72" width="220" height="120" rx="24" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-accent)" stroke-width="2.5" />
-    <rect x="680" y="72" width="220" height="120" rx="24" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-signal)" stroke-width="2.5" />
-    <rect x="60" y="250" width="840" height="188" rx="28" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-stroke)" stroke-width="2" />
+    <rect x="72" y="76" width="280" height="176" rx="28" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-stroke)" stroke-width="2" />
+    <rect x="420" y="76" width="280" height="176" rx="28" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-accent)" stroke-width="2.5" />
+    <rect x="768" y="76" width="280" height="176" rx="28" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-signal)" stroke-width="2.5" />
+    <rect x="72" y="308" width="976" height="220" rx="32" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-stroke)" stroke-width="2" />
 
-    <path d="M280 132 H370" fill="none" stroke="var(--fq-diagram-stroke)" stroke-width="4" stroke-linecap="round" />
-    <path d="M590 132 H680" fill="none" stroke="var(--fq-diagram-accent)" stroke-width="4" stroke-linecap="round" />
+    <path d="M352 164 H420" fill="none" stroke="var(--fq-diagram-stroke)" stroke-width="4" stroke-linecap="round" />
+    <path d="M700 164 H768" fill="none" stroke="var(--fq-diagram-accent)" stroke-width="4" stroke-linecap="round" />
 
-    <text x="92" y="110" fill="var(--fq-diagram-muted)" font-size="16" font-weight="700">
-      <tspan x="92" dy="0">{{ content.entry }}</tspan>
+    <text x="108" y="118" fill="var(--fq-diagram-muted)" font-size="16" font-weight="700">
+      <tspan x="108" dy="0">{{ content.entry }}</tspan>
     </text>
-    <text x="402" y="110" fill="var(--fq-diagram-muted)" font-size="16" font-weight="700">
-      <tspan x="402" dy="0">{{ content.contract }}</tspan>
+    <text x="456" y="118" fill="var(--fq-diagram-muted)" font-size="16" font-weight="700">
+      <tspan x="456" dy="0">{{ content.contract }}</tspan>
     </text>
-    <text x="712" y="110" fill="var(--fq-diagram-muted)" font-size="16" font-weight="700">
-      <tspan x="712" dy="0">{{ content.evidence }}</tspan>
-    </text>
-
-    <text x="92" y="144" fill="var(--fq-diagram-text)" font-size="22" font-weight="700">
-      <tspan v-for="(line, index) in content.cliTitle" :key="`cli-title-${line}`" x="92" :dy="index === 0 ? 0 : 28">{{ line }}</tspan>
-    </text>
-    <text x="92" y="204" fill="var(--fq-diagram-text)" font-size="18">
-      <tspan v-for="(line, index) in content.cliDetail" :key="`cli-detail-${line}`" x="92" :dy="index === 0 ? 0 : 24">{{ line }}</tspan>
+    <text x="804" y="118" fill="var(--fq-diagram-muted)" font-size="16" font-weight="700">
+      <tspan x="804" dy="0">{{ content.evidence }}</tspan>
     </text>
 
-    <text x="402" y="144" fill="var(--fq-diagram-text)" font-size="22" font-weight="700">
-      <tspan v-for="(line, index) in content.apiTitle" :key="`api-title-${line}`" x="402" :dy="index === 0 ? 0 : 28">{{ line }}</tspan>
+    <text x="108" y="156" fill="var(--fq-diagram-text)" font-size="24" font-weight="700">
+      <tspan v-for="(line, index) in content.cliTitle" :key="`cli-title-${line}`" x="108" :dy="index === 0 ? 0 : 30">{{ line }}</tspan>
     </text>
-    <text x="402" y="204" fill="var(--fq-diagram-text)" font-size="18">
-      <tspan v-for="(line, index) in content.apiDetail" :key="`api-detail-${line}`" x="402" :dy="index === 0 ? 0 : 24">{{ line }}</tspan>
-    </text>
-
-    <text x="712" y="144" fill="var(--fq-diagram-text)" font-size="22" font-weight="700">
-      <tspan v-for="(line, index) in content.evidenceTitle" :key="`evidence-title-${line}`" x="712" :dy="index === 0 ? 0 : 28">{{ line }}</tspan>
-    </text>
-    <text x="712" y="204" fill="var(--fq-diagram-text)" font-size="18">
-      <tspan v-for="(line, index) in content.evidenceDetail" :key="`evidence-detail-${line}`" x="712" :dy="index === 0 ? 0 : 24">{{ line }}</tspan>
+    <text x="108" y="218" fill="var(--fq-diagram-text)" font-size="18">
+      <tspan v-for="(line, index) in content.cliDetail" :key="`cli-detail-${line}`" x="108" :dy="index === 0 ? 0 : 24">{{ line }}</tspan>
     </text>
 
-    <text x="92" y="286" fill="var(--fq-diagram-muted)" font-size="16" font-weight="700">
-      <tspan x="92" dy="0">{{ content.coreLabel }}</tspan>
+    <text x="456" y="156" fill="var(--fq-diagram-text)" font-size="24" font-weight="700">
+      <tspan v-for="(line, index) in content.apiTitle" :key="`api-title-${line}`" x="456" :dy="index === 0 ? 0 : 30">{{ line }}</tspan>
     </text>
-    <text x="92" y="330" fill="var(--fq-diagram-text)" font-size="22" font-weight="700">
-      <tspan v-for="(line, index) in content.coreTitle" :key="`core-title-${line}`" x="92" :dy="index === 0 ? 0 : 28">{{ line }}</tspan>
+    <text x="456" y="218" fill="var(--fq-diagram-text)" font-size="18">
+      <tspan v-for="(line, index) in content.apiDetail" :key="`api-detail-${line}`" x="456" :dy="index === 0 ? 0 : 24">{{ line }}</tspan>
     </text>
-    <text x="92" y="376" fill="var(--fq-diagram-text)" font-size="18">
-      <tspan v-for="(line, index) in content.coreDetail" :key="`core-detail-${line}`" x="92" :dy="index === 0 ? 0 : 24">{{ line }}</tspan>
+
+    <text x="804" y="156" fill="var(--fq-diagram-text)" font-size="24" font-weight="700">
+      <tspan v-for="(line, index) in content.evidenceTitle" :key="`evidence-title-${line}`" x="804" :dy="index === 0 ? 0 : 30">{{ line }}</tspan>
+    </text>
+    <text x="804" y="218" fill="var(--fq-diagram-text)" font-size="18">
+      <tspan v-for="(line, index) in content.evidenceDetail" :key="`evidence-detail-${line}`" x="804" :dy="index === 0 ? 0 : 24">{{ line }}</tspan>
+    </text>
+
+    <text x="108" y="358" fill="var(--fq-diagram-muted)" font-size="16" font-weight="700">
+      <tspan x="108" dy="0">{{ content.coreLabel }}</tspan>
+    </text>
+    <text x="108" y="406" fill="var(--fq-diagram-text)" font-size="24" font-weight="700">
+      <tspan v-for="(line, index) in content.coreTitle" :key="`core-title-${line}`" x="108" :dy="index === 0 ? 0 : 30">{{ line }}</tspan>
+    </text>
+    <text x="108" y="458" fill="var(--fq-diagram-text)" font-size="18">
+      <tspan v-for="(line, index) in content.coreDetail" :key="`core-detail-${line}`" x="108" :dy="index === 0 ? 0 : 24">{{ line }}</tspan>
     </text>
   </svg>
 </template>

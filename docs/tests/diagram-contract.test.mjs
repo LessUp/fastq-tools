@@ -86,6 +86,14 @@ test('all publication diagrams are inline vue components with theme tokens and w
   }
 })
 
+test('architecture overview diagram uses an expanded canvas for less crowded review labels', () => {
+  const source = readUtf8('../.vitepress/theme/components/diagrams/ArchitectureOverviewDiagram.vue')
+
+  assert.match(source, /viewBox=["']0 0 1120 640["']/)
+  assert.match(source, /x="72"\s+y="76"\s+width="280"/)
+  assert.match(source, /x="72"\s+y="308"\s+width="976"\s+height="220"/)
+})
+
 test('shared diagrams keep locale-aware labels on bilingual narrative pages', () => {
   for (const page of adoptedPages) {
     const expectedLocale = page.relativePath.includes('/zh/') ? 'zh' : 'en'

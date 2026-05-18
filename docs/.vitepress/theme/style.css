@@ -127,6 +127,7 @@ body {
 }
 
 .VPDoc .home-whitepaper {
+  width: 100%;
   max-width: 1360px;
 }
 
@@ -190,7 +191,7 @@ body {
 }
 
 .system-atlas-grid {
-  grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.95fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 
@@ -351,6 +352,10 @@ body {
   gap: 1rem;
 }
 
+.system-atlas-ledger {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
 .publication-proof-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -399,6 +404,7 @@ body {
 }
 
 .system-atlas-actions {
+  grid-column: 1 / -1;
   width: 100%;
 }
 

@@ -65,6 +65,10 @@
   min-width: 44rem;
 }
 
+.architecture-overview-diagram {
+  min-width: 54rem;
+}
+
 .publication-diagram :where(text, tspan) {
   fill: var(--fq-diagram-text);
   font-family: var(--vp-font-family-base);

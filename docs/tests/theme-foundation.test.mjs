@@ -82,9 +82,10 @@ test('whitepaper nav stays active on locale homepages and whitepaper-owned pages
 test('publication shell widens the homepage and doc reading surface', () => {
   assert.match(baseStyles, /\.VPDoc\s+\.container\s*\{[\s\S]*max-width:\s*min\(100%,\s*1480px\);/s)
   assert.match(baseStyles, /\.VPDoc\s+\.content\s*\{[\s\S]*max-width:\s*880px;/s)
+  assert.match(baseStyles, /\.VPDoc:not\(\.has-sidebar\):has\(\.publication-hero\)\s+\.container\s*\{[\s\S]*max-width:\s*min\(100%,\s*1480px\);/s)
   assert.match(baseStyles, /\.VPDoc\s+\.content:has\(\.publication-hero\)\s*\{[\s\S]*max-width:\s*min\(100%,\s*1360px\);/s)
   assert.match(baseStyles, /\.VPDoc\s+\.content:has\(\.publication-hero\)\s+\.content-container\s*\{[\s\S]*max-width:\s*none;/s)
-  assert.match(themeStyles, /\.VPDoc\s+\.home-whitepaper\s*\{[\s\S]*max-width:\s*1360px;/s)
+  assert.match(themeStyles, /\.VPDoc\s+\.home-whitepaper\s*\{[\s\S]*width:\s*100%;[\s\S]*max-width:\s*1360px;/s)
 })
 
 test('top nav active state is an underline rail instead of rounded pill highlight', () => {

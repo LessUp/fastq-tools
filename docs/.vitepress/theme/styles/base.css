@@ -139,12 +139,20 @@ body {
   max-width: min(100%, 1480px);
 }
 
+.VPDoc:not(.has-sidebar):has(.publication-hero) .container {
+  max-width: min(100%, 1480px);
+}
+
 .VPDoc .content {
   max-width: 880px;
 }
 
 .VPDoc .content:has(.publication-hero) {
   width: 100%;
+  max-width: min(100%, 1360px);
+}
+
+.VPDoc:not(.has-sidebar):has(.publication-hero) .content {
   max-width: min(100%, 1360px);
 }
 
