@@ -143,6 +143,15 @@ body {
   max-width: 880px;
 }
 
+.VPDoc .content:has(.publication-hero) {
+  width: 100%;
+  max-width: min(100%, 1360px);
+}
+
+.VPDoc .content:has(.publication-hero) .content-container {
+  max-width: none;
+}
+
 .VPDoc h1 {
   font-size: clamp(2.2rem, 4vw, 3rem);
   line-height: 1.08;
