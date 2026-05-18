@@ -1,16 +1,14 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 
 const diagramCss = readFileSync(new URL('../.vitepress/theme/styles/diagrams.css', import.meta.url), 'utf8')
 const diagramFrameSource = readFileSync(
   new URL('../.vitepress/theme/components/DiagramFrame.vue', import.meta.url),
   'utf8',
 )
-const systemArchitectureDiagramSource = readFileSync(
-  new URL('../.vitepress/theme/components/SystemArchitectureDiagram.vue', import.meta.url),
-  'utf8',
-)
+const readUtf8 = (relativePath) => readFileSync(new URL(relativePath, import.meta.url), 'utf8')
+const exists = (relativePath) => existsSync(new URL(relativePath, import.meta.url))
 
 const adoptedPages = [
   '../en/architecture/index.md',
@@ -25,26 +23,28 @@ const adoptedPages = [
 }))
 
 test('diagram css defines shared light and dark tokens', () => {
-  for (const token of ['--fq-diagram-bg', '--fq-diagram-stroke', '--fq-diagram-text']) {
+  for (const token of [
+    '--fq-diagram-bg',
+    '--fq-diagram-layer',
+    '--fq-diagram-accent',
+    '--fq-diagram-signal',
+    '--fq-diagram-stroke',
+    '--fq-diagram-text',
+    '--fq-diagram-muted',
+  ]) {
     assert.match(diagramCss, new RegExp(token))
   }
   assert.match(diagramCss, /\.dark[^{]*\{/)
-  assert.match(diagramCss, /\.dark[^{]*\{[^}]*--fq-diagram-stroke:\s*var\(--vp-c-brand-2\);/s)
+  assert.match(diagramCss, /\.dark[^{]*\{[^}]*--fq-diagram-accent:/s)
 })
 
-test('shared svg assets use theme-friendly colors', () => {
-  for (const file of ['architecture-overview.svg', 'execution-model.svg', 'reading-map.svg']) {
-    const source = readFileSync(new URL(`../assets/diagrams/${file}`, import.meta.url), 'utf8')
-    assert.doesNotMatch(source, /@media/)
-    assert.doesNotMatch(source, /prefers-color-scheme/)
-    assert.doesNotMatch(source, /:root\s*\{/)
-    assert.match(source, /(currentColor|var\(--fq-diagram-)/)
+test('diagram frame dispatches theme-native vue diagrams instead of raw svg injection', () => {
+  for (const componentName of ['ArchitectureOverviewDiagram', 'ExecutionModelDiagram', 'ReadingMapDiagram']) {
+    assert.match(diagramFrameSource, new RegExp(componentName))
   }
-})
-
-test('diagram frame is wired to inline raw svg assets', () => {
-  assert.match(diagramFrameSource, /\?raw['"]/)
-  assert.match(diagramFrameSource, /v-html=/)
+  assert.match(diagramFrameSource, /locale\?: 'en' \| 'zh'/)
+  assert.doesNotMatch(diagramFrameSource, /\?raw['"]/)
+  assert.doesNotMatch(diagramFrameSource, /v-html=/)
 })
 
 test('diagram frame renders a caption when the prop or named slot is present', () => {
@@ -59,14 +59,30 @@ test('adopted pages reference shared diagram assets through DiagramFrame props',
   }
 })
 
-test('homepage architecture diagram wraps narrow labels with tspans', () => {
-  assert.match(systemArchitectureDiagramSource, /<tspan\b/)
-  assert.match(
-    systemArchitectureDiagramSource,
-    /<tspan[\s\S]*v-for="\(\s*line,\s*index\s*\) in content\.pipelineDetail"/,
-  )
-  assert.match(
-    systemArchitectureDiagramSource,
-    /<tspan[\s\S]*v-for="\(\s*line,\s*index\s*\) in content\.outputsDetail"/,
-  )
+test('all publication diagrams are inline vue components with theme tokens and wrapped labels', () => {
+  const sources = [
+    '../.vitepress/theme/components/diagrams/ArchitectureOverviewDiagram.vue',
+    '../.vitepress/theme/components/diagrams/ExecutionModelDiagram.vue',
+    '../.vitepress/theme/components/diagrams/ReadingMapDiagram.vue',
+  ]
+
+  for (const relativePath of sources) {
+    assert.equal(exists(relativePath), true, `${relativePath} should exist`)
+    const source = readUtf8(relativePath)
+    assert.match(source, /<svg[\s\S]*viewBox=/)
+    assert.match(source, /var\(--fq-diagram-/)
+    assert.match(source, /<tspan\b/)
+    assert.doesNotMatch(source, /#0[0-9a-f]{2,7}/i)
+  }
+})
+
+test('shared diagrams keep locale-aware labels on bilingual narrative pages', () => {
+  for (const page of adoptedPages) {
+    const expectedLocale = page.relativePath.includes('/zh/') ? 'zh' : 'en'
+    assert.match(page.source, new RegExp(`locale=["']${expectedLocale}["']`))
+  }
+
+  assert.match(readUtf8('../.vitepress/theme/components/diagrams/ArchitectureOverviewDiagram.vue'), /FastQTools 架构总览/)
+  assert.match(readUtf8('../.vitepress/theme/components/diagrams/ExecutionModelDiagram.vue'), /FastQTools 执行模型/)
+  assert.match(readUtf8('../.vitepress/theme/components/diagrams/ReadingMapDiagram.vue'), /FastQTools 阅读地图/)
 })

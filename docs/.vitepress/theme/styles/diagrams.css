@@ -1,23 +1,38 @@
 :root {
-  --fq-diagram-bg: var(--fq-c-surface);
-  --fq-diagram-stroke: var(--fq-c-border-strong);
+  --fq-diagram-bg: color-mix(in srgb, var(--vp-c-bg) 95%, var(--fq-c-brand-soft));
+  --fq-diagram-layer: color-mix(in srgb, var(--vp-c-bg-elv) 92%, var(--fq-c-brand-soft));
+  --fq-diagram-accent: var(--vp-c-brand-1);
+  --fq-diagram-signal: var(--fq-c-info);
+  --fq-diagram-stroke: color-mix(in srgb, var(--vp-c-border) 82%, var(--vp-c-brand-1));
   --fq-diagram-text: var(--fq-c-text-main);
+  --fq-diagram-muted: var(--vp-c-text-2);
 }
 
 .dark {
-  --fq-diagram-bg: var(--fq-c-surface-alt);
-  --fq-diagram-stroke: var(--vp-c-brand-2);
+  --fq-diagram-bg: color-mix(in srgb, var(--vp-c-bg-soft) 94%, var(--vp-c-brand-3));
+  --fq-diagram-layer: color-mix(in srgb, var(--vp-c-bg-elv) 94%, var(--vp-c-brand-3));
+  --fq-diagram-accent: var(--vp-c-brand-2);
+  --fq-diagram-signal: color-mix(in srgb, var(--fq-c-info) 88%, white);
+  --fq-diagram-stroke: color-mix(in srgb, var(--vp-c-border) 70%, var(--vp-c-brand-2));
   --fq-diagram-text: var(--fq-c-text-main);
+  --fq-diagram-muted: var(--vp-c-text-2);
 }
 
 .diagram-frame {
   margin: 1.5rem 0;
-  padding: 1rem;
+  padding: 1.1rem;
   border: 1px solid var(--fq-diagram-stroke);
-  border-radius: 1rem;
-  background: var(--fq-diagram-bg);
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--fq-diagram-layer) 72%, transparent), transparent 14rem),
+    var(--fq-diagram-bg);
   color: var(--fq-diagram-text);
   overflow-x: auto;
+  box-shadow: 0 20px 48px color-mix(in srgb, var(--fq-diagram-accent) 8%, transparent);
+}
+
+.diagram-frame__asset {
+  min-width: min(100%, 46rem);
 }
 
 .diagram-frame :where(img, object, svg) {
@@ -31,11 +46,16 @@
   margin-top: 0.75rem;
   font-size: 0.95rem;
   line-height: 1.5;
-  color: var(--fq-diagram-text);
+  color: var(--fq-diagram-muted);
 }
 
-.diagram-frame svg {
-  color: var(--fq-diagram-stroke);
+.publication-diagram {
+  min-width: 44rem;
+}
+
+.publication-diagram :where(text, tspan) {
+  fill: var(--fq-diagram-text);
+  font-family: var(--vp-font-family-base);
 }
 
 .mermaid {
@@ -45,4 +65,10 @@
 
 .mermaid svg {
   color: var(--fq-diagram-stroke);
+}
+
+@media (max-width: 640px) {
+  .publication-diagram {
+    min-width: 36rem;
+  }
 }

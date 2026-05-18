@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restructured v3.1.0 release notes: English first, Chinese second format
 - Verified all workflows are necessary and well-designed
 - Completed the GitHub Pages whitepaper redesign with the new information architecture, shared theme components, visual system, knowledge map, resource navigation, and bilingual narrative pages
+- Rebuilt the docs whitepaper surface with publication-style homepage modules, theme-native bilingual diagrams, deeper architecture/performance/research chapters, and a stronger academic reference trail
 
 ### Fixed
 - Fixed performance claims in README (1.7M reads/s instead of 1.7 billion)

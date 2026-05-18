@@ -10,6 +10,14 @@ This bibliography is intentionally mixed: it includes external papers and projec
 
 <ReferenceList locale="en" variant="bibliography" />
 
+## Citation protocol
+
+Use this list in layers:
+
+1. start with FASTQ and QC background sources when terminology needs formal grounding;
+2. move to architecture and benchmark RFCs when the claim concerns execution policy, memory discipline, or publication posture;
+3. finish with adjacent project references when the goal is comparison rather than implementation detail.
+
 ## How to use this list
 
-Start with the FASTQ background sources if you need terminology, move to the RFC and benchmark-policy entries if you need to justify system claims, and finish with the adjacent project references when you need comparison context rather than implementation detail.
+Treat the bibliography as the canonical citation surface for the whitepaper, not as a miscellaneous link dump. If a chapter makes a strong comparative or methodological claim, the supporting source should be recoverable from here.

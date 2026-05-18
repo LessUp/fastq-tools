@@ -15,24 +15,24 @@ const homepageContracts = [
     locale: 'zh',
     source: zhHome,
     expectedMarkup: [
-      '<WhitepaperHero locale="zh" />',
-      '<SystemSnapshot locale="zh" />',
-      '<AlgorithmPillars locale="zh" />',
-      '<EvidenceOverview locale="zh" />',
-      '<ReadingTracks locale="zh" />',
-      '<ResearchRail locale="zh" />',
+      '<PublicationHero locale="zh" />',
+      '<ProofDashboard locale="zh" />',
+      '<SystemAtlas locale="zh" />',
+      '<EvidenceDeck locale="zh" />',
+      '<ReadingLanes locale="zh" />',
+      '<ResearchCanon locale="zh" />',
     ],
   },
   {
     locale: 'en',
     source: enHome,
     expectedMarkup: [
-      '<WhitepaperHero locale="en" />',
-      '<SystemSnapshot locale="en" />',
-      '<AlgorithmPillars locale="en" />',
-      '<EvidenceOverview locale="en" />',
-      '<ReadingTracks locale="en" />',
-      '<ResearchRail locale="en" />',
+      '<PublicationHero locale="en" />',
+      '<ProofDashboard locale="en" />',
+      '<SystemAtlas locale="en" />',
+      '<EvidenceDeck locale="en" />',
+      '<ReadingLanes locale="en" />',
+      '<ResearchCanon locale="en" />',
     ],
   },
 ]
@@ -51,13 +51,12 @@ test('homepages use the new research-grade component stack', () => {
 
 test('theme registers the rebuilt homepage components', () => {
   for (const componentName of [
-    'WhitepaperHero',
-    'SystemSnapshot',
-    'AlgorithmPillars',
-    'EvidenceOverview',
-    'ReadingTracks',
-    'ResearchRail',
-    'SystemArchitectureDiagram',
+    'PublicationHero',
+    'ProofDashboard',
+    'SystemAtlas',
+    'EvidenceDeck',
+    'ReadingLanes',
+    'ResearchCanon',
   ]) {
     assert.match(
       themeSource,
@@ -67,12 +66,12 @@ test('theme registers the rebuilt homepage components', () => {
   }
 })
 
-test('system architecture diagram is an inline theme-aware svg', () => {
-  assert.doesNotThrow(() => readUtf8('../.vitepress/theme/components/SystemArchitectureDiagram.vue'))
-  const diagramSource = readUtf8('../.vitepress/theme/components/SystemArchitectureDiagram.vue')
+test('system atlas is an inline theme-aware svg with publication-grade tokens', () => {
+  assert.doesNotThrow(() => readUtf8('../.vitepress/theme/components/SystemAtlas.vue'))
+  const diagramSource = readUtf8('../.vitepress/theme/components/SystemAtlas.vue')
 
   assert.match(diagramSource, /<svg[\s\S]*viewBox=/)
-  assert.match(diagramSource, /--fq-home-diagram-(?:surface|accent|signal|stroke|text)/)
+  assert.match(diagramSource, /--fq-diagram-(?:bg|layer|accent|signal|stroke|text|muted)/)
   assert.doesNotMatch(diagramSource, /#0[0-9a-f]{2,7}/i)
 })
 

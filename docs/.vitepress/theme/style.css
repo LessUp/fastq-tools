@@ -134,6 +134,27 @@ body {
   align-items: start;
 }
 
+.publication-hero-grid,
+.proof-dashboard-grid,
+.system-atlas-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.publication-hero-grid {
+  grid-template-columns: minmax(0, 1.2fr) minmax(20rem, 0.95fr);
+  align-items: start;
+}
+
+.proof-dashboard-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.system-atlas-grid {
+  grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.95fr);
+  align-items: start;
+}
+
 .hero-title,
 .section-heading {
   margin: 0;
@@ -271,6 +292,12 @@ body {
   background: color-mix(in srgb, var(--vp-c-bg) 84%, transparent);
 }
 
+.publication-abstract,
+.system-atlas-ledger {
+  display: grid;
+  gap: 1rem;
+}
+
 .metric-icon {
   display: inline-flex;
   align-items: center;
@@ -287,6 +314,11 @@ body {
   align-items: start;
 }
 
+.proof-card,
+.atlas-card {
+  gap: 0.75rem;
+}
+
 .paper-metric h3,
 .paper-card h3,
 .evidence-value {
@@ -301,6 +333,14 @@ body {
 
 .diagram-frame-home {
   overflow: auto;
+}
+
+.system-atlas-figure {
+  margin: 0;
+}
+
+.system-atlas-actions {
+  width: 100%;
 }
 
 .evidence-value {
@@ -358,6 +398,9 @@ body {
 }
 
 @media (max-width: 960px) {
+  .publication-hero-grid,
+  .proof-dashboard-grid,
+  .system-atlas-grid,
   .home-hero-grid,
   .snapshot-grid,
   .paper-grid,

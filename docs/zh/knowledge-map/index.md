@@ -4,6 +4,7 @@
 
 <DiagramFrame
   asset="reading-map"
+  locale="zh"
   caption="阅读地图：先建立导读与白皮书心智模型，再进入执行与参考材料。"
 />
 

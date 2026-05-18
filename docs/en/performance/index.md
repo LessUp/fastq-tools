@@ -10,8 +10,13 @@ The point of repeating those numbers is not to promise that every dataset or sto
 
 <DiagramFrame
   asset="execution-model"
+  locale="en"
   caption="Execution model: performance evidence should be read together with execution path, methodology, and maintenance boundaries."
 />
+
+## Benchmark envelope
+
+Treat the headline numbers as the envelope of the maintained benchmark story, not as universally portable constants. The envelope includes hardware class, build mode, workload shape, and the fact that the numbers are representative publication samples rather than release-time SLAs.
 
 ## The evidence ladder
 
@@ -24,7 +29,7 @@ Treat the performance material as a ladder, not as a single benchmark table:
 
 If you skip a layer, you usually end up overstating the conclusion. Architecture still matters here, which is why it helps to read this page alongside [`Architecture`](../architecture/) and [`Algorithms`](../algorithms/).
 
-## What can change the conclusion
+## Threats to validity
 
 Published results are **representative samples**, not universal constants. The most important moving parts are:
 
@@ -34,11 +39,24 @@ Published results are **representative samples**, not universal constants. The m
 - **Input distribution**: read length, quality distribution, predicate combinations, and pass rate all change the hotspots in the path.
 - **Machine topology**: CPU microarchitecture, cache hierarchy, memory bandwidth, SMT, and container limits all affect the final curve.
 
-So the right question is usually not “is 1696 MB/s the truth?” It is “does the project publish a result, method, and policy that make further evaluation worthwhile?” For migration or SLA work, reproduce the workload yourself and use the policy documents before repeating any number.
+So the right question is usually not “is 1696 MB/s the truth?” It is “does the project publish a result, method, and policy that make further evaluation worthwhile?”
+
+## What can change the conclusion
+
+For migration work, procurement review, or SLA framing, reproduce the workload yourself and read the policy documents before repeating any number as if it were a guarantee.
+
+## Reproduction trail
+
+Once the raw metrics are clear, use the maintained trail to validate and reproduce them:
+
+- [`Benchmark Report`](./benchmark-report) for the representative published snapshot;
+- [`Benchmark Guide`](../dev/benchmark-guide) for environment and command reproduction;
+- [`Research bibliography`](../research/bibliography) for terminology and standards references;
+- [`Evolution notes`](../research/evolution-notes) for the historical reasons benchmark policy became first-class documentation.
 
 ## Cross-checks beyond the benchmark report
 
-Once the raw metrics are clear, use the research layer to avoid reading them in isolation:
+Use the research layer to avoid reading metrics in isolation:
 
 - [`Research bibliography`](../research/bibliography) collects the formal sources behind format, architecture, and benchmark language.
 - [`Related projects`](../research/related-projects) helps you compare FastQTools with FastQC, fastp, Cutadapt, and seqtk without flattening them into a winner table.

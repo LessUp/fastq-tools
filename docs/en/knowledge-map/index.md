@@ -4,6 +4,7 @@ This map splits the site into three layers: Orientation establishes reading orde
 
 <DiagramFrame
   asset="reading-map"
+  locale="en"
   caption="Reading map: build the Orientation and whitepaper mental model first, then move into execution and reference material."
 />
 

@@ -17,6 +17,12 @@ import EvidenceOverview from './components/EvidenceOverview.vue'
 import ReadingTracks from './components/ReadingTracks.vue'
 import ResearchRail from './components/ResearchRail.vue'
 import SystemArchitectureDiagram from './components/SystemArchitectureDiagram.vue'
+import PublicationHero from './components/PublicationHero.vue'
+import ProofDashboard from './components/ProofDashboard.vue'
+import SystemAtlas from './components/SystemAtlas.vue'
+import EvidenceDeck from './components/EvidenceDeck.vue'
+import ReadingLanes from './components/ReadingLanes.vue'
+import ResearchCanon from './components/ResearchCanon.vue'
 import ReferenceList from './components/ReferenceList.vue'
 import ReferenceBadge from './components/ReferenceBadge.vue'
 import { referenceCatalog } from './content/references'
@@ -133,6 +139,12 @@ const theme: Theme = {
     ctx.app.component('ReadingTracks', ReadingTracks)
     ctx.app.component('ResearchRail', ResearchRail)
     ctx.app.component('SystemArchitectureDiagram', SystemArchitectureDiagram)
+    ctx.app.component('PublicationHero', PublicationHero)
+    ctx.app.component('ProofDashboard', ProofDashboard)
+    ctx.app.component('SystemAtlas', SystemAtlas)
+    ctx.app.component('EvidenceDeck', EvidenceDeck)
+    ctx.app.component('ReadingLanes', ReadingLanes)
+    ctx.app.component('ResearchCanon', ResearchCanon)
     ctx.app.component('ReferenceList', ReferenceList)
     ctx.app.component('ReferenceBadge', ReferenceBadge)
     ctx.app.provide(THEME_FOUNDATION_KEY, themeFoundation)

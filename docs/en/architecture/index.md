@@ -10,12 +10,23 @@ FastQTools keeps the CLI, command orchestration, public API, and concrete implem
 - **Public API layer** keeps `include/fqtools/` as the maintained integration surface for tests, the CLI, and downstream C++ callers.
 - **Implementation layer** contains I/O, processing, statistics, configuration, and error handling where throughput and correctness are actually earned.
 
-The layered model defined by <ReferenceBadge kind="RFC" href="https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0001-core-architecture.md">RFC-0001</ReferenceBadge> is what lets FastQTools be reviewed first through the CLI and then through code-facing contracts without changing the mental model. That is also why the next narrative stop after this page is [`Algorithms`](../algorithms/) rather than an unstructured list of classes.
+The layered model defined by <ReferenceBadge kind="RFC" href="https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0001-core-architecture.md">RFC-0001</ReferenceBadge> is what lets FastQTools be reviewed first through the CLI and then through code-facing contracts without changing the mental model.
 
 <DiagramFrame
   asset="architecture-overview"
+  locale="en"
   caption="Architecture overview: entry points, public API, and execution path are organized around the same whitepaper narrative."
 />
+
+## Boundary ledger
+
+The maintained architecture can be read as a ledger of ownership transfers:
+
+1. input enters through bounded readers that normalize plain and gzip FASTQ into reusable batches;
+2. those batches cross into the processing core where predicates, mutators, and statistics operate on record views;
+3. outputs cross again into sink and reporting layers where terminal behavior, files, and evidence surfaces become stable.
+
+That ledger matters because it lets reviewers ask “where does ownership change hands?” instead of “which file had the last benchmark tweak?”
 
 ## Execution path and control surfaces
 
@@ -25,7 +36,17 @@ The maintained execution story is still `source → processing → sink`, but wh
 2. **Processing** applies maintained predicates, mutators, and statistics work to record views instead of detached string copies.
 3. **Sink** writes filtered records or summary output while preserving the final I/O and cleanup boundary.
 
-That is why the algorithm layer matters: [`Algorithms`](../algorithms/) explains what each stage actually does, while this page explains why the stage boundaries exist in the first place. The architecture claim is not “parallelism exists,” but that the project makes parallelism reviewable by keeping ownership transitions explicit.
+This is why the algorithm layer matters: [`Algorithms`](../algorithms/) explains what each stage actually does, while this page explains why the stage boundaries exist in the first place.
+
+## Control surfaces
+
+FastQTools stays reviewable because a few control surfaces remain explicit:
+
+- CLI flags and config choices shape command intent but do not bypass the staged core;
+- public headers expose supported interfaces without leaking arbitrary internal ownership tricks;
+- benchmark and reference chapters stay separate from implementation code while still describing the same system model.
+
+Those surfaces make it possible to move from homepage narrative to code-facing detail without inventing a second architecture story.
 
 ## Memory discipline is architectural, not incidental
 
@@ -35,7 +56,17 @@ The most important architectural trade-off is the decision to treat memory owner
 - `std::string_view` keeps traversal cheap, but only while batch lifetime remains correct;
 - object-pool reuse keeps allocation churn bounded, but only if in-flight batches are explicitly controlled.
 
-That is the concern formalized in <ReferenceBadge kind="RFC" href="https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0004-memory-pool.md">RFC-0004</ReferenceBadge>. It is also why the whitepaper can talk about performance and memory in the same breath without turning either topic into marketing shorthand.
+That is the concern formalized in <ReferenceBadge kind="RFC" href="https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0004-memory-pool.md">RFC-0004</ReferenceBadge>.
+
+## Failure containment
+
+The architecture is also a failure-containment policy:
+
+- ingest failures should terminate at I/O boundaries with explicit error translation;
+- processing failures should not silently corrupt record ownership or result accounting;
+- sink and CLI layers should be where user-visible reporting and final cleanup happen.
+
+That separation keeps “fast path” and “correctness path” from drifting into separate mental models.
 
 ## Verification ladder
 

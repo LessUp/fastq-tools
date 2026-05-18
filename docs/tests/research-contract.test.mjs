@@ -22,7 +22,12 @@ const bilingualPages = [
     architecture: readUtf8('../en/architecture/index.md'),
     performance: readUtf8('../en/performance/index.md'),
     reference: readUtf8('../en/reference/index.md'),
+    expectedWhitepaperHeadings: ['## Review questions', '## Boundary contract', '## Reading itinerary'],
     expectedAlgorithmsHeadings: ['## Filtering pipeline', '## Statistics path', '## Execution model', '## Memory discipline'],
+    expectedArchitectureHeadings: ['## Boundary ledger', '## Control surfaces', '## Failure containment'],
+    expectedPerformanceHeadings: ['## Benchmark envelope', '## Threats to validity', '## Reproduction trail'],
+    expectedResearchHeadings: ['## Source program', '## Comparative lens', '## Evolution pressure'],
+    expectedReferenceHeadings: ['## Implementation lanes', '## Operator reference', '## Contributor surfaces'],
     expectedResearchLinks: ['bibliography', 'related-projects', 'evolution-notes'],
     expectedAliasSignals: ['legacy alias', '../algorithms/'],
   },
@@ -38,7 +43,12 @@ const bilingualPages = [
     architecture: readUtf8('../zh/architecture/index.md'),
     performance: readUtf8('../zh/performance/index.md'),
     reference: readUtf8('../zh/reference/index.md'),
+    expectedWhitepaperHeadings: ['## 评审问题', '## 边界契约', '## 阅读路线'],
     expectedAlgorithmsHeadings: ['## 过滤流水线', '## 统计路径', '## 执行模型', '## 内存约束'],
+    expectedArchitectureHeadings: ['## 边界账本', '## 控制界面', '## 故障收敛'],
+    expectedPerformanceHeadings: ['## Benchmark 包络', '## 有效性威胁', '## 复现实验路径'],
+    expectedResearchHeadings: ['## 来源程序', '## 比较透镜', '## 演进压力'],
+    expectedReferenceHeadings: ['## 实施路径', '## 操作参考', '## 贡献者界面'],
     expectedResearchLinks: ['bibliography', 'related-projects', 'evolution-notes'],
     expectedAliasSignals: ['旧别名', '../algorithms/'],
   },
@@ -72,8 +82,16 @@ test('whitepaper, algorithms, and research layers expose the approved bilingual 
     assert.match(page.whitepaper, /\.\.\/algorithms\//)
     assert.match(page.whitepaper, /\.\.\/research\//)
 
+    for (const heading of page.expectedWhitepaperHeadings) {
+      assert.match(page.whitepaper, new RegExp(heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+    }
+
     for (const heading of page.expectedAlgorithmsHeadings) {
       assert.match(page.algorithms, new RegExp(heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+    }
+
+    for (const heading of page.expectedResearchHeadings) {
+      assert.match(page.researchIndex, new RegExp(heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
     }
 
     for (const slug of page.expectedResearchLinks) {
@@ -92,6 +110,18 @@ test('whitepaper, algorithms, and research layers expose the approved bilingual 
 
 test('architecture, performance, and reference pages align with the expanded whitepaper narrative', () => {
   for (const page of bilingualPages) {
+    for (const heading of page.expectedArchitectureHeadings) {
+      assert.match(page.architecture, new RegExp(heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+    }
+
+    for (const heading of page.expectedPerformanceHeadings) {
+      assert.match(page.performance, new RegExp(heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+    }
+
+    for (const heading of page.expectedReferenceHeadings) {
+      assert.match(page.reference, new RegExp(heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+    }
+
     assert.match(page.architecture, /\.\.\/whitepaper\//)
     assert.match(page.architecture, /\.\.\/algorithms\//)
     assert.match(page.performance, /\.\.\/research\//)

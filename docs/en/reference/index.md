@@ -12,7 +12,7 @@ Reference is the lookup surface for readers who already know the question they n
 
 ## Use the deep-content layers intentionally
 
-The new content stack works best when each layer keeps one job:
+The content stack works best when each layer keeps one job:
 
 - [`Whitepaper`](../whitepaper/) frames scope, constraints, and adoption logic.
 - [`Architecture`](../architecture/) explains why the layers and boundaries exist.
@@ -22,19 +22,31 @@ The new content stack works best when each layer keeps one job:
 
 Reference begins after that point.
 
-## CLI and API lookup
+## Implementation lanes
+
+Use this page when the task is no longer “understand the story” but “land on the exact maintained interface.” The reference layer therefore routes readers into command, API, build, and contributor surfaces instead of repeating narrative prose.
+
+## Operator reference
 
 - [`CLI Reference`](../guide/cli-reference)
-- [`API Overview`](../api/overview)
-- [`Developer Architecture`](../dev/architecture)
-
-## Learning and maintenance material
-
-- [`Guide`](../guide/)
 - [`Getting Started`](../guide/getting-started)
 - [`Configuration`](../guide/configuration)
 - [`Deployment`](../guide/deployment)
+
+## CLI and API lookup
+
+- [`API Overview`](../api/overview)
+- [`IO Module`](../api/io)
+- [`Processing`](../api/processing)
+- [`Statistics`](../api/statistics)
+
+## Contributor surfaces
+
 - [`Developer Guide`](../dev/)
+- [`Developer Architecture`](../dev/architecture)
+- [`Build`](../dev/build)
+- [`Testing`](../dev/testing)
+- [`Benchmark Guide`](../dev/benchmark-guide)
 
 ## Research and comparison entry points
 
@@ -42,8 +54,6 @@ Reference begins after that point.
 - [`Bibliography`](../research/bibliography)
 - [`Related projects`](../research/related-projects)
 - [`Evolution notes`](../research/evolution-notes)
-- [`Resources`](../resources/)
-- [`Contributing`](../contributing/)
 - [`Archive Overview`](../archive/)
 
 ## Internal anchors from the whitepaper redesign
@@ -52,7 +62,7 @@ Reference begins after that point.
 
 ## How to use this page
 
-- Want to execute commands right now? Start from CLI Reference.
-- Want to understand the public interfaces and library integration? Start from API Overview.
-- Want to inspect internals, build, or test practice? Start from Developer Guide.
-- Want project background, external reading, or comparison material? Move to the Research appendix, then to the bibliography and related-project pages.
+- Want to execute commands right now? Start from Operator reference.
+- Want to understand public interfaces and library integration? Start from CLI and API lookup.
+- Want to inspect internals, build, or test practice? Start from Contributor surfaces.
+- Want project background, external reading, or comparison material? Move to the Research appendix.

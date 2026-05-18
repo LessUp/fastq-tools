@@ -18,7 +18,7 @@ This page is not a winner board. It is a boundary comparison for readers who nee
 | seqtk | Small, portable FASTA/FASTQ utility toolkit | Useful contrast for readers who prefer compact command collections over layered docs and API surfaces. |
 | FastQTools | Focused FASTQ QC core with CLI + C++ API | Best fit when the goal is explainable throughput, bounded memory behavior, and an embeddable interface. |
 
-## What FastQTools is not trying to replace
+## Scope and evidence contrast
 
 FastQTools does not claim to subsume every role covered by FastQC, fastp, Cutadapt, or seqtk. The maintained product scope is narrower: routine FASTQ statistics plus filtering/trimming in a system whose execution model, benchmark evidence, and API boundary are deliberately documented together.
 
@@ -28,8 +28,10 @@ That means comparisons should focus on **boundary choice**:
 - integrated “do everything in one command” preprocessing versus a smaller maintained capability set;
 - compact utilities versus a documented architecture and public C++ surface.
 
-## When the comparison becomes useful
+## What FastQTools is not trying to replace
 
-Use this page when someone asks “why not just use FastQC, fastp, Cutadapt, or seqtk?” The right answer is rarely “because FastQTools has more features.” The stronger answer is that FastQTools chooses a different center of gravity: an auditable QC core with explicit execution and maintenance policy.
+Use this page when someone asks “why not just use FastQC, fastp, Cutadapt, or seqtk?” The strongest answer is rarely “because FastQTools has more features.” The stronger answer is that FastQTools chooses a different center of gravity: an auditable QC core with explicit execution and maintenance policy.
+
+## When the comparison becomes useful
 
 For the supporting sources behind these comparisons, continue to [`Bibliography`](./bibliography). For the internal system story that explains those boundaries, return to [`Whitepaper`](../whitepaper/) and [`Algorithms`](../algorithms/).
