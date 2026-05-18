@@ -6,6 +6,8 @@
   --fq-diagram-stroke: color-mix(in srgb, var(--vp-c-border) 82%, var(--vp-c-brand-1));
   --fq-diagram-text: var(--fq-c-text-main);
   --fq-diagram-muted: var(--vp-c-text-2);
+  --fq-diagram-grid: var(--fq-c-gridline);
+  --fq-diagram-glow: color-mix(in oklch, var(--fq-c-info-soft) 70%, transparent);
 }
 
 .dark {
@@ -16,6 +18,8 @@
   --fq-diagram-stroke: color-mix(in srgb, var(--vp-c-border) 70%, var(--vp-c-brand-2));
   --fq-diagram-text: var(--fq-c-text-main);
   --fq-diagram-muted: var(--vp-c-text-2);
+  --fq-diagram-grid: var(--fq-c-gridline);
+  --fq-diagram-glow: color-mix(in oklch, var(--fq-c-info-soft) 64%, transparent);
 }
 
 .diagram-frame {
@@ -33,6 +37,14 @@
 
 .diagram-frame__asset {
   min-width: min(100%, 46rem);
+}
+
+.diagram-frame :where(svg) {
+  color: var(--fq-diagram-text);
+}
+
+.diagram-frame :where(text, tspan) {
+  fill: var(--fq-diagram-text);
 }
 
 .diagram-frame :where(img, object, svg) {

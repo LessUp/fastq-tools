@@ -73,7 +73,7 @@ const resolve = (linkId: SharedLinkId) => withBase(getSharedLinkHref(props.local
 </script>
 
 <template>
-  <section class="home-whitepaper home-section">
+  <section class="home-whitepaper home-section evidence-deck">
     <div class="section-header">
       <p class="section-kicker">{{ content.eyebrow }}</p>
       <h2 class="section-heading">{{ content.title }}</h2>

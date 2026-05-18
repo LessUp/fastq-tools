@@ -46,9 +46,20 @@ body {
 }
 
 .VPNavBarMenuLink.active {
-  border-color: color-mix(in srgb, var(--vp-c-brand-1) 38%, var(--vp-c-border));
-  background: color-mix(in srgb, var(--fq-c-brand-soft) 90%, var(--vp-c-bg-elv));
+  border-color: transparent;
+  background: transparent;
   color: var(--vp-c-brand-1);
+}
+
+.VPNavBarMenuLink.active::after {
+  content: '';
+  position: absolute;
+  left: 0.82rem;
+  right: 0.82rem;
+  bottom: 0.22rem;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--vp-c-brand-1), transparent);
 }
 
 .VPSidebar {
@@ -115,12 +126,29 @@ body {
   box-shadow: var(--fq-home-panel-shadow);
 }
 
+.VPDoc .home-whitepaper {
+  max-width: 1360px;
+}
+
 .hero-whitepaper {
+  position: relative;
+  overflow: hidden;
   padding: clamp(1.5rem, 2vw + 1rem, 2.5rem);
   background:
     radial-gradient(circle at top left, color-mix(in srgb, var(--fq-c-brand-soft) 86%, transparent), transparent 38%),
     radial-gradient(circle at right center, color-mix(in srgb, var(--fq-c-info-soft) 78%, transparent), transparent 34%),
     var(--fq-home-panel-bg-strong);
+}
+
+.publication-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--fq-c-gridline) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    linear-gradient(180deg, color-mix(in oklch, var(--fq-c-brand-soft) 72%, transparent), transparent 42%);
+  opacity: 0.62;
 }
 
 .home-hero-grid,
@@ -142,8 +170,23 @@ body {
 }
 
 .publication-hero-grid {
-  grid-template-columns: minmax(0, 1.2fr) minmax(20rem, 0.95fr);
+  position: relative;
+  z-index: 1;
+  grid-template-columns: auto minmax(0, 1.3fr) minmax(21rem, 0.92fr);
   align-items: start;
+}
+
+.hero-runway {
+  writing-mode: vertical-rl;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 18rem;
+  color: var(--vp-c-brand-1);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .system-atlas-grid {
@@ -269,6 +312,19 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
 }
 
+.evidence-deck .evidence-grid {
+  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.75fr);
+}
+
+.evidence-deck .evidence-card:first-child {
+  grid-row: span 2;
+  min-height: 100%;
+}
+
+.research-canon-grid {
+  grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1fr);
+}
+
 .paper-card {
   display: grid;
   gap: 0.8rem;
@@ -292,6 +348,12 @@ body {
 .publication-abstract,
 .system-atlas-ledger {
   display: grid;
+  gap: 1rem;
+}
+
+.publication-proof-grid {
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 1rem;
 }
 
@@ -402,6 +464,11 @@ body {
   .snapshot-grid {
     grid-template-columns: 1fr;
   }
+
+  .hero-runway {
+    writing-mode: horizontal-tb;
+    min-height: 0;
+  }
 }
 
 @media (max-width: 960px) {
@@ -412,6 +479,11 @@ body {
   .research-rail-grid,
   .home-hero-grid,
   .snapshot-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .evidence-deck .evidence-grid,
+  .research-canon-grid {
     grid-template-columns: 1fr;
   }
 }

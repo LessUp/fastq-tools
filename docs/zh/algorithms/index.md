@@ -40,6 +40,18 @@ FastQTools 沿用架构层描述的同一套阶段模型：`source → processin
 
 <ReferenceBadge kind="RFC" href="https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0004-memory-pool.md">RFC-0004</ReferenceBadge> 描述的对象池策略，正是为了控制分配抖动并保持 in-flight 内存有界。因此，内存不是性能页最后顺手提一下的话题，而是维护中的执行约束之一。
 
+## 正确性不变量
+
+算法层应该用不变量来评审，而不能只看吞吐：
+
+| 不变量 | 为什么重要 |
+| --- | --- |
+| FASTQ 记录保持四行逻辑单元。 | 如果记录结构变得含混，解析再快也没有意义。 |
+| mutation 后 sequence 与 quality 长度仍然一致。 | 过滤与修剪不能产出无效 FASTQ。 |
+| 同一输入与配置下 predicate 决策保持确定性。 | 可复现 QC 比机会性的并行顺序更重要。 |
+| 批次视图不能逃逸出所属存储。 | 零拷贝只有在生命周期纪律明确时才安全。 |
+| signature sidecar 只能作为附加输出。 | 可选 QC 摘要不能替代默认 `stat` 报告契约。 |
+
 ## 接下来去哪里验证
 
 - 去 [`性能总览`](../performance/) 查看这些执行选择如何反映到 benchmark 证据里；

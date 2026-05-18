@@ -21,3 +21,12 @@ Use this list in layers:
 ## How to use this list
 
 Treat the bibliography as the canonical citation surface for the whitepaper, not as a miscellaneous link dump. If a chapter makes a strong comparative or methodological claim, the supporting source should be recoverable from here.
+
+## Citation quality bar
+
+The bibliography is maintained with the same claim discipline as the rest of the whitepaper:
+
+1. a source must support a concrete claim about format, execution policy, benchmark interpretation, or adjacent-tool context;
+2. internal RFCs are valid citations because they define what FastQTools is allowed to claim;
+3. project pages are used for comparison context, not for borrowing unsupported capability claims;
+4. benchmark citations should always be paired with method or policy references.

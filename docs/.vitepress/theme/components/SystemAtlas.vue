@@ -96,6 +96,14 @@ const resolve = (linkId: SharedLinkId) => withBase(getSharedLinkHref(props.local
           </desc>
 
           <rect x="24" y="24" width="912" height="472" rx="28" fill="var(--fq-diagram-bg)" />
+          <circle cx="480" cy="246" r="188" fill="var(--fq-diagram-glow)" />
+          <g class="diagram-grid" stroke="var(--fq-diagram-grid)" stroke-width="1">
+            <path d="M180 54 V468" />
+            <path d="M480 54 V468" />
+            <path d="M780 54 V468" />
+            <path d="M54 214 H906" />
+            <path d="M54 352 H906" />
+          </g>
           <rect
             x="56"
             y="72"

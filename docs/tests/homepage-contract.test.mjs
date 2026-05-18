@@ -91,3 +91,18 @@ test('homepage grids size cards with responsive min widths instead of fixed thre
     /@media \(max-width:\s*1100px\)\s*\{[\s\S]*\.publication-hero-grid,[\s\S]*\.proof-dashboard-grid,[\s\S]*\.system-atlas-grid,[\s\S]*grid-template-columns:\s*1fr;/s,
   )
 })
+
+test('homepage hero uses the specimen-sheet redesign vocabulary and rhythm', () => {
+  const heroSource = readUtf8('../.vitepress/theme/components/PublicationHero.vue')
+
+  assert.match(heroSource, /Specimen\s+01|标本\s+01/)
+  assert.match(heroSource, /systems review sheet|系统评审样张/)
+  assert.match(themeStyles, /\.publication-hero::before\s*\{[\s\S]*linear-gradient\(90deg/s)
+  assert.match(themeStyles, /\.publication-proof-grid\s*\{[\s\S]*grid-template-columns:\s*1fr;/s)
+})
+
+test('homepage visual system avoids template card monotony with ledger and runway regions', () => {
+  assert.match(themeStyles, /\.hero-runway\s*\{[\s\S]*writing-mode:\s*vertical-rl;/s)
+  assert.match(themeStyles, /\.evidence-deck\s+\.evidence-grid\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1\.1fr\)\s+minmax\(18rem,\s*0\.75fr\);/s)
+  assert.match(themeStyles, /\.research-canon-grid\s*\{[\s\S]*grid-template-columns:\s*minmax\(18rem,\s*0\.8fr\)\s+minmax\(0,\s*1fr\);/s)
+})

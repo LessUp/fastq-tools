@@ -31,12 +31,21 @@ test('diagram css defines shared light and dark tokens', () => {
     '--fq-diagram-stroke',
     '--fq-diagram-text',
     '--fq-diagram-muted',
+    '--fq-diagram-glow',
+    '--fq-diagram-grid',
   ]) {
     assert.match(diagramCss, new RegExp(token))
   }
   assert.match(diagramCss, /\.dark[^{]*\{/)
   assert.match(diagramCss, /\.dark[^{]*\{[^}]*--fq-diagram-accent:/s)
 })
+
+test('diagram css protects light and dark svg readability without filters', () => {
+  assert.match(diagramCss, /\.diagram-frame\s*:where\(svg\)\s*\{[\s\S]*color:\s*var\(--fq-diagram-text\);/s)
+  assert.match(diagramCss, /\.diagram-frame\s*:where\(text,\s*tspan\)\s*\{[\s\S]*fill:\s*var\(--fq-diagram-text\);/s)
+  assert.doesNotMatch(diagramCss, /filter:\s*invert\(/)
+}
+)
 
 test('diagram frame dispatches theme-native vue diagrams instead of raw svg injection', () => {
   for (const componentName of ['ArchitectureOverviewDiagram', 'ExecutionModelDiagram', 'ReadingMapDiagram']) {
@@ -71,6 +80,7 @@ test('all publication diagrams are inline vue components with theme tokens and w
     const source = readUtf8(relativePath)
     assert.match(source, /<svg[\s\S]*viewBox=/)
     assert.match(source, /var\(--fq-diagram-/)
+    assert.match(source, /class="diagram-grid"/)
     assert.match(source, /<tspan\b/)
     assert.doesNotMatch(source, /#0[0-9a-f]{2,7}/i)
   }

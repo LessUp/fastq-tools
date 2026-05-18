@@ -29,6 +29,17 @@ Treat the performance material as a ladder, not as a single benchmark table:
 
 If you skip a layer, you usually end up overstating the conclusion. Architecture still matters here, which is why it helps to read this page alongside [`Architecture`](../architecture/) and [`Algorithms`](../algorithms/).
 
+## Interpretation rules
+
+Use these rules before quoting a number outside this site:
+
+| Rule | Consequence |
+| --- | --- |
+| Quote the workload with the number. | A throughput figure without read count, read length, build mode, and machine class is not reviewable. |
+| Keep read, write, filter, and statistics paths separate. | A strong read-path number does not automatically prove the whole QC workflow. |
+| Treat compression as part of the workload. | gzip cost can dominate or mask parser behavior depending on input and storage. |
+| Repeat locally for adoption decisions. | The published snapshot is a starting point for evaluation, not a procurement guarantee. |
+
 ## Threats to validity
 
 Published results are **representative samples**, not universal constants. The most important moving parts are:

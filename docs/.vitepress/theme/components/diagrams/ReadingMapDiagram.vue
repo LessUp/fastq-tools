@@ -54,6 +54,14 @@ const content = computed(() => copy[props.locale])
     <desc :id="`reading-map-desc-${props.locale}`">{{ content.desc }}</desc>
 
     <rect x="24" y="24" width="912" height="472" rx="28" fill="var(--fq-diagram-bg)" />
+    <g class="diagram-grid" stroke="var(--fq-diagram-grid)" stroke-width="1">
+      <path d="M186 54 V430" />
+      <path d="M480 54 V430" />
+      <path d="M774 54 V430" />
+      <path d="M56 134 H904" />
+      <path d="M56 298 H904" />
+      <path d="M56 430 H904" />
+    </g>
     <rect x="76" y="84" width="220" height="100" rx="24" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-accent)" stroke-width="2.5" />
     <rect x="370" y="84" width="220" height="100" rx="24" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-stroke)" stroke-width="2" />
     <rect x="664" y="84" width="220" height="100" rx="24" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-signal)" stroke-width="2.5" />

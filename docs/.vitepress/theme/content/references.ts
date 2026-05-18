@@ -84,8 +84,8 @@ export const referenceCatalog = [
       en: 'Research appendix',
     },
     summary: {
-      zh: '收纳参考资料、协作入口与历史上下文。',
-      en: 'Collects references, collaboration entry points, and historical context.',
+      zh: '收纳书目、同类项目比较与设计演进历史。',
+      en: 'Collects bibliography, adjacent-project comparison, and design evolution history.',
     },
   },
 ] as const satisfies readonly ReferenceEntry[]

@@ -36,6 +36,17 @@ FastQTools is strongest in the part of the sequencing workflow where teams need 
 
 That distinction matters because the whitepaper is closer to a technical due-diligence packet than to a product-marketing landing page.
 
+## Claim discipline matrix
+
+| Claim class | What the site may say | Where to verify |
+| --- | --- | --- |
+| Product boundary | FastQTools maintains `stat`, `filter`, gzip-aware FASTQ I/O, bounded predicates, bounded mutators, and a reusable C++ surface. | Product spec and API pages |
+| Execution model | Throughput is explained through contiguous batch ownership, `std::string_view` record views, staged execution, and oneTBB orchestration. | Architecture and algorithms chapters |
+| Evidence posture | Published numbers are representative benchmark evidence with conditions, not portable guarantees for every machine or dataset. | Performance chapter and benchmark RFCs |
+| Research context | Adjacent tools are comparison anchors for scope and evidence style, not targets to subsume. | Research appendix and bibliography |
+
+This matrix is intentionally conservative. It keeps the documentation from drifting into unreviewable claims while still giving senior readers enough material to evaluate design quality, operational fit, and comparison context.
+
 ## Reading path
 
 This page leads into the deeper whitepaper layers in the same order a technical review usually happens.
@@ -54,6 +65,16 @@ If you are still deciding whether FastQTools belongs in your environment, it als
 ## Reading order through the deep-content layers
 
 The itinerary above is deliberate: narrative framing comes first, systems reasoning comes second, performance interpretation comes third, and operational lookup only appears once the reviewer already understands what is being operated.
+
+## Reviewer handoff
+
+After the first pass, the strongest route is to read this site as a dossier:
+
+1. collect the maintained scope from this page;
+2. inspect the system boundary in [`Architecture`](../architecture/);
+3. inspect behavior and invariants in [`Algorithms`](../algorithms/);
+4. interpret the benchmark envelope in [`Performance`](../performance/);
+5. use [`Research appendix`](../research/) only after the main system story is clear enough to cite or compare.
 
 ## Core internal references
 

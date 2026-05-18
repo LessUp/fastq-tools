@@ -48,6 +48,17 @@ FastQTools stays reviewable because a few control surfaces remain explicit:
 
 Those surfaces make it possible to move from homepage narrative to code-facing detail without inventing a second architecture story.
 
+## Architecture review checklist
+
+Use this checklist when reviewing a future change against the current system model:
+
+| Question | Acceptable answer |
+| --- | --- |
+| Does the change preserve the `source → processing → sink` path? | The new behavior enters through a stage boundary and does not create an untracked side path. |
+| Does it preserve record ownership clarity? | Any `std::string_view` remains tied to the owning batch lifetime. |
+| Does it keep public API and implementation detail separate? | Supported callers still enter through `include/fqtools/` or CLI surfaces. |
+| Does it keep evidence separate from implementation code? | Benchmarks and publication language remain in docs, RFCs, or benchmark reports rather than source comments alone. |
+
 ## Memory discipline is architectural, not incidental
 
 The most important architectural trade-off is the decision to treat memory ownership as a first-class systems boundary:

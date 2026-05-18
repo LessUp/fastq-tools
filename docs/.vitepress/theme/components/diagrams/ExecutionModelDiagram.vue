@@ -54,6 +54,15 @@ const content = computed(() => copy[props.locale])
     <desc :id="`execution-model-desc-${props.locale}`">{{ content.desc }}</desc>
 
     <rect x="24" y="24" width="912" height="472" rx="28" fill="var(--fq-diagram-bg)" />
+    <g class="diagram-grid" stroke="var(--fq-diagram-grid)" stroke-width="1">
+      <path d="M120 48 V472" />
+      <path d="M300 48 V472" />
+      <path d="M480 48 V472" />
+      <path d="M660 48 V472" />
+      <path d="M840 48 V472" />
+      <path d="M48 222 H912" />
+      <path d="M48 390 H912" />
+    </g>
     <rect x="60" y="142" width="220" height="160" rx="24" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-stroke)" stroke-width="2" />
     <rect x="370" y="102" width="220" height="240" rx="24" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-accent)" stroke-width="2.5" />
     <rect x="680" y="142" width="220" height="160" rx="24" fill="var(--fq-diagram-layer)" stroke="var(--fq-diagram-signal)" stroke-width="2.5" />

@@ -40,6 +40,18 @@ Memory policy is part of the algorithm layer because the throughput story depend
 
 The object-pool strategy described in <ReferenceBadge kind="RFC" href="https://github.com/LessUp/fastq-tools/blob/master/openspec/baseline/architecture/0004-memory-pool.md">RFC-0004</ReferenceBadge> exists to control allocation churn and to keep in-flight memory bounded. This is why memory is not a postscript to performance; it is one of the maintained execution constraints.
 
+## Correctness invariants
+
+The algorithm layer should be judged by invariants, not only by throughput:
+
+| Invariant | Why it matters |
+| --- | --- |
+| FASTQ records remain four-line logical units. | Parsing speed is irrelevant if record structure becomes ambiguous. |
+| Sequence and quality lengths stay aligned after mutation. | Filtering and trimming must not produce invalid FASTQ output. |
+| Predicate decisions are deterministic for the same input and configuration. | Reproducible QC is more important than opportunistic parallel ordering. |
+| Batch views never escape their owning storage. | Zero-copy is only safe when lifetime discipline is explicit. |
+| Signature sidecars remain additive. | Optional QC summaries must not replace the default `stat` report contract. |
+
 ## Where to verify next
 
 - Read [`Performance`](../performance/) to see how these execution choices surface in benchmark evidence.

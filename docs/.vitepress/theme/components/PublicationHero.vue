@@ -20,10 +20,11 @@ const props = defineProps<{ locale: LocaleKey }>()
 
 const copy = {
   en: {
-    eyebrow: 'FastQTools technical whitepaper',
-    title: 'A publication-grade FASTQ systems brief for adoption review, design transfer, and evidence audit.',
+    eyebrow: 'Specimen 01 · FastQTools technical whitepaper',
+    runway: 'systems review sheet',
+    title: 'FASTQ quality control, drawn as an auditable systems brief.',
     summary:
-      'FastQTools is presented here as a bounded quality-control engine: zero-copy I/O, oneTBB execution, and maintained benchmark policy are treated as one technical narrative rather than as separate marketing claims.',
+      'FastQTools is presented as a bounded quality-control engine: zero-copy I/O, oneTBB execution, and maintained benchmark policy are treated as one technical narrative rather than separate marketing claims.',
     actions: [
       { label: 'Read the whitepaper', linkId: 'whitepaperNav', variant: 'primary' },
       { label: 'Inspect architecture', linkId: 'architecture', variant: 'secondary' },
@@ -48,8 +49,9 @@ const copy = {
     ] satisfies Signal[],
   },
   zh: {
-    eyebrow: 'FastQTools 技术白皮书',
-    title: '面向采用评审、设计移交与证据复核的 FASTQ 系统级白皮书首页。',
+    eyebrow: '标本 01 · FastQTools 技术白皮书',
+    runway: '系统评审样张',
+    title: '把 FASTQ 质控画成一份可审计的系统简报。',
     summary:
       '这里的 FastQTools 被组织成一个受控的质控引擎：零拷贝 I/O、oneTBB 执行模型与 benchmark 维护政策被写进同一条技术叙事，而不是拆散成零散卖点。',
     actions: [
@@ -84,6 +86,7 @@ const resolve = (linkId: SharedLinkId) => withBase(getSharedLinkHref(props.local
 <template>
   <section class="home-whitepaper hero-whitepaper publication-hero">
     <div class="publication-hero-grid">
+      <div class="hero-runway" aria-hidden="true">{{ content.runway }}</div>
       <div class="hero-copy">
         <p class="section-kicker">{{ content.eyebrow }}</p>
         <h1 class="hero-title">{{ content.title }}</h1>
