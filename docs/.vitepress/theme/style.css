@@ -46,9 +46,9 @@ body {
 }
 
 .VPNavBarMenuLink.active {
-  border-color: color-mix(in srgb, var(--vp-c-brand-1) 24%, var(--vp-c-border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--fq-c-brand-soft) 95%, transparent), color-mix(in srgb, var(--vp-c-bg-elv) 92%, transparent));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--vp-c-brand-1) 16%, transparent);
+  border-color: color-mix(in srgb, var(--vp-c-brand-1) 38%, var(--vp-c-border));
+  background: color-mix(in srgb, var(--fq-c-brand-soft) 90%, var(--vp-c-bg-elv));
+  color: var(--vp-c-brand-1);
 }
 
 .VPSidebar {
@@ -130,7 +130,7 @@ body {
 }
 
 .home-hero-grid {
-  grid-template-columns: minmax(0, 1.4fr) minmax(20rem, 1fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 1fr);
   align-items: start;
 }
 
