@@ -21,9 +21,14 @@ FASTQTOOLS="${FASTQTOOLS:-$PROJECT_ROOT/build/clang-release/FastQTools}"
 # 测试数据目录
 DATA_DIR="$PROJECT_ROOT/tools/data"
 
-# 临时输出目录
-TMP_DIR=$(mktemp -d)
-trap "rm -rf $TMP_DIR" EXIT
+# 临时输出目录（限制在仓库内，避免写入系统临时目录）
+TMP_ROOT="$PROJECT_ROOT/tests/e2e/.tmp"
+mkdir -p "$TMP_ROOT"
+TMP_DIR="$(mktemp -d "$TMP_ROOT/test_cli.XXXXXX")"
+cleanup() {
+    rm -rf -- "$TMP_DIR"
+}
+trap cleanup EXIT
 
 # 颜色输出
 RED='\033[0;31m'
@@ -58,32 +63,63 @@ echo "Test 1: Global help"
 if $FASTQTOOLS --help 2>&1 | grep -q "Available commands"; then
     pass "Global help displays available commands"
 else
-    # 没有 --help 时也显示帮助
-    if $FASTQTOOLS 2>&1 | grep -q "Available commands"; then
-        pass "Global help displays available commands (no args)"
-    else
-        fail "Global help does not display available commands"
-    fi
+    fail "Global help does not display available commands"
 fi
 
-# Test 2: filter 子命令帮助
-echo "Test 2: filter --help"
+# Test 2: 无子命令
+echo "Test 2: no subcommand"
+set +e
+$FASTQTOOLS > "$TMP_DIR/no-subcommand.txt" 2>&1
+STATUS=$?
+set -e
+if [[ $STATUS -ne 0 ]] && grep -q "Available commands" "$TMP_DIR/no-subcommand.txt"; then
+    pass "No subcommand prints help and exits non-zero"
+else
+    fail "No subcommand did not print help with non-zero exit"
+fi
+
+# Test 3: 未知子命令
+echo "Test 3: unknown subcommand"
+set +e
+$FASTQTOOLS unknown-command > "$TMP_DIR/unknown-subcommand.txt" 2>&1
+STATUS=$?
+set -e
+if [[ $STATUS -ne 0 ]] && grep -q "Unknown subcommand" "$TMP_DIR/unknown-subcommand.txt"; then
+    pass "Unknown subcommand reports an error and exits non-zero"
+else
+    fail "Unknown subcommand did not report an error with non-zero exit"
+fi
+
+# Test 4: filter 子命令帮助
+echo "Test 4: filter --help"
 if $FASTQTOOLS filter --help 2>&1 | grep -q "input"; then
     pass "filter --help displays input option"
 else
     fail "filter --help does not display input option"
 fi
 
-# Test 3: stat 子命令帮助
-echo "Test 3: stat --help"
+# Test 5: stat 子命令帮助
+echo "Test 5: stat --help"
 if $FASTQTOOLS stat --help 2>&1 | grep -q "input"; then
     pass "stat --help displays input option"
 else
     fail "stat --help does not display input option"
 fi
 
-# Test 4: --quiet 模式
-echo "Test 4: --quiet mode"
+# Test 6: --log-level 与子命令帮助组合
+echo "Test 6: --log-level with subcommand help"
+set +e
+$FASTQTOOLS --log-level=debug stat --help > "$TMP_DIR/log-level-help.txt" 2>&1
+STATUS=$?
+set -e
+if [[ $STATUS -eq 0 ]] && grep -q "Generate statistics for a FASTQ file" "$TMP_DIR/log-level-help.txt"; then
+    pass "--log-level works with subcommand help"
+else
+    fail "--log-level does not work with subcommand help"
+fi
+
+# Test 7: --quiet 模式
+echo "Test 7: --quiet mode"
 OUTPUT=$($FASTQTOOLS --quiet filter --help 2>&1)
 if echo "$OUTPUT" | grep -q "FastQTools - A toolkit"; then
     fail "--quiet mode still prints banner"
@@ -91,9 +127,48 @@ else
     pass "--quiet mode suppresses banner"
 fi
 
-# Test 5: filter 命令基本执行
+# Test 8: filter 缺少必需参数
+echo "Test 8: filter missing required args"
+NEGATIVE_INPUT="$TMP_DIR/negative-input.fastq"
+cat > "$NEGATIVE_INPUT" <<'EOF'
+@negative-read
+ACGT
++
+!!!!
+EOF
+set +e
+$FASTQTOOLS --quiet filter --input "$NEGATIVE_INPUT" > "$TMP_DIR/filter-missing-output.txt" 2>&1
+STATUS_OUTPUT=$?
+$FASTQTOOLS --quiet filter --output "$TMP_DIR/filter.fastq" > "$TMP_DIR/filter-missing-input.txt" 2>&1
+STATUS_INPUT=$?
+set -e
+if [[ $STATUS_OUTPUT -ne 0 ]] && [[ $STATUS_INPUT -ne 0 ]] &&
+   grep -q "both --input and --output options are required" "$TMP_DIR/filter-missing-output.txt" &&
+   grep -q "both --input and --output options are required" "$TMP_DIR/filter-missing-input.txt"; then
+    pass "filter rejects missing input/output arguments"
+else
+    fail "filter did not reject missing input/output arguments"
+fi
 
-echo "Test 5: filter command execution"
+# Test 9: stat 缺少必需参数
+echo "Test 9: stat missing required args"
+set +e
+$FASTQTOOLS --quiet stat --input "$NEGATIVE_INPUT" > "$TMP_DIR/stat-missing-output.txt" 2>&1
+STATUS_OUTPUT=$?
+$FASTQTOOLS --quiet stat --output "$TMP_DIR/stat.txt" > "$TMP_DIR/stat-missing-input.txt" 2>&1
+STATUS_INPUT=$?
+set -e
+if [[ $STATUS_OUTPUT -ne 0 ]] && [[ $STATUS_INPUT -ne 0 ]] &&
+   grep -q "both --input and --output options are required" "$TMP_DIR/stat-missing-output.txt" &&
+   grep -q "both --input and --output options are required" "$TMP_DIR/stat-missing-input.txt"; then
+    pass "stat rejects missing input/output arguments"
+else
+    fail "stat did not reject missing input/output arguments"
+fi
+
+# Test 10: filter 命令基本执行
+
+echo "Test 10: filter command execution"
 if [[ -f "$DATA_DIR/sample_10k_len100.fastq" ]]; then
     if $FASTQTOOLS -q filter --input "$DATA_DIR/sample_10k_len100.fastq" --output "$TMP_DIR/filtered.fastq" --threads 2 2>&1; then
         pass "filter command executes without error"
@@ -105,9 +180,9 @@ else
     warn "Skipping filter test: sample data not found"
 fi
 
-# Test 6: stat 命令基本执行
+# Test 11: stat 命令基本执行
 
-echo "Test 6: stat command execution"
+echo "Test 11: stat command execution"
 if [[ -f "$DATA_DIR/sample_10k_len100.fastq" ]]; then
     if $FASTQTOOLS -q stat --input "$DATA_DIR/sample_10k_len100.fastq" --output "$TMP_DIR/stats.txt" --threads 2 2>&1; then
         pass "stat command executes without error"
@@ -119,9 +194,9 @@ else
     warn "Skipping stat test: sample data not found"
 fi
 
-# Test 7: trim-quality 实际裁剪生效
+# Test 12: trim-quality 实际裁剪生效
 
-echo "Test 7: trim-quality changes output"
+echo "Test 12: trim-quality changes output"
 TRIM_INPUT="$TMP_DIR/trim-input.fastq"
 cat > "$TRIM_INPUT" <<'EOF'
 @trim-read

@@ -112,4 +112,71 @@ TEST(FilterPlanTest, BuildsAndAppliesRepresentativeFilterOptions) {
     EXPECT_EQ(read.qual, "II");
 }
 
+TEST(FilterPlanTest, BuildsAdapterAndPolyXTailMutatorsFromRepeatableOptions) {
+    cxxopts::Options options("filter", "Filter and trim FastQ files");
+    CommonCliOptions::addOptions(options);
+    addFilterPlanOptions(options);
+
+    const std::vector<std::string> args = {
+        "filter",
+        "--input",
+        "input.fastq",
+        "--output",
+        "output.fastq",
+        "--adapter-seq",
+        "TTAA",
+        "--adapter-seq",
+        "GGCC",
+        "--adapter-min-overlap",
+        "4",
+        "--adapter-max-mismatches",
+        "1",
+        "--trim-poly-x",
+        "5",
+    };
+
+    std::vector<char*> argv;
+    argv.reserve(args.size());
+    for (const auto& arg : args) {
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+
+    const auto parsed = options.parse(static_cast<int>(argv.size()), argv.data());
+    const auto common = CommonCliOptions::parse(parsed);
+
+    auto plan = buildFilterPlan(parsed, common);
+    CapturingPipeline pipeline;
+    plan.applyTo(pipeline);
+
+    ASSERT_EQ(pipeline.mutators_.size(), 2U);
+
+    auto* const adapterTrimmer =
+        dynamic_cast<fq::processing::AdapterTrimmer*>(pipeline.mutators_[0].get());
+    ASSERT_NE(adapterTrimmer, nullptr);
+
+    fq::io::FastqRecord read1{"read1", {}, "ACGTTTAA", "IIIIIIII", "+"};
+    adapterTrimmer->process(read1);
+    EXPECT_EQ(read1.seq, "ACGT");
+    EXPECT_EQ(read1.qual, "IIII");
+
+    fq::io::FastqRecord read2{"read2", {}, "ACGTGGCC", "IIIIIIII", "+"};
+    adapterTrimmer->process(read2);
+    EXPECT_EQ(read2.seq, "ACGT");
+    EXPECT_EQ(read2.qual, "IIII");
+
+    auto* const polyTailTrimmer =
+        dynamic_cast<fq::processing::PolyTailTrimmer*>(pipeline.mutators_[1].get());
+    ASSERT_NE(polyTailTrimmer, nullptr);
+
+    fq::io::FastqRecord polyXRead{"polyX", {}, "ACGTTTTT", "IIIIIIII", "+"};
+    polyTailTrimmer->process(polyXRead);
+    EXPECT_EQ(polyXRead.seq, "ACGT");
+    EXPECT_EQ(polyXRead.qual, "IIII");
+
+    fq::io::FastqRecord shortPolyXRead{"shortPolyX", {}, "ACGTTTT", "IIIIIII", "+"};
+    polyTailTrimmer->process(shortPolyXRead);
+    EXPECT_EQ(shortPolyXRead.seq, "ACGTTTT");
+    EXPECT_EQ(shortPolyXRead.qual, "IIIIIII");
+}
+
 }  // namespace fq::cli

@@ -1,9 +1,9 @@
 import subprocess
 import os
 import unittest
-import tempfile
 import shutil
 import gzip
+import uuid
 
 class TestFastQToolsCLI(unittest.TestCase):
     @classmethod
@@ -12,6 +12,8 @@ class TestFastQToolsCLI(unittest.TestCase):
         cls.fastqtools = os.environ.get("FASTQTOOLS", "./build/clang-release/FastQTools")
         cls.data_dir = os.path.join(os.getcwd(), "tools/data")
         cls.sample_fastq = os.path.join(cls.data_dir, "sample_10k_len100.fastq")
+        cls.tmp_root = os.path.join(os.getcwd(), "tests", "e2e", ".tmp_python")
+        os.makedirs(cls.tmp_root, exist_ok=True)
         
         if not os.path.exists(cls.fastqtools):
             raise unittest.SkipTest(f"Executable not found at {cls.fastqtools}")
@@ -19,7 +21,8 @@ class TestFastQToolsCLI(unittest.TestCase):
             raise unittest.SkipTest(f"Sample data not found at {cls.sample_fastq}")
 
     def setUp(self):
-        self.test_dir = tempfile.mkdtemp()
+        self.test_dir = os.path.join(self.tmp_root, f"case-{uuid.uuid4().hex}")
+        os.makedirs(self.test_dir, exist_ok=False)
 
     def tearDown(self):
         shutil.rmtree(self.test_dir)
@@ -95,6 +98,36 @@ class TestFastQToolsCLI(unittest.TestCase):
             self.assertIn("#ReadNum\t10000", content)
             self.assertIn("#BaseCount\t1000000", content)
             self.assertIn("#MaxReadLength\t100", content)
+
+    def test_filter_gzip_input_and_output(self):
+        input_fastq_gz = os.path.join(self.test_dir, "input.fastq.gz")
+        output_fastq_gz = os.path.join(self.test_dir, "output.fastq.gz")
+        with open(self.sample_fastq, "rb") as source:
+            with gzip.open(input_fastq_gz, "wb") as target:
+                target.write(source.read())
+
+        result = self.run_cmd(["filter", "--input", input_fastq_gz, "--output", output_fastq_gz, "--threads", "2"])
+
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(os.path.exists(output_fastq_gz))
+        self.assertTrue(self._is_gzip(output_fastq_gz))
+        lines = self._read_fastq_lines(output_fastq_gz)
+        self.assertEqual(len(lines), 40000)
+
+    def test_stat_accepts_gzip_input(self):
+        input_fastq_gz = os.path.join(self.test_dir, "input.fastq.gz")
+        output_stats = os.path.join(self.test_dir, "stats.txt")
+        with open(self.sample_fastq, "rb") as source:
+            with gzip.open(input_fastq_gz, "wb") as target:
+                target.write(source.read())
+
+        result = self.run_cmd(["stat", "--input", input_fastq_gz, "--output", output_stats, "--threads", "2"])
+
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(os.path.exists(output_stats))
+        with open(output_stats, "r") as f:
+            content = f.read()
+        self.assertIn("#ReadNum\t10000", content)
 
     def test_filter_min_length(self):
         # Our sample data has all 100bp reads. Filter for min 101bp should result in 0 reads.
