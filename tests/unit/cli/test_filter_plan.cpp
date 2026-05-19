@@ -168,7 +168,7 @@ TEST(FilterPlanTest, BuildsAdapterAndPolyXTailMutatorsFromRepeatableOptions) {
         dynamic_cast<fq::processing::PolyTailTrimmer*>(pipeline.mutators_[1].get());
     ASSERT_NE(polyTailTrimmer, nullptr);
 
-    fq::io::FastqRecord polyXRead{"polyX", {}, "ACGTTTTT", "IIIIIIII", "+"};
+    fq::io::FastqRecord polyXRead{"polyX", {}, "ACGTAAAAA", "IIIIIIIII", "+"};
     polyTailTrimmer->process(polyXRead);
     EXPECT_EQ(polyXRead.seq, "ACGT");
     EXPECT_EQ(polyXRead.qual, "IIII");
