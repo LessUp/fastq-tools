@@ -1,28 +1,29 @@
+---
+title: Knowledge Map (legacy route)
+description: Legacy route retained for compatibility; use the maintained architecture and reference sections instead.
+layout: doc
+---
+
 # Knowledge Map
 
-This map splits the site into three layers: Orientation establishes reading order, the whitepaper establishes the decision framework, and the execution plus reference material turns that framework into action.
+Knowledge Map is now a legacy route kept only so older links still resolve. The maintained docs surface now routes readers directly through the whitepaper, architecture, algorithms, and reference sections instead of treating this page as a parallel hub.
 
 <DiagramFrame
   asset="reading-map"
   locale="en"
-  caption="Reading map: build the Orientation and whitepaper mental model first, then move into execution and reference material."
+  caption="Legacy reading map kept for compatibility; use the maintained architecture and reference sections as your current routing surface."
 />
 
-## How to use this map
+## Current routing
 
-If you are still asking “where do I start,” begin with [`Orientation`](../orientation/). If you are already asking “why should I trust these claims,” enter the [`Whitepaper`](../whitepaper/). If you already know what you want to do, move straight to [`Workflows`](../workflows/) and [`Reference`](../reference/).
+Use [`Whitepaper`](../whitepaper/) for the maintained product story, [`Architecture`](../architecture/) for system boundaries, and [`Reference`](../reference/) for exact commands and APIs.
 
-## Three-layer reading structure
+## Why this route still exists
 
-| Layer | Main pages | Purpose |
-| --- | --- | --- |
-| Orientation layer | [`Orientation`](../orientation/), [`Why FastQTools`](../why-fastqtools/) | Clarify project positioning and reading order |
-| Whitepaper layer | [`Whitepaper`](../whitepaper/), [`Architecture`](../architecture/), [`Performance`](../performance/) | Build the framework for system boundaries, execution model, and evidence |
-| Execution layer | [`Workflows`](../workflows/), [`Guide`](../guide/), [`API`](../api/), [`Developer Guide`](../dev/) | Support command execution, interface integration, and maintenance practice |
+This page remains only to retire the older IA safely without producing dead routes. It is not a maintained map hub anymore.
 
-## Common questions and where to enter
+## Where to go next
 
-- Want to judge whether the project fits the current FASTQ QC scenario? [`Why FastQTools`](../why-fastqtools/)
-- Want to understand the whitepaper storyline? [`Whitepaper`](../whitepaper/)
-- Want to validate the performance narrative and benchmark framing? [`Performance`](../performance/)
-- Want to jump directly into commands, APIs, or developer material? [`Reference`](../reference/)
+- Need the maintained system overview? Go to [`Architecture`](../architecture/).
+- Need operational docs or API lookup? Go to [`Reference`](../reference/).
+- Need workflow-oriented execution guidance? Go to [`Algorithms`](../algorithms/).

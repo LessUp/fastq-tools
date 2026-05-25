@@ -19,6 +19,8 @@ const bilingualPages = [
     relatedProjects: readUtf8('../en/research/related-projects.md'),
     evolutionNotes: readUtf8('../en/research/evolution-notes.md'),
     academyAlias: readUtf8('../en/academy/index.md'),
+    orientationNotice: readUtf8('../en/orientation/index.md'),
+    knowledgeMapNotice: readUtf8('../en/knowledge-map/index.md'),
     architecture: readUtf8('../en/architecture/index.md'),
     performance: readUtf8('../en/performance/index.md'),
     reference: readUtf8('../en/reference/index.md'),
@@ -30,6 +32,8 @@ const bilingualPages = [
     expectedReferenceHeadings: ['## Implementation lanes', '## Operator reference', '## Contributor surfaces'],
     expectedResearchLinks: ['bibliography', 'related-projects', 'evolution-notes'],
     expectedAliasSignals: ['legacy alias', '../algorithms/'],
+    expectedOrientationSignals: ['legacy route', '../whitepaper/', '../reference/'],
+    expectedKnowledgeMapSignals: ['legacy route', '../architecture/', '../reference/'],
   },
   {
     locale: 'zh',
@@ -40,6 +44,8 @@ const bilingualPages = [
     relatedProjects: readUtf8('../zh/research/related-projects.md'),
     evolutionNotes: readUtf8('../zh/research/evolution-notes.md'),
     academyAlias: readUtf8('../zh/academy/index.md'),
+    orientationNotice: readUtf8('../zh/orientation/index.md'),
+    knowledgeMapNotice: readUtf8('../zh/knowledge-map/index.md'),
     architecture: readUtf8('../zh/architecture/index.md'),
     performance: readUtf8('../zh/performance/index.md'),
     reference: readUtf8('../zh/reference/index.md'),
@@ -51,6 +57,8 @@ const bilingualPages = [
     expectedReferenceHeadings: ['## 实施路径', '## 操作参考', '## 贡献者界面'],
     expectedResearchLinks: ['bibliography', 'related-projects', 'evolution-notes'],
     expectedAliasSignals: ['旧别名', '../algorithms/'],
+    expectedOrientationSignals: ['旧入口', '../whitepaper/', '../reference/'],
+    expectedKnowledgeMapSignals: ['旧入口', '../architecture/', '../reference/'],
   },
 ]
 
@@ -105,6 +113,17 @@ test('whitepaper, algorithms, and research layers expose the approved bilingual 
     for (const signal of page.expectedAliasSignals) {
       assert.match(page.academyAlias, new RegExp(signal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
     }
+
+    assert.doesNotMatch(page.academyAlias, /<SectionLandingGrid/)
+    assert.doesNotMatch(page.orientationNotice, /<SectionLandingGrid/)
+
+    for (const signal of page.expectedOrientationSignals) {
+      assert.match(page.orientationNotice, new RegExp(signal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+    }
+
+    for (const signal of page.expectedKnowledgeMapSignals) {
+      assert.match(page.knowledgeMapNotice, new RegExp(signal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+    }
   }
 })
 
@@ -139,5 +158,15 @@ test('research navigation exposes the new chapter entry points instead of the re
 
   for (const retiredId of ['benchmarkReport', 'resourcesOverview', 'contributing']) {
     assert.doesNotMatch(researchSidebarBlock, new RegExp(retiredId))
+  }
+})
+
+test('legacy retirement notices hand readers to maintained section roots only', () => {
+  for (const page of bilingualPages) {
+    assert.match(page.academyAlias, /\.\.\/algorithms\//)
+    assert.match(page.academyAlias, /\.\.\/reference\//)
+    assert.match(page.academyAlias, /\.\.\/research\//)
+    assert.doesNotMatch(page.academyAlias, /\.\.\/workflows\//)
+    assert.doesNotMatch(page.academyAlias, /\.\.\/guide\/getting-started/)
   }
 })

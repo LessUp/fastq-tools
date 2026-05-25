@@ -1,107 +1,92 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+This root changelog is the maintained project history. Older granular work logs from the retired `changelog/` tree have been folded into the yearly and release summaries below.
 
 ---
 
 ## [Unreleased]
 
+### Changed
+- Consolidated the maintained repository history into this file and retired the legacy `changelog/` directory.
+- Retired docs-site changelog publication in favor of GitHub Releases plus the root `CHANGELOG.md`.
+
+### Architecture and runtime
+- Continued the post-v3.1.0 architecture cleanup with injectable I/O abstractions, shared CLI/runtime configuration helpers, centralized statistics reporting, and clearer execution-runtime seams.
+- Reduced shallow wrappers and false seams, tightened error-handling boundaries, and fixed follow-up CI workflow regressions plus a CLI test regression during the refactor cycle.
+
+### Documentation and project presentation
+- Rebuilt the documentation whitepaper surface with stronger information architecture, bilingual narrative pages, theme-aware diagrams, research and algorithms routing fixes, and responsive homepage/layout follow-ups.
+- Cleaned publication rules so internal asset README files are not treated as user-facing documentation.
+
+---
+
+## [3.2.0] - 2026-04-30
+
 ### Added
-- GitHub Release v3.1.0 with bilingual release notes
+- Advanced preprocessing capabilities called out by the `v3.2.0` release tag, including quality trimming, poly-tail trimming, adapter trimming, and related CLI options such as `--adapter-seq`, `--trim-poly-g`, and `--trim-poly-x`.
+- QC signature reporting called out by the `v3.2.0` release tag, including optional signature sidecar output, duplicate estimation, and head-kmer statistics.
 
 ### Changed
-- Optimized GitHub repository description for better visibility
-- Updated GitHub topics: added `sequence-analysis`, `ngs-qc`, `fastq-processor`
-- Restructured v3.1.0 release notes: English first, Chinese second format
-- Verified all workflows are necessary and well-designed
-- Completed the GitHub Pages whitepaper redesign with the new information architecture, shared theme components, visual system, knowledge map, resource navigation, and bilingual narrative pages
-- Rebuilt the docs whitepaper surface with publication-style homepage modules, theme-native bilingual diagrams, deeper architecture/performance/research chapters, and a stronger academic reference trail
-
-### Fixed
-- Fixed performance claims in README (1.7M reads/s instead of 1.7 billion)
-- Fixed mkdocs.yml: removed non-existent custom_icons path
-- Created missing migration notice documents for archive section
+- Repository history at the `v3.2.0` tag shows accompanying cleanup around CI simplification plus documentation, GitHub Pages, and AI-governance reorganization.
 
 ---
 
 ## [3.1.0] - 2026-04-16
 
-### Release Highlights / 发布亮点
-
-This release marks the first stable version with complete bilingual documentation support and professional project presentation.
-
-本次发布标志着首个稳定版本，提供完整的双语文档支持和专业的项目展示。
-
 ### Added
-
-**Core Features / 核心功能**
-- `stat` command: FASTQ file statistical analysis with base composition, quality distribution, GC content
-- `filter` command: Read filtering and quality trimming with multi-dimensional criteria support
-
-**Performance / 性能优化**
-- Intel TBB `parallel_pipeline` based parallel processing
-- `FastqRecord` zero-copy I/O using `string_view`
-- libdeflate high-performance compression/decompression
-
-**Development Tools / 开发工具**
-- Comprehensive unit/integration/e2e test coverage
-- Google Benchmark performance testing
-- LibFuzzer fuzzing support
-- ASan/TSan/UBSan sanitizers integration
-- Valgrind memory checking configuration
-
-**Build System / 构建系统**
-- CMake 3.28+ modern configuration
-- Conan 2.x dependency management
-- GCC 15 / Clang 21 compiler support
-- CMake Presets multi-configuration support
-
-**Docker Support / Docker 支持**
-- Development environment image (gcc:15.2-bookworm)
-- Production deployment image (debian:bookworm-slim)
-- VS Code DevContainer configuration
+- First stable bilingual documentation release across the README, documentation site, and release materials.
+- Production-ready FASTQ processing commands: `stat` for statistical analysis and `filter` for read filtering and quality trimming.
+- High-performance processing foundations including TBB `parallel_pipeline`, zero-copy FASTQ record views, and libdeflate-backed compression support.
+- Broader quality tooling with unit/integration/e2e tests, Google Benchmark, fuzzing support, sanitizers, Valgrind checks, Docker images, and DevContainer setup.
 
 ### Changed
+- Standardized the project on C++23, modern CMake presets, and Conan 2.x dependency management.
+- Completed the public API/interface split, unified logging and error handling, and tightened naming/documentation conventions across the codebase.
+- Reworked the documentation structure, bilingual navigation, and release presentation for a stable public release.
 
-- Language standard upgraded from C++20 to C++23
-- Implemented interface-implementation separation modular architecture
-- Unified error handling and logging system
-- MongoDB-style naming conventions
+### Fixed
+- Resolved documentation workflow issues around i18n, static-site configuration, and release-note consistency.
+- Addressed code quality findings affecting CLI logging consistency and public API annotations.
+
+---
+
+## 2026 Development Summary
+
+- **Toolchain and quality**: unified GCC 15 / Clang 21 expectations, completed the C++23 migration, simplified selected dependency configuration (including header-only `fmt` usage), added benchmark and coverage improvements, and hardened build/test workflows.
+- **Developer environment**: iterated on DevContainer and Docker support, remote/AI-assisted development integration, and local tooling guidance so contributors could build and validate the project more reliably.
+- **Repository convergence**: cleaned repository structure, aligned baseline specifications with implementation reality, improved workflow reliability, and refined release/readme/docs presentation leading into and after v3.1.0.
+- **Post-release maintenance**: May 2026 focused on architecture deepening and whitepaper/content refinement; the key outcomes of that work are reflected in the Unreleased section above.
 
 ---
 
 ## [3.0.0] - 2025-07-31
 
 ### Added
-- Initial core functionality implementation
-- CMake build system
-- Conan dependency management
+- Initial modular implementation of the core FASTQ processing functionality.
+- Modern CMake-based build system and Conan-managed dependency setup.
 
 ### Changed
-- Reverted from C++20 modules to traditional header file structure
-- Modular code architecture
+- Reverted from experimental C++20 modules to the traditional header/source layout used by the project today.
+- Reorganized the codebase around clearer module boundaries for I/O, processing, statistics, and CLI concerns.
+
+---
+
+## 2025 Development Summary
+
+- **Project bootstrap**: established the repository layout, build scripts, Docker/devcontainer setup, CI/CD foundations, and early documentation structure.
+- **Core implementation**: built FASTQ I/O, processing pipelines, statistics analysis, and early high-performance refactors around the TBB-based architecture.
+- **Quality and packaging**: expanded tests, multi-platform release automation, consumer/package verification, install fixes, and dependency cleanup.
+- **Repository maturation**: completed major docs restructures, naming/style unification, public header relocation, script cleanup, and end-of-year configuration alignment that set up the 2026 stabilization work.
 
 ---
 
 ## [2.0.0] - 2024-07-29
 
 ### Added
-- Initial release
-- FastQ file statistical analysis functionality
-- Multi-threaded processing support
-- Compressed file format support
-- Command-line interface
-
----
-
-## Change Log Index / 变更记录索引
-
-| Year | Summary | Details |
-|------|---------|---------|
-| 2026 | [Summary](changelog/2026-summary.md) | [Archive](changelog/archive/2026/) |
-| 2025 | [Summary](changelog/2025-summary.md) | [Archive](changelog/archive/2025/) |
-
-**Template**: [TEMPLATE.md](changelog/TEMPLATE.md)
+- Initial public release of FastQTools.
+- FASTQ statistical analysis, multi-threaded processing, compressed file support, and a command-line interface.

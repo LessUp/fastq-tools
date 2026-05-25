@@ -36,8 +36,8 @@
 
 - 公共 API 位于 `include/fqtools/`，实现位于 `src/`；不要随意改动导出接口。
 - API 变更需同步更新 `openspec/baseline/api/core-api.md`。
-- 常规变更应补充 `changelog/` 记录；文件名格式为 `YYYY-MM-DD-<slug>.md`。
-- 注释、commit message、changelog 优先使用中文。
+- 常规变更如需保留历史，应更新根目录 `CHANGELOG.md`（通常补到合适的发布节或 `Unreleased`），不要重新创建 `changelog/` 目录。
+- 注释、commit message、`CHANGELOG.md` 更新说明优先使用中文。
 - 优先通过现有脚本完成构建、测试、格式化，不要发明新入口。
 
 ## 常用路径

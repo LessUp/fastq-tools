@@ -33,13 +33,13 @@
 
 ---
 
-FastQTools is a modern C++23 toolkit for routine FASTQ quality-control work. It is built for researchers and pipeline engineers who want a focused tool for inspecting, filtering, and trimming reads — not a heavyweight workflow platform.
+FastQTools is a modern C++23 toolkit for routine FASTQ quality-control work. Its maintained surface is intentionally small: the `stat` command, the `filter` command, and a minimal embeddable C++ API centered on `fqtools/fq.h`, the documented common/config/error/io/processing headers it aggregates, and the supported statistics workflow `StatisticOptions + createStatisticCalculator(...)->run()`.
 
 ## What it is good at
 
 - **FASTQ statistics (`stat`)** — inspect read counts, length distribution, base composition, GC content, and Q20/Q30-style quality metrics.
 - **Filtering and trimming (`filter`)** — apply length, quality, and N-ratio thresholds, then trim low-quality bases in the same pass.
-- **Pipeline integration** — use the CLI directly or embed the public C++ API in larger bioinformatics tools.
+- **Embeddable C++ API (`fqtools/fq.h`)** — integrate through the umbrella header, the documented common/config/error/io/processing headers it aggregates, and the supported statistics workflow `StatisticOptions + createStatisticCalculator(...)->run()`.
 - **Performance-conscious implementation** — zero-copy record views, Intel oneTBB pipelines, and compressed-file workflows where supported.
 - **Production hygiene** — CI, sanitizers, fuzzing, and a maintained docs site.
 
@@ -90,14 +90,14 @@ See the [benchmark overview](https://lessup.github.io/fastq-tools/performance/be
 | Integrate the library into C++ code | [API Overview](https://lessup.github.io/fastq-tools/api/overview.en/) |
 | Understand benchmark numbers | [Benchmark Overview](https://lessup.github.io/fastq-tools/performance/benchmark-report/) |
 | Contribute docs or code | [Contributing](https://lessup.github.io/fastq-tools/contributing.en/) |
-| Follow project-level changes | [Changelog](https://lessup.github.io/fastq-tools/changelog.en/) |
+| Follow project-level changes | [CHANGELOG.md](./CHANGELOG.md) |
 
 ## Build requirements
 
 - C++23-compatible compiler (**GCC 11+** or **Clang 12+** minimum)
 - **CMake 3.28+**
 - **Conan 2.x**
-- Linux is the primary target; macOS is supported for local development, and Windows users should prefer Docker or WSL.
+- Supported build environments today include Linux and macOS; on Windows, use Docker or WSL.
 
 ## Contributing
 

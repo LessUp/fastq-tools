@@ -1,21 +1,17 @@
 export const localeText = {
   zh: {
     nav: {
-      orientation: '导读',
       whitepaper: '白皮书',
       architecture: '架构',
       algorithms: '算法',
-      academy: '算法（学院旧别名）',
       performance: '性能',
       reference: '参考',
       research: '研究',
     },
     sidebar: {
-      orientationHub: '导读',
       whitepaperHub: '白皮书',
       architectureHub: '架构',
       algorithmsHub: '算法与流程',
-      academyHub: '算法（学院旧别名）',
       performanceHub: '性能证据',
       referenceHub: '参考',
       researchHub: '研究',
@@ -26,7 +22,6 @@ export const localeText = {
       whyFastqtools: '为什么选择 FastQTools',
       architecture: '架构',
       algorithms: '算法',
-      knowledgeMap: '知识地图',
       workflows: '工作流',
       performance: '性能',
       benchmarkReport: 'Benchmark 报告',
@@ -61,7 +56,6 @@ export const localeText = {
       resourcesOverview: '资源导航',
       contributing: '参与贡献',
       releaseNotes: '发布说明',
-      changelog: '变更记录',
       agents: 'Agent 文档',
       domain: '领域模型',
       issueTracker: 'Issue Tracker',
@@ -75,21 +69,17 @@ export const localeText = {
   },
   en: {
     nav: {
-      orientation: 'Orientation',
       whitepaper: 'Whitepaper',
       architecture: 'Architecture',
       algorithms: 'Algorithms',
-      academy: 'Algorithms (legacy Academy alias)',
       performance: 'Performance',
       reference: 'Reference',
       research: 'Research',
     },
     sidebar: {
-      orientationHub: 'Orientation',
       whitepaperHub: 'Whitepaper',
       architectureHub: 'Architecture',
       algorithmsHub: 'Algorithms and workflows',
-      academyHub: 'Algorithms (legacy Academy alias)',
       performanceHub: 'Performance evidence',
       referenceHub: 'Reference',
       researchHub: 'Research',
@@ -100,7 +90,6 @@ export const localeText = {
       whyFastqtools: 'Why FastQTools',
       architecture: 'Architecture',
       algorithms: 'Algorithms',
-      knowledgeMap: 'Knowledge Map',
       workflows: 'Workflows',
       performance: 'Performance',
       benchmarkReport: 'Benchmark Report',
@@ -135,7 +124,6 @@ export const localeText = {
       resourcesOverview: 'Resources Overview',
       contributing: 'Contributing',
       releaseNotes: 'Release Notes',
-      changelog: 'Changelog',
       agents: 'Agent Docs',
       domain: 'Domain',
       issueTracker: 'Issue Tracker',
@@ -157,7 +145,7 @@ export const themeFoundation = {
   sections: {
     whitepaper: {
       path: 'whitepaper/',
-      aliases: ['orientation/', 'why-fastqtools/'],
+      aliases: ['why-fastqtools/'],
       summary: {
         zh: '面向采用判断的主叙事入口。',
         en: 'Narrative entry point for adoption decisions.',
@@ -165,7 +153,7 @@ export const themeFoundation = {
     },
     architecture: {
       path: 'architecture/',
-      aliases: ['knowledge-map/'],
+      aliases: [],
       summary: {
         zh: '聚焦系统分层、执行模型与设计权衡。',
         en: 'System layers, execution model, and design trade-offs.',
@@ -173,7 +161,7 @@ export const themeFoundation = {
     },
     algorithms: {
       path: 'algorithms/',
-      aliases: ['academy/', 'workflows/'],
+      aliases: ['workflows/'],
       summary: {
         zh: '面向流程、算法与执行路径的学习入口。',
         en: 'Workflow and algorithm-oriented learning entry.',
@@ -189,7 +177,7 @@ export const themeFoundation = {
     },
     referenceNav: {
       path: 'reference/',
-      aliases: ['guide/', 'api/', 'dev/', 'release-notes/'],
+      aliases: ['guide/', 'api/', 'dev/'],
       summary: {
         zh: 'CLI、API 与开发实现资料。',
         en: 'CLI, API, and developer implementation material.',

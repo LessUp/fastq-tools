@@ -19,10 +19,6 @@ const sharedLinks = {
     path: themeFoundation.sections.performance.path,
     labels: { zh: localeText.zh.nav.performance, en: localeText.en.nav.performance },
   },
-  orientationNav: {
-    path: 'orientation/',
-    labels: { zh: localeText.zh.nav.orientation, en: localeText.en.nav.orientation },
-  },
   whitepaperNav: {
     path: 'whitepaper/',
     labels: { zh: localeText.zh.nav.whitepaper, en: localeText.en.nav.whitepaper },
@@ -38,10 +34,6 @@ const sharedLinks = {
   why: {
     path: 'why-fastqtools/',
     labels: { zh: localeText.zh.sidebar.whyFastqtools, en: localeText.en.sidebar.whyFastqtools },
-  },
-  knowledgeMap: {
-    path: 'knowledge-map/',
-    labels: { zh: localeText.zh.sidebar.knowledgeMap, en: localeText.en.sidebar.knowledgeMap },
   },
   workflows: {
     path: 'workflows/',
@@ -159,10 +151,6 @@ const sharedLinks = {
     path: 'contributing/',
     labels: { zh: localeText.zh.sidebar.contributing, en: localeText.en.sidebar.contributing },
   },
-  changelog: {
-    path: 'release-notes/changelog',
-    labels: { zh: localeText.zh.sidebar.changelog, en: localeText.en.sidebar.changelog },
-  },
   agentsDomain: {
     path: 'agents/domain',
     labels: { zh: localeText.zh.sidebar.domain, en: localeText.en.sidebar.domain },
@@ -196,20 +184,13 @@ export const topNavLinkIds = [
   'researchNav',
 ] as const satisfies readonly SharedLinkId[]
 
-export const orientationSidebarGroups = [
-  {
-    headingKey: 'orientationHub',
-    items: ['orientationNav', 'whitepaper', 'architecture', 'algorithms', 'performance', 'referenceNav', 'researchNav'],
-  },
-] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
-
 export const whitepaperSidebarGroups = [
-  { headingKey: 'whitepaperHub', items: ['whitepaper', 'orientationNav', 'whitepaperNav', 'why'] },
+  { headingKey: 'whitepaperHub', items: ['whitepaper', 'whitepaperNav', 'why'] },
   { headingKey: 'narrativeContext', items: ['architecture', 'algorithms', 'performance', 'referenceNav', 'researchNav'] },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const architectureSidebarGroups = [
-  { headingKey: 'architectureHub', items: ['architecture', 'knowledgeMap'] },
+  { headingKey: 'architectureHub', items: ['architecture'] },
   { headingKey: 'systemDesign', items: ['whitepaper', 'performance', 'referenceNav'] },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
@@ -231,7 +212,6 @@ export const referenceSidebarGroups = [
     headingKey: 'developer',
     items: ['devOverview', 'devArchitecture', 'design', 'build', 'testing', 'codingStandards', 'localTooling', 'qualityTools', 'gitWorkflow', 'devcontainer', 'benchmarkGuide'],
   },
-  { headingKey: 'releaseNotes', items: ['changelog'] },
 ] as const satisfies readonly { headingKey: SidebarTextKey; items: readonly SharedLinkId[] }[]
 
 export const researchSidebarGroups = [
@@ -246,13 +226,6 @@ export const homepagePillarLinkIds = {
   architecture: 'architecture',
   reference: 'referenceNav',
 } as const satisfies Record<string, SharedLinkId>
-
-export const knowledgeMapSections = [
-  { id: 'evaluate', href: 'whitepaper', items: ['whitepaper', 'why', 'architecture', 'performance'] },
-  { id: 'operate', href: 'algorithms', items: ['algorithms', 'workflows', 'gettingStarted', 'cliReference'] },
-  { id: 'reference', href: 'referenceNav', items: ['referenceNav', 'apiOverview', 'developerGuide'] },
-  { id: 'extend', href: 'researchNav', items: ['researchNav', 'bibliography', 'relatedProjects', 'evolutionNotes'] },
-] as const satisfies readonly { id: string; href: SharedLinkId; items: readonly SharedLinkId[] }[]
 
 export const workflowPathLinks = {
   evaluate: { primary: 'gettingStarted', secondary: 'why' },
@@ -292,7 +265,7 @@ export const resourceHubGroups = [
   {
     id: 'history',
     href: 'archiveOverview',
-    items: [{ type: 'doc', id: 'archiveOverview' }, { type: 'doc', id: 'migrationNotice' }, { type: 'doc', id: 'knowledgeMap' }],
+    items: [{ type: 'doc', id: 'archiveOverview' }, { type: 'doc', id: 'migrationNotice' }],
   },
 ] as const satisfies readonly { id: string; href: SharedLinkId; items: readonly ResourceHubItem[] }[]
 

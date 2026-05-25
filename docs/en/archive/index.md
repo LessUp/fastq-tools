@@ -14,7 +14,7 @@ As the project adopted OpenSpec and the new documentation information architectu
 - Current specification baseline: `openspec/baseline/`
 - Active proposals: `openspec/changes/`
 - Landed history: `openspec/archive/`
-- Project change timeline: [`Changelog`](../release-notes/changelog)
+- Project history surfaces: [Root `CHANGELOG.md`](https://github.com/LessUp/fastq-tools/blob/master/CHANGELOG.md) and [GitHub Releases](https://github.com/LessUp/fastq-tools/releases)
 
 ## How to read archive material
 

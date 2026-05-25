@@ -69,4 +69,5 @@ auto_execution_mode: 1
 9. **总结与记录**
    - 汇总表：文件 | 问题 | 处理方式 | 脚本状态
    - 未完成项明确责任人和后续动作
-   - 记录格式化提交：将“仅机械改动”的提交写入 `changelog/`，必要时可把该提交 hash 添加到 `.git-blame-ignore-revs`
+   - 如本次整理属于需要保留的项目级变更，按根目录 `CHANGELOG.md` 的维护流程更新；纯机械格式化通常无需单独记录
+   - 必要时可把“仅机械改动”的提交 hash 添加到 `.git-blame-ignore-revs`

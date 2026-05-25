@@ -19,7 +19,8 @@
 ## 历史与归档
 
 - [`归档概览`](../archive/) —— 解释哪些内容已经迁移、哪些只保留参考价值；
-- [`变更记录`](../release-notes/changelog) —— 查看已落地改动的时间线。
+- [GitHub Releases](https://github.com/LessUp/fastq-tools/releases) —— 查看可安装版本与配套发布说明；
+- [根目录 `CHANGELOG.md`](https://github.com/LessUp/fastq-tools/blob/master/CHANGELOG.md) —— 查看当前维护中的项目级变更历史。
 
 ## 如何使用这些资源
 

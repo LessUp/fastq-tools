@@ -62,9 +62,6 @@ public:
     [[nodiscard]] auto getDescription() const -> std::string override;
 
 private:
-    struct Config;
-    std::unique_ptr<Config> config_;
-    // Depend on the INTERFACE
     std::unique_ptr<fq::processing::ProcessingPipelineInterface> pipeline_;
 };
 

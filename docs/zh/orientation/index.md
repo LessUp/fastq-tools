@@ -1,12 +1,12 @@
 ---
-title: 导读
-description: 先建立阅读框架，再进入 FastQTools 的白皮书、算法与参考材料。
+title: 导读（旧入口）
+description: 为兼容旧书签保留的旧入口；请从当前维护中的白皮书与参考层开始。
 layout: doc
 ---
 
-<SectionLandingGrid locale="zh" section="orientation" />
-
 # 导读
+
+导读现在只是一个为旧书签和旧入口保留的旧入口页。当前维护中的文档主线已经收敛到白皮书与核心参考层，因此请把这里视为转接说明，而不是继续扩展的主入口。
 
 ## 项目定位
 
@@ -14,9 +14,9 @@ FastQTools 是一个面向 FASTQ 质控核心环节的工程化工具包，而�
 
 ## 阅读路径
 
-1. 先读 [`为什么选择 FastQTools`](../why-fastqtools/)
-2. 再读 [`技术白皮书`](../whitepaper/)
-3. 最后按角色进入 [`算法`](../algorithms/) 与 [`参考导航`](../reference/)
+1. 先读[`技术白皮书`](../whitepaper/)，了解当前维护中的产品与系统主线。
+2. 再进入[`算法`](../algorithms/)，查看过滤、统计与执行路径。
+3. 最后进入[`参考导航`](../reference/)，查命令、API 与贡献资料。
 
 ## 术语表
 
@@ -25,4 +25,4 @@ FastQTools 是一个面向 FASTQ 质控核心环节的工程化工具包，而�
 
 ## 下一步
 
-如果你还在判断项目值不值得试，继续阅读 [`为什么选择 FastQTools`](../why-fastqtools/)；如果你已经想系统理解叙事主线，直接进入 [`技术白皮书`](../whitepaper/)。
+如果你只是被旧链接带到这里，请直接继续阅读当前维护中的[`技术白皮书`](../whitepaper/)或[`参考导航`](../reference/)。

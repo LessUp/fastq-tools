@@ -24,16 +24,9 @@
 
 namespace fq::cli::commands {
 
-// FilterCommand 内部配置仅保存输入输出路径
-// 其他配置参数直接使用 fq::processing::ProcessingOptions
-struct FilterCommand::Config {
-    std::string inputFile;
-    std::string outputFile;
-};
-
 // Use the factory in the constructor
 FilterCommand::FilterCommand()
-    : config_(std::make_unique<Config>()), pipeline_(fq::processing::createProcessingPipeline()) {}
+    : pipeline_(fq::processing::createProcessingPipeline()) {}
 
 FilterCommand::~FilterCommand() = default;
 
@@ -67,9 +60,6 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
         std::cout << options.help() << '\n';
         return 1;
     }
-
-    config_->inputFile = common.inputPath;
-    config_->outputFile = common.outputPath;
 
     auto plan = buildFilterPlan(result, common);
     plan.applyTo(*pipeline_);

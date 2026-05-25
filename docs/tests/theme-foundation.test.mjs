@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs'
 
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 const navSource = readFileSync(new URL('../.vitepress/theme/content/siteNavigation.ts', import.meta.url), 'utf8')
+const contentSource = readFileSync(new URL('../.vitepress/theme/content/siteContent.ts', import.meta.url), 'utf8')
 const configSource = readFileSync(new URL('../.vitepress/config.ts', import.meta.url), 'utf8')
 const tokensSource = readFileSync(new URL('../.vitepress/theme/styles/tokens.css', import.meta.url), 'utf8')
 const baseStyles = readFileSync(new URL('../.vitepress/theme/styles/base.css', import.meta.url), 'utf8')
@@ -42,6 +43,14 @@ test('theme foundation ships dedicated shared content and reference data modules
   }
 })
 
+test('theme foundation removes the retired KnowledgeMap component file', () => {
+  assert.equal(
+    existsSync(new URL('../.vitepress/theme/components/KnowledgeMap.vue', import.meta.url)),
+    false,
+    'KnowledgeMap.vue should be removed once the component is retired',
+  )
+})
+
 test('config active matches pivot around the new IA concepts', () => {
   for (const token of ['whitepaper:', 'architecture:', 'algorithms:', 'performance:', 'referenceNav:', 'researchNav:']) {
     assert.match(configSource, new RegExp(token))
@@ -49,6 +58,17 @@ test('config active matches pivot around the new IA concepts', () => {
 
   assert.doesNotMatch(configSource, /orientationNav:/)
   assert.doesNotMatch(configSource, /academyNav:/)
+})
+
+test('theme foundation keeps only maintained section concepts in shared content', () => {
+  for (const concept of ['whitepaper', 'architecture', 'algorithms', 'performance', 'referenceNav', 'researchNav']) {
+    assert.match(contentSource, new RegExp(concept))
+  }
+
+  assert.doesNotMatch(contentSource, /orientation:\s*'导读'/)
+  assert.doesNotMatch(contentSource, /orientation:\s*'Orientation'/)
+  assert.doesNotMatch(contentSource, /academy:\s*'算法（学院旧别名）'/)
+  assert.doesNotMatch(contentSource, /academy:\s*'Algorithms \(legacy Academy alias\)'/)
 })
 
 test('top-level active matches keep performance and research nav states mutually exclusive', () => {
@@ -63,20 +83,40 @@ test('top-level active matches keep performance and research nav states mutually
   assert.doesNotMatch('/en/research/', performanceActiveMatch)
 })
 
-test('whitepaper nav stays active on locale homepages and whitepaper-owned pages', () => {
+test('whitepaper nav stays active on locale homepages and maintained whitepaper pages only', () => {
   const enWhitepaperActiveMatch = getActiveMatchPattern('whitepaper', 'en')
   const zhWhitepaperActiveMatch = getActiveMatchPattern('whitepaper', 'zh')
 
-  for (const route of ['/en/', '/en/whitepaper/', '/en/orientation/', '/en/why-fastqtools/']) {
+  for (const route of ['/en/', '/en/whitepaper/', '/en/why-fastqtools/']) {
     assert.match(route, enWhitepaperActiveMatch)
   }
 
-  for (const route of ['/zh/', '/zh/whitepaper/', '/zh/orientation/', '/zh/why-fastqtools/']) {
+  for (const route of ['/zh/', '/zh/whitepaper/', '/zh/why-fastqtools/']) {
     assert.match(route, zhWhitepaperActiveMatch)
   }
 
+  assert.doesNotMatch('/en/orientation/', enWhitepaperActiveMatch)
+  assert.doesNotMatch('/zh/orientation/', zhWhitepaperActiveMatch)
   assert.doesNotMatch('/en/architecture/', enWhitepaperActiveMatch)
   assert.doesNotMatch('/zh/algorithms/', zhWhitepaperActiveMatch)
+})
+
+test('retired route aliases do not participate in maintained section highlighting', () => {
+  const enArchitectureActiveMatch = getActiveMatchPattern('architecture', 'en')
+  const enAlgorithmsActiveMatch = getActiveMatchPattern('algorithms', 'en')
+
+  assert.doesNotMatch('/en/knowledge-map/', enArchitectureActiveMatch)
+  assert.doesNotMatch('/en/academy/', enAlgorithmsActiveMatch)
+})
+
+test('theme foundation keeps retired routes outside maintained alias lists', () => {
+  assert.match(contentSource, /whitepaper:\s*\{[\s\S]*path: 'whitepaper\/'/)
+  assert.match(contentSource, /architecture:\s*\{[\s\S]*path: 'architecture\/'/)
+  assert.match(contentSource, /algorithms:\s*\{[\s\S]*path: 'algorithms\/'/)
+
+  assert.doesNotMatch(contentSource, /whitepaper:\s*\{[\s\S]*aliases: \[[\s\S]*orientation\//)
+  assert.doesNotMatch(contentSource, /architecture:\s*\{[\s\S]*aliases: \[[\s\S]*knowledge-map\//)
+  assert.doesNotMatch(contentSource, /algorithms:\s*\{[\s\S]*aliases: \[[\s\S]*academy\//)
 })
 
 test('publication shell widens the homepage and doc reading surface', () => {

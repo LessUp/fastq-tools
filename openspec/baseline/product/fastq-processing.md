@@ -1,19 +1,25 @@
 # Product Specification: FASTQ Processing
 
 > **Status**: Active
-> **Last Updated**: 2026-04-28
+> **Last Updated**: 2026-05-24
 > **Owner**: FastQTools Core Team
 
 ## Overview
 
-FastQTools is a focused C++23 FASTQ preprocessing and quality-control toolkit for day-to-day sequencing workflows. The product surface remains intentionally small: a CLI for routine QC/preprocessing tasks and a reusable C++ API for embedding the same primitives into other tools.
+FastQTools is a focused C++23 FASTQ preprocessing and quality-control toolkit for day-to-day sequencing workflows.
 
-The project keeps a narrow product scope, but the maintained baseline now allows additive evolution in execution policy, bounded preprocessing modules, and lightweight QC signatures as long as the default user experience remains stable.
+The maintained product surface is explicitly limited to three supported entry points:
+
+- the `stat` CLI command
+- the `filter` CLI command
+- the supported embeddable C++ API subset centered on `fqtools/fq.h`, the documented common/config/error/io/processing headers it aggregates, and the high-level statistics workflow `StatisticOptions + createStatisticCalculator(...)->run()`
+
+Everything else is implementation detail, supporting documentation, or internal tooling rather than maintained product surface.
 
 ## Target Users
 
 - Bioinformatics researchers who need fast local FASTQ inspection and filtering
-- Pipeline engineers who want a lightweight QC step instead of a workflow platform
+- Pipeline engineers who want a lightweight QC step instead of a broader orchestration toolkit
 - C++ developers who want reusable FASTQ I/O and processing primitives
 
 ## Core Product Surface
@@ -62,19 +68,19 @@ FastQTools filter \
 ## Key Capabilities
 
 1. **Zero-copy FASTQ batches** — records are exposed as `std::string_view` into `FastqBatch` storage.
-2. **Predicate/mutator pipeline** — filtering and trimming are composed through a processing pipeline interface.
+2. **Predicate/mutator pipeline** — filtering and trimming are composed through the retained `filter` workflow and its public processing interfaces.
 3. **Per-position statistics** — `stat` computes summary metrics plus per-position base/quality distributions.
 4. **Gzip-aware file handling** — the maintained compression path is gzip for both reading and writing.
-5. **Execution and memory policy controls** — default oneTBB + object-pool execution remains explicit and configurable.
+5. **Performance and memory controls** — batch size, thread count, performance profile, and memory limit remain part of the focused toolkit surface.
 6. **Lightweight QC signatures** — `stat` may emit bounded sidecar summaries for duplicate estimation and head-kmer signatures without replacing the default text report.
-7. **Embeddable C++ surface** — public headers under `include/fqtools/` remain the supported integration boundary.
+7. **Embeddable C++ surface** — the supported C++ integration boundary is the documented embeddable subset centered on `fqtools/fq.h`, its common/config/error/io/processing headers, and the high-level statistics workflow `StatisticOptions + createStatisticCalculator(...)->run()`.
 
 ## Explicit Non-Goals
 
 - Becoming a general-purpose workflow runner
 - Claiming maintained support for bzip2/xz I/O when the current implementation does not provide it
-- Expanding the public surface with new commands instead of extending the existing `stat` / `filter` workflows
-- Turning lightweight QC signatures into a classifier, mapper, or platform service
+- Expanding the maintained surface beyond `stat`, `filter`, and the documented embeddable C++ API subset centered on `fqtools/fq.h`
+- Turning lightweight QC signatures into a classifier, mapper, or broader service surface
 - Keeping legacy docs, workflows, or metadata that no longer improve the maintained product
 
 ## Representative Performance Targets
@@ -95,7 +101,7 @@ These are product-sizing targets for the maintained benchmark dataset, not unive
 3. `filter` must continue to work when adapter trimming or poly-tail trimming are enabled.
 4. `stat` output must include summary metrics and a per-position table.
 5. Optional signature sidecar output must remain additive and must not replace the default text report.
-6. Public C++ integration continues to use headers in `include/fqtools/` as the supported boundary.
+6. Public C++ integration continues to use the documented embeddable API subset centered on `fqtools/fq.h`, including the supported statistics workflow `StatisticOptions + createStatisticCalculator(...)->run()`.
 7. Build, test, and lint entry points remain the scripts under `scripts/core/`.
 
 ## Related Specifications

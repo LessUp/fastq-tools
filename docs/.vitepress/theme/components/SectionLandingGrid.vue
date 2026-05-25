@@ -4,7 +4,7 @@ import { withBase } from 'vitepress'
 import { ArrowRight } from 'lucide-vue-next'
 import { getSharedLinkHref, type LocaleKey, type SharedLinkId } from '../content/siteNavigation'
 
-type SectionKey = 'orientation' | 'whitepaper' | 'academy' | 'reference' | 'research'
+type SectionKey = 'whitepaper' | 'reference' | 'research'
 
 type SectionCard = {
   tag: string
@@ -27,41 +27,11 @@ const props = defineProps<{ locale: LocaleKey; section: SectionKey }>()
 
 const copy: Record<LocaleKey, Record<SectionKey, SectionCopy>> = {
   en: {
-    orientation: {
-      eyebrow: 'Orientation',
-      title: 'Pick the right entry point before you read deeply.',
-      summary: 'Orientation is the shortest route into the new reading path. Use it to understand how whitepaper, algorithms, reference, and research fit together.',
-      hubLinkId: 'orientationNav',
-      hubLinkLabel: 'Open orientation',
-      cards: [
-        {
-          tag: 'Map',
-          title: 'Use the knowledge map first',
-          summary: 'Choose the best section root for your current question before you commit to a long reading session.',
-          linkId: 'knowledgeMap',
-          linkLabel: 'Open knowledge map',
-        },
-        {
-          tag: 'Story',
-          title: 'Continue into the whitepaper',
-          summary: 'Move into positioning, architecture, and performance claims once you know you need the narrative case.',
-          linkId: 'whitepaperNav',
-          linkLabel: 'Read the whitepaper',
-        },
-        {
-          tag: 'Need concrete details?',
-          title: 'Jump straight to reference',
-          summary: 'When you already know the task, go directly to guides, API pages, and developer material.',
-          linkId: 'referenceNav',
-          linkLabel: 'Open reference',
-        },
-      ],
-    },
     whitepaper: {
       eyebrow: 'Whitepaper',
       title: 'Review the technical whitepaper before making adoption claims.',
       summary: 'The whitepaper section frames why FastQTools exists, what constraints shaped it, and how the evidence should be read.',
-      hubLinkId: 'whitepaperNav',
+      hubLinkId: 'whitepaper',
       hubLinkLabel: 'Open whitepaper',
       cards: [
         {
@@ -84,36 +54,6 @@ const copy: Record<LocaleKey, Record<SectionKey, SectionCopy>> = {
           summary: 'Read benchmark-backed claims before repeating them in adoption documents or technical reviews.',
           linkId: 'performance',
           linkLabel: 'Review performance',
-        },
-      ],
-    },
-    academy: {
-      eyebrow: 'Academy (legacy alias)',
-      title: 'Academy now resolves to the Algorithms layer.',
-      summary: 'This legacy route stays available for old links, but the canonical learning surface is Algorithms: onboarding, repeatable workflows, and the shortest route to execution-focused docs.',
-      hubLinkId: 'algorithms',
-      hubLinkLabel: 'Open canonical algorithms',
-      cards: [
-        {
-          tag: 'Canonical',
-          title: 'Go to Algorithms first',
-          summary: 'Use the maintained Algorithms hub as the primary entry for filtering, statistics, and workflow-oriented reading.',
-          linkId: 'algorithms',
-          linkLabel: 'Open algorithms',
-        },
-        {
-          tag: 'Path',
-          title: 'Choose a workflow path',
-          summary: 'See whether you are evaluating the tool, operating routine QC work, or contributing code.',
-          linkId: 'workflows',
-          linkLabel: 'Open workflows',
-        },
-        {
-          tag: 'Onboarding',
-          title: 'Run the getting-started route',
-          summary: 'Move from install and build to the first successful stat command without browsing unrelated material.',
-          linkId: 'gettingStarted',
-          linkLabel: 'Open getting started',
         },
       ],
     },
@@ -179,41 +119,11 @@ const copy: Record<LocaleKey, Record<SectionKey, SectionCopy>> = {
     },
   },
   zh: {
-    orientation: {
-      eyebrow: '导读',
-      title: '先选对入口，再决定要深入阅读哪一层。',
-      summary: '导读层是新阅读路径的最短入口，用来快速说明白皮书、算法、参考、研究之间的关系。',
-      hubLinkId: 'orientationNav',
-      hubLinkLabel: '进入导读',
-      cards: [
-        {
-          tag: '地图',
-          title: '先看知识地图',
-          summary: '在投入较长阅读时间前，先确认当前问题最适合落在哪个分区根节点。',
-          linkId: 'knowledgeMap',
-          linkLabel: '打开知识地图',
-        },
-        {
-          tag: '叙事',
-          title: '继续进入白皮书',
-          summary: '当你需要了解定位、架构与性能论证时，再进入白皮书层阅读完整叙事。',
-          linkId: 'whitepaperNav',
-          linkLabel: '阅读白皮书',
-        },
-        {
-          tag: '已经有明确任务？',
-          title: '直接跳到参考层',
-          summary: '如果你已经知道自己要找什么，可以直接进入指南、API 与开发资料。',
-          linkId: 'referenceNav',
-          linkLabel: '打开参考导航',
-        },
-      ],
-    },
     whitepaper: {
       eyebrow: '白皮书',
       title: '在做采用判断前，先读完这组技术白皮书材料。',
       summary: '白皮书层负责解释 FastQTools 为什么存在、受哪些约束影响，以及证据应该如何理解。',
-      hubLinkId: 'whitepaperNav',
+      hubLinkId: 'whitepaper',
       hubLinkLabel: '进入白皮书',
       cards: [
         {
@@ -236,36 +146,6 @@ const copy: Record<LocaleKey, Record<SectionKey, SectionCopy>> = {
           summary: '在把吞吐或采用结论写进评审材料前，先回到性能证据页面逐项确认。',
           linkId: 'performance',
           linkLabel: '查看性能总览',
-        },
-      ],
-    },
-    academy: {
-      eyebrow: '学院（旧别名）',
-      title: '学院路由现在收敛到算法层。',
-      summary: '这个旧链接会继续保留，但规范入口已经切换到“算法”：从上手、工作流到执行细节都应以 algorithms/ 为准。',
-      hubLinkId: 'algorithms',
-      hubLinkLabel: '进入规范算法入口',
-      cards: [
-        {
-          tag: '规范入口',
-          title: '先进入算法页',
-          summary: '过滤、统计与工作流相关的维护中内容，现在都以算法层作为主入口。',
-          linkId: 'algorithms',
-          linkLabel: '打开算法',
-        },
-        {
-          tag: '路径',
-          title: '先选工作流路径',
-          summary: '先判断你是处在采用评估、常规质控执行，还是贡献开发的阶段。',
-          linkId: 'workflows',
-          linkLabel: '打开工作流',
-        },
-        {
-          tag: '上手',
-          title: '执行快速开始路线',
-          summary: '从依赖安装与构建走到第一次成功执行 stat，中间不需要浏览无关材料。',
-          linkId: 'gettingStarted',
-          linkLabel: '打开快速开始',
         },
       ],
     },

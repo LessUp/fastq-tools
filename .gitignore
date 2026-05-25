@@ -57,6 +57,7 @@ __pycache__/
 cascade/
 .claude/
 .omc/
+superpowers/
 
 # ===== OpenSpec CLI（Node.js） =====
 node_modules/

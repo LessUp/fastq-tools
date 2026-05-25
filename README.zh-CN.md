@@ -33,13 +33,13 @@
 
 ---
 
-FastQTools 是一个基于现代 C++23 的 FASTQ 质控工具集，适合希望快速检查、过滤、修剪 reads 的研究人员和流水线工程师。它强调**聚焦、快速、可集成**，而不是把常见 FASTQ 任务塞进一个笨重的平台。
+FastQTools 是一个基于现代 C++23 的 FASTQ 质控工具集，适合希望快速检查、过滤、修剪 reads 的研究人员和流水线工程师。当前维护面刻意保持精简：`stat` 命令、`filter` 命令，以及一个以 `fqtools/fq.h` 为中心的最小可嵌入 C++ API，其中包括其聚合的 common/config/error/io/processing 文档化头文件，以及受支持的统计工作流 `StatisticOptions + createStatisticCalculator(...)->run()`。
 
 ## 它最适合做什么
 
 - **FASTQ 统计 (`stat`)**：快速查看读段数量、长度分布、碱基组成、GC 含量，以及 Q20/Q30 等质量指标。
 - **过滤与修剪 (`filter`)**：在同一条处理链中组合长度、质量、N 比例过滤，并执行低质量端修剪。
-- **流水线集成**：既可以直接作为 CLI 使用，也可以通过公开 C++ API 嵌入更大的生物信息学工具。
+- **可嵌入的 C++ API（`fqtools/fq.h`）**：通过总入口头文件、其聚合的 common/config/error/io/processing 文档化头文件，以及受支持的统计工作流 `StatisticOptions + createStatisticCalculator(...)->run()` 接入与 CLI 对齐的接口。
 - **性能导向实现**：零拷贝记录视图、Intel oneTBB 并行流水线，以及对压缩文件工作流的支持。
 - **工程质量保障**：持续集成、消毒剂、模糊测试，以及持续维护的文档站点。
 
@@ -90,14 +90,14 @@ cd fastq-tools
 | 在 C++ 项目中集成库接口 | [API Overview](https://lessup.github.io/fastq-tools/api/overview.en/) |
 | 判断性能数字该如何解读 | [Benchmark Overview](https://lessup.github.io/fastq-tools/performance/benchmark-report/) |
 | 参与文档或代码贡献 | [Contributing](https://lessup.github.io/fastq-tools/contributing.en/) |
-| 跟踪项目层面的变更 | [Changelog](https://lessup.github.io/fastq-tools/changelog.en/) |
+| 跟踪项目层面的变更 | [CHANGELOG.md](./CHANGELOG.md) |
 
 ## 构建要求
 
 - 支持 C++23 的编译器（最低 **GCC 11+** 或 **Clang 12+**）
 - **CMake 3.28+**
 - **Conan 2.x**
-- Linux 是主要目标环境；macOS 适合本地开发，Windows 用户建议优先使用 Docker 或 WSL。
+- 当前支持的构建环境包括 Linux 和 macOS；Windows 用户建议使用 Docker 或 WSL。
 
 ## 贡献
 

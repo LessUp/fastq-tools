@@ -22,7 +22,7 @@ const copy = {
       {
         title: 'Adoption diligence',
         summary: 'Use this route when the question is whether FastQTools belongs in a team, platform, or procurement story.',
-        steps: ['orientationNav', 'whitepaperNav', 'performance'],
+        steps: ['whitepaperNav', 'why', 'performance'],
       },
       {
         title: 'Implementation handoff',
@@ -45,7 +45,7 @@ const copy = {
       {
         title: '采用尽调',
         summary: '当问题是 FastQTools 是否适合团队、平台或采购叙事时，请走这条路线。',
-        steps: ['orientationNav', 'whitepaperNav', 'performance'],
+        steps: ['whitepaperNav', 'why', 'performance'],
       },
       {
         title: '实施移交',

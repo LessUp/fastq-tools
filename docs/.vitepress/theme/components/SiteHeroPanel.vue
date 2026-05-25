@@ -22,15 +22,15 @@ const copy = {
   en: {
     eyebrow: 'FastQTools technical whitepaper',
     title: 'Choose the reading path that fits your FASTQ evaluation stage.',
-    summary: 'Start with orientation, move through the technical whitepaper, then continue into algorithms guidance or research evidence when you need deeper validation.',
+    summary: 'Start on the maintained whitepaper surface, then continue into algorithms guidance or research evidence when you need deeper validation.',
     actions: [
-      { label: 'Start with orientation', linkId: 'orientationNav', variant: 'primary' },
-      { label: 'Read the whitepaper', linkId: 'whitepaperNav', variant: 'secondary' },
+      { label: 'Read the whitepaper', linkId: 'whitepaper', variant: 'primary' },
+      { label: 'Open reference', linkId: 'referenceNav', variant: 'secondary' },
     ] satisfies Action[],
     signals: [
       {
-        title: 'orientation for first-pass triage',
-        detail: 'Use orientation when you need the fastest explanation of section boundaries, audience fit, and where to read next.',
+        title: 'whitepaper for first-pass triage',
+        detail: 'Use the whitepaper when you need the fastest maintained explanation of section boundaries, audience fit, and where to read next.',
         icon: BookOpen,
       },
       {
@@ -48,15 +48,15 @@ const copy = {
   zh: {
     eyebrow: 'FastQTools 技术白皮书',
     title: '为 FASTQ 采用评估选择合适的阅读路径。',
-    summary: '先从导读进入，再阅读技术白皮书；当你需要更深的落地说明时，再转向算法层或研究证据。',
+    summary: '先从当前维护中的白皮书入口开始；当你需要更深的落地说明时，再转向算法层或研究证据。',
     actions: [
-      { label: '从导读开始', linkId: 'orientationNav', variant: 'primary' },
-      { label: '阅读白皮书', linkId: 'whitepaperNav', variant: 'secondary' },
+      { label: '阅读白皮书', linkId: 'whitepaper', variant: 'primary' },
+      { label: '打开参考导航', linkId: 'referenceNav', variant: 'secondary' },
     ] satisfies Action[],
     signals: [
       {
-        title: '导读负责第一次分流',
-        detail: '当你需要最快理解分区边界、适合对象与下一步阅读建议时，先看导读最省时间。',
+        title: '白皮书负责第一次分流',
+        detail: '当你需要最快理解当前维护中的分区边界、适合对象与下一步阅读建议时，先看白皮书最省时间。',
         icon: BookOpen,
       },
       {

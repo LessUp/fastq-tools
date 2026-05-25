@@ -14,7 +14,7 @@
 - 当前规范基线：`openspec/baseline/`
 - 活跃提案：`openspec/changes/`
 - 已落地历史：`openspec/archive/`
-- 项目变更时间线：[`变更记录`](../release-notes/changelog)
+- 项目历史出口：[仓库根目录 `CHANGELOG.md`](https://github.com/LessUp/fastq-tools/blob/master/CHANGELOG.md) 与 [GitHub Releases](https://github.com/LessUp/fastq-tools/releases)
 
 ## 如何阅读归档材料
 

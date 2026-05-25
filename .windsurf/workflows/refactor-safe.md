@@ -64,7 +64,7 @@ auto_execution_mode: 1
    - `./scripts/core/test -c clang -t Release`
 
 8. **收尾**
-   - 更新 `changelog/` 记录重构内容
+   - 如该重构需要纳入项目维护历史，按根目录 `CHANGELOG.md` 的维护流程补充摘要
    - 确认 `git diff --stat` 范围合理
    - 提交：`git commit -m "refactor(<scope>): <description>"`
 

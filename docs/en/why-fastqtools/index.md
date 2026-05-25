@@ -12,7 +12,7 @@ The deciding questions are usually engineering questions like these:
 - **Can results be audited?** Once filtering, trimming, and statistics enter production paths, resource boundaries, output consistency, and verification paths have to be clear.
 - **Is integration cost controllable?** Many teams validate with the CLI first, then embed the capability into a C++ program or an existing QC workflow. If the interfaces split, adoption cost rises quickly.
 
-FastQTools brings those questions into one whitepaper narrative instead of scattering commands, benchmark numbers, and architectural trade-offs across disconnected pages. If you want the overall site map first, return to [`Orientation`](../orientation/) or the [`Knowledge Map`](../knowledge-map/).
+FastQTools brings those questions into one whitepaper narrative instead of scattering commands, benchmark numbers, and architectural trade-offs across disconnected pages. If you want the maintained reading spine first, start from the [`Whitepaper`](../whitepaper/) and keep the [`Reference`](../reference/) surface nearby for exact commands and API follow-up.
 
 ## Suitable scenarios
 

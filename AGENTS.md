@@ -143,7 +143,7 @@ fastq-tools/
 ├── .github/workflows/          # CI/CD 工作流
 ├── docs/                       # MkDocs 文档
 ├── tools/                      # 开发工具（基准测试、模糊测试、测试数据）
-└── changelog/                  # 变更记录
+└── CHANGELOG.md                # 项目维护历史（单一变更记录）
 ```
 
 ---
@@ -424,7 +424,7 @@ VS Code DevContainer 配置位于 `.devcontainer/`：
 ### Step 4: 轻量验证并整理提交
 
 - 运行与改动直接相关的最小验证集；文档 / 规则改动至少执行 `git diff --check`。
-- 在提交说明、changelog 或任务记录中写明 baseline 引用、验证结果、风险点、是否需要 archive。
+- 在提交说明、`CHANGELOG.md` 更新或任务记录中写明 baseline 引用、验证结果、风险点、是否需要 archive。
 - 如任务复杂或风险较高，可自行补一次人工或次级 AI 的 diff review。
 
 ### Step 5: 落地后归档
@@ -439,7 +439,7 @@ VS Code DevContainer 配置位于 `.devcontainer/`：
 
 - 任何对外部暴露的 API 变更，必须同步修改 `openspec/baseline/api/core-api.md`。
 - 如果遇到不确定的技术细节，请查阅 `openspec/baseline/architecture/` 下的架构约定，不要自行捏造设计模式。
-- 任何修改行为都应记录在 `changelog/` 目录中。
+- 任何需要保留的项目变更历史都应更新到根目录 `CHANGELOG.md`，不要重新创建 `changelog/` 目录。
 
 ---
 
@@ -448,16 +448,16 @@ VS Code DevContainer 配置位于 `.devcontainer/`：
 - 不要引用仓库里已废弃的旧脚本路径；统一使用 `scripts/core/*`。
 - 不要假设 build 产物已经存在；必要时先构建目标。
 - 不要擅自重命名公共头文件、导出目标或 CLI 命令。
-- commit message、changelog、代码注释优先使用中文。
+- commit message、`CHANGELOG.md` 更新说明、代码注释优先使用中文。
 - 提交规范采用 Conventional Commits：`feat|fix|docs|refactor|test|build|ci|chore(scope): subject`。
 
 ---
 
 ## Change Record Requirements
 
-- 每次修改都必须在 `changelog/` 新增一条记录。
-- 文件名格式：`YYYY-MM-DD-<slug>.md`。
-- 内容至少写清：目标、主要改动、影响范围、验证方式。
+- 需要记录的变更统一维护在根目录 `CHANGELOG.md`，不要新增 `changelog/` 目录或分散的逐变更 Markdown 文件。
+- 更新时优先补充合适的发布节或 `Unreleased` 小节，保持单一历史来源。
+- 条目内容至少写清：目标、主要改动、影响范围、验证方式（可按该文件既有格式归纳）。
 
 ---
 

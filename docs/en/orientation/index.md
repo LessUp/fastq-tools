@@ -1,12 +1,12 @@
 ---
-title: Orientation
-description: Build the reading frame first, then move into the FastQTools whitepaper, algorithms, and reference materials.
+title: Orientation (legacy route)
+description: Legacy route retained for compatibility; start from the maintained whitepaper and reference surfaces instead.
 layout: doc
 ---
 
-<SectionLandingGrid locale="en" section="orientation" />
-
 # Orientation
+
+Orientation is now a legacy route kept only for older bookmarks and inbound links. The maintained docs surface starts from the whitepaper and the core reference sections, so treat this page as a handoff rather than a primary hub.
 
 ## Project position
 
@@ -14,9 +14,9 @@ FastQTools is an engineering-focused toolkit for the FASTQ QC core, not a workfl
 
 ## Reading path
 
-1. Start with [`Why FastQTools`](../why-fastqtools/)
-2. Continue to [`Whitepaper`](../whitepaper/)
-3. Move into [`Algorithms`](../algorithms/) and [`Reference`](../reference/)
+1. Start with [`Whitepaper`](../whitepaper/) if you need the maintained product and system story.
+2. Continue to [`Algorithms`](../algorithms/) when you want execution, filtering, and workflow guidance.
+3. Move into [`Reference`](../reference/) for exact commands, APIs, and contributor material.
 
 ## Terms
 
@@ -25,4 +25,4 @@ FastQTools is an engineering-focused toolkit for the FASTQ QC core, not a workfl
 
 ## Next step
 
-If you are still deciding whether the project is worth trying, continue to [`Why FastQTools`](../why-fastqtools/). If you want the full narrative spine right away, go straight to the [`Whitepaper`](../whitepaper/).
+If you only opened this page because of an older link, continue directly to the maintained [`Whitepaper`](../whitepaper/) or [`Reference`](../reference/) sections.

@@ -17,12 +17,12 @@ const copy = {
     eyebrow: 'Reading tracks',
     title: 'Choose the next route by review intent, not by guessing section names.',
     summary:
-      'Different readers arrive with different jobs to do. The homepage now turns those jobs into explicit tracks that mirror the information architecture from Task 1.',
+      'Different readers arrive with different jobs to do. The homepage turns those jobs into explicit tracks that stay on maintained section surfaces.',
     tracks: [
       {
         title: 'Adoption review',
         summary: 'For stakeholders deciding whether FastQTools fits a pipeline, team, or procurement narrative.',
-        steps: ['orientationNav', 'whitepaperNav', 'performance'],
+        steps: ['whitepaper', 'performance', 'referenceNav'],
       },
       {
         title: 'Implementation onboarding',
@@ -40,12 +40,12 @@ const copy = {
     eyebrow: '阅读路径',
     title: '按评审意图选路线，而不是靠猜章节名。',
     summary:
-      '不同读者来到首页时承担的任务并不一样。新版首页把这些任务翻译成明确路径，并与任务 1 产出的信息架构保持镜像。',
+      '不同读者来到首页时承担的任务并不一样。新版首页把这些任务翻译成明确路径，并且只落在当前维护中的分区表面。',
     tracks: [
       {
         title: '采用评审',
         summary: '适合判断 FastQTools 是否匹配当前流程、团队或采购叙事的读者。',
-        steps: ['orientationNav', 'whitepaperNav', 'performance'],
+        steps: ['whitepaper', 'performance', 'referenceNav'],
       },
       {
         title: '实施入门',

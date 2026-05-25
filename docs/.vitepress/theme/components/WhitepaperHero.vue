@@ -25,8 +25,8 @@ const copy = {
     summary:
       'The homepage now behaves like the front page of a whitepaper: it frames system scope, maps the execution model, isolates algorithm pillars, and points reviewers toward evidence and follow-up chapters without forcing them through a generic card wall.',
     actions: [
-      { label: 'Start with orientation', linkId: 'orientationNav', variant: 'primary' },
-      { label: 'Enter the whitepaper', linkId: 'whitepaperNav', variant: 'secondary' },
+      { label: 'Enter the whitepaper', linkId: 'whitepaper', variant: 'primary' },
+      { label: 'Open reference', linkId: 'referenceNav', variant: 'secondary' },
       { label: 'Inspect performance evidence', linkId: 'performance', variant: 'secondary' },
     ] satisfies Action[],
     signals: [
@@ -53,8 +53,8 @@ const copy = {
     summary:
       '首页不再是泛化卡片堆，而是白皮书首页：先界定系统范围，再给出执行模型与算法支柱，并把证据、章节入口和后续阅读路径组织成可供评审直接引用的技术结构。',
     actions: [
-      { label: '从导读开始', linkId: 'orientationNav', variant: 'primary' },
-      { label: '进入白皮书', linkId: 'whitepaperNav', variant: 'secondary' },
+      { label: '进入白皮书', linkId: 'whitepaper', variant: 'primary' },
+      { label: '打开参考导航', linkId: 'referenceNav', variant: 'secondary' },
       { label: '查看性能证据', linkId: 'performance', variant: 'secondary' },
     ] satisfies Action[],
     signals: [

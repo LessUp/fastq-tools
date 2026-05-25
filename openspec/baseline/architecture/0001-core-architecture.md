@@ -2,36 +2,35 @@
 
 > **Status**: Active
 > **Created**: 2026-04-17
-> **Last Updated**: 2026-04-23
+> **Last Updated**: 2026-05-24
 > **Authors**: FastQTools Core Team
 > **Related**: [Product Spec](../product/fastq-processing.md)
 
 ## Context
 
-FastQTools requires a high-performance, maintainable architecture for processing FASTQ files in bioinformatics workflows. The architecture must support parallel processing, zero-copy I/O, and clean separation of concerns.
+FastQTools requires a high-performance, maintainable architecture for processing FASTQ files in bioinformatics workflows. The architecture must support parallel processing, zero-copy I/O, and a narrow maintained surface centered on the retained CLI commands and the documented embeddable API subset.
 
 ## Decision
 
 ### Architecture Pattern
 
-The system follows a **layered architecture** with interface-implementation separation:
+The system follows a **single maintained execution path** with interface-implementation separation:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    CLI Layer                             │
-│  (Command parsing, argument validation, output)         │
+│       (Retained commands: stat / filter only)           │
 ├─────────────────────────────────────────────────────────┤
-│                 Command Layer                            │
-│  (stat command, filter command orchestration)           │
+│            Public Library Interfaces                     │
+│ (`fqtools/fq.h` + documented API subset for retained     │
+│  processing/statistics flows; shared support headers     │
+│  may also be consumed by the CLI layer)                  │
 ├─────────────────────────────────────────────────────────┤
-│              Core Library Layer                          │
+│          Core Implementations in src/                    │
 │  ┌──────────┬──────────┬──────────┬────────────┐        │
 │  │ I/O      │Processing│Statistics│ Utilities  │        │
 │  │ Module   │ Module   │ Module   │ Module     │        │
 │  └──────────┴──────────┴──────────┴────────────┘        │
-├─────────────────────────────────────────────────────────┤
-│              Implementation Layer                        │
-│  (Concrete implementations of all modules)              │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -39,9 +38,9 @@ The system follows a **layered architecture** with interface-implementation sepa
 
 #### 1. Interface-Implementation Separation
 
-- **Public API**: `include/fqtools/` - stable, versioned interface
+- **Public API**: `include/fqtools/fq.h` plus the documented `common/`, `config/`, `error/`, `io/`, and `processing/` header families, along with the supported statistics workflow exposed via `fqtools/statistics/statistic_calculator_interface.h` - stable, versioned embeddable interface
 - **Implementation**: `src/` - internal implementation details
-- **CLI Layer**: Depends only on public API, never on implementation
+- **CLI Layer**: keeps the maintained `stat` / `filter` processing path and the supported statistics calculator workflow on the documented embeddable API subset, while shared support headers such as `fqtools/logging.h` and other installed-but-unsupported statistics headers may still be consumed by the CLI
 
 #### 2. Zero-Copy I/O Model
 
@@ -77,10 +76,10 @@ Reader (serial) → Transform (parallel) → Writer (serial)
 #### 4. Factory Pattern
 
 Object creation via factory functions:
-- `createProcessingPipeline(config)` → returns pipeline implementation
-- `createStatisticCalculator(type)` → returns calculator implementation
+- `createProcessingPipeline()` → returns pipeline implementation
+- `createStatisticCalculator(options)` → returns calculator implementation
 
-**Rationale**: Enables dependency injection and testability.
+**Rationale**: Keeps the CLI and embeddable library on the same public construction path while preserving testability.
 
 #### 5. Command Pattern
 
@@ -93,7 +92,7 @@ public:
 };
 ```
 
-**Rationale**: Clean command registration and dispatch, extensible for new commands.
+**Rationale**: Keeps dispatch for the retained commands isolated, testable, and aligned with the public library interfaces.
 
 ## Technical Stack
 

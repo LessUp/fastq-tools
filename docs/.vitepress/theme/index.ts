@@ -1,20 +1,16 @@
 import DefaultTheme from 'vitepress/theme'
 import { inBrowser } from 'vitepress'
 import type { EnhanceAppContext, Theme } from 'vitepress'
-import SiteHeroPanel from './components/SiteHeroPanel.vue'
 import EvidenceStrip from './components/EvidenceStrip.vue'
 import PillarGrid from './components/PillarGrid.vue'
-import KnowledgeMap from './components/KnowledgeMap.vue'
 import WorkflowPaths from './components/WorkflowPaths.vue'
 import ResourceHub from './components/ResourceHub.vue'
 import CitationStrip from './components/CitationStrip.vue'
 import DiagramFrame from './components/DiagramFrame.vue'
 import SectionLandingGrid from './components/SectionLandingGrid.vue'
-import WhitepaperHero from './components/WhitepaperHero.vue'
 import SystemSnapshot from './components/SystemSnapshot.vue'
 import AlgorithmPillars from './components/AlgorithmPillars.vue'
 import EvidenceOverview from './components/EvidenceOverview.vue'
-import ReadingTracks from './components/ReadingTracks.vue'
 import ResearchRail from './components/ResearchRail.vue'
 import SystemArchitectureDiagram from './components/SystemArchitectureDiagram.vue'
 import PublicationHero from './components/PublicationHero.vue'
@@ -123,20 +119,16 @@ const theme: Theme = {
   enhanceApp(ctx) {
     DefaultTheme.enhanceApp?.(ctx)
 
-    ctx.app.component('SiteHeroPanel', SiteHeroPanel)
     ctx.app.component('EvidenceStrip', EvidenceStrip)
     ctx.app.component('PillarGrid', PillarGrid)
-    ctx.app.component('KnowledgeMap', KnowledgeMap)
     ctx.app.component('WorkflowPaths', WorkflowPaths)
     ctx.app.component('ResourceHub', ResourceHub)
     ctx.app.component('CitationStrip', CitationStrip)
     ctx.app.component('DiagramFrame', DiagramFrame)
     ctx.app.component('SectionLandingGrid', SectionLandingGrid)
-    ctx.app.component('WhitepaperHero', WhitepaperHero)
     ctx.app.component('SystemSnapshot', SystemSnapshot)
     ctx.app.component('AlgorithmPillars', AlgorithmPillars)
     ctx.app.component('EvidenceOverview', EvidenceOverview)
-    ctx.app.component('ReadingTracks', ReadingTracks)
     ctx.app.component('ResearchRail', ResearchRail)
     ctx.app.component('SystemArchitectureDiagram', SystemArchitectureDiagram)
     ctx.app.component('PublicationHero', PublicationHero)

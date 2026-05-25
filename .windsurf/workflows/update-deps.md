@@ -33,4 +33,4 @@ auto_execution_mode: 1
 
 6. **收尾**
    - `./scripts/core/lint format-check`
-   - 更新 `changelog/` 记录依赖变更
+   - 如需记录依赖变更历史，更新根目录 `CHANGELOG.md`，不要重新创建 `changelog/`

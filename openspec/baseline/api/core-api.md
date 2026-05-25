@@ -1,27 +1,29 @@
 # API Specification: Core Interfaces
 
 > **Status**: Active
-> **Last Updated**: 2026-04-28
+> **Last Updated**: 2026-05-24
 > **Related**: [Product Spec](../product/fastq-processing.md), [Core Architecture](../architecture/0001-core-architecture.md)
 
 ## Overview
 
-FastQTools exposes its maintained public C++ surface from `include/fqtools/`. The umbrella header is:
+FastQTools exposes a documented embeddable C++ API subset. The primary umbrella header is:
 
 ```cpp
 #include <fqtools/fq.h>
 ```
 
-The maintained API goal is **truthful stability with additive evolution**. Only interfaces present in public headers are part of this baseline, and new capabilities should extend the existing `stat` / `filter` workflows instead of creating parallel command families.
+This baseline only covers the embeddable interfaces documented below: `fqtools/fq.h`, the common/config/error/io/processing headers it aggregates, and the high-level statistics workflow exposed through `fqtools/statistics/statistic_calculator_interface.h`. Installed headers outside this documented map are not promised as maintained product surface.
+
+The canonical statistics namespace in the maintained API is `fq::statistic`, matching the current public headers and implementation.
 
 ## Public Header Map
 
 | Area | Entry points |
 | --- | --- |
 | Common / config / errors | `fqtools/common/common.h`, `fqtools/config/config.h`, `fqtools/error/error.h` |
-| I/O | `fqtools/io/fastq_io.h`, `fqtools/io/fastq_reader.h`, `fqtools/io/fastq_writer.h` |
-| Processing | `fqtools/processing/processing_pipeline_interface.h`, `fqtools/processing/read_predicate_interface.h`, `fqtools/processing/read_mutator_interface.h`, `fqtools/processing/predicates.h`, `fqtools/processing/mutators.h` |
-| Statistics | `fqtools/statistics/statistic_calculator.h`, `fqtools/statistics/statistic_calculator_interface.h`, `fqtools/statistics/statistic_interface.h` |
+| I/O | `fqtools/io/fastq_io.h`, `fqtools/io/fastq_reader.h`, `fqtools/io/fastq_writer.h`, `fqtools/io/reader_interface.h`, `fqtools/io/writer_interface.h` |
+| Processing | `fqtools/processing/mutators.h`, `fqtools/processing/predicates.h`, `fqtools/processing/processing_options.h`, `fqtools/processing/processing_pipeline_interface.h`, `fqtools/processing/read_mutator_interface.h`, `fqtools/processing/read_predicate_interface.h` |
+| Statistics | Supported: `fqtools/statistics/statistic_calculator_interface.h` (`StatisticOptions + createStatisticCalculator(...)->run()`). Exposed but not supported for embedders: `fqtools/statistics/statistic_interface.h`, `fqtools/statistics/statistics_writer.h` |
 
 ## I/O Module (`fq::io`)
 
@@ -113,6 +115,22 @@ public:
 
 **Supported compression path**: gzip by filename convention (`.gz`).
 
+### `IReader`
+
+```cpp
+namespace fq::io {
+
+class IReader {
+public:
+    virtual ~IReader() = default;
+    [[nodiscard]] virtual auto nextBatch(FastqBatch& batch) -> bool = 0;
+};
+
+using ReaderPtr = std::unique_ptr<IReader>;
+
+}  // namespace fq::io
+```
+
 ### `FastqWriterCompressionMode`, `FastqWriterOptions`, and `FastqWriter`
 
 ```cpp
@@ -151,19 +169,42 @@ public:
 }  // namespace fq::io
 ```
 
+### `IWriter`
+
+```cpp
+namespace fq::io {
+
+class IWriter {
+public:
+    virtual ~IWriter() = default;
+    virtual void write(const FastqBatch& batch) = 0;
+};
+
+using WriterPtr = std::unique_ptr<IWriter>;
+
+}  // namespace fq::io
+```
+
 ## Processing Module (`fq::processing`)
 
-### Runtime policy enums
+### Processing options
 
 ```cpp
 namespace fq::processing {
 
-enum class ExecutionBackend : std::uint8_t {
-    OneTbb,
+enum class ProcessingProfile : std::uint8_t {
+    Default,
+    LowMemory,
+    HighThroughput,
 };
 
-enum class MemoryResourcePolicy : std::uint8_t {
-    ObjectPool,
+struct ProcessingOptions {
+    size_t batchSize = 10000;
+    size_t threadCount = 1;
+    ProcessingProfile profile = ProcessingProfile::Default;
+    std::optional<size_t> memoryLimitBytes;
+
+    void validate() const;
 };
 
 }  // namespace fq::processing
@@ -272,27 +313,10 @@ struct ProcessingStatistics {
     uint64_t elapsedMs = 0;
     double processingTimeMs = 0.0;
     double throughputMbps = 0.0;
-    bool allocationTelemetryEnabled = false;
-    MemoryResourcePolicy memoryResourcePolicy = MemoryResourcePolicy::ObjectPool;
-    size_t resolvedMaxInFlightBatches = 0;
 
     [[nodiscard]] auto getPassRate() const -> double;
     [[nodiscard]] auto getFilterRate() const -> double;
     [[nodiscard]] auto toString() const -> std::string;
-};
-
-struct ProcessingConfig {
-    size_t batchSize = 10000;
-    size_t threadCount = 1;
-    ExecutionBackend executionBackend = ExecutionBackend::OneTbb;
-    MemoryResourcePolicy memoryResourcePolicy = MemoryResourcePolicy::ObjectPool;
-    bool allocationTelemetryEnabled = false;
-    size_t readChunkBytes = 1 * 1024 * 1024;
-    size_t zlibBufferBytes = 128 * 1024;
-    size_t writerBufferBytes = 128 * 1024;
-    size_t batchCapacityBytes = 4 * 1024 * 1024;
-    size_t memoryLimitBytes = 0;
-    size_t maxInFlightBatches = 0;
 };
 
 class ProcessingPipelineInterface {
@@ -301,7 +325,9 @@ public:
 
     virtual void setInputPath(const std::string& inputPath) = 0;
     virtual void setOutputPath(const std::string& outputPath) = 0;
-    virtual void setProcessingConfig(const ProcessingConfig& config) = 0;
+    virtual void setReader(std::unique_ptr<fq::io::IReader> reader) = 0;
+    virtual void setWriter(std::unique_ptr<fq::io::IWriter> writer) = 0;
+    virtual void setProcessingOptions(const ProcessingOptions& options) = 0;
     virtual void addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator) = 0;
     virtual void addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicate) = 0;
     virtual auto run() -> ProcessingStatistics = 0;
@@ -314,7 +340,7 @@ auto createProcessingPipeline() -> std::unique_ptr<ProcessingPipelineInterface>;
 
 ## Statistics Module (`fq::statistic`)
 
-### High-level statistics entry point
+### Supported high-level statistics entry point
 
 ```cpp
 namespace fq::statistic {
@@ -323,21 +349,14 @@ struct StatisticOptions {
     std::string inputFastqPath;
     std::string outputStatPath;
     std::string signatureReportPath;
-    uint32_t batchSize = 50000;
+    fq::processing::ProcessingOptions processing;
     size_t signatureKmerSize = 15;
     size_t maxReportedSignatures = 20;
     size_t duplicateEstimateSampleModulo = 1024;
-    uint32_t threadCount = 4;
-    fq::processing::ExecutionBackend executionBackend = fq::processing::ExecutionBackend::OneTbb;
-    fq::processing::MemoryResourcePolicy memoryResourcePolicy =
-        fq::processing::MemoryResourcePolicy::ObjectPool;
-    bool allocationTelemetryEnabled = false;
-    size_t readChunkBytes = 1 * 1024 * 1024;
-    size_t zlibBufferBytes = 128 * 1024;
-    size_t batchCapacityBytes = 4 * 1024 * 1024;
-    size_t memoryLimitBytes = 0;
-    size_t maxInFlightBatches = 0;
     int qualityEncoding = 33;
+
+    [[nodiscard]] auto batchSize() const -> uint32_t;
+    [[nodiscard]] auto threadCount() const -> uint32_t;
 };
 
 class StatisticCalculatorInterface {
@@ -352,28 +371,17 @@ auto createStatisticCalculator(const StatisticOptions& options)
 }  // namespace fq::statistic
 ```
 
-### Low-level statistic extension point
+### Exposed-but-not-supported statistics headers
 
-```cpp
-namespace fq::statistic {
+`fqtools/statistics/statistic_interface.h` and `fqtools/statistics/statistics_writer.h` are currently installed and re-exported by `fqtools/fq.h`, but they are **not** part of the supported embeddable API contract.
 
-struct FqStatisticResult;  // forward-declared in the public interface
+Both headers depend on `FqStatisticResult`, whose full definition is internal rather than public. As a result:
 
-class StatisticInterface {
-public:
-    using Batch = fq::io::FastqBatch;
-    using Result = FqStatisticResult;
+- embedders should treat these headers as implementation details / compatibility surface
+- the project does not promise them as stable extension points for custom statistics or direct report writing
+- the maintained public workflow for statistics remains `StatisticOptions + createStatisticCalculator(...)->run()`
 
-    virtual ~StatisticInterface() = default;
-    virtual auto calculateStats(const Batch& batch) -> Result = 0;
-};
-
-using IStatistic = StatisticInterface;
-
-}  // namespace fq::statistic
-```
-
-**API note**: the maintained public workflow for statistics is `StatisticOptions + createStatisticCalculator(...)->run()`. Optional signature output remains additive through `signatureReportPath`; the default text report is still the primary contract.
+Optional signature output remains additive through `signatureReportPath`; the default text report is still the primary contract for the retained `stat` workflow.
 
 ## Configuration Module (`fq::config`)
 
@@ -427,9 +435,10 @@ Public code uses the exception hierarchy in `fqtools/error/error.h`. Configurati
 
 ## Stability Notes
 
-1. Public integration must include headers from `include/fqtools/`.
-2. Types or helpers only declared under `src/` are implementation details, even if referenced by public interfaces internally.
-3. Additive changes should prefer extending `ProcessingConfig`, `ProcessingStatistics`, or `StatisticOptions` instead of inventing separate command-specific configuration surfaces.
+1. Public integration should start from `fqtools/fq.h`, one of the documented common/config/error/io/processing headers in this baseline, or the supported statistics entry point `fqtools/statistics/statistic_calculator_interface.h`.
+2. `fqtools/statistics/statistic_interface.h` and `fqtools/statistics/statistics_writer.h` are exposed headers but not supported embeddable API because they depend on the internal `FqStatisticResult` type.
+3. Types or helpers only declared under `src/` are implementation details, even if referenced by public interfaces internally.
+4. Maintained API evolution should reinforce the existing `stat` / `filter` workflows instead of inventing parallel command families or non-header integration surfaces.
 
 ## Related Specifications
 

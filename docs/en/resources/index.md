@@ -19,7 +19,8 @@ The resource hub collects entry points that sit outside the main reading path bu
 ## History and archives
 
 - [`Archive Overview`](../archive/) — explains what has been migrated and what remains for reference only.
-- [`Changelog`](../release-notes/changelog) — review the timeline of landed changes.
+- [GitHub Releases](https://github.com/LessUp/fastq-tools/releases) — review installable milestones and bundled release notes.
+- [Root `CHANGELOG.md`](https://github.com/LessUp/fastq-tools/blob/master/CHANGELOG.md) — review the maintained project-level change history.
 
 ## How to use these resources
 
