@@ -189,7 +189,7 @@ public:
         std::size_t total = 0;
 
         for (char c : sequence) {
-            ++counts[std::toupper(c)];
+            ++counts[static_cast<char>(std::toupper(static_cast<unsigned char>(c)))];
             ++total;
         }
 

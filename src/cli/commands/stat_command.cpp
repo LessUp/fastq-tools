@@ -64,21 +64,22 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
         return 1;
     }
 
-    // 4. 构建选项
-    fq::statistic::StatisticOptions statOpts;
-    statOpts.processing = common.toProcessingOptions();
-    statOpts.inputFastqPath = common.inputPath;
-    statOpts.outputStatPath = common.outputPath;
-    statOpts.qualityEncoding = result["quality-encoding"].as<int>();
-    statOpts.signatureKmerSize = result["signature-kmer-size"].as<size_t>();
-    statOpts.maxReportedSignatures = result["signature-limit"].as<size_t>();
-    statOpts.duplicateEstimateSampleModulo = result["duplicate-sample-modulo"].as<size_t>();
-
-    if (result.count("signature-report")) {
-        statOpts.signatureReportPath = result["signature-report"].as<std::string>();
-    }
-
     try {
+        // 4. 构建选项
+        fq::statistic::StatisticOptions statOpts;
+        statOpts.processing = common.toProcessingOptions();
+        statOpts.inputFastqPath = common.inputPath;
+        statOpts.outputStatPath = common.outputPath;
+        statOpts.qualityEncoding =
+            fq::cli::validateQualityEncoding(result["quality-encoding"].as<int>());
+        statOpts.signatureKmerSize = result["signature-kmer-size"].as<size_t>();
+        statOpts.maxReportedSignatures = result["signature-limit"].as<size_t>();
+        statOpts.duplicateEstimateSampleModulo = result["duplicate-sample-modulo"].as<size_t>();
+
+        if (result.count("signature-report")) {
+            statOpts.signatureReportPath = result["signature-report"].as<std::string>();
+        }
+
         // Use the factory to create an instance of the calculator
         auto stater = fq::statistic::createStatisticCalculator(statOpts);
 

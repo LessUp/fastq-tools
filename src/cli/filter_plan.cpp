@@ -1,11 +1,40 @@
 #include "filter_plan.h"
 
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "enum_parser.h"
 
 namespace fq::cli {
+
+namespace {
+
+void validateNonNegativeThreshold(const char* name, double value) {
+    if (value < 0.0) {
+        throw std::invalid_argument(std::string(name) + " must be >= 0");
+    }
+}
+
+void validateMaxNRatio(double value) {
+    if (value < 0.0 || value > 1.0) {
+        throw std::invalid_argument("max-n-ratio must be between 0.0 and 1.0");
+    }
+}
+
+void validateLengthBounds(const cxxopts::ParseResult& result) {
+    if (!result.count("min-length") || !result.count("max-length")) {
+        return;
+    }
+
+    const size_t minLength = result["min-length"].as<size_t>();
+    const size_t maxLength = result["max-length"].as<size_t>();
+    if (minLength > maxLength) {
+        throw std::invalid_argument("min-length must be <= max-length");
+    }
+}
+
+}  // namespace
 
 auto FilterPlan::applyTo(fq::processing::ProcessingPipelineInterface& pipeline) -> void {
     pipeline.setInputPath(inputPath);
@@ -54,11 +83,15 @@ auto buildFilterPlan(const cxxopts::ParseResult& result,
     plan.outputPath = common.outputPath;
     plan.processingOptions = common.toProcessingOptions();
 
-    const int qualityEncoding = result["quality-encoding"].as<int>();
+    validateLengthBounds(result);
+
+    const int qualityEncoding = validateQualityEncoding(result["quality-encoding"].as<int>());
 
     if (result.count("min-quality")) {
-        plan.predicates.push_back(std::make_unique<fq::processing::MinQualityPredicate>(
-            result["min-quality"].as<double>(), qualityEncoding));
+        const double minQuality = result["min-quality"].as<double>();
+        validateNonNegativeThreshold("min-quality", minQuality);
+        plan.predicates.push_back(
+            std::make_unique<fq::processing::MinQualityPredicate>(minQuality, qualityEncoding));
     }
 
     if (result.count("min-length")) {
@@ -72,13 +105,16 @@ auto buildFilterPlan(const cxxopts::ParseResult& result,
     }
 
     if (result.count("max-n-ratio")) {
-        plan.predicates.push_back(std::make_unique<fq::processing::MaxNRatioPredicate>(
-            result["max-n-ratio"].as<double>()));
+        const double maxNRatio = result["max-n-ratio"].as<double>();
+        validateMaxNRatio(maxNRatio);
+        plan.predicates.push_back(std::make_unique<fq::processing::MaxNRatioPredicate>(maxNRatio));
     }
 
     if (result.count("trim-quality")) {
+        const double trimQuality = result["trim-quality"].as<double>();
+        validateNonNegativeThreshold("trim-quality", trimQuality);
         plan.mutators.push_back(std::make_unique<fq::processing::QualityTrimmer>(
-            result["trim-quality"].as<double>(),
+            trimQuality,
             static_cast<size_t>(1),
             parseTrimMode(result["trim-mode"].as<std::string>()),
             qualityEncoding));

@@ -297,6 +297,16 @@ TEST_F(AdapterTrimmerTest, HandlesAdapterLongerThanRead) {
     EXPECT_EQ(read.seq, "ACGT");
 }
 
+TEST_F(AdapterTrimmerTest, HandlesMinOverlapLongerThanReadWithoutHanging) {
+    AdapterTrimmer trimmer({"TTAA"}, 5, 0);
+
+    FastqRecord read{"read1", {}, "ACGT", "IIII", "+"};
+    trimmer.process(read);
+
+    EXPECT_EQ(read.seq, "ACGT");
+    EXPECT_EQ(read.qual, "IIII");
+}
+
 TEST_F(AdapterTrimmerTest, GetNameReturnsNonEmpty) {
     AdapterTrimmer trimmer({"TTAA"}, 3, 0);
 

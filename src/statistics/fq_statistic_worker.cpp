@@ -32,8 +32,8 @@ constexpr auto buildBaseLut() -> std::array<uint8_t, 256> {
 
 constexpr auto kBaseLut = buildBaseLut();
 
-void updateBoundedHeadKmers(std::map<std::string, uint64_t>& counts,
-                            std::string key,
+void updateBoundedHeadKmers(std::map<std::string, uint64_t, std::less<>>& counts,
+                            std::string_view key,
                             size_t maxEntries) {
     if (maxEntries == 0) {
         return;
@@ -46,7 +46,7 @@ void updateBoundedHeadKmers(std::map<std::string, uint64_t>& counts,
     }
 
     if (counts.size() < maxEntries) {
-        counts.emplace(std::move(key), 1);
+        counts.emplace(std::string(key), 1);
         return;
     }
 
@@ -65,7 +65,7 @@ void updateBoundedHeadKmers(std::map<std::string, uint64_t>& counts,
         --minIt->second;
     } else {
         counts.erase(minIt);
-        counts.emplace(std::move(key), 1);
+        counts.emplace(std::string(key), 1);
     }
 }
 
@@ -99,9 +99,9 @@ auto FqStatisticWorker::calculateStats(const Batch& batch) -> IStatistic::Result
 
         if (len >= signatureKmerSize_) {
             updateBoundedHeadKmers(
-                result.headKmerCounts, std::string(read.seq.substr(0, signatureKmerSize_)), 64);
+                result.headKmerCounts, read.seq.substr(0, signatureKmerSize_), 64);
         } else if (len > 0) {
-            updateBoundedHeadKmers(result.headKmerCounts, std::string(read.seq), 64);
+            updateBoundedHeadKmers(result.headKmerCounts, read.seq, 64);
         }
 
         // 确保扁平化数组容量足够（仅在遇到更长 read 时 resize）

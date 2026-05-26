@@ -1,6 +1,6 @@
+#include <deque>
 #include <filesystem>
 #include <fstream>
-#include <deque>
 #include <string>
 
 #include "fixture_loader.h"

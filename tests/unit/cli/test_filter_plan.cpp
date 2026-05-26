@@ -1,4 +1,5 @@
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -177,6 +178,98 @@ TEST(FilterPlanTest, BuildsAdapterAndPolyXTailMutatorsFromRepeatableOptions) {
     polyTailTrimmer->process(shortPolyXRead);
     EXPECT_EQ(shortPolyXRead.seq, "ACGTTTT");
     EXPECT_EQ(shortPolyXRead.qual, "IIIIIII");
+}
+
+TEST(FilterPlanTest, RejectsUnsupportedQualityEncoding) {
+    cxxopts::Options options("filter", "Filter and trim FastQ files");
+    CommonCliOptions::addOptions(options);
+    addFilterPlanOptions(options);
+
+    const std::vector<std::string> args = {
+        "filter", "--input", "input.fastq", "--output", "output.fastq", "--quality-encoding", "40"};
+
+    std::vector<char*> argv;
+    argv.reserve(args.size());
+    for (const auto& arg : args) {
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+
+    const auto parsed = options.parse(static_cast<int>(argv.size()), argv.data());
+    const auto common = CommonCliOptions::parse(parsed);
+
+    EXPECT_THROW(static_cast<void>(buildFilterPlan(parsed, common)), std::invalid_argument);
+}
+
+TEST(FilterPlanTest, RejectsOutOfRangeMaxNRatioAndConflictingLengths) {
+    cxxopts::Options options("filter", "Filter and trim FastQ files");
+    CommonCliOptions::addOptions(options);
+    addFilterPlanOptions(options);
+
+    {
+        const std::vector<std::string> args = {
+            "filter", "--input", "input.fastq", "--output", "output.fastq", "--max-n-ratio", "1.5"};
+
+        std::vector<char*> argv;
+        argv.reserve(args.size());
+        for (const auto& arg : args) {
+            argv.push_back(const_cast<char*>(arg.c_str()));
+        }
+
+        const auto parsed = options.parse(static_cast<int>(argv.size()), argv.data());
+        const auto common = CommonCliOptions::parse(parsed);
+
+        EXPECT_THROW(static_cast<void>(buildFilterPlan(parsed, common)), std::invalid_argument);
+    }
+
+    {
+        const std::vector<std::string> args = {"filter",
+                                               "--input",
+                                               "input.fastq",
+                                               "--output",
+                                               "output.fastq",
+                                               "--min-length",
+                                               "10",
+                                               "--max-length",
+                                               "3"};
+
+        std::vector<char*> argv;
+        argv.reserve(args.size());
+        for (const auto& arg : args) {
+            argv.push_back(const_cast<char*>(arg.c_str()));
+        }
+
+        const auto parsed = options.parse(static_cast<int>(argv.size()), argv.data());
+        const auto common = CommonCliOptions::parse(parsed);
+
+        EXPECT_THROW(static_cast<void>(buildFilterPlan(parsed, common)), std::invalid_argument);
+    }
+}
+
+TEST(FilterPlanTest, RejectsNegativeQualityThresholds) {
+    cxxopts::Options options("filter", "Filter and trim FastQ files");
+    CommonCliOptions::addOptions(options);
+    addFilterPlanOptions(options);
+
+    const std::vector<std::string> args = {"filter",
+                                           "--input",
+                                           "input.fastq",
+                                           "--output",
+                                           "output.fastq",
+                                           "--min-quality",
+                                           "-1",
+                                           "--trim-quality",
+                                           "-2"};
+
+    std::vector<char*> argv;
+    argv.reserve(args.size());
+    for (const auto& arg : args) {
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+
+    const auto parsed = options.parse(static_cast<int>(argv.size()), argv.data());
+    const auto common = CommonCliOptions::parse(parsed);
+
+    EXPECT_THROW(static_cast<void>(buildFilterPlan(parsed, common)), std::invalid_argument);
 }
 
 }  // namespace fq::cli
