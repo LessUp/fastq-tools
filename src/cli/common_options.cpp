@@ -75,4 +75,11 @@ auto CommonCliOptions::toProcessingOptions() const -> processing::ProcessingOpti
     return opts;
 }
 
+auto validateQualityEncoding(int qualityEncoding) -> int {
+    if (qualityEncoding != 33 && qualityEncoding != 64) {
+        throw std::invalid_argument("quality-encoding must be 33 or 64");
+    }
+    return qualityEncoding;
+}
+
 }  // namespace fq::cli

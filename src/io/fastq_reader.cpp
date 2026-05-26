@@ -132,7 +132,6 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
     if (!impl_->remainder.empty()) {
         batch.buffer() = std::move(impl_->remainder);
         impl_->remainder.clear();
-        impl_->remainder.shrink_to_fit();  // 释放 remainder 的旧内存
     }
 
     if (batch.buffer().empty() && impl_->isEofReached) {

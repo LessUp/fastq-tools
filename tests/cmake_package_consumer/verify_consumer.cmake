@@ -33,6 +33,30 @@ set(consumer_source_dir "${source_dir}/tests/cmake_package_consumer")
 set(deps_dir "${FQTOOLS_BINARY_DIR}")
 set(fqtools_dir "${FQTOOLS_INSTALL_DIR}/lib/cmake/FastQTools")
 set(toolchain_file "${FQTOOLS_BINARY_DIR}/conan_toolchain.cmake")
+set(consumer_link_flags "")
+
+set(cache_file "${FQTOOLS_BINARY_DIR}/CMakeCache.txt")
+if(EXISTS "${cache_file}")
+    file(STRINGS "${cache_file}" asan_enabled REGEX "^ENABLE_ASAN:BOOL=ON$")
+    file(STRINGS "${cache_file}" tsan_enabled REGEX "^ENABLE_TSAN:BOOL=ON$")
+    file(STRINGS "${cache_file}" ubsan_enabled REGEX "^ENABLE_UBSAN:BOOL=ON$")
+    file(STRINGS "${cache_file}" msan_enabled REGEX "^ENABLE_MSAN:BOOL=ON$")
+
+    if(asan_enabled)
+        string(APPEND consumer_link_flags " -fsanitize=address")
+    endif()
+    if(tsan_enabled)
+        string(APPEND consumer_link_flags " -fsanitize=thread")
+    endif()
+    if(ubsan_enabled)
+        string(APPEND consumer_link_flags " -fsanitize=undefined -fno-sanitize-recover=all")
+    endif()
+    if(msan_enabled)
+        string(APPEND consumer_link_flags " -fsanitize=memory -fsanitize-memory-track-origins=2")
+    endif()
+
+    string(STRIP "${consumer_link_flags}" consumer_link_flags)
+endif()
 
 execute_process(
     COMMAND ${CMAKE_COMMAND}
@@ -43,6 +67,8 @@ execute_process(
         "-DCMAKE_TOOLCHAIN_FILE=${toolchain_file}"
         "-DFastQTools_DIR=${fqtools_dir}"
         "-DCMAKE_PREFIX_PATH=${deps_dir}"
+        "-DCMAKE_EXE_LINKER_FLAGS=${consumer_link_flags}"
+        "-DCMAKE_SHARED_LINKER_FLAGS=${consumer_link_flags}"
     RESULT_VARIABLE configure_result
 )
 if(NOT configure_result EQUAL 0)

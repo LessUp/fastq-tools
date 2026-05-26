@@ -25,8 +25,7 @@
 namespace fq::cli::commands {
 
 // Use the factory in the constructor
-FilterCommand::FilterCommand()
-    : pipeline_(fq::processing::createProcessingPipeline()) {}
+FilterCommand::FilterCommand() : pipeline_(fq::processing::createProcessingPipeline()) {}
 
 FilterCommand::~FilterCommand() = default;
 

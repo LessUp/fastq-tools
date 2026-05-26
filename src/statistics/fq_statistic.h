@@ -19,6 +19,7 @@
 #include "fqtools/statistics/statistic_interface.h"
 
 #include <cstdint>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -45,8 +46,8 @@ struct FqStatisticResult {
     std::vector<uint64_t> posQualityDist;
     /// 位置碱基分布（扁平化一维布局：[pos * kMaxBaseNum + base]）
     std::vector<uint64_t> posBaseDist;
-    std::map<std::string, uint64_t> headKmerCounts;      ///< 头部 k-mer signature 计数
-    std::map<uint64_t, uint64_t> sampledSequenceHashes;  ///< duplicate 采样哈希计数
+    std::map<std::string, uint64_t, std::less<>> headKmerCounts;  ///< 头部 k-mer signature 计数
+    std::map<uint64_t, uint64_t> sampledSequenceHashes;           ///< duplicate 采样哈希计数
 
     /// 确保分布数组能容纳 newLength 个位置
     void ensureCapacity(size_t newLength) {

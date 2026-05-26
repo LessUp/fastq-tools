@@ -14,7 +14,6 @@ namespace fq::statistic {
 
 namespace {
 
-constexpr int kWriterMaxQual = 128;
 constexpr int kQ20Threshold = 20;
 constexpr int kQ30Threshold = 30;
 
@@ -24,24 +23,31 @@ auto calculateErrorPerPosition(const uint64_t* qualSlot, uint64_t totalBases) ->
     }
 
     double sumProb = 0.0;
-    for (int q = 0; q < kWriterMaxQual; ++q) {
+    for (int q = 0; q < kMaxQual; ++q) {
         sumProb +=
             static_cast<double>(qualSlot[q]) * std::pow(10.0, -static_cast<double>(q) / 10.0);
     }
     return 100.0 * sumProb / static_cast<double>(totalBases);
 }
 
-auto sortedTopEntries(const std::map<std::string, uint64_t>& counts,
+auto sortedTopEntries(const std::map<std::string, uint64_t, std::less<>>& counts,
                       size_t limit) -> std::vector<std::pair<std::string, uint64_t>> {
     std::vector<std::pair<std::string, uint64_t>> entries(counts.begin(), counts.end());
-    std::sort(entries.begin(), entries.end(), [](const auto& lhs, const auto& rhs) {
+    const auto compare = [](const auto& lhs, const auto& rhs) {
         if (lhs.second != rhs.second) {
             return lhs.second > rhs.second;
         }
         return lhs.first < rhs.first;
-    });
+    };
+
     if (entries.size() > limit) {
+        std::partial_sort(entries.begin(),
+                          entries.begin() + static_cast<std::ptrdiff_t>(limit),
+                          entries.end(),
+                          compare);
         entries.resize(limit);
+    } else {
+        std::sort(entries.begin(), entries.end(), compare);
     }
     return entries;
 }
@@ -53,8 +59,10 @@ auto estimateDuplicates(uint64_t duplicateSampledReads, size_t sampleModulo) -> 
 auto formatMetricLine(const std::string& name, uint64_t count, uint64_t totalBases) -> std::string {
     std::ostringstream line;
     line << std::fixed << std::setprecision(2);
-    line << name << '\t' << count << '\t'
-         << 100.0 * static_cast<double>(count) / static_cast<double>(totalBases) << '%';
+    const double ratio = totalBases == 0
+        ? 0.0
+        : 100.0 * static_cast<double>(count) / static_cast<double>(totalBases);
+    line << name << '\t' << count << '\t' << ratio << '%';
     return line.str();
 }
 
@@ -99,10 +107,10 @@ auto buildStatisticsReport(const FqStatisticResult& result,
         const uint64_t* qSlot = result.qualityAt(i);
         const uint64_t* bSlot = result.baseAt(i);
 
-        for (int j = kQ20Threshold; j < kWriterMaxQual; ++j) {
+        for (int j = kQ20Threshold; j < kMaxQual; ++j) {
             nQ20 += qSlot[j];
         }
-        for (int j = kQ30Threshold; j < kWriterMaxQual; ++j) {
+        for (int j = kQ30Threshold; j < kMaxQual; ++j) {
             nQ30 += qSlot[j];
         }
 

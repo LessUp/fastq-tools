@@ -65,4 +65,6 @@ struct CommonCliOptions {
     [[nodiscard]] auto toProcessingOptions() const -> processing::ProcessingOptions;
 };
 
+[[nodiscard]] auto validateQualityEncoding(int qualityEncoding) -> int;
+
 }  // namespace fq::cli

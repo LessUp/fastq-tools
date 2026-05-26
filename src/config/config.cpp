@@ -175,7 +175,8 @@ void Configuration::validateKey(std::string_view key) const {
         FQ_THROW_CONFIG_ERROR("Configuration key cannot be empty");
     }
     for (char character : key) {
-        if (!std::isalnum(character) && character != '_' && character != '-') {
+        const auto byte = static_cast<unsigned char>(character);
+        if (!std::isalnum(byte) && character != '_' && character != '-') {
             FQ_THROW_CONFIG_ERROR(
                 std::format("Invalid character '{}' in configuration key '{}'", character, key));
         }

@@ -247,6 +247,10 @@ auto AdapterTrimmer::findAdapter(std::string_view sequence,
     // For simplicity here: check suffix of seq vs prefix of adapter
 
     // 1. Check if adapter is inside sequence
+    if (adapter.empty() || sequence.size() < minOverlap_ || adapter.size() < minOverlap_) {
+        return std::string::npos;
+    }
+
     size_t pos = sequence.find(adapter);
     if (pos != std::string_view::npos)
         return pos;
@@ -265,7 +269,8 @@ auto AdapterTrimmer::findAdapter(std::string_view sequence,
 
     size_t startCheck = (seqLen > adLen) ? (seqLen - adLen) : 0;
 
-    for (size_t i = startCheck; i <= seqLen - minOverlap_; ++i) {
+    const size_t lastStart = seqLen - minOverlap_;
+    for (size_t i = startCheck; i <= lastStart; ++i) {
         // Compare sequence[i...] with adapter[0...]
         size_t overlapLen = seqLen - i;
         // If overlapLen > adLen, logic error above, but loop handles it
