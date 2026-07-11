@@ -15,8 +15,7 @@
 #pragma once
 
 #include "fqtools/io/fastq_io.h"
-#include "fqtools/statistics/statistic_calculator_interface.h"
-#include "fqtools/statistics/statistic_interface.h"
+#include "fqtools/statistics/interfaces.h"
 
 #include <cstdint>
 #include <functional>

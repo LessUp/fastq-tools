@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "fqtools/statistics/statistic_interface.h"
+#include "fqtools/statistics/interfaces.h"
 
 #include <cstdint>
 #include <memory>

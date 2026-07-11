@@ -9,8 +9,8 @@
 #include <vector>
 
 #include <fcntl.h>
-#include <libdeflate.h>
 #include <unistd.h>
+#include <zlib.h>
 
 #ifdef __linux__
 #include <fcntl.h>  // posix_fadvise
@@ -28,13 +28,11 @@ static auto endsWithGzSuffix(const std::string& path) -> bool {
 
 struct FastqWriter::Impl {
     int fd = -1;
+    gzFile gzfile = nullptr;
     std::string path;
     FastqWriterOptions options{};
     FastqWriterCompressionMode compression = FastqWriterCompressionMode::Auto;
     std::vector<char> buffer;
-
-    struct libdeflate_compressor* compressor = nullptr;
-    std::vector<char> compressedBuffer;
 
     std::uint64_t totalUncompressedBytes = 0;
     static constexpr size_t kBufferThreshold = 64 * 1024;
@@ -50,29 +48,21 @@ struct FastqWriter::Impl {
             compression = options.compression;
         }
 
-        // Open file with standard POSIX IO
-        fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-        if (fd < 0) {
-            throw fq::error::IOError(path, errno);
+        if (compression == FastqWriterCompressionMode::Gzip) {
+            // 使用 zlib gz API 写入 gzip 文件，压缩级别 6
+            gzfile = gzopen(path.c_str(), "wb6");
+            if (!gzfile) {
+                throw fq::error::IOError(path, errno);
+            }
+            gzbuffer(gzfile, static_cast<unsigned>(options.outputBufferBytes));
+        } else {
+            fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd < 0) {
+                throw fq::error::IOError(path, errno);
+            }
         }
 
         buffer.reserve(options.outputBufferBytes);
-
-        if (compression == FastqWriterCompressionMode::Gzip) {
-            // Level 6 is default zlib level
-            compressor = libdeflate_alloc_compressor(6);
-            if (!compressor) {
-                ::close(fd);
-                throw fq::error::FastQException(fq::error::ErrorCategory::Resource,
-                                                fq::error::ErrorSeverity::Critical,
-                                                "Failed to allocate libdeflate compressor");
-            }
-
-            // Ensure compressed buffer is large enough for worst case
-            // libdeflate_gzip_compress_bound provides the upper bound
-            compressedBuffer.resize(
-                libdeflate_gzip_compress_bound(compressor, options.outputBufferBytes));
-        }
     }
 
     ~Impl() {
@@ -80,36 +70,36 @@ struct FastqWriter::Impl {
             try {
                 flush();
             } catch (...) {
-                // Destructors must not throw.
+                // 析构函数不能抛异常
             }
             ::close(fd);
-            if (compressor) {
-                libdeflate_free_compressor(compressor);
+        }
+        if (gzfile) {
+            try {
+                flush();
+            } catch (...) {
             }
+            gzclose(gzfile);
         }
     }
 
     void flush() {
-        if (fd >= 0 && !buffer.empty()) {
-            const char* outPtr = nullptr;
-            size_t outSize = 0;
+        if (buffer.empty()) return;
 
-            if (compression == FastqWriterCompressionMode::Gzip) {
-                const size_t compressedSize = libdeflate_gzip_compress(compressor,
-                                                                       buffer.data(),
-                                                                       buffer.size(),
-                                                                       compressedBuffer.data(),
-                                                                       compressedBuffer.size());
-                if (compressedSize == 0) {
-                    throw fq::error::IOError(path, 0);
-                }
-                outPtr = compressedBuffer.data();
-                outSize = compressedSize;
-            } else {
-                outPtr = buffer.data();
-                outSize = buffer.size();
+        if (compression == FastqWriterCompressionMode::Gzip) {
+            // gzwrite 返回写入的未压缩字节数（0 表示错误）
+            const unsigned toWrite = static_cast<unsigned>(buffer.size());
+            int written = gzwrite(gzfile, buffer.data(), toWrite);
+            if (written == 0) {
+                int err = 0;
+                const char* msg = gzerror(gzfile, &err);
+                throw fq::error::FastQException(fq::error::ErrorCategory::IO,
+                                                fq::error::ErrorSeverity::Critical,
+                                                msg ? msg : "gzwrite failed");
             }
-
+        } else {
+            const char* outPtr = buffer.data();
+            size_t outSize = buffer.size();
             size_t totalWritten = 0;
             while (totalWritten < outSize) {
                 const ssize_t written = ::write(fd, outPtr + totalWritten, outSize - totalWritten);
@@ -125,14 +115,14 @@ struct FastqWriter::Impl {
                 totalWritten += static_cast<size_t>(written);
             }
 
-            buffer.clear();
-
 #ifdef __linux__
             // 通知内核释放已写出的 page cache，减少大文件写出时的内存压力
             ::posix_fadvise(fd, flushedOffset, static_cast<off_t>(outSize), POSIX_FADV_DONTNEED);
             flushedOffset += static_cast<off_t>(outSize);
 #endif
         }
+
+        buffer.clear();
     }
 
     /// 批量追加：先计算总大小，一次 resize，然后用 memcpy 拼接
@@ -156,10 +146,6 @@ struct FastqWriter::Impl {
             if (needed > buffer.capacity()) {
                 size_t newCap = std::max(buffer.capacity() * 2, needed + 4096);
                 buffer.reserve(newCap);
-
-                if (compression == FastqWriterCompressionMode::Gzip) {
-                    compressedBuffer.resize(libdeflate_gzip_compress_bound(compressor, newCap));
-                }
             }
         }
 
@@ -206,7 +192,7 @@ FastqWriter::FastqWriter(FastqWriter&&) noexcept = default;
 FastqWriter& FastqWriter::operator=(FastqWriter&&) noexcept = default;
 
 bool FastqWriter::isOpen() const {
-    return impl_ && impl_->fd >= 0;
+    return impl_ && (impl_->fd >= 0 || impl_->gzfile != nullptr);
 }
 
 void FastqWriter::write(const FastqBatch& batch) {

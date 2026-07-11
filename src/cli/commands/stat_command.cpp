@@ -17,7 +17,7 @@
 #include <cxxopts.hpp>
 
 #include <fqtools/logging.h>
-#include <fqtools/statistics/statistic_calculator_interface.h>
+#include <fqtools/statistics/interfaces.h>
 
 namespace fq::cli::commands {
 

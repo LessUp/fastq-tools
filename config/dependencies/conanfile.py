@@ -16,8 +16,6 @@ class FastQTools(ConanFile):
     def configure(self):
         # 避免编译 fmt 库本体在新版本 GCC/Clang 下触发 consteval 相关编译失败，改为纯头文件模式
         self.options["fmt"].header_only = True
-        self.options["spdlog"].header_only = True
-        self.options["spdlog"].use_std_fmt = False
         # onetbb 要求 hwloc 以 shared 模式构建
         self.options["hwloc"].shared = True
 
@@ -26,13 +24,11 @@ class FastQTools(ConanFile):
         Declare all dependencies for the project.
         """
         self.requires("cxxopts/3.1.1")
-        self.requires("spdlog/1.17.0")
         self.requires("zlib-ng/2.3.2")
         self.requires("fmt/12.1.0")
         self.requires("nlohmann_json/3.11.3")
         # Intel's Threading Building Blocks for high-level parallelism
         self.requires("onetbb/2022.3.0")
-        self.requires("libdeflate/1.25")
         self.requires("benchmark/1.8.3")
 
     def build_requirements(self):

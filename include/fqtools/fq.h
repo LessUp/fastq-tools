@@ -14,18 +14,15 @@
 #include "fqtools/io/fastq_io.h"
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/io/fastq_writer.h"
-#include "fqtools/io/reader_interface.h"
-#include "fqtools/io/writer_interface.h"
+#include "fqtools/io/interfaces.h"
 
 // 处理管道
+#include "fqtools/processing/interfaces.h"
 #include "fqtools/processing/mutators.h"
 #include "fqtools/processing/predicates.h"
 #include "fqtools/processing/processing_options.h"
 #include "fqtools/processing/processing_pipeline_interface.h"
-#include "fqtools/processing/read_mutator_interface.h"
-#include "fqtools/processing/read_predicate_interface.h"
 
 // 统计
-#include "fqtools/statistics/statistic_calculator_interface.h"
-#include "fqtools/statistics/statistic_interface.h"
+#include "fqtools/statistics/interfaces.h"
 #include "fqtools/statistics/statistics_writer.h"

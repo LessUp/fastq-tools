@@ -21,7 +21,7 @@ target_include_directories(fq_processing
 # fq_modern_io: 公共头文件引用了 FastqBatch 等类型，需 PUBLIC
 # fq_common/fq_error: 公共头文件间接引用，需 PUBLIC
 # execution_runtime.h 现在在内部头里直接使用 TBB 类型，因此需要 PUBLIC 传递
-# spdlog/fmt 仍然只在 .cpp 实现中使用，设为 PRIVATE
+# fmt 仍然只在 .cpp 实现中使用，设为 PRIVATE
 target_link_libraries(fq_processing
     PUBLIC
         fq_common
@@ -29,7 +29,6 @@ target_link_libraries(fq_processing
         fq_modern_io
         TBB::tbb
     PRIVATE
-        spdlog::spdlog
         fmt::fmt
 )
 

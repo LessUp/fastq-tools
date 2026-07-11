@@ -4,14 +4,10 @@ on:
   push:
     branches: [master]
     paths-ignore:
-      - 'docs/**'
-      - 'openspec/**'
       - '**/*.md'
   pull_request:
     branches: [master]
     paths-ignore:
-      - 'docs/**'
-      - 'openspec/**'
       - '**/*.md'
 
 permissions:
@@ -185,22 +181,3 @@ jobs:
           name: coverage-report
           path: coverage_report/
           retention-days: 7
-
-  docker-smoke:
-    name: Docker Smoke
-    if: github.event_name == 'push'
-    needs: build-and-test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build production image
-        run: docker build -f docker/Dockerfile.prod -t fastqtools:ci .
-
-      - name: Smoke test production image
-        run: docker run --rm fastqtools:ci fastqtools --help

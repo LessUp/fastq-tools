@@ -13,7 +13,7 @@ target_include_directories(fq_statistics
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# spdlog/TBB 仅在 .cpp 实现中使用，设为 PRIVATE
+# TBB 仅在 .cpp 实现中使用，设为 PRIVATE
 target_link_libraries(fq_statistics
     PUBLIC
         fq_common
@@ -21,7 +21,6 @@ target_link_libraries(fq_statistics
         fq_modern_io
     PRIVATE
         fq_processing
-        spdlog::spdlog
         TBB::tbb
 )
 

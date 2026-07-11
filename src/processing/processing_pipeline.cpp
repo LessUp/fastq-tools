@@ -13,8 +13,7 @@
 #include "processing/processing_pipeline.h"
 
 #include "fqtools/logging.h"
-#include "fqtools/processing/read_mutator_interface.h"
-#include "fqtools/processing/read_predicate_interface.h"
+#include "fqtools/processing/interfaces.h"
 
 #include <chrono>
 #include <functional>

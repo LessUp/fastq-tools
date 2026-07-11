@@ -16,7 +16,7 @@
 #include <string>
 
 #include "fastq_io.h"
-#include "reader_interface.h"
+#include "interfaces.h"
 
 namespace fq::io {
 

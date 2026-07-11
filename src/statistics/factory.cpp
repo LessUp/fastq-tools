@@ -1,4 +1,4 @@
-#include "fqtools/statistics/statistic_calculator_interface.h"
+#include "fqtools/statistics/interfaces.h"
 
 #include "statistics/fq_statistic.h"
 

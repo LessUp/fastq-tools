@@ -20,7 +20,6 @@
 
 #include <fqtools/fq.h>  // 公共 API Façade（包含 pipeline 接口、predicates、mutators）
 #include <fqtools/logging.h>
-#include <spdlog/spdlog.h>
 
 namespace fq::cli::commands {
 
@@ -64,7 +63,7 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     plan.applyTo(*pipeline_);
 
     auto stats = pipeline_->run();
-    if (spdlog::get_level() < spdlog::level::err) {
+    if (fq::logging::getLevel() < fq::logging::Level::Error) {
         std::cout << stats.toString() << '\n';
     }
 

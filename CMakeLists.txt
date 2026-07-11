@@ -98,21 +98,13 @@ endif()
 
 # --- Find Dependencies (handled by Conan) ---
 find_package(cxxopts CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(TBB CONFIG REQUIRED)
-find_package(libdeflate CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-add_compile_definitions(USE_LIBDEFLATE)
-message(STATUS "Found libdeflate: ${libdeflate_VERSION}")
 
 if(TARGET fmt::fmt-header-only AND NOT TARGET fmt::fmt)
     add_library(fmt::fmt ALIAS fmt::fmt-header-only)
-endif()
-
-if(TARGET spdlog::spdlog_header_only AND NOT TARGET spdlog::spdlog)
-    add_library(spdlog::spdlog ALIAS spdlog::spdlog_header_only)
 endif()
 
 # --- Optional clang-tidy integration ---

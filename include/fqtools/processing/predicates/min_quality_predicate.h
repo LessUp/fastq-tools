@@ -1,7 +1,6 @@
 #pragma once
 
-#include "fqtools/io/fastq_io.h"
-#include "fqtools/processing/read_predicate_interface.h"
+#include "fqtools/processing/interfaces.h"
 
 #include <atomic>
 #include <string>

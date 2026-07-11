@@ -2,7 +2,7 @@
 #include "fqtools/processing/mutators.h"
 #include "fqtools/processing/predicates.h"
 #include "fqtools/processing/processing_pipeline_interface.h"
-#include "fqtools/statistics/statistic_calculator_interface.h"
+#include "fqtools/statistics/interfaces.h"
 
 #include <gtest/gtest.h>
 

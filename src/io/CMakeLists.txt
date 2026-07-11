@@ -9,22 +9,13 @@ target_include_directories(fq_modern_io
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-# ZLIB/libdeflate/spdlog/fmt/fq_error 仅在 .cpp 中使用，不暴露给下游
+# ZLIB/fmt/fq_error 仅在 .cpp 中使用，不暴露给下游
 target_link_libraries(fq_modern_io
     PRIVATE
         ZLIB::ZLIB
-        spdlog::spdlog
         fmt::fmt
         fq_error
 )
-
-if(TARGET libdeflate::libdeflate)
-    target_link_libraries(fq_modern_io PRIVATE libdeflate::libdeflate)
-elseif(TARGET libdeflate::libdeflate_static)
-    target_link_libraries(fq_modern_io PRIVATE libdeflate::libdeflate_static)
-elseif(TARGET libdeflate::libdeflate_shared)
-    target_link_libraries(fq_modern_io PRIVATE libdeflate::libdeflate_shared)
-endif()
 
 target_compile_features(fq_modern_io PUBLIC cxx_std_23)
 

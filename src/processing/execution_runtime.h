@@ -4,8 +4,7 @@
 #include "fqtools/io/fastq_io.h"
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/io/fastq_writer.h"
-#include "fqtools/io/reader_interface.h"
-#include "fqtools/io/writer_interface.h"
+#include "fqtools/io/interfaces.h"
 #include "fqtools/processing/processing_options.h"
 
 #include <cstddef>

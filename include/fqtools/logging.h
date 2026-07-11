@@ -1,93 +1,107 @@
 #pragma once
 /**
  * @file logging.h
- * @brief 统一日志初始化接口
+ * @brief 统一日志接口（基于 fmt 的轻量实现）
  */
 
+#include <atomic>
 #include <string>
+#include <string_view>
 #include <utility>
 
-#include <spdlog/spdlog.h>
+#include <fmt/format.h>
 
 namespace fq::logging {
 
-/**
- * @brief 日志配置选项
- */
-struct LogOptions {
-    std::string level = "info";  ///< 日志级别: trace, debug, info, warn, error, critical
-    std::string pattern = "";    ///< 自定义日志格式（空则使用默认）
-    bool colored = true;         ///< 是否启用彩色输出
+/// @brief 日志级别
+enum class Level : int {
+    Trace = 0,
+    Debug = 1,
+    Info = 2,
+    Warn = 3,
+    Error = 4,
+    Critical = 5,
+    Off = 6
 };
 
-/**
- * @brief 初始化日志系统
- * @param options 日志配置选项
- */
+/// @brief 全局日志级别
+inline std::atomic<Level> currentLevel{Level::Info};
+
+/// @brief 日志配置选项
+struct LogOptions {
+    std::string level = "info";  ///< 日志级别: trace, debug, info, warn, error, critical, off
+    std::string pattern = "";    ///< 保留兼容，当前实现忽略
+    bool colored = true;         ///< 保留兼容，当前实现忽略
+};
+
+/// @brief 解析日志级别字符串
+inline auto parseLevel(std::string_view name) -> Level {
+    if (name == "trace") return Level::Trace;
+    if (name == "debug") return Level::Debug;
+    if (name == "info") return Level::Info;
+    if (name == "warn" || name == "warning") return Level::Warn;
+    if (name == "error") return Level::Error;
+    if (name == "critical") return Level::Critical;
+    if (name == "off") return Level::Off;
+    return Level::Info;
+}
+
+/// @brief 初始化日志系统
+/// @param options 日志配置选项
 inline void init(const LogOptions& options = {}) {
-    spdlog::level::level_enum level = spdlog::level::info;
-
-    if (options.level == "trace") {
-        level = spdlog::level::trace;
-    } else if (options.level == "debug") {
-        level = spdlog::level::debug;
-    } else if (options.level == "info") {
-        level = spdlog::level::info;
-    } else if (options.level == "warn" || options.level == "warning") {
-        level = spdlog::level::warn;
-    } else if (options.level == "error") {
-        level = spdlog::level::err;
-    } else if (options.level == "critical") {
-        level = spdlog::level::critical;
-    } else if (options.level == "off") {
-        level = spdlog::level::off;
-    }
-
-    spdlog::set_level(level);
-
-    if (!options.pattern.empty()) {
-        spdlog::set_pattern(options.pattern);
-    }
+    currentLevel.store(parseLevel(options.level), std::memory_order_relaxed);
 }
 
-/**
- * @brief 便捷函数：设置日志级别
- * @param level 日志级别字符串
- */
+/// @brief 便捷函数：设置日志级别
+/// @param level 日志级别字符串
 inline void setLevel(const std::string& level) {
-    LogOptions opts;
-    opts.level = level;
-    init(opts);
+    currentLevel.store(parseLevel(level), std::memory_order_relaxed);
+}
+
+/// @brief 获取当前日志级别
+inline auto getLevel() -> Level {
+    return currentLevel.load(std::memory_order_relaxed);
+}
+
+namespace detail {
+
+template <typename... Args>
+inline void logImpl(Level level, std::string_view tag, fmt::format_string<Args...> fmtStr,
+                    Args&&... args) {
+    if (currentLevel.load(std::memory_order_relaxed) > level) return;
+    fmt::print(stderr, "[{}] {}\n", tag, fmt::format(fmtStr, std::forward<Args>(args)...));
+}
+
+}  // namespace detail
+
+template <typename... Args>
+inline void trace(fmt::format_string<Args...> fmt, Args&&... args) {
+    detail::logImpl(Level::Trace, "trace", fmt, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-inline void trace(spdlog::format_string_t<Args...> fmt, Args&&... args) {
-    spdlog::trace(fmt, std::forward<Args>(args)...);
+inline void debug(fmt::format_string<Args...> fmt, Args&&... args) {
+    detail::logImpl(Level::Debug, "debug", fmt, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-inline void debug(spdlog::format_string_t<Args...> fmt, Args&&... args) {
-    spdlog::debug(fmt, std::forward<Args>(args)...);
+inline void info(fmt::format_string<Args...> fmt, Args&&... args) {
+    detail::logImpl(Level::Info, "info", fmt, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-inline void info(spdlog::format_string_t<Args...> fmt, Args&&... args) {
-    spdlog::info(fmt, std::forward<Args>(args)...);
+inline void warn(fmt::format_string<Args...> fmt, Args&&... args) {
+    detail::logImpl(Level::Warn, "warn", fmt, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-inline void warn(spdlog::format_string_t<Args...> fmt, Args&&... args) {
-    spdlog::warn(fmt, std::forward<Args>(args)...);
+inline void error(fmt::format_string<Args...> fmt, Args&&... args) {
+    detail::logImpl(Level::Error, "error", fmt, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-inline void error(spdlog::format_string_t<Args...> fmt, Args&&... args) {
-    spdlog::error(fmt, std::forward<Args>(args)...);
-}
-
-template <typename... Args>
-inline void critical(spdlog::format_string_t<Args...> fmt, Args&&... args) {
-    spdlog::critical(fmt, std::forward<Args>(args)...);
+inline void critical(fmt::format_string<Args...> fmt, Args&&... args) {
+    detail::logImpl(Level::Critical, "critical", fmt, std::forward<Args>(args)...);
 }
 
 }  // namespace fq::logging
