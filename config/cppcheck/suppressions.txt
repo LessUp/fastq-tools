@@ -1,6 +1,5 @@
 missingIncludeSystem
 unusedFunction:*tbb*
-preprocessorErrorDirective:*spdlog*
 missingOverride
 unusedPrivateFunction
 unusedStructMember:tests/*

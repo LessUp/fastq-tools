@@ -77,7 +77,6 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/performance_benchmark.cpp")
     target_link_libraries(performance_benchmark PRIVATE
         fq_cli
         fmt::fmt
-        spdlog::spdlog
     )
 
     target_include_directories(performance_benchmark PRIVATE

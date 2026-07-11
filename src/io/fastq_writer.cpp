@@ -75,6 +75,7 @@ struct FastqWriter::Impl {
             ::close(fd);
         }
         if (gzfile) {
+            // 先 flush 应用层 buffer 到 gzfile，再 gzclose 刷 zlib 内部缓冲区
             try {
                 flush();
             } catch (...) {
@@ -90,7 +91,7 @@ struct FastqWriter::Impl {
             // gzwrite 返回写入的未压缩字节数（0 表示错误）
             const unsigned toWrite = static_cast<unsigned>(buffer.size());
             int written = gzwrite(gzfile, buffer.data(), toWrite);
-            if (written == 0) {
+            if (written == 0 || static_cast<unsigned>(written) != toWrite) {
                 int err = 0;
                 const char* msg = gzerror(gzfile, &err);
                 throw fq::error::FastQException(fq::error::ErrorCategory::IO,

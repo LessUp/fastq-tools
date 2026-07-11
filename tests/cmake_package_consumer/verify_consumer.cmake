@@ -41,6 +41,7 @@ if(EXISTS "${cache_file}")
     file(STRINGS "${cache_file}" tsan_enabled REGEX "^ENABLE_TSAN:BOOL=ON$")
     file(STRINGS "${cache_file}" ubsan_enabled REGEX "^ENABLE_UBSAN:BOOL=ON$")
     file(STRINGS "${cache_file}" msan_enabled REGEX "^ENABLE_MSAN:BOOL=ON$")
+    file(STRINGS "${cache_file}" lto_enabled REGEX "^ENABLE_LTO:BOOL=ON$")
 
     if(asan_enabled)
         string(APPEND consumer_link_flags " -fsanitize=address")
@@ -53,6 +54,11 @@ if(EXISTS "${cache_file}")
     endif()
     if(msan_enabled)
         string(APPEND consumer_link_flags " -fsanitize=memory -fsanitize-memory-track-origins=2")
+    endif()
+    # 主项目启用 LTO 时，安装的 .a 是 ThinLTO bitcode，
+    # consumer 也需要启用 LTO 才能链接
+    if(lto_enabled)
+        string(APPEND consumer_link_flags " -flto=thin")
     endif()
 
     string(STRIP "${consumer_link_flags}" consumer_link_flags)
