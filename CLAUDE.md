@@ -4,7 +4,7 @@
 
 ## 项目
 
-- **FastQTools**: C++23 高性能 FASTQ 处理工具，业余练手项目。
+- **FastQTools**: C++23 高性能 FASTQ 处理工具，工程能力展示项目。
 - 公共 API 在 `include/fqtools/`，实现在 `src/`。
 - 并行基于 `tbb::parallel_pipeline`，零拷贝 `std::string_view`。
 

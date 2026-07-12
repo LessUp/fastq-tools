@@ -1,6 +1,6 @@
 # Contributing to FastQTools
 
-业余练手项目，欢迎贡献。
+C++23 工程能力展示项目，欢迎贡献。
 
 ## 开发流程
 

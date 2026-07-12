@@ -9,9 +9,6 @@
   <a href="https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml">
     <img src="https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml/badge.svg" alt="CI 状态">
   </a>
-  <a href="https://github.com/LessUp/fastq-tools/actions/workflows/pages.yml">
-    <img src="https://github.com/LessUp/fastq-tools/actions/workflows/pages.yml/badge.svg" alt="文档状态">
-  </a>
   <a href="https://github.com/LessUp/fastq-tools/releases">
     <img src="https://img.shields.io/github/v/release/LessUp/fastq-tools?label=Release&logo=github" alt="GitHub 发布版本">
   </a>
@@ -27,7 +24,7 @@
 <p align="center">
   <a href="README.md">English</a> •
   <a href="README.zh-CN.md">简体中文</a> •
-  <a href="https://lessup.github.io/fastq-tools/index.en/">中文概览</a> •
+  <a href="./docs/ARCHITECTURE.md">架构</a> •
   <a href="https://github.com/LessUp/fastq-tools/releases">发布版本</a>
 </p>
 
@@ -41,7 +38,7 @@ FastQTools 是一个基于现代 C++23 的 FASTQ 质控工具集，适合希望�
 - **过滤与修剪 (`filter`)**：在同一条处理链中组合长度、质量、N 比例过滤，并执行低质量端修剪。
 - **可嵌入的 C++ API（`fqtools/fq.h`）**：通过总入口头文件、其聚合的 common/config/error/io/processing 文档化头文件，以及受支持的统计工作流 `StatisticOptions + createStatisticCalculator(...)->run()` 接入与 CLI 对齐的接口。
 - **性能导向实现**：零拷贝记录视图、Intel oneTBB 并行流水线，以及对压缩文件工作流的支持。
-- **工程质量保障**：持续集成、消毒剂、模糊测试，以及持续维护的文档站点。
+- **工程质量保障**：持续集成、消毒剂、模糊测试，以及仓库内技术文档。
 
 ## 快速开始
 
@@ -66,7 +63,7 @@ cd fastq-tools
   --trim-mode both
 ```
 
-如果你需要环境配置、安装说明或部署入口，建议先看[快速开始指南](https://lessup.github.io/fastq-tools/guide/getting-started.en/)。
+如果你需要环境配置、安装说明或部署入口，建议先看[快速开始指南](./docs/getting-started.md)。
 
 ## 代表性性能数据
 
@@ -79,17 +76,18 @@ cd fastq-tools
 | 组合过滤处理 | 167 万 reads/s |
 | 完整统计分析 | 302 MB/s |
 
-更完整的背景说明见[性能总览](https://lessup.github.io/fastq-tools/performance/benchmark-report/)。
+更完整的背景说明见[性能总览](./docs/benchmark.md)。
 
 ## 文档入口
 
 | 如果你想… | 建议从这里开始 |
 | --- | --- |
-| 完成构建并跑通第一个命令 | [Getting Started](https://lessup.github.io/fastq-tools/guide/getting-started.en/) |
-| 查询命令语法与参数 | [CLI Reference](https://lessup.github.io/fastq-tools/guide/cli-reference.en/) |
-| 在 C++ 项目中集成库接口 | [API Overview](https://lessup.github.io/fastq-tools/api/overview.en/) |
-| 判断性能数字该如何解读 | [Benchmark Overview](https://lessup.github.io/fastq-tools/performance/benchmark-report/) |
-| 参与文档或代码贡献 | [Contributing](https://lessup.github.io/fastq-tools/contributing.en/) |
+| 完成构建并跑通第一个命令 | [快速开始](./docs/getting-started.md) |
+| 查询命令语法与参数 | [CLI 参考](./docs/cli-reference.md) |
+| 在 C++ 项目中集成库接口 | [API 概览](./docs/api.md) |
+| 了解架构与设计决策 | [架构文档](./docs/ARCHITECTURE.md) |
+| 判断性能数字该如何解读 | [性能总览](./docs/benchmark.md) |
+| 参与文档或代码贡献 | [贡献指南](./CONTRIBUTING.md) |
 | 跟踪项目层面的变更 | [CHANGELOG.md](./CHANGELOG.md) |
 
 ## 构建要求
@@ -103,10 +101,16 @@ cd fastq-tools
 
 欢迎提交聚焦明确的改进：bug 报告、文档修订、测试补充、基准工作，以及范围清晰的功能调整。
 
-- 阅读[贡献指南](https://lessup.github.io/fastq-tools/contributing.en/)
+- 阅读[贡献指南](./CONTRIBUTING.md)
 - 通过 [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) 反馈问题
 - 在 [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions) 讨论想法
 
 ## 许可证
 
 FastQTools 基于 [MIT 许可证](LICENSE) 发布。
+
+## 作者
+
+**shijiashuai** — [GitHub](https://github.com/LessUp) · jiashuai.shi@qq.com
+
+C++23 工程能力展示项目：零拷贝 FASTQ 视图、TBB 流水线并行、接口最小化、依赖瘦身。技术叙事见 [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)。

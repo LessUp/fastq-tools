@@ -9,9 +9,6 @@
   <a href="https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml">
     <img src="https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml/badge.svg" alt="CI Status">
   </a>
-  <a href="https://github.com/LessUp/fastq-tools/actions/workflows/pages.yml">
-    <img src="https://github.com/LessUp/fastq-tools/actions/workflows/pages.yml/badge.svg" alt="Docs Status">
-  </a>
   <a href="https://github.com/LessUp/fastq-tools/releases">
     <img src="https://img.shields.io/github/v/release/LessUp/fastq-tools?label=Release&logo=github" alt="GitHub Release">
   </a>
@@ -27,7 +24,7 @@
 <p align="center">
   <a href="README.md">English</a> •
   <a href="README.zh-CN.md">简体中文</a> •
-  <a href="https://lessup.github.io/fastq-tools/">Documentation</a> •
+  <a href="./docs/ARCHITECTURE.md">Architecture</a> •
   <a href="https://github.com/LessUp/fastq-tools/releases">Releases</a>
 </p>
 
@@ -41,7 +38,7 @@ FastQTools is a modern C++23 toolkit for routine FASTQ quality-control work. Its
 - **Filtering and trimming (`filter`)** — apply length, quality, and N-ratio thresholds, then trim low-quality bases in the same pass.
 - **Embeddable C++ API (`fqtools/fq.h`)** — integrate through the umbrella header, the documented common/config/error/io/processing headers it aggregates, and the supported statistics workflow `StatisticOptions + createStatisticCalculator(...)->run()`.
 - **Performance-conscious implementation** — zero-copy record views, Intel oneTBB pipelines, and compressed-file workflows where supported.
-- **Production hygiene** — CI, sanitizers, fuzzing, and a maintained docs site.
+- **Production hygiene** — CI, sanitizers, fuzzing, and in-repo technical docs.
 
 ## Quick start
 
@@ -66,7 +63,7 @@ cd fastq-tools
   --trim-mode both
 ```
 
-For environment setup, installation notes, and deployment options, start with the [Getting Started guide](https://lessup.github.io/fastq-tools/guide/getting-started.en/).
+For environment setup, installation notes, and deployment options, see [docs/getting-started.md](./docs/getting-started.md).
 
 ## Representative performance
 
@@ -79,17 +76,18 @@ Benchmarks below are a maintained point-in-time snapshot for **100K reads (150 b
 | Combined filtering pass | 1.67M reads/s |
 | Full statistics pass | 302 MB/s |
 
-See the [benchmark overview](https://lessup.github.io/fastq-tools/performance/benchmark-report/) for methodology and context.
+See [docs/benchmark.md](./docs/benchmark.md) for methodology and context.
 
 ## Documentation map
 
 | If you want to… | Start here |
 | --- | --- |
-| Build FastQTools and run your first command | [Getting Started](https://lessup.github.io/fastq-tools/guide/getting-started.en/) |
-| Check command syntax and options | [CLI Reference](https://lessup.github.io/fastq-tools/guide/cli-reference.en/) |
-| Integrate the library into C++ code | [API Overview](https://lessup.github.io/fastq-tools/api/overview.en/) |
-| Understand benchmark numbers | [Benchmark Overview](https://lessup.github.io/fastq-tools/performance/benchmark-report/) |
-| Contribute docs or code | [Contributing](https://lessup.github.io/fastq-tools/contributing.en/) |
+| Build FastQTools and run your first command | [docs/getting-started.md](./docs/getting-started.md) |
+| Check command syntax and options | [docs/cli-reference.md](./docs/cli-reference.md) |
+| Integrate the library into C++ code | [docs/api.md](./docs/api.md) |
+| Understand the architecture and design decisions | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
+| Understand benchmark numbers | [docs/benchmark.md](./docs/benchmark.md) |
+| Contribute docs or code | [CONTRIBUTING.md](./CONTRIBUTING.md) |
 | Follow project-level changes | [CHANGELOG.md](./CHANGELOG.md) |
 
 ## Build requirements
@@ -103,10 +101,16 @@ See the [benchmark overview](https://lessup.github.io/fastq-tools/performance/be
 
 FastQTools welcomes focused improvements: bug reports, docs fixes, tests, benchmark work, and narrow feature changes.
 
-- Read the [contributing guide](https://lessup.github.io/fastq-tools/contributing.en/)
+- Read the [contributing guide](./CONTRIBUTING.md)
 - Open issues via [GitHub Issues](https://github.com/LessUp/fastq-tools/issues)
 - Discuss ideas in [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions)
 
 ## License
 
 FastQTools is released under the [MIT License](LICENSE).
+
+## Author
+
+**shijiashuai** — [GitHub](https://github.com/LessUp) · jiashuai.shi@qq.com
+
+A C++23 engineering showcase project: zero-copy FASTQ views, TBB pipeline parallelism, interface minimalism, and dependency trimming. See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the technical narrative.
