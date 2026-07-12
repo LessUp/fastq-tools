@@ -45,6 +45,36 @@ cmake --build build --target run_benchmarks
 | `pipeline_benchmark.cpp` | TBB 流水线吞吐 |
 | `object_pool_benchmark.cpp` | 对象池分配性能 |
 
+## 与同类工具对比
+
+本表不内置 fastp/seqkit 的直接同环境数字，因为对比结果高度依赖 CPU、磁盘、压缩级别、参数与数据集，写死容易误导。下面给出**量级定位**与**可复现方法**，供你在自己的硬件上补一行。
+
+| 工具 | 典型量级（公开基准） | 与 FastQTools 的定位差异 |
+| --- | --- | --- |
+| fastp | 多线程下数十 M reads/min（150bp PE） | 功能面远大于 FastQTools；FastQTools 聚焦 stat+filter 热点路径，内核更现代 |
+| seqkit | Go 实现，单线程数十 M reads/min | 算子面巨大；FastQTools 原生 C++、二进制更小、可嵌入 |
+| FastQTools | 读取 1696 MB/s，过滤 167 万 reads/s | 见上表 |
+
+**如何在本仓库跑一次对比**：
+
+```bash
+# 1. 构建 FastQTools 基准
+cmake --build build --target benchmarks
+
+# 2. 跑 FastQTools 基准
+./build/tools/benchmark/benchmark_fastq_io --benchmark_format=json
+
+# 3. 在同一台机器、同一份数据上跑 fastp / seqkit
+#    例如：fastp -i sample.fastq.gz -o /dev/null --thread 8
+#         seqkit stats -Q sample.fastq.gz
+
+# 4. 记录环境（CPU、磁盘、压缩级别、参数）后填入上表
+```
+
+公开基准来源（量级参考，非本仓库实测）：
+- fastp：[OpenGene/fastp](https://github.com/OpenGene/fastp) README 与 issue 中的用户基准
+- seqkit：[shenwei356/seqkit](https://github.com/shenwei356/seqkit) README 性能小节
+
 ## 注意
 
-这些数字是维护中的点时快照，适合判断量级，不是所有数据集、压缩级别或存储环境下的绝对承诺。
+这些数字是维护中的点时快照，适合判断量级，不是所有数据集、压缩级别或存储环境下的绝对承诺。与同类工具的对比请在你自己的硬件上按上述方法复现，不要把本表数字当作跨工具的绝对结论。
