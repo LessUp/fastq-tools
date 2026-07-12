@@ -46,4 +46,4 @@
 
 - 命令参数细节：[cli-reference.md](./cli-reference.md)
 - 嵌入 C++ 项目：[api.md](./api.md)
-- 架构与设计决策：[ARCHITECTURE.md](./ARCHITECTURE.md)
+- 架构与设计决策：[architecture.md](./architecture.md)

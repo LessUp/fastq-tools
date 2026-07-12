@@ -30,7 +30,7 @@ scripts/
 │   └── gcov-wrapper        # gcov/llvm-cov 包装器
 │
 ├── README.md               # 本文件
-└── ARCHITECTURE.md         # 架构设计文档
+└── architecture.md         # 架构设计文档
 ```
 
 ## 🚀 快速开始
@@ -268,7 +268,7 @@ sudo ./scripts/tools/release/install-llvm 21      # 安装 LLVM 21
 
 ## 📄 相关文档
 
-- **架构设计**: `scripts/ARCHITECTURE.md`
+- **架构设计**: `scripts/architecture.md`
 - **核心脚本**: `scripts/core/README.md`
 - **工具脚本**: `scripts/tools/README.md`
 - **测试系统**: `../tests/README.md`

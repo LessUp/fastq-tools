@@ -24,7 +24,7 @@
 <p align="center">
   <a href="README.md">English</a> •
   <a href="README.zh-CN.md">简体中文</a> •
-  <a href="./docs/ARCHITECTURE.md">Architecture</a> •
+  <a href="./docs/architecture.md">Architecture</a> •
   <a href="https://github.com/LessUp/fastq-tools/releases">Releases</a>
 </p>
 
@@ -85,7 +85,7 @@ See [docs/benchmark.md](./docs/benchmark.md) for methodology and context.
 | Build FastQTools and run your first command | [docs/getting-started.md](./docs/getting-started.md) |
 | Check command syntax and options | [docs/cli-reference.md](./docs/cli-reference.md) |
 | Integrate the library into C++ code | [docs/api.md](./docs/api.md) |
-| Understand the architecture and design decisions | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
+| Understand the architecture and design decisions | [docs/architecture.md](./docs/architecture.md) |
 | Understand benchmark numbers | [docs/benchmark.md](./docs/benchmark.md) |
 | Contribute docs or code | [CONTRIBUTING.md](./CONTRIBUTING.md) |
 | Follow project-level changes | [CHANGELOG.md](./CHANGELOG.md) |
@@ -113,4 +113,4 @@ FastQTools is released under the [MIT License](LICENSE).
 
 **shijiashuai** — [GitHub](https://github.com/LessUp) · jiashuai.shi@qq.com
 
-A C++23 engineering showcase project: zero-copy FASTQ views, TBB pipeline parallelism, interface minimalism, and dependency trimming. See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for the technical narrative.
+A C++23 engineering showcase project: zero-copy FASTQ views, TBB pipeline parallelism, interface minimalism, and dependency trimming. See [docs/architecture.md](./docs/architecture.md) for the technical narrative.

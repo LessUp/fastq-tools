@@ -24,7 +24,7 @@
 <p align="center">
   <a href="README.md">English</a> •
   <a href="README.zh-CN.md">简体中文</a> •
-  <a href="./docs/ARCHITECTURE.md">架构</a> •
+  <a href="./docs/architecture.md">架构</a> •
   <a href="https://github.com/LessUp/fastq-tools/releases">发布版本</a>
 </p>
 
@@ -85,7 +85,7 @@ cd fastq-tools
 | 完成构建并跑通第一个命令 | [快速开始](./docs/getting-started.md) |
 | 查询命令语法与参数 | [CLI 参考](./docs/cli-reference.md) |
 | 在 C++ 项目中集成库接口 | [API 概览](./docs/api.md) |
-| 了解架构与设计决策 | [架构文档](./docs/ARCHITECTURE.md) |
+| 了解架构与设计决策 | [架构文档](./docs/architecture.md) |
 | 判断性能数字该如何解读 | [性能总览](./docs/benchmark.md) |
 | 参与文档或代码贡献 | [贡献指南](./CONTRIBUTING.md) |
 | 跟踪项目层面的变更 | [CHANGELOG.md](./CHANGELOG.md) |
@@ -113,4 +113,4 @@ FastQTools 基于 [MIT 许可证](LICENSE) 发布。
 
 **shijiashuai** — [GitHub](https://github.com/LessUp) · jiashuai.shi@qq.com
 
-C++23 工程能力展示项目：零拷贝 FASTQ 视图、TBB 流水线并行、接口最小化、依赖瘦身。技术叙事见 [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)。
+C++23 工程能力展示项目：零拷贝 FASTQ 视图、TBB 流水线并行、接口最小化、依赖瘦身。技术叙事见 [docs/architecture.md](./docs/architecture.md)。
