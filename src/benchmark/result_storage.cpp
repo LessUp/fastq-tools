@@ -1,9 +1,10 @@
+#include "result_storage.h"
+
 #include <algorithm>
 #include <fstream>
 #include <stdexcept>
 
-#include <fqtools/benchmark/data_collector.h>
-#include <fqtools/benchmark/result_storage.h>
+#include "data_collector.h"
 
 namespace fq::benchmark {
 

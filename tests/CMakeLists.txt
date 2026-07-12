@@ -38,21 +38,21 @@ add_subdirectory(utils)
 add_subdirectory(unit)
 add_subdirectory(integration)
 
-set(FQTOOLS_CMAKE_CONSUMER_BINARY_DIR ${CMAKE_BINARY_DIR}/tests/cmake-package-consumer)
-set(FQTOOLS_CMAKE_CONSUMER_INSTALL_DIR ${CMAKE_BINARY_DIR}/tests/cmake-package-install)
+set(FQTOOLS_PACKAGING_TEST_BINARY_DIR ${CMAKE_BINARY_DIR}/tests/packaging-build)
+set(FQTOOLS_PACKAGING_TEST_INSTALL_DIR ${CMAKE_BINARY_DIR}/tests/packaging-install)
 
 add_test(
-    NAME cmake_package_consumer
+    NAME packaging_test
     COMMAND
         ${CMAKE_COMMAND}
         -DFQTOOLS_SOURCE_DIR=${CMAKE_SOURCE_DIR}
         -DFQTOOLS_BINARY_DIR=${CMAKE_BINARY_DIR}
-        -DFQTOOLS_CONSUMER_BINARY_DIR=${FQTOOLS_CMAKE_CONSUMER_BINARY_DIR}
-        -DFQTOOLS_INSTALL_DIR=${FQTOOLS_CMAKE_CONSUMER_INSTALL_DIR}
+        -DFQTOOLS_CONSUMER_BINARY_DIR=${FQTOOLS_PACKAGING_TEST_BINARY_DIR}
+        -DFQTOOLS_INSTALL_DIR=${FQTOOLS_PACKAGING_TEST_INSTALL_DIR}
         -DFQTOOLS_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -P ${CMAKE_SOURCE_DIR}/tests/cmake_package_consumer/verify_consumer.cmake
+        -P ${CMAKE_SOURCE_DIR}/tests/packaging/verify_consumer.cmake
 )
-set_tests_properties(cmake_package_consumer PROPERTIES
+set_tests_properties(packaging_test PROPERTIES
     LABELS "integration"
     TIMEOUT 180
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

@@ -11,14 +11,28 @@ class TestFastQToolsCLI(unittest.TestCase):
         # Path to the executable
         cls.fastqtools = os.environ.get("FASTQTOOLS", "./build/clang-release/FastQTools")
         cls.data_dir = os.path.join(os.getcwd(), "tools/data")
-        cls.sample_fastq = os.path.join(cls.data_dir, "sample_10k_len100.fastq")
         cls.tmp_root = os.path.join(os.getcwd(), "tests", "e2e", ".tmp_python")
         os.makedirs(cls.tmp_root, exist_ok=True)
-        
+        # 样本生成到独立 tmp 目录，避免与 e2e_shell_cli 并发写同一文件
+        cls.sample_fastq = os.path.join(cls.tmp_root, "sample_10k_len100.fastq")
+
         if not os.path.exists(cls.fastqtools):
             raise unittest.SkipTest(f"Executable not found at {cls.fastqtools}")
         if not os.path.exists(cls.sample_fastq):
-            raise unittest.SkipTest(f"Sample data not found at {cls.sample_fastq}")
+            gen_script = os.path.join(cls.data_dir, "gen_fastq.py")
+            if not os.path.exists(gen_script):
+                raise unittest.SkipTest(f"Generator not found: {gen_script}")
+            subprocess.run(
+                [
+                    "python3", gen_script,
+                    "-o", cls.sample_fastq,
+                    "-n", "10000",
+                    "--min-len", "100",
+                    "--max-len", "100",
+                    "--seed", "42",
+                ],
+                check=True,
+            )
 
     def setUp(self):
         self.test_dir = os.path.join(self.tmp_root, f"case-{uuid.uuid4().hex}")

@@ -1,3 +1,5 @@
+#include "data_collector.h"
+
 #include <array>
 #include <chrono>
 #include <cstdio>
@@ -7,8 +9,6 @@
 #include <memory>
 #include <sstream>
 #include <thread>
-
-#include <fqtools/benchmark/data_collector.h>
 
 #ifdef __linux__
 #include <unistd.h>

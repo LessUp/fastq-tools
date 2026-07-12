@@ -235,7 +235,7 @@ if [[ "$VALGRIND" == "true" ]]; then
         exit 1
     fi
     
-    SUPPRESSION_FILE="${PROJECT_ROOT}/config/valgrind/suppressions.supp"
+    SUPPRESSION_FILE="${PROJECT_ROOT}/build-config/valgrind/suppressions.supp"
     VALGRIND_CMD="valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1"
     
     if [[ -f "$SUPPRESSION_FILE" ]]; then
@@ -299,8 +299,8 @@ if [[ "$VALGRIND" == "true" ]]; then
     CTEST_ARGS+=(-T memcheck)
     export CTEST_MEMORYCHECK_COMMAND="valgrind"
     export CTEST_MEMORYCHECK_COMMAND_OPTIONS="--leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1"
-    if [[ -f "${PROJECT_ROOT}/config/valgrind/suppressions.supp" ]]; then
-        export CTEST_MEMORYCHECK_SUPPRESSIONS_FILE="${PROJECT_ROOT}/config/valgrind/suppressions.supp"
+    if [[ -f "${PROJECT_ROOT}/build-config/valgrind/suppressions.supp" ]]; then
+        export CTEST_MEMORYCHECK_SUPPRESSIONS_FILE="${PROJECT_ROOT}/build-config/valgrind/suppressions.supp"
     fi
 fi
 

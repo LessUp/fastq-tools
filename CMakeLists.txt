@@ -103,7 +103,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/fq_sanitizers.cmake)
 fq_add_sanitizer_flags_global()
 
 # --- Conan Integration ---
-# This assumes you have run `conan install config/dependencies/ --build=missing`
+# This assumes you have run `conan install build-config/dependencies/ --build=missing`
 # and the conan_toolchain.cmake file is in the build directory.
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     if(EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
@@ -167,23 +167,6 @@ if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
 
-# --- Create Executable ---
-add_executable(FastQTools
-    src/cli/main.cpp
-)
-
-target_link_libraries(FastQTools
-    PRIVATE
-        fq_cli # This library contains all command logic and links to all other libs
-        fmt::fmt # Explicitly link fmt for main.cpp usage
-        TBB::tbb # Explicitly link TBB for main.cpp usage
-)
-
-target_include_directories(FastQTools 
-    PRIVATE 
-        src
-)
-
 # --- Installation ---
 install(TARGETS FastQTools
     EXPORT FastQToolsTargets
@@ -211,15 +194,7 @@ install(TARGETS
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-# fq_benchmark 仅在 BUILD_BENCHMARKS=ON 时编译并导出
-if(BUILD_BENCHMARKS AND TARGET fq_benchmark)
-    install(TARGETS fq_benchmark
-        EXPORT FastQToolsTargets
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    )
-endif()
+# fq_benchmark 为内部测量设施，不下发至公共 SDK
 
 
 # --- Package Configuration ---

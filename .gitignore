@@ -67,9 +67,13 @@ Thumbs.db
 *.bak
 .dSYM/
 
+# ===== E2E 测试临时目录 =====
+tests/e2e/.tmp/
+tests/e2e/.tmp_python/
+
 # ===== 覆盖率与分析数据 =====
 coverage/
-!config/coverage/
+!build-config/coverage/
 *.gcda
 *.gcno
 *.gcov

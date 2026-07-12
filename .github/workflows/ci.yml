@@ -60,7 +60,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.conan2
-          key: ${{ runner.os }}-conan-gcc-analysis-${{ hashFiles('config/dependencies/**') }}
+          key: ${{ runner.os }}-conan-gcc-analysis-${{ hashFiles('build-config/dependencies/**') }}
           restore-keys: |
             ${{ runner.os }}-conan-gcc-analysis-
             ${{ runner.os }}-conan-gcc-
@@ -98,20 +98,20 @@ jobs:
             test_command: ./scripts/core/test --preset gcc-release --timeout 180
           - name: Clang Release
             compiler: clang
-            build_command: ./scripts/core/build --compiler clang --type Release --build-dir build/ci-clang-release --conan-profile config/conan/profile-clang-ci --no-lto
+            build_command: ./scripts/core/build --compiler clang --type Release --build-dir build/ci-clang-release --conan-profile build-config/conan/profile-clang-ci --no-lto
             test_command: ./scripts/core/test --build-dir build/ci-clang-release --timeout 180
           - name: Clang ASan
             compiler: clang
-            build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer asan --build-dir build/ci-clang-asan --conan-profile config/conan/profile-clang-ci --no-lto
-            test_command: ctest --test-dir build/ci-clang-asan --exclude-regex 'cmake_package_consumer'
+            build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer asan --build-dir build/ci-clang-asan --conan-profile build-config/conan/profile-clang-ci --no-lto
+            test_command: ctest --test-dir build/ci-clang-asan --exclude-regex 'packaging_test'
           - name: Clang TSan
             compiler: clang
-            build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer tsan --build-dir build/ci-clang-tsan --conan-profile config/conan/profile-clang-ci --no-lto
-            test_command: ctest --test-dir build/ci-clang-tsan --exclude-regex 'cmake_package_consumer'
+            build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer tsan --build-dir build/ci-clang-tsan --conan-profile build-config/conan/profile-clang-ci --no-lto
+            test_command: ctest --test-dir build/ci-clang-tsan --exclude-regex 'packaging_test'
           - name: Clang UBSan
             compiler: clang
-            build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer ubsan --build-dir build/ci-clang-ubsan --conan-profile config/conan/profile-clang-ci --no-lto
-            test_command: ctest --test-dir build/ci-clang-ubsan --exclude-regex 'cmake_package_consumer'
+            build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer ubsan --build-dir build/ci-clang-ubsan --conan-profile build-config/conan/profile-clang-ci --no-lto
+            test_command: ctest --test-dir build/ci-clang-ubsan --exclude-regex 'packaging_test'
 
     steps:
       - name: Checkout
@@ -121,7 +121,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.conan2
-          key: ${{ runner.os }}-conan-${{ matrix.compiler }}-${{ hashFiles('config/dependencies/**') }}
+          key: ${{ runner.os }}-conan-${{ matrix.compiler }}-${{ hashFiles('build-config/dependencies/**') }}
           restore-keys: |
             ${{ runner.os }}-conan-${{ matrix.compiler }}-
             ${{ runner.os }}-conan-
@@ -154,7 +154,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.conan2
-          key: ${{ runner.os }}-conan-gcc-coverage-${{ hashFiles('config/dependencies/**') }}
+          key: ${{ runner.os }}-conan-gcc-coverage-${{ hashFiles('build-config/dependencies/**') }}
           restore-keys: |
             ${{ runner.os }}-conan-gcc-coverage-
             ${{ runner.os }}-conan-gcc-
@@ -173,10 +173,10 @@ jobs:
         run: ./scripts/core/build --preset coverage --no-lto
 
       - name: Run coverage tests
-        run: ctest --preset coverage --exclude-regex 'cmake_package_consumer'
+        run: ctest --preset coverage --exclude-regex 'packaging_test'
 
       - name: Generate coverage report
-        run: bash ./scripts/tools/analysis/coverage-report -b build/coverage -o coverage_report --xml
+        run: bash ./scripts/dev/analysis/coverage-report -b build/coverage -o coverage_report --xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

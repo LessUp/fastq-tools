@@ -30,6 +30,11 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# 样本生成到独立 tmp 目录，避免与 e2e_python_cli 并发写同一文件
+SAMPLE_FASTQ="$TMP_DIR/sample_10k_len100.fastq"
+echo "Generating sample data via gen_fastq.py..."
+python3 "$DATA_DIR/gen_fastq.py" -o "$SAMPLE_FASTQ" -n 10000 --min-len 100 --max-len 100 --seed 42
+
 # 颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'

@@ -10,7 +10,11 @@
 #include "fqtools/config/config.h"
 #include "fqtools/error/error.h"
 
+// 内存
+#include "fqtools/memory/object_pool.h"
+
 // I/O
+#include "fqtools/io/fastq_batch_pool.h"
 #include "fqtools/io/fastq_io.h"
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/io/fastq_writer.h"

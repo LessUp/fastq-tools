@@ -4,25 +4,26 @@
 
 默认生成 10_000 条 reads，读长分布在 80~150bp，质量分数偏移为 33。
 可通过参数自定义条数、读长、输出文件等。
+
+数据特征：
+- 碱基仅 ACGT（无 N），避免触发 filter 的 max-n-ratio 过滤
+- 质量统一 Q38（高可靠），确保 filter 默认全保留
+- 这样生成的样本可作为 e2e/基准测试的"理想输入"
 """
 
 import argparse
 import random
-import string
 from pathlib import Path
 from typing import Tuple
 
-BASES = ["A", "C", "G", "T", "N"]
+BASES = ["A", "C", "G", "T"]
 
 
 def random_read(seq_len: int) -> Tuple[str, str]:
     seq = "".join(random.choices(BASES, k=seq_len))
-    # 让质量分布稍微分层：大部分在高质量，少量低质量噪声
-    qualities = []
-    for _ in range(seq_len):
-        q = 38 if random.random() > 0.1 else 25  # 高质量占 90%
-        qualities.append(chr(q + 33))
-    return seq, "".join(qualities)
+    # 统一高质量，避免被默认质量过滤剔除
+    qual = "".join(chr(38 + 33) for _ in range(seq_len))
+    return seq, qual
 
 
 def main() -> None:

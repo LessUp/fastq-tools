@@ -27,3 +27,21 @@ target_include_directories(fq_cli
 
 # 确保cxxopts头文件路径正确传递
 target_compile_features(fq_cli PUBLIC cxx_std_23)
+
+# --- 可执行入口 ---
+# main.cpp 与 fq_cli 同目录，归属此处而非根 CMakeLists.txt
+add_executable(FastQTools main.cpp)
+
+# 产物固定输出到构建根，避免下沉后路径变为 build/src/cli/FastQTools
+# 下游脚本/tests 默认期望 ${CMAKE_BINARY_DIR}/FastQTools
+set_target_properties(FastQTools PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+target_link_libraries(FastQTools
+    PRIVATE
+        fq_cli
+        fmt::fmt
+)
+
+target_compile_features(FastQTools PRIVATE cxx_std_23)

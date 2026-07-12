@@ -33,9 +33,9 @@ tools/
 cmake --build build --target benchmarks
 
 # 通过统一 CLI 运行
-./scripts/tools/benchmark run
-./scripts/tools/benchmark report
-./scripts/tools/benchmark compare baseline.json current.json
+./scripts/dev/performance/benchmark run
+./scripts/dev/performance/benchmark report
+./scripts/dev/performance/benchmark compare baseline.json current.json
 ```
 
 ### 模糊测试
@@ -63,4 +63,4 @@ python3 tools/benchmark/scripts/gen_benchmark_data.py --generate-dataset
 
 - **CMake**: 根 `CMakeLists.txt` 通过 `BUILD_BENCHMARKS` 和 `ENABLE_FUZZING` 选项控制构建
 - **CI**: `.github/workflows/benchmark.yml` 自动运行基准测试和回归检测
-- **脚本**: `scripts/tools/benchmark` 提供统一的命令行接口
+- **脚本**: `scripts/dev/performance/benchmark` 提供统一的命令行接口

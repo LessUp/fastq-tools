@@ -195,15 +195,15 @@ conan profile detect --force
 echo ">>> Conan 安装依赖..."
 CONAN_ARGS="--build=missing -s build_type=Release -of=${BUILD_DIR}"
 
-if [ "$COMPILER" = "clang" ] && [ -f "config/conan/profile-clang" ]; then
-    CONAN_ARGS="${CONAN_ARGS} -pr:h config/conan/profile-clang"
+if [ "$COMPILER" = "clang" ] && [ -f "build-config/conan/profile-clang" ]; then
+    CONAN_ARGS="${CONAN_ARGS} -pr:h build-config/conan/profile-clang"
 fi
 
 if [ "$STATIC" = "true" ]; then
     CONAN_ARGS="${CONAN_ARGS} -o *:shared=False"
 fi
 
-conan install config/dependencies/ ${CONAN_ARGS}
+conan install build-config/dependencies/ ${CONAN_ARGS}
 
 # =============================================================================
 # CMake 配置

@@ -168,7 +168,7 @@ run_cppcheck() {
     )
     
     # 使用抑制文件
-    local suppression_file="${PROJECT_ROOT}/config/cppcheck/suppressions.txt"
+    local suppression_file="${PROJECT_ROOT}/build-config/cppcheck/suppressions.txt"
     if [[ -f "$suppression_file" ]]; then
         cppcheck_args+=(--suppressions-list="$suppression_file")
     fi
@@ -224,7 +224,7 @@ run_iwyu() {
     
     log_info "使用编译数据库: ${BUILD_DIR}/compile_commands.json"
     
-    local mapping_file="${PROJECT_ROOT}/config/iwyu/mappings.imp"
+    local mapping_file="${PROJECT_ROOT}/build-config/iwyu/mappings.imp"
     local iwyu_args=(-p "$BUILD_DIR")
     
     if [[ -f "$mapping_file" ]]; then

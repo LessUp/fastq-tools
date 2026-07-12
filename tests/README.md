@@ -24,7 +24,7 @@ tests/
 │   ├── fixture_loader.h/cpp  #   数据加载、TempDirectory、文件比较
 │   ├── test_helpers.h/cpp    #   FASTQ 数据生成、测试基类
 │   └── CMakeLists.txt
-└── cmake_package_consumer/   # CMake 包消费测试（独立构建验证）
+└── packaging/                # CMake 包消费测试（独立构建验证）
     ├── CMakeLists.txt
     ├── main.cpp
     └── verify_consumer.cmake
@@ -51,7 +51,7 @@ tests/
 python3 ./tests/e2e/test_advanced_cli.py
 
 # CMake 包消费验证（会先安装到临时前缀，再独立配置/构建 consumer）
-ctest --test-dir build/clang-debug -R cmake_package_consumer --output-on-failure
+ctest --test-dir build/clang-debug -R packaging_test --output-on-failure
 ```
 
 ## 测试工具库

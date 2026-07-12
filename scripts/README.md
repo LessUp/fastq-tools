@@ -12,25 +12,21 @@ scripts/
 │   ├── lint                # 代码质量检查
 │   └── install-deps        # 依赖安装
 │
-├── tools/                   # 🛠️ 工具脚本（特定场景）
-│   ├── benchmark           # 性能基准测试 CLI
-│   ├── benchmark-io        # I/O 性能基准测试
-│   ├── coverage-report     # 覆盖率报告生成
-│   ├── deploy              # Docker 部署
-│   ├── generate-diff       # 差异报告生成
-│   ├── install-llvm        # LLVM 工具链安装
-│   ├── package-release     # 发布打包
-│   ├── run-fuzzer          # Fuzz 测试
-│   ├── setup-devcontainer  # DevContainer 初始化
-│   ├── valgrind-cachegrind # 缓存性能分析
-│   └── valgrind-memcheck   # 内存检查
+├── dev/                     # 🛠️ 开发与分析工具（特定场景）
+│   ├── performance/        # 性能分析
+│   │   ├── benchmark       # 性能基准测试 CLI
+│   │   └── benchmark-io    # I/O 性能基准测试
+│   └── analysis/           # 代码分析
+│       ├── coverage-report # 覆盖率报告生成
+│       ├── generate-diff   # 差异报告生成
+│       ├── run-fuzzer      # Fuzz 测试
+│       └── valgrind-memcheck # 内存检查
 │
 ├── lib/                     # 📚 公共函数库 / 内部工具
 │   ├── common.sh           # 核心工具函数
 │   └── gcov-wrapper        # gcov/llvm-cov 包装器
 │
-├── README.md               # 本文件
-└── architecture.md         # 架构设计文档
+└── README.md               # 本文件
 ```
 
 ## 🚀 快速开始
@@ -115,70 +111,37 @@ scripts/
 
 ### benchmark - 性能基准测试 CLI
 ```bash
-./scripts/tools/performance/benchmark run              # 运行基准测试
-./scripts/tools/performance/benchmark report           # 生成报告
-./scripts/tools/performance/benchmark compare a.json b.json
+./scripts/dev/performance/benchmark run              # 运行基准测试
+./scripts/dev/performance/benchmark report           # 生成报告
+./scripts/dev/performance/benchmark compare a.json b.json
 ```
 
 ### benchmark-io - I/O 性能测试
 ```bash
-./scripts/tools/performance/benchmark-io
-```
-
-### benchmark - 统一基准测试 CLI
-```bash
-# 运行基准测试
-./scripts/tools/performance/benchmark run
-
-# 编译器对比基准
-./scripts/tools/performance/benchmark compiler
-
-# 生成编译器对比可视化报告
-./scripts/tools/performance/benchmark visualize --format html
+./scripts/dev/performance/benchmark-io
 ```
 
 ### coverage-report - 覆盖率报告
 ```bash
-./scripts/tools/analysis/coverage-report
-```
-
-### deploy - Docker 部署
-```bash
-./scripts/tools/release/deploy --env production --action build
+./scripts/dev/analysis/coverage-report
 ```
 
 ### generate-diff - 差异报告
 ```bash
-./scripts/tools/analysis/generate-diff
-```
-
-### install-llvm - LLVM 工具链安装
-```bash
-sudo ./scripts/tools/release/install-llvm 21      # 安装 LLVM 21
-```
-
-### package-release - 发布打包
-```bash
-./scripts/tools/release/package-release 3.1.0
+./scripts/dev/analysis/generate-diff
 ```
 
 ### run-fuzzer - Fuzz 测试
 ```bash
-./scripts/tools/analysis/run-fuzzer
+./scripts/dev/analysis/run-fuzzer
 ```
 
-### setup-devcontainer - DevContainer 初始化
+### valgrind-memcheck
 ```bash
-./scripts/tools/release/setup-devcontainer
+./scripts/dev/analysis/valgrind-memcheck
 ```
 
-### valgrind-cachegrind / valgrind-memcheck
-```bash
-./scripts/tools/performance/valgrind-cachegrind
-./scripts/tools/analysis/valgrind-memcheck
-```
-
-详细文档：`scripts/tools/README.md`
+详细文档：`scripts/dev/README.md`
 
 ## 📚 公共函数库
 
@@ -238,16 +201,13 @@ sudo ./scripts/tools/release/install-llvm 21      # 安装 LLVM 21
 # 2. 多配置验证
 ./scripts/core/build -c gcc -t Release
 ./scripts/core/build --sanitizer asan
-
-# 3. 生成发布包
-./scripts/tools/release/package-release 3.1.0
 ```
 
 ## 🎨 设计原则
 
 ### 1. 清晰的职责分离
 - **core/** - 日常必需的核心功能
-- **tools/** - 特定场景的专用工具
+- **dev/** - 特定场景的开发与分析工具
 - **lib/** - 可复用的公共函数和内部工具
 
 ### 2. 统一的接口规范
@@ -268,9 +228,8 @@ sudo ./scripts/tools/release/install-llvm 21      # 安装 LLVM 21
 
 ## 📄 相关文档
 
-- **架构设计**: `scripts/architecture.md`
 - **核心脚本**: `scripts/core/README.md`
-- **工具脚本**: `scripts/tools/README.md`
+- **工具脚本**: `scripts/dev/README.md`
 - **测试系统**: `../tests/README.md`
 
 ## 🔧 开发指南
@@ -323,7 +282,7 @@ export -f my_function
 ### 权限错误
 ```bash
 chmod +x scripts/core/*
-chmod +x scripts/tools/*
+chmod +x scripts/dev/*
 ```
 
 ### 依赖缺失

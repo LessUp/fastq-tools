@@ -424,14 +424,14 @@ if command -v conan &>/dev/null; then
             CONAN_ARCH="$(uname -m 2>/dev/null || true)"
             if [[ "${CONAN_ARCH}" == "x86_64" ]]; then
                 if [[ "${COMPILER}" == "clang" ]]; then
-                    CONAN_PROFILE="config/conan/profile-clang"
+                    CONAN_PROFILE="build-config/conan/profile-clang"
                 elif [[ "${COMPILER}" == "gcc" ]]; then
-                    CONAN_PROFILE="config/conan/profile-gcc"
+                    CONAN_PROFILE="build-config/conan/profile-gcc"
                 fi
             fi
         fi
 
-        CONAN_ARGS=(install config/dependencies/ --build=missing -of="${BUILD_DIR}" -s "build_type=${CONAN_BUILD_TYPE}")
+        CONAN_ARGS=(install build-config/dependencies/ --build=missing -of="${BUILD_DIR}" -s "build_type=${CONAN_BUILD_TYPE}")
         if [[ -n "${CONAN_PROFILE}" && -f "${CONAN_PROFILE}" ]]; then
             CONAN_ARGS+=(-pr:h "${CONAN_PROFILE}")
         fi
