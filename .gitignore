@@ -8,6 +8,7 @@
 
 # ===== 构建与安装输出 =====
 build*/
+!build-config/
 build_verify/
 install/
 install-*/

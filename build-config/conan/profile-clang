@@ -1,0 +1,18 @@
+# Conan Profile for Clang 21 + libc++ (本地开发)
+# CI 构建使用 libstdc++ 避免 libc++ 头文件冲突
+# Usage: conan install . -pr:h build-config/conan/profile-clang --build=missing
+
+[settings]
+arch=x86_64
+build_type=Release
+compiler=clang
+compiler.cppstd=23
+compiler.libcxx=libc++
+compiler.version=21
+os=Linux
+
+[conf]
+tools.build:compiler_executables={"c": "clang", "cpp": "clang++"}
+tools.build:cxxflags=["-Wno-deprecated-declarations"]
+tools.build:exelinkflags=["-fuse-ld=lld","-Wl,--undefined-version"]
+tools.build:sharedlinkflags=["-fuse-ld=lld","-Wl,--undefined-version"]
