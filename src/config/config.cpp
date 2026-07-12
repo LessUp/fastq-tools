@@ -237,7 +237,7 @@ void Configuration::setFromString(const std::string& key, const std::string& val
                 set(key, i);
                 return;
             }
-        } catch (...) {
+        } catch (...) {  // NOLINT(bugprone-empty-catch) 解析失败则回退到浮点
         }
 
         try {
@@ -247,7 +247,7 @@ void Configuration::setFromString(const std::string& key, const std::string& val
                 set(key, d);
                 return;
             }
-        } catch (...) {
+        } catch (...) {  // NOLINT(bugprone-empty-catch) 解析失败则作为字符串
         }
 
         // 最后作为字符串

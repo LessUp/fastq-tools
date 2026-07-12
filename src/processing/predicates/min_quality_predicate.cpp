@@ -52,7 +52,8 @@ auto MinQualityPredicate::getDescription() const -> std::string {
 auto MinQualityPredicate::getStatistics() const -> std::string {
     size_t total = totalEvaluated_.load();
     size_t passed = passedCount_.load();
-    double percent = total > 0 ? (100.0 * passed / total) : 0.0;
+    double percent =
+        total > 0 ? (100.0 * static_cast<double>(passed) / static_cast<double>(total)) : 0.0;
     return fmt::format("MinQuality: Passed {}/{} ({:.2f}%)", passed, total, percent);
 }
 

@@ -45,7 +45,8 @@ struct ProcessingStatistics {
      * @return 通过率（0.0 ~ 1.0）
      */
     [[nodiscard]] auto getPassRate() const -> double {
-        return totalReads > 0 ? static_cast<double>(passedReads) / totalReads : 0.0;
+        return totalReads > 0 ? static_cast<double>(passedReads) / static_cast<double>(totalReads)
+                              : 0.0;
     }
 
     /**
@@ -53,7 +54,8 @@ struct ProcessingStatistics {
      * @return 过滤率（0.0 ~ 1.0）
      */
     [[nodiscard]] auto getFilterRate() const -> double {
-        return totalReads > 0 ? static_cast<double>(filteredReads) / totalReads : 0.0;
+        return totalReads > 0 ? static_cast<double>(filteredReads) / static_cast<double>(totalReads)
+                              : 0.0;
     }
 
     /**
