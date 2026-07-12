@@ -7,11 +7,14 @@
 
 #include "fqtools/logging.h"
 
+#include <utility>
+
 #include "statistics/statistics_report.h"
 
 namespace fq::statistic {
 
-StatisticsWriter::StatisticsWriter(const StatisticsWriterOptions& options) : options_(options) {}
+StatisticsWriter::StatisticsWriter(StatisticsWriterOptions options)
+    : options_(std::move(options)) {}
 
 void StatisticsWriter::write(std::ostream& os, const FqStatisticResult& result) {
     const auto report = buildStatisticsReport(result, options_);

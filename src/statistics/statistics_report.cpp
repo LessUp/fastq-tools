@@ -130,7 +130,7 @@ auto buildStatisticsReport(const FqStatisticResult& result,
     report.summaryLines.push_back(formatMetricLine("#N", nN, result.totalBases));
     report.summaryLines.push_back(formatMetricLine("#GC", nG + nC, result.totalBases));
 
-    report.positionLines.push_back("#Pos\tA\tC\tG\tT\tN\tAvgQual\tErrRate");
+    report.positionLines.emplace_back("#Pos\tA\tC\tG\tT\tN\tAvgQual\tErrRate");
     for (size_t i = 0; i < result.maxReadLength; ++i) {
         const uint64_t* bSlot = result.baseAt(i);
         const uint64_t* qSlot = result.qualityAt(i);
@@ -157,7 +157,7 @@ auto buildStatisticsReport(const FqStatisticResult& result,
         report.positionLines.push_back(line.str());
     }
 
-    report.signatureLines.push_back("metric\tkey\tcount");
+    report.signatureLines.emplace_back("metric\tkey\tcount");
     report.signatureLines.push_back("summary\ttotal_reads\t" + std::to_string(result.readCount));
     report.signatureLines.push_back("summary\tduplicate_estimate\t" +
                                     std::to_string(duplicateEstimate));

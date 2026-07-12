@@ -172,18 +172,20 @@ private:
         return finalResult;
     }
 
-    auto derivePolicy(const ExecutionRuntimePlan& plan) const -> RuntimePolicy;
-    auto deriveExecutionPlan(const ExecutionRuntimePlan& plan,
-                             const RuntimePolicy& runtimePolicy) const -> PipelineExecutionPlan;
+    [[nodiscard]] auto derivePolicy(const ExecutionRuntimePlan& plan) const -> RuntimePolicy;
+    [[nodiscard]] auto deriveExecutionPlan(const ExecutionRuntimePlan& plan,
+                                           const RuntimePolicy& runtimePolicy) const
+        -> PipelineExecutionPlan;
     auto createReader(const ExecutionRuntimePlan& plan,
                       const RuntimePolicy& runtimePolicy) -> std::unique_ptr<fq::io::IReader>;
-    auto createWriter(const ExecutionRuntimePlan& plan,
-                      const RuntimePolicy& runtimePolicy) const -> std::shared_ptr<fq::io::IWriter>;
+    [[nodiscard]] auto createWriter(const ExecutionRuntimePlan& plan,
+                                    const RuntimePolicy& runtimePolicy) const
+        -> std::shared_ptr<fq::io::IWriter>;
     auto nextBatch(fq::io::IReader& reader,
                    fq::io::FastqBatch& batch,
                    size_t maxRecords) const -> bool;
-    auto commitBatch(const std::shared_ptr<fq::io::IWriter>& writer,
-                     const fq::io::FastqBatch& batch) const -> std::uint64_t;
+    [[nodiscard]] auto commitBatch(const std::shared_ptr<fq::io::IWriter>& writer,
+                                   const fq::io::FastqBatch& batch) const -> std::uint64_t;
 
     std::unique_ptr<fq::io::IReader> customReader_;
     std::shared_ptr<fq::io::IWriter> customWriter_;

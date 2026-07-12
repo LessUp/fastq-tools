@@ -101,7 +101,7 @@ public:
      * @pre options 必须包含有效的配置参数
      * @post 统计信息管理器被初始化并准备使用
      */
-    explicit FastqStatisticCalculator(const StatisticOptions& options);
+    explicit FastqStatisticCalculator(StatisticOptions options);
 
     /**
      * @brief 执行统计信息生成过程
@@ -120,7 +120,7 @@ private:
      * @post 统计信息被写入到配置指定的输出文件中
      */
     void writeResult(const FqStatisticResult& result);
-    void writeSignatureSidecar(const FqStatisticResult& result);
+    void writeSignatureSidecar(const FqStatisticResult& result) const;
 
     StatisticOptions options_;  ///< 统计配置选项
 };

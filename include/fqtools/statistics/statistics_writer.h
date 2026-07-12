@@ -45,7 +45,7 @@ struct StatisticsWriterOptions {
  */
 class StatisticsWriter {
 public:
-    explicit StatisticsWriter(const StatisticsWriterOptions& options);
+    explicit StatisticsWriter(StatisticsWriterOptions options);
     ~StatisticsWriter() = default;
 
     // 禁止拷贝

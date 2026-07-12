@@ -107,8 +107,8 @@ void Configuration::loadFromEnv() {
 }
 
 void Configuration::validate() const {
-    static const std::vector<std::string> requiredKeys = {"input", "output"};
-    for (const auto& key : requiredKeys) {
+    static const std::vector<std::string> kRequiredKeys = {"input", "output"};
+    for (const auto& key : kRequiredKeys) {
         if (!hasKey(key)) {
             FQ_THROW_CONFIG_ERROR(std::format("Required configuration key '{}' is missing", key));
         }

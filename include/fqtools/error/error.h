@@ -75,7 +75,7 @@ public:
      * @param file_path 文件路径
      * @param error_code 错误代码，默认为0
      */
-    explicit IOError(std::string_view file_path, int error_code = 0);
+    explicit IOError(std::string_view filePath, int errorCode = 0);
 };
 
 /// @brief 表示文件格式错误的异常。

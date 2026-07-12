@@ -67,7 +67,7 @@ public:
      * @param options 读取器配置选项
      */
     FastqReader(const std::string& path, const FastqReaderOptions& options);
-    ~FastqReader();
+    ~FastqReader() override;
 
     // 禁止拷贝
     FastqReader(const FastqReader&) = delete;

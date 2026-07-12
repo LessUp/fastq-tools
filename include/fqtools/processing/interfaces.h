@@ -28,7 +28,7 @@ public:
      * @param read 待评估的 FASTQ 读段
      * @return 是否满足过滤条件（true = 保留，false = 过滤掉）
      */
-    virtual auto evaluate(const fq::io::FastqRecord& read) const -> bool = 0;
+    [[nodiscard]] virtual auto evaluate(const fq::io::FastqRecord& read) const -> bool = 0;
 };
 
 /**

@@ -38,7 +38,7 @@ public:
           afterCommit_(std::move(afterCommit)),
           merge_(std::move(merge)) {}
 
-    auto makeResult() const -> result_type {
+    [[nodiscard]] auto makeResult() const -> result_type {
         return {};
     }
 
@@ -51,7 +51,7 @@ public:
     }
 
     void merge(result_type& total, result_type partial) const {
-        merge_(total, std::move(partial));
+        merge_(total, partial);
     }
 
 private:
@@ -130,7 +130,7 @@ auto ProcessingPipeline::run() -> ProcessingStatistics {
 
         auto startTime = std::chrono::steady_clock::now();
         auto outcome = runtime.execute(runtimePlan, adapter);
-        auto stats = std::move(outcome.result);
+        auto stats = outcome.result;
 
         auto endTime = std::chrono::steady_clock::now();
         auto duration =

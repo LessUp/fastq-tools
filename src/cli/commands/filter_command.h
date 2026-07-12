@@ -37,7 +37,7 @@ public:
      *
      * @post 所有资源被正确释放
      */
-    ~FilterCommand();
+    ~FilterCommand() override;
 
     /**
      * @brief 执行过滤命令

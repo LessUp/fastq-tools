@@ -7,6 +7,7 @@
 #include <cerrno>
 #include <cstring>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include <fcntl.h>
@@ -14,7 +15,6 @@
 #include <zlib.h>
 
 #ifdef __linux__
-#include <fcntl.h>  // posix_fadvise
 #endif
 
 namespace fq::io {
@@ -41,7 +41,7 @@ struct FastqWriter::Impl {
     // 记录已刷写到磁盘的文件偏移，用于 posix_fadvise DONTNEED
     off_t flushedOffset = 0;
 
-    explicit Impl(const std::string& p, const FastqWriterOptions& opt) : path(p), options(opt) {
+    explicit Impl(std::string p, const FastqWriterOptions& opt) : path(std::move(p)), options(opt) {
         if (options.compression == FastqWriterCompressionMode::Auto) {
             compression = endsWithGzSuffix(path) ? FastqWriterCompressionMode::Gzip
                                                  : FastqWriterCompressionMode::None;
@@ -88,12 +88,13 @@ struct FastqWriter::Impl {
     }
 
     void flush() {
-        if (buffer.empty())
+        if (buffer.empty()) {
             return;
+        }
 
         if (compression == FastqWriterCompressionMode::Gzip) {
             // gzwrite 返回写入的未压缩字节数（0 表示错误）
-            const unsigned toWrite = static_cast<unsigned>(buffer.size());
+            const auto toWrite = static_cast<unsigned>(buffer.size());
             int written = gzwrite(gzfile, buffer.data(), toWrite);
             if (written == 0 || static_cast<unsigned>(written) != toWrite) {
                 int err = 0;

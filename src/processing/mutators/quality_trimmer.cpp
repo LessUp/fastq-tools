@@ -24,8 +24,9 @@ QualityTrimmer::QualityTrimmer(double qualityThreshold,
 void QualityTrimmer::process(fq::io::FastqRecord& read) {
     totalProcessed_++;
 
-    if (read.empty())
+    if (read.empty()) {
         return;
+    }
 
     size_t originalLen = read.seq.size();
     size_t start = 0;
@@ -212,8 +213,9 @@ AdapterTrimmer::AdapterTrimmer(const std::vector<std::string>& adapterSequences,
 
 void AdapterTrimmer::process(fq::io::FastqRecord& read) {
     totalProcessed_++;
-    if (read.empty())
+    if (read.empty()) {
         return;
+    }
 
     // Simple implementation: check 3' end for adapter
     // If found, trim from that position
@@ -252,8 +254,9 @@ auto AdapterTrimmer::findAdapter(std::string_view sequence,
     }
 
     size_t pos = sequence.find(adapter);
-    if (pos != std::string_view::npos)
+    if (pos != std::string_view::npos) {
         return pos;
+    }
 
     // 2. Check 3' overlap
     // Adapter starts within sequence and continues
@@ -294,8 +297,9 @@ auto AdapterTrimmer::countMismatches(std::string_view seq1, std::string_view seq
     for (size_t i = 0; i < len; ++i) {
         if (seq1[i] != seq2[i]) {  // Case sensitive? Usually yes for adapters
             mis++;
-            if (mis > maxMismatches_)
+            if (mis > maxMismatches_) {
                 return mis;
+            }
         }
     }
     return mis;

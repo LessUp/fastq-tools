@@ -21,6 +21,7 @@
 #include <iterator>
 #include <memory>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 #include "processing/execution_runtime.h"
@@ -41,7 +42,7 @@ public:
           signatureKmerSize_(signatureKmerSize),
           duplicateEstimateSampleModulo_(duplicateEstimateSampleModulo) {}
 
-    auto makeResult() const -> result_type {
+    [[nodiscard]] auto makeResult() const -> result_type {
         return {};
     }
 
@@ -51,9 +52,9 @@ public:
         return worker.calculateStats(batch);
     }
 
-    void afterCommit(result_type&, std::uint64_t) const {}
+    void afterCommit(result_type& /*unused*/, std::uint64_t /*unused*/) const {}
 
-    void merge(result_type& total, result_type partial) const {
+    void merge(result_type& total, const result_type& partial) const {
         total += partial;
     }
 
@@ -113,8 +114,8 @@ auto FqStatisticResult::operator+=(const FqStatisticResult& other) -> FqStatisti
     return *this;
 }
 
-FastqStatisticCalculator::FastqStatisticCalculator(const StatisticOptions& options)
-    : options_(options) {
+FastqStatisticCalculator::FastqStatisticCalculator(StatisticOptions options)
+    : options_(std::move(options)) {
     // 验证配置
     options_.processing.validate();
 }
@@ -161,7 +162,7 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
     }
 }
 
-void FastqStatisticCalculator::writeSignatureSidecar(const FqStatisticResult& result) {
+void FastqStatisticCalculator::writeSignatureSidecar(const FqStatisticResult& result) const {
     std::ofstream writer(options_.signatureReportPath);
     if (!writer) {
         throw std::runtime_error("Failed to open signature report file: " +

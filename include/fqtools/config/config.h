@@ -125,7 +125,7 @@ private:
                                                           {'h', "help"}};
     void validateKey(std::string_view key) const;
     void parseConfigStream(std::istream& stream);
-    auto getLongNameForShort(char shortName) const -> std::string;
+    [[nodiscard]] auto getLongNameForShort(char shortName) const -> std::string;
 };
 
 /**

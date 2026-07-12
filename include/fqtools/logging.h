@@ -30,26 +30,33 @@ inline std::atomic<Level> currentLevel{Level::Info};
 /// @brief 日志配置选项
 struct LogOptions {
     std::string level = "info";  ///< 日志级别: trace, debug, info, warn, error, critical, off
-    std::string pattern = "";    ///< 保留兼容，当前实现忽略
+    std::string pattern;         ///< 保留兼容，当前实现忽略
     bool colored = true;         ///< 保留兼容，当前实现忽略
 };
 
 /// @brief 解析日志级别字符串
 inline auto parseLevel(std::string_view name) -> Level {
-    if (name == "trace")
+    if (name == "trace") {
         return Level::Trace;
-    if (name == "debug")
+    }
+    if (name == "debug") {
         return Level::Debug;
-    if (name == "info")
+    }
+    if (name == "info") {
         return Level::Info;
-    if (name == "warn" || name == "warning")
+    }
+    if (name == "warn" || name == "warning") {
         return Level::Warn;
-    if (name == "error")
+    }
+    if (name == "error") {
         return Level::Error;
-    if (name == "critical")
+    }
+    if (name == "critical") {
         return Level::Critical;
-    if (name == "off")
+    }
+    if (name == "off") {
         return Level::Off;
+    }
     return Level::Info;
 }
 
@@ -77,8 +84,9 @@ inline void logImpl(Level level,
                     std::string_view tag,
                     fmt::format_string<Args...> fmtStr,
                     Args&&... args) {
-    if (currentLevel.load(std::memory_order_relaxed) > level)
+    if (currentLevel.load(std::memory_order_relaxed) > level) {
         return;
+    }
     fmt::print(stderr, "[{}] {}\n", tag, fmt::format(fmtStr, std::forward<Args>(args)...));
 }
 

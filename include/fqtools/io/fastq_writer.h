@@ -72,7 +72,7 @@ public:
      */
     FastqWriter(const std::string& path, const FastqWriterOptions& options);
 
-    ~FastqWriter();
+    ~FastqWriter() override;
 
     // 禁止拷贝
     FastqWriter(const FastqWriter&) = delete;

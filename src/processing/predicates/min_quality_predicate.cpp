@@ -13,8 +13,9 @@ MinQualityPredicate::MinQualityPredicate(double minQuality, int qualityEncoding)
 
 auto MinQualityPredicate::evaluate(const fq::io::FastqRecord& read) const -> bool {
     totalEvaluated_.fetch_add(1, std::memory_order_relaxed);
-    if (read.qual.empty())
+    if (read.qual.empty()) {
         return false;
+    }
 
     double avgQual = calculateAverageQuality(read.qual);
 
@@ -26,8 +27,9 @@ auto MinQualityPredicate::evaluate(const fq::io::FastqRecord& read) const -> boo
 }
 
 auto MinQualityPredicate::calculateAverageQuality(std::string_view qualityString) const -> double {
-    if (qualityString.empty())
+    if (qualityString.empty()) {
         return 0.0;
+    }
 
     // 用 int64_t 累加并 clamp 负值到 0，避免 uint64_t 下溢成巨大正值
     // 导致坏数据（ASCII < encoding）反而通过质控
@@ -114,12 +116,14 @@ auto MaxNRatioPredicate::evaluate(const fq::io::FastqRecord& read) const -> bool
 }
 
 auto MaxNRatioPredicate::calculateNRatio(std::string_view sequence) const -> double {
-    if (sequence.empty())
+    if (sequence.empty()) {
         return 0.0;
+    }
     size_t nCount = 0;
     for (char c : sequence) {
-        if (c == 'N' || c == 'n')
+        if (c == 'N' || c == 'n') {
             nCount++;
+        }
     }
     return static_cast<double>(nCount) / static_cast<double>(sequence.size());
 }

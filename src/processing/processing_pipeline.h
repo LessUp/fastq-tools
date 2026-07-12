@@ -36,7 +36,7 @@ public:
      * @brief 析构函数
      * @details 清理所有资源，确保文件句柄正确关闭
      */
-    ~ProcessingPipeline();
+    ~ProcessingPipeline() override;
 
     void setInputPath(const std::string& inputPath) override;
     void setOutputPath(const std::string& outputPath) override;

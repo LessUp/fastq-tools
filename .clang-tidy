@@ -12,7 +12,11 @@ Checks:          '-*,
                    -performance-avoid-endl,
                    -bugprone-easily-swappable-parameters,
                    -bugprone-implicit-widening-of-multiplication-result,
+                   -bugprone-exception-escape,
                    -modernize-use-trailing-return-type,
+                   -modernize-avoid-c-arrays,
+                   -readability-implicit-bool-conversion,
+                   -readability-convert-member-functions-to-static,
                    '
 HeaderFilterRegex: '^(.*[/\\])?(src|include|tests)/.*\.(h|hh|hpp|hxx|ipp|inl|c|cc|cpp|cxx)$'
 CheckOptions:

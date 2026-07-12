@@ -8,6 +8,7 @@
 #include <cstring>
 #include <limits>
 #include <stdexcept>
+#include <utility>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -16,7 +17,6 @@
 #include <fmt/format.h>
 
 #ifdef __linux__
-#include <fcntl.h>  // posix_fadvise
 #endif
 
 namespace fq::io {
@@ -30,7 +30,7 @@ struct FastqReader::Impl {
     FastqReaderOptions options{};
     std::vector<char> remainder;
 
-    explicit Impl(const std::string& p, const FastqReaderOptions& opt) : path(p), options(opt) {
+    explicit Impl(std::string p, const FastqReaderOptions& opt) : path(std::move(p)), options(opt) {
         unsigned char header[2] = {0, 0};
         {
             const int sniffFd = ::open(path.c_str(), O_RDONLY);
@@ -81,7 +81,7 @@ struct FastqReader::Impl {
         return fd >= 0;
     }
 
-    auto readSome(char* dst, size_t toRead) -> ssize_t {
+    auto readSome(char* dst, size_t toRead) const -> ssize_t {
         if (toRead == 0) {
             return 0;
         }
@@ -144,14 +144,14 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
         if (!impl_->isEofReached) {
             const size_t chunk = std::max<size_t>(1, impl_->options.readChunkBytes);
             const bool unlimited = (maxRecords == std::numeric_limits<size_t>::max());
-            constexpr size_t bytesPerRecordEst = 512;
+            constexpr size_t kBytesPerRecordEst = 512;
             const size_t maxBuf = impl_->options.maxBufferBytes;
 
             size_t targetBytes = 0;
             if (unlimited) {
                 targetBytes = batch.buffer().size() + chunk;
             } else {
-                const size_t want = maxRecords * bytesPerRecordEst;
+                const size_t want = maxRecords * kBytesPerRecordEst;
                 targetBytes = std::max(batch.buffer().size(), want);
             }
 
