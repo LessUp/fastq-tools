@@ -29,7 +29,7 @@ function(add_benchmark benchmark_name source_files)
     
     # 设置基准测试属性
     set_target_properties(${benchmark_name} PROPERTIES
-        CXX_STANDARD 20
+        CXX_STANDARD 23
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
     )

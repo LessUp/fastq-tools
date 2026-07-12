@@ -67,22 +67,7 @@ log_section() {
 # =============================================================================
 # 错误处理
 # =============================================================================
-
-# 错误处理函数
-error_handler() {
-    local exit_code=$1
-    local line_number=$2
-    log_error "Script failed at line ${line_number} with exit code ${exit_code}"
-    log_error "Command: ${BASH_COMMAND}"
-    exit "$exit_code"
-}
-
-# 设置错误处理陷阱
-setup_error_trap() {
-    set -euo pipefail
-    trap 'error_handler $? $LINENO' ERR
-}
-
+# 各脚本自行 `set -euo pipefail`，无需统一 trap
 # =============================================================================
 # 路径和环境工具
 # =============================================================================

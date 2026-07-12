@@ -74,8 +74,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         if(ENABLE_NATIVE_ARCH)
             add_compile_options(-march=native)
         else()
-            # x86-64-v3 = AVX2 + BMI1/2 + FMA，跨机器可移植的基线
-            add_compile_options(-march=x86-64-v3)
+            # 按架构选择可移植基线：x86-64-v3（AVX2+FMA+BMI）或 armv8-a
+            if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|i386|i686")
+                add_compile_options(-march=x86-64-v3)
+            elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|arm")
+                add_compile_options(-march=armv8-a)
+            endif()
         endif()
         # 显式启用向量化和循环展开（-O3 默认包含，但显式声明确保一致性）
         add_compile_options(-O3 -ftree-vectorize -funroll-loops)
@@ -83,9 +87,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         if(ENABLE_FAST_MATH)
             add_compile_options(-ffast-math)
         endif()
+        # 使用函数段和数据段，配合链接器 --gc-sections 消除未使用代码
+        # 仅在非 Debug 构建启用，避免影响调试体验
+        add_compile_options(-ffunction-sections -fdata-sections)
     endif()
-    # 使用函数段和数据段，配合链接器 --gc-sections 消除未使用代码
-    add_compile_options(-ffunction-sections -fdata-sections)
 endif()
 
 # 链接器优化：移除未使用的段

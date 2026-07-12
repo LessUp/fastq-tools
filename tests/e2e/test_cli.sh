@@ -9,7 +9,7 @@
 # - stat 命令基本执行
 # - trim-quality 行为回归
 
-set -e
+set -euo pipefail
 
 # 获取脚本所在目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -68,10 +68,10 @@ fi
 
 # Test 2: 无子命令
 echo "Test 2: no subcommand"
-set +e
+set +euo pipefail
 $FASTQTOOLS > "$TMP_DIR/no-subcommand.txt" 2>&1
 STATUS=$?
-set -e
+set -euo pipefail
 if [[ $STATUS -ne 0 ]] && grep -q "Available commands" "$TMP_DIR/no-subcommand.txt"; then
     pass "No subcommand prints help and exits non-zero"
 else
@@ -80,10 +80,10 @@ fi
 
 # Test 3: 未知子命令
 echo "Test 3: unknown subcommand"
-set +e
+set +euo pipefail
 $FASTQTOOLS unknown-command > "$TMP_DIR/unknown-subcommand.txt" 2>&1
 STATUS=$?
-set -e
+set -euo pipefail
 if [[ $STATUS -ne 0 ]] && grep -q "Unknown subcommand" "$TMP_DIR/unknown-subcommand.txt"; then
     pass "Unknown subcommand reports an error and exits non-zero"
 else
@@ -108,10 +108,10 @@ fi
 
 # Test 6: --log-level 与子命令帮助组合
 echo "Test 6: --log-level with subcommand help"
-set +e
+set +euo pipefail
 $FASTQTOOLS --log-level=debug stat --help > "$TMP_DIR/log-level-help.txt" 2>&1
 STATUS=$?
-set -e
+set -euo pipefail
 if [[ $STATUS -eq 0 ]] && grep -q "Generate statistics for a FASTQ file" "$TMP_DIR/log-level-help.txt"; then
     pass "--log-level works with subcommand help"
 else
@@ -136,12 +136,12 @@ ACGT
 +
 !!!!
 EOF
-set +e
+set +euo pipefail
 $FASTQTOOLS --quiet filter --input "$NEGATIVE_INPUT" > "$TMP_DIR/filter-missing-output.txt" 2>&1
 STATUS_OUTPUT=$?
 $FASTQTOOLS --quiet filter --output "$TMP_DIR/filter.fastq" > "$TMP_DIR/filter-missing-input.txt" 2>&1
 STATUS_INPUT=$?
-set -e
+set -euo pipefail
 if [[ $STATUS_OUTPUT -ne 0 ]] && [[ $STATUS_INPUT -ne 0 ]] &&
    grep -q "both --input and --output options are required" "$TMP_DIR/filter-missing-output.txt" &&
    grep -q "both --input and --output options are required" "$TMP_DIR/filter-missing-input.txt"; then
@@ -152,12 +152,12 @@ fi
 
 # Test 9: stat 缺少必需参数
 echo "Test 9: stat missing required args"
-set +e
+set +euo pipefail
 $FASTQTOOLS --quiet stat --input "$NEGATIVE_INPUT" > "$TMP_DIR/stat-missing-output.txt" 2>&1
 STATUS_OUTPUT=$?
 $FASTQTOOLS --quiet stat --output "$TMP_DIR/stat.txt" > "$TMP_DIR/stat-missing-input.txt" 2>&1
 STATUS_INPUT=$?
-set -e
+set -euo pipefail
 if [[ $STATUS_OUTPUT -ne 0 ]] && [[ $STATUS_INPUT -ne 0 ]] &&
    grep -q "both --input and --output options are required" "$TMP_DIR/stat-missing-output.txt" &&
    grep -q "both --input and --output options are required" "$TMP_DIR/stat-missing-input.txt"; then
