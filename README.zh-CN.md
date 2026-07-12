@@ -30,15 +30,14 @@
 
 ---
 
-FastQTools 是一个基于现代 C++23 的 FASTQ 质控工具集，适合希望快速检查、过滤、修剪 reads 的研究人员和流水线工程师。当前维护面刻意保持精简：`stat` 命令、`filter` 命令，以及一个以 `fqtools/fq.h` 为中心的最小可嵌入 C++ API，其中包括其聚合的 common/config/error/io/processing 文档化头文件，以及受支持的统计工作流 `StatisticOptions + createStatisticCalculator(...)->run()`。
+FastQTools 是一个基于现代 C++23 的 FASTQ 质控工具集，适合希望快速检查、过滤、修剪 reads 的研究人员和流水线工程师。当前维护面刻意保持精简：`stat` 命令、`filter` 命令，以及一个以总入口头文件 `fqtools/fq.h` 为中心的最小可嵌入 C++ API。
 
 ## 它最适合做什么
 
-- **FASTQ 统计 (`stat`)**：快速查看读段数量、长度分布、碱基组成、GC 含量，以及 Q20/Q30 等质量指标。
-- **过滤与修剪 (`filter`)**：在同一条处理链中组合长度、质量、N 比例过滤，并执行低质量端修剪。
-- **可嵌入的 C++ API（`fqtools/fq.h`）**：通过总入口头文件、其聚合的 common/config/error/io/processing 文档化头文件，以及受支持的统计工作流 `StatisticOptions + createStatisticCalculator(...)->run()` 接入与 CLI 对齐的接口。
-- **性能导向实现**：零拷贝记录视图、Intel oneTBB 并行流水线，以及对压缩文件工作流的支持。
-- **工程质量保障**：持续集成、消毒剂、模糊测试，以及仓库内技术文档。
+- **FASTQ 统计 (`stat`)**：读段数量、长度分布、碱基组成、GC 含量、Q20/Q30 等质量指标。
+- **过滤与修剪 (`filter`)**：长度、质量、N 比例过滤，加上低质量端修剪，同一条处理链完成。
+- **可嵌入的 C++ API（`fqtools/fq.h`）**：单一总入口头文件，与 CLI 对齐。
+- **性能导向实现**：零拷贝记录视图、Intel oneTBB 并行流水线、压缩文件工作流支持。
 
 ## 快速开始
 
@@ -113,4 +112,4 @@ FastQTools 基于 [MIT 许可证](LICENSE) 发布。
 
 **shijiashuai** — [GitHub](https://github.com/LessUp) · jiashuai.shi@qq.com
 
-C++23 工程能力展示项目：零拷贝 FASTQ 视图、TBB 流水线并行、接口最小化、依赖瘦身。技术叙事见 [docs/architecture.md](./docs/architecture.md)。
+C++23 FASTQ 工具集。技术叙事见 [docs/architecture.md](./docs/architecture.md)。

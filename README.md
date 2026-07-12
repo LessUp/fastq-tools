@@ -30,15 +30,14 @@
 
 ---
 
-FastQTools is a modern C++23 toolkit for routine FASTQ quality-control work. Its maintained surface is intentionally small: the `stat` command, the `filter` command, and a minimal embeddable C++ API centered on `fqtools/fq.h`, the documented common/config/error/io/processing headers it aggregates, and the supported statistics workflow `StatisticOptions + createStatisticCalculator(...)->run()`.
+FastQTools is a modern C++23 toolkit for routine FASTQ quality-control work. Its maintained surface is intentionally small: the `stat` command, the `filter` command, and a minimal embeddable C++ API centered on the umbrella header `fqtools/fq.h`.
 
 ## What it is good at
 
-- **FASTQ statistics (`stat`)** — inspect read counts, length distribution, base composition, GC content, and Q20/Q30-style quality metrics.
-- **Filtering and trimming (`filter`)** — apply length, quality, and N-ratio thresholds, then trim low-quality bases in the same pass.
-- **Embeddable C++ API (`fqtools/fq.h`)** — integrate through the umbrella header, the documented common/config/error/io/processing headers it aggregates, and the supported statistics workflow `StatisticOptions + createStatisticCalculator(...)->run()`.
-- **Performance-conscious implementation** — zero-copy record views, Intel oneTBB pipelines, and compressed-file workflows where supported.
-- **Production hygiene** — CI, sanitizers, fuzzing, and in-repo technical docs.
+- **FASTQ statistics (`stat`)** — read counts, length distribution, base composition, GC content, Q20/Q30-style quality metrics.
+- **Filtering and trimming (`filter`)** — length, quality, and N-ratio thresholds, plus low-quality end trimming in the same pass.
+- **Embeddable C++ API (`fqtools/fq.h`)** — one umbrella header, aligned with the CLI.
+- **Performance-conscious implementation** — zero-copy record views, Intel oneTBB pipelines, compressed-file workflows where supported.
 
 ## Quick start
 
@@ -113,4 +112,4 @@ FastQTools is released under the [MIT License](LICENSE).
 
 **shijiashuai** — [GitHub](https://github.com/LessUp) · jiashuai.shi@qq.com
 
-A C++23 engineering showcase project: zero-copy FASTQ views, TBB pipeline parallelism, interface minimalism, and dependency trimming. See [docs/architecture.md](./docs/architecture.md) for the technical narrative.
+A C++23 FASTQ toolkit. Technical narrative in [docs/architecture.md](./docs/architecture.md).
