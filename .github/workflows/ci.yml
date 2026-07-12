@@ -4,11 +4,17 @@ on:
   push:
     branches: [master]
     paths-ignore:
-      - '**/*.md'
+      - 'docs/**'
+      - 'README*.md'
+      - 'CHANGELOG.md'
+      - 'CONTRIBUTING.md'
   pull_request:
     branches: [master]
     paths-ignore:
-      - '**/*.md'
+      - 'docs/**'
+      - 'README*.md'
+      - 'CHANGELOG.md'
+      - 'CONTRIBUTING.md'
 
 permissions:
   contents: read
@@ -102,6 +108,10 @@ jobs:
             compiler: clang
             build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer tsan --build-dir build/ci-clang-tsan --conan-profile config/conan/profile-clang-ci --no-lto
             test_command: ctest --test-dir build/ci-clang-tsan --exclude-regex 'cmake_package_consumer'
+          - name: Clang UBSan
+            compiler: clang
+            build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer ubsan --build-dir build/ci-clang-ubsan --conan-profile config/conan/profile-clang-ci --no-lto
+            test_command: ctest --test-dir build/ci-clang-ubsan --exclude-regex 'cmake_package_consumer'
 
     steps:
       - name: Checkout

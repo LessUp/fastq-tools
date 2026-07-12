@@ -46,16 +46,18 @@ struct FastqReader::Impl {
 
         if (isGzip) {
             gzfile = gzopen(path.c_str(), "r");
-            if (gzfile) {
-                gzbuffer(gzfile, static_cast<unsigned>(options.zlibBufferBytes));
+            if (!gzfile) {
+                throw fq::error::IOError(path, errno);
             }
+            gzbuffer(gzfile, static_cast<unsigned>(options.zlibBufferBytes));
         } else {
             fd = ::open(path.c_str(), O_RDONLY);
+            if (fd < 0) {
+                throw fq::error::IOError(path, errno);
+            }
 #ifdef __linux__
             // 提示内核进行顺序预读，显著提升大文件顺序读取性能
-            if (fd >= 0) {
-                ::posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
-            }
+            ::posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
 #endif
         }
     }

@@ -29,9 +29,12 @@ auto MinQualityPredicate::calculateAverageQuality(std::string_view qualityString
     if (qualityString.empty())
         return 0.0;
 
-    uint64_t sumQual = 0;
+    // 用 int64_t 累加并 clamp 负值到 0，避免 uint64_t 下溢成巨大正值
+    // 导致坏数据（ASCII < encoding）反而通过质控
+    int64_t sumQual = 0;
     for (char q : qualityString) {
-        sumQual += (static_cast<int>(q) - qualityEncoding_);
+        const int qVal = static_cast<int>(q) - qualityEncoding_;
+        sumQual += (qVal > 0) ? qVal : 0;
     }
     return static_cast<double>(sumQual) / static_cast<double>(qualityString.size());
 }

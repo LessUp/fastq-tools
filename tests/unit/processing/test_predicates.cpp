@@ -347,3 +347,15 @@ TEST_F(PredicateBoundaryTest, QualityAtThreshold) {
     // 平均质量 = 20.0，应该通过（>= 阈值）
     EXPECT_TRUE(predicate.evaluate(read));
 }
+
+TEST_F(PredicateBoundaryTest, QualityBelowEncodingDoesNotOverflow) {
+    // 质量字符 ASCII 值低于 encoding（Phred33），如 NUL(0) 或空格(32)
+    // 修复前：uint64_t 累加负差下溢成巨大正值，坏数据反而通过
+    // 修复后：负质量值 clamp 到 0，应判为低质量
+    MinQualityPredicate predicate(20.0);
+
+    // 空格(32) - 33 = -1，四个空格平均 = -1 → clamp 0
+    FastqRecord read{"read1", {}, "ACGT", "    ", "+"};
+
+    EXPECT_FALSE(predicate.evaluate(read));
+}

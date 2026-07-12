@@ -60,17 +60,29 @@ else()
 endif()
 
 # --- Compiler-specific options ---
+# 架构扩展：默认 x86-64-v3（AVX2+，可移植），可选 native 用于本地极致性能
+option(ENABLE_NATIVE_ARCH "Use -march=native for local build (not portable)" OFF)
+# 快速浮点：允许重排浮点运算，提升向量化但牺牲精度与可复现性
+option(ENABLE_FAST_MATH "Enable -ffast-math (impairs numerical reproducibility)" OFF)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_options(-g -O0)
     else()
         # Release build optimizations
-        add_compile_options(-O3 -march=native -mavx2)
+        if(ENABLE_NATIVE_ARCH)
+            add_compile_options(-march=native)
+        else()
+            # x86-64-v3 = AVX2 + BMI1/2 + FMA，跨机器可移植的基线
+            add_compile_options(-march=x86-64-v3)
+        endif()
         # 显式启用向量化和循环展开（-O3 默认包含，但显式声明确保一致性）
-        add_compile_options(-ftree-vectorize -funroll-loops)
-        # 允许编译器重排浮点运算以提升向量化效果（统计模块受益）
-        add_compile_options(-ffast-math)
+        add_compile_options(-O3 -ftree-vectorize -funroll-loops)
+        # -ffast-math 影响统计模块数值可复现性，默认关闭
+        if(ENABLE_FAST_MATH)
+            add_compile_options(-ffast-math)
+        endif()
     endif()
     # 使用函数段和数据段，配合链接器 --gc-sections 消除未使用代码
     add_compile_options(-ffunction-sections -fdata-sections)
@@ -193,6 +205,16 @@ install(TARGETS
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
+
+# fq_benchmark 仅在 BUILD_BENCHMARKS=ON 时编译并导出
+if(BUILD_BENCHMARKS AND TARGET fq_benchmark)
+    install(TARGETS fq_benchmark
+        EXPORT FastQToolsTargets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+endif()
 
 
 # --- Package Configuration ---

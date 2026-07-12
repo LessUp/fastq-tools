@@ -69,6 +69,11 @@ TEST_F(FastqReaderTest, ReadBasic) {
     EXPECT_TRUE(batch.records().empty());
 }
 
+TEST_F(FastqReaderTest, ConstructorThrowsOnMissingFile) {
+    // 构造失败应抛 IOError，与 FastqWriter 行为一致
+    EXPECT_THROW(fq::io::FastqReader reader("/nonexistent/path/to/file.fastq"), fq::error::IOError);
+}
+
 TEST_F(FastqReaderTest, PreservesPlusLineContent) {
     const std::string customFile = "test_reader_plus.fastq";
     {

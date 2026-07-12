@@ -36,13 +36,20 @@ struct LogOptions {
 
 /// @brief 解析日志级别字符串
 inline auto parseLevel(std::string_view name) -> Level {
-    if (name == "trace") return Level::Trace;
-    if (name == "debug") return Level::Debug;
-    if (name == "info") return Level::Info;
-    if (name == "warn" || name == "warning") return Level::Warn;
-    if (name == "error") return Level::Error;
-    if (name == "critical") return Level::Critical;
-    if (name == "off") return Level::Off;
+    if (name == "trace")
+        return Level::Trace;
+    if (name == "debug")
+        return Level::Debug;
+    if (name == "info")
+        return Level::Info;
+    if (name == "warn" || name == "warning")
+        return Level::Warn;
+    if (name == "error")
+        return Level::Error;
+    if (name == "critical")
+        return Level::Critical;
+    if (name == "off")
+        return Level::Off;
     return Level::Info;
 }
 
@@ -66,9 +73,12 @@ inline auto getLevel() -> Level {
 namespace detail {
 
 template <typename... Args>
-inline void logImpl(Level level, std::string_view tag, fmt::format_string<Args...> fmtStr,
+inline void logImpl(Level level,
+                    std::string_view tag,
+                    fmt::format_string<Args...> fmtStr,
                     Args&&... args) {
-    if (currentLevel.load(std::memory_order_relaxed) > level) return;
+    if (currentLevel.load(std::memory_order_relaxed) > level)
+        return;
     fmt::print(stderr, "[{}] {}\n", tag, fmt::format(fmtStr, std::forward<Args>(args)...));
 }
 

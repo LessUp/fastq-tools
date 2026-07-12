@@ -1,6 +1,7 @@
 #include "fqtools/io/fastq_writer.h"
 
 #include "fqtools/error/error.h"
+#include "fqtools/logging.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -69,8 +70,9 @@ struct FastqWriter::Impl {
         if (fd >= 0) {
             try {
                 flush();
-            } catch (...) {
-                // 析构函数不能抛异常
+            } catch (const std::exception& e) {
+                // 析构函数不能抛异常，但必须记录 flush 失败，否则数据丢失无感知
+                fq::logging::error("FastqWriter flush failed on close: {}", e.what());
             }
             ::close(fd);
         }
@@ -78,14 +80,16 @@ struct FastqWriter::Impl {
             // 先 flush 应用层 buffer 到 gzfile，再 gzclose 刷 zlib 内部缓冲区
             try {
                 flush();
-            } catch (...) {
+            } catch (const std::exception& e) {
+                fq::logging::error("FastqWriter flush failed on close: {}", e.what());
             }
             gzclose(gzfile);
         }
     }
 
     void flush() {
-        if (buffer.empty()) return;
+        if (buffer.empty())
+            return;
 
         if (compression == FastqWriterCompressionMode::Gzip) {
             // gzwrite 返回写入的未压缩字节数（0 表示错误）
