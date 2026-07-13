@@ -32,6 +32,23 @@ conanbuildinfo.*
 conan.lock
 conan_toolchain.cmake
 
+# Conan CMakeDeps 生成文件（conan install 在 conanfile.py 目录生成）
+build-config/dependencies/CMakePresets.json
+build-config/dependencies/Find*.cmake
+build-config/dependencies/*Config.cmake
+build-config/dependencies/*ConfigVersion.cmake
+build-config/dependencies/*Targets.cmake
+build-config/dependencies/*-Target-*.cmake
+build-config/dependencies/*-config.cmake
+build-config/dependencies/*-config-version.cmake
+build-config/dependencies/*-data.cmake
+build-config/dependencies/cmakedeps_macros.cmake
+build-config/dependencies/conandeps_legacy.cmake
+build-config/dependencies/conanbuild*.sh
+build-config/dependencies/conanrun*.sh
+build-config/dependencies/deactivate_conan*.sh
+build-config/dependencies/module-*.cmake
+
 # ===== Python =====
 __pycache__/
 *.pyc

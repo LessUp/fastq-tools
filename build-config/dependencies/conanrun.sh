@@ -1,1 +1,0 @@
-. "/home/shane/github/lessup/fastq-tools/build-config/dependencies/conanrunenv-release-x86_64.sh"
