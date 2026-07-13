@@ -35,7 +35,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup formatter
         uses: ./.github/actions/setup-cpp
@@ -54,10 +54,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cache Conan packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.conan2
           key: ${{ runner.os }}-conan-gcc-analysis-${{ hashFiles('build-config/dependencies/**') }}
@@ -115,10 +115,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cache Conan packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.conan2
           key: ${{ runner.os }}-conan-${{ matrix.compiler }}-${{ hashFiles('build-config/dependencies/**') }}
@@ -148,10 +148,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cache Conan packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.conan2
           key: ${{ runner.os }}-conan-gcc-coverage-${{ hashFiles('build-config/dependencies/**') }}
@@ -179,14 +179,14 @@ jobs:
         run: bash ./scripts/dev/analysis/coverage-report -b build/coverage -o coverage_report --xml
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: coverage_report/coverage.xml
           fail_ci_if_error: false
           verbose: true
 
       - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-report
           path: coverage_report/
