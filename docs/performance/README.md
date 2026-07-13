@@ -10,9 +10,10 @@
 ## 阅读顺序
 
 1. [`environment.md`](./environment.md) — 测试环境基线，所有快照的口径。
-2. [`benchmark-reports/`](./benchmark-reports/) — 历次原始数据。
-3. [`optimizations/`](./optimizations/) — 数据背后的故事。
-4. [`../benchmark.md`](../benchmark.md) — 面向用户的代表性结果摘要。
+2. [`optimizations/2026-07-13-backlog.md`](./optimizations/2026-07-13-backlog.md) — 性能优化路线图，待执行的优化方向。
+3. [`benchmark-reports/`](./benchmark-reports/) — 历次原始数据。
+4. [`optimizations/`](./optimizations/) — 数据背后的故事（已完成的优化叙事）。
+5. [`../benchmark.md`](../benchmark.md) — 面向用户的代表性结果摘要。
 
 ## 写作规范
 
