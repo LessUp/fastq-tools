@@ -33,9 +33,11 @@ private:
     std::atomic<size_t> trimmedCount_{0};
     std::atomic<size_t> totalBasesRemoved_{0};
 
-    auto trimFivePrime(std::string_view sequence, std::string_view quality) const -> size_t;
-    auto trimThreePrime(std::string_view sequence, std::string_view quality) const -> size_t;
-    auto isHighQuality(char qualityChar) const -> bool;
+    [[nodiscard]] auto trimFivePrime(std::string_view sequence,
+                                     std::string_view quality) const -> size_t;
+    [[nodiscard]] auto trimThreePrime(std::string_view sequence,
+                                      std::string_view quality) const -> size_t;
+    [[nodiscard]] auto isHighQuality(char qualityChar) const -> bool;
 };
 
 class LengthTrimmer : public ReadMutatorInterface {
@@ -80,8 +82,10 @@ private:
     std::atomic<size_t> adapterFound_{0};
     std::atomic<size_t> totalBasesRemoved_{0};
 
-    auto findAdapter(std::string_view sequence, std::string_view adapter) const -> size_t;
-    auto countMismatches(std::string_view seq1, std::string_view seq2) const -> size_t;
+    [[nodiscard]] auto findAdapter(std::string_view sequence,
+                                   std::string_view adapter) const -> size_t;
+    [[nodiscard]] auto countMismatches(std::string_view seq1,
+                                       std::string_view seq2) const -> size_t;
 };
 
 class PolyTailTrimmer : public ReadMutatorInterface {

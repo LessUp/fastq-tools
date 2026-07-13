@@ -28,16 +28,16 @@ TEST(EnumParserTest, ParseHighThroughputProfile) {
 }
 
 TEST(EnumParserTest, ParseInvalidProfileThrows) {
-    EXPECT_THROW(parseProcessingProfile("invalid"), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(parseProcessingProfile("invalid")), std::invalid_argument);
 }
 
 TEST(EnumParserTest, ParseEmptyProfileThrows) {
-    EXPECT_THROW(parseProcessingProfile(""), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(parseProcessingProfile("")), std::invalid_argument);
 }
 
 TEST(EnumParserTest, ParseProfileCaseSensitive) {
     // 大小写敏感：Default 应抛异常
-    EXPECT_THROW(parseProcessingProfile("Default"), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(parseProcessingProfile("Default")), std::invalid_argument);
 }
 
 // ============================================================================
@@ -57,9 +57,9 @@ TEST(EnumParserTest, ParseTrimModeBoth) {
 }
 
 TEST(EnumParserTest, ParseInvalidTrimModeThrows) {
-    EXPECT_THROW(parseTrimMode("invalid"), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(parseTrimMode("invalid")), std::invalid_argument);
 }
 
 TEST(EnumParserTest, ParseEmptyTrimModeThrows) {
-    EXPECT_THROW(parseTrimMode(""), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(parseTrimMode("")), std::invalid_argument);
 }

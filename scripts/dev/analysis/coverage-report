@@ -155,6 +155,7 @@ LCOV_ARGS=(
     --output-file "$COVERAGE_INFO"
     --ignore-errors mismatch
     --ignore-errors gcov
+    --ignore-errors negative
 )
 
 if [[ "$VERBOSE" == "false" ]]; then
@@ -184,6 +185,7 @@ FILTER_ARGS=(
     --ignore-errors unused
     --ignore-errors mismatch
     --ignore-errors gcov
+    --ignore-errors negative
 )
 
 if [[ "$VERBOSE" == "false" ]]; then
