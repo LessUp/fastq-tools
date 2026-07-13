@@ -73,7 +73,8 @@ runs:
           packages+=(cppcheck)
         fi
         if [[ '${{ inputs.install-lcov }}' == 'true' ]]; then
-          packages+=(lcov)
+          # lcov 从源码安装 2.3.2（apt 版本 2.0 不兼容 GCC 15 gcov 格式）
+          packages+=(libjson-perl libperlio-gzip-perl)
         fi
         if [[ '${{ inputs.install-valgrind }}' == 'true' ]]; then
           packages+=(valgrind)
@@ -97,14 +98,33 @@ runs:
         sudo apt-get update -o Acquire::Retries=3
         sudo apt-get install -y --no-install-recommends --fix-missing gcc-15 g++-15
 
-        # 设置 update-alternatives 使 gcc/g++ 默认指向 15
+        # 设置 update-alternatives 使 gcc/g++/gcov 默认指向 15
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100
         sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-15 100
         sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-15 100
+        sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-15 100
 
         echo "GCC version:"
         gcc --version | head -1
+
+    - name: Install lcov 2.3.2 from source
+      if: ${{ inputs.install-lcov == 'true' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # Ubuntu 24.04 apt lcov 2.0 不兼容 GCC 15 gcov 格式，从源码安装 2.3.2
+        lcov_version="2.3.2"
+        lcov_archive="$RUNNER_TEMP/lcov-${lcov_version}.tar.gz"
+        curl -fsSL "https://github.com/linux-test-project/lcov/releases/download/v${lcov_version}/lcov-${lcov_version}.tar.gz" \
+          -o "$lcov_archive"
+        tar -C "$RUNNER_TEMP" -xzf "$lcov_archive"
+        cd "$RUNNER_TEMP/lcov-${lcov_version}"
+        sudo make install PREFIX=/usr/local
+
+        echo "lcov version:"
+        lcov --version
 
     - name: Install CMake
       shell: bash

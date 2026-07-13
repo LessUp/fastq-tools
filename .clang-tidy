@@ -19,9 +19,6 @@ Checks:          '-*,
                    -readability-convert-member-functions-to-static,
                    '
 HeaderFilterRegex: '^(.*[/\\])?(src|include|tests)/.*\.(h|hh|hpp|hxx|ipp|inl|c|cc|cpp|cxx)$'
-# GCC 15+ 生成的 compile_commands.json 包含 clang-tidy 不认识的 flag，需过滤
-CompileFlags:
-  Remove: ['-fdeps-format=*', '-fmodule-mapper=*', '-fmodules-ts']
 CheckOptions:
   - key:             readability-identifier-naming.ClassCase
     value:           CamelCase

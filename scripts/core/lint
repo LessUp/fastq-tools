@@ -285,7 +285,7 @@ run_tidy() {
     fi
     
     log_info "使用编译数据库: ${BUILD_DIR}/compile_commands.json"
-    
+
     local python_cmd=""
     if command -v python3 &>/dev/null; then
         python_cmd="python3"
@@ -295,6 +295,31 @@ run_tidy() {
         log_error "运行 clang-tidy 需要 python3 或 python 来解析 compile_commands.json"
         return 1
     fi
+
+    # GCC 15+ 生成的 compile_commands.json 包含 clang-tidy 不认识的 flag，
+    # 创建过滤后的编译数据库供 clang-tidy 使用
+    local tidy_build_dir="${BUILD_DIR}/clang-tidy-filtered"
+    mkdir -p "$tidy_build_dir"
+    "${python_cmd}" - "${BUILD_DIR}/compile_commands.json" "${tidy_build_dir}/compile_commands.json" <<'PY'
+import json, sys
+
+src, dst = sys.argv[1], sys.argv[2]
+with open(src, encoding="utf-8") as f:
+    entries = json.load(f)
+
+bad_prefixes = ("-fdeps-format=", "-fmodule-mapper=", "-fmodules-ts")
+for entry in entries:
+    cmd = entry.get("command", "")
+    if cmd:
+        parts = cmd.split()
+        filtered = [p for p in parts if not any(p.startswith(b) for b in bad_prefixes)]
+        entry["command"] = " ".join(filtered)
+
+with open(dst, "w", encoding="utf-8") as f:
+    json.dump(entries, f)
+PY
+    log_info "使用过滤后的编译数据库: ${tidy_build_dir}/compile_commands.json"
+    BUILD_DIR="$tidy_build_dir"
 
     # 仅分析当前编译数据库中的翻译单元，避免扫描未进入当前构建图的源文件。
     local files
