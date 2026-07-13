@@ -30,8 +30,8 @@ auto calculateErrorPerPosition(const uint64_t* qualSlot, uint64_t totalBases) ->
     return 100.0 * sumProb / static_cast<double>(totalBases);
 }
 
-auto sortedTopEntries(const std::map<std::string, uint64_t, std::less<>>& counts,
-                      size_t limit) -> std::vector<std::pair<std::string, uint64_t>> {
+auto sortedTopEntries(const std::map<std::string, uint64_t, std::less<>>& counts, size_t limit)
+    -> std::vector<std::pair<std::string, uint64_t>> {
     std::vector<std::pair<std::string, uint64_t>> entries(counts.begin(), counts.end());
     const auto compare = [](const auto& lhs, const auto& rhs) {
         if (lhs.second != rhs.second) {
@@ -68,8 +68,8 @@ auto formatMetricLine(const std::string& name, uint64_t count, uint64_t totalBas
 
 }  // namespace
 
-auto buildStatisticsReport(const FqStatisticResult& result,
-                           const StatisticsWriterOptions& options) -> StatisticsReport {
+auto buildStatisticsReport(const FqStatisticResult& result, const StatisticsWriterOptions& options)
+    -> StatisticsReport {
     StatisticsReport report;
     if (result.readCount == 0) {
         return report;

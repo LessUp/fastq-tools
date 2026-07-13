@@ -1,20 +1,13 @@
 name: CI
 
+# 改为手动触发，避免每次 push 都跑耗时安装
 on:
-  push:
-    branches: [master]
-    paths-ignore:
-      - 'docs/**'
-      - 'README*.md'
-      - 'CHANGELOG.md'
-      - 'CONTRIBUTING.md'
-  pull_request:
-    branches: [master]
-    paths-ignore:
-      - 'docs/**'
-      - 'README*.md'
-      - 'CHANGELOG.md'
-      - 'CONTRIBUTING.md'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: '触发原因'
+        required: false
+        default: 'manual'
 
 permissions:
   contents: read

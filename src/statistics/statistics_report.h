@@ -13,7 +13,8 @@ struct StatisticsReport {
     std::vector<std::string> signatureLines;
 };
 
-[[nodiscard]] auto buildStatisticsReport(
-    const FqStatisticResult& result, const StatisticsWriterOptions& options) -> StatisticsReport;
+[[nodiscard]] auto buildStatisticsReport(const FqStatisticResult& result,
+                                         const StatisticsWriterOptions& options)
+    -> StatisticsReport;
 
 }  // namespace fq::statistic

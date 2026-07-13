@@ -17,6 +17,15 @@ Checks:          '-*,
                    -modernize-avoid-c-arrays,
                    -readability-implicit-bool-conversion,
                    -readability-convert-member-functions-to-static,
+                   -modernize-use-scoped-lock,
+                   -modernize-use-designated-initializers,
+                   -modernize-use-integer-sign-comparison,
+                   -modernize-use-ranges,
+                   -readability-math-missing-parentheses,
+                   -readability-use-concise-preprocessor-directives,
+                   -readability-container-contains,
+                   -readability-use-std-min-max,
+                   -performance-unnecessary-value-param,
                    '
 HeaderFilterRegex: '^(.*[/\\])?(src|include|tests)/.*\.(h|hh|hpp|hxx|ipp|inl|c|cc|cpp|cxx)$'
 CheckOptions:

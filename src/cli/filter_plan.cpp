@@ -76,8 +76,8 @@ void addFilterPlanOptions(cxxopts::Options& options) {
         cxxopts::value<size_t>());
 }
 
-auto buildFilterPlan(const cxxopts::ParseResult& result,
-                     const CommonCliOptions& common) -> FilterPlan {
+auto buildFilterPlan(const cxxopts::ParseResult& result, const CommonCliOptions& common)
+    -> FilterPlan {
     FilterPlan plan;
     plan.inputPath = common.inputPath;
     plan.outputPath = common.outputPath;
