@@ -24,8 +24,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CONAN_VERSION: '2.24.0'
-  CMAKE_VERSION: '4.0.2'
+  CONAN_VERSION: '2.27.1'
+  CMAKE_VERSION: '4.3.4'
   LLVM_VERSION: '21'
 
 jobs:

@@ -26,14 +26,14 @@ class FastQTools(ConanFile):
         Declare all dependencies for the project.
         """
         self.requires("cxxopts/3.1.1")
-        self.requires("zlib-ng/2.3.2")
+        self.requires("zlib-ng/2.3.3")
         self.requires("fmt/12.1.0")
-        self.requires("nlohmann_json/3.11.3")
+        self.requires("nlohmann_json/3.12.0")
         # Intel's Threading Building Blocks for high-level parallelism
         self.requires("onetbb/2022.3.0")
         if self.options.with_taskflow:
             self.requires("taskflow/4.0.0")
-        self.requires("benchmark/1.8.3")
+        self.requires("benchmark/1.9.5")
 
     def build_requirements(self):
         """
@@ -41,7 +41,7 @@ class FastQTools(ConanFile):
         """
         self.tool_requires("cmake/[>=3.20]")
         if self.options.get_safe("build_testing", True):
-            self.requires("gtest/1.14.0")
+            self.requires("gtest/1.17.0")
 
     def generate(self):
         """

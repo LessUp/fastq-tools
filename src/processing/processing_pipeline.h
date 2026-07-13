@@ -54,13 +54,13 @@ private:
      */
     auto processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats) -> bool;
 
-    std::string inputPath_;                                        ///< 输入文件路径
-    std::string outputPath_;                                       ///< 输出文件路径
-    ProcessingOptions options_;                                    ///< 用户可见的处理选项
-    std::vector<std::unique_ptr<ReadMutatorInterface>> mutators_;  ///< 数据修改器列表
+    std::string inputPath_;                                            ///< 输入文件路径
+    std::string outputPath_;                                           ///< 输出文件路径
+    ProcessingOptions options_;                                        ///< 用户可见的处理选项
+    std::vector<std::unique_ptr<ReadMutatorInterface>> mutators_;      ///< 数据修改器列表
     std::vector<std::unique_ptr<ReadPredicateInterface>> predicates_;  ///< 数据过滤器列表
-    std::unique_ptr<fq::io::IReader> customReader_;  ///< 自定义读取器（测试用）
-    std::shared_ptr<fq::io::IWriter> customWriter_;  ///< 自定义写入器（测试用）
+    std::unique_ptr<fq::io::IReader> customReader_;                    ///< 自定义读取器（测试用）
+    std::shared_ptr<fq::io::IWriter> customWriter_;                    ///< 自定义写入器（测试用）
     bool customReaderConfigured_ = false;
 };
 

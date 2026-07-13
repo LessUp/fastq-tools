@@ -36,7 +36,7 @@ enum class FastqWriterCompressionMode : std::uint8_t {
  * @details 用于配置 FastqWriter 的行为参数
  */
 struct FastqWriterOptions {
-    size_t zlibBufferBytes = static_cast<size_t>(128) * 1024;  ///< zlib 压缩缓冲区大小（字节）
+    size_t zlibBufferBytes = static_cast<size_t>(128) * 1024;    ///< zlib 压缩缓冲区大小（字节）
     size_t outputBufferBytes = static_cast<size_t>(128) * 1024;  ///< 输出缓冲区大小（字节）
     FastqWriterCompressionMode compression = FastqWriterCompressionMode::Auto;  ///< 压缩模式
 };
