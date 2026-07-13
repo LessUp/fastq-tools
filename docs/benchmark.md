@@ -57,16 +57,41 @@ cmake -S . -B build/taskflow-release \
 cmake --build build/taskflow-release --target benchmark_backend_comparison
 ```
 
-报告写入 `build/taskflow-release/benchmark-results/backends/summary.md`，包含 7 次重复的 p50、p95、吞吐和峰值 RSS。
+报告写入 `build/taskflow-release/benchmark-results/backends/summary.md`，包含 7 次重复的 p50、p95、吞吐和峰值 RSS。该报告已入库快照：`docs/performance/benchmark-reports/backends/summary.md`。
 
-2026-07-13 本机验证快照（100K × 150bp，plain FASTQ）：
+2026-07-13 本机验证快照（16 X 3193.9 MHz，100K × 150bp，plain FASTQ，Clang 21 Release + libc++，每 case 7 次重复）：
 
-| 工作负载 | 最佳 backend | p50 | 吞吐 |
-| --- | --- | ---: | ---: |
-| CPU-only | oneTBB 4T | 15.59 ms | 1931.95 MiB/s |
-| 读取 + 处理 + 写出 | oneTBB 2T | 54.69 ms | 550.86 MiB/s |
+| Benchmark | p50 (ms) | p95 (ms) | 中位吞吐 (MiB/s) | 峰值 RSS (MiB) |
+| --- | ---: | ---: | ---: | ---: |
+| SequentialCpu/1T | 55.94 | 65.97 | 538.50 | 34.7 |
+| SequentialReadWrite/1T | 140.05 | 153.66 | 215.10 | 34.6 |
+| OneTbbCpu/2T | 29.76 | 40.30 | 1012.41 | 54.7 |
+| OneTbbCpu/4T | 21.68 | 30.48 | 1389.51 | 53.2 |
+| OneTbbCpu/8T | 25.39 | 25.89 | 1186.69 | 76.3 |
+| OneTbbReadWrite/2T | 71.59 | 138.14 | 420.78 | 60.7 |
+| OneTbbReadWrite/4T | 57.43 | 147.71 | 524.51 | 76.7 |
+| OneTbbReadWrite/8T | 76.59 | 163.39 | 393.34 | 106.7 |
+| TaskflowCpu/2T | 36.08 | 43.02 | 835.00 | 44.6 |
+| TaskflowCpu/4T | 22.01 | 24.04 | 1368.42 | 53.9 |
+| TaskflowCpu/8T | 23.77 | 25.69 | 1267.43 | 63.0 |
+| TaskflowReadWrite/2T | 78.18 | 139.21 | 385.32 | 49.6 |
+| TaskflowReadWrite/4T | 38.43 | 53.58 | 783.84 | 69.0 |
+| TaskflowReadWrite/8T | 78.58 | 173.09 | 383.36 | 104.0 |
 
-Taskflow 在该矩阵中未满足“至少两个 CPU 密集负载吞吐提升 ≥10%、RSS 增长 ≤10%”的迁移门槛，因此 oneTBB 保持默认 backend。该快照只用于验证选型，正式结论仍应在目标机器和真实数据集上复现。
+逐线程数对照（同工作负载同线程数取吞吐更高者为胜）：
+
+| 工作负载 | oneTBB 最佳 | Taskflow 最佳 | 胜者 | 差值 |
+| --- | --- | --- | --- | --- |
+| CPU-only 2T | 1012.41 MiB/s | 835.00 MiB/s | oneTBB | +21% |
+| CPU-only 4T | 1389.51 MiB/s | 1368.42 MiB/s | oneTBB | +1.5% |
+| CPU-only 8T | 1186.69 MiB/s | 1267.43 MiB/s | Taskflow | +6.8% |
+| ReadWrite 2T | 420.78 MiB/s | 385.32 MiB/s | oneTBB | +9.2% |
+| ReadWrite 4T | 524.51 MiB/s | 783.84 MiB/s | Taskflow | +49.4% |
+| ReadWrite 8T | 393.34 MiB/s | 383.36 MiB/s | oneTBB | +2.6% |
+
+迁移门槛为“至少两个 CPU 密集负载吞吐提升 ≥10%、RSS 增长 ≤10%”。实测中 Taskflow 在 CPU-only 8T（+6.8%，未达 10%）和 ReadWrite 4T（+49.4%，达标且 RSS 更低 69 vs 76.7 MiB）两项胜出，但严格按门槛只有 ReadWrite 4T 一项满足 ≥10%，未达“至少两项”要求，因此 oneTBB 保持默认 backend。
+
+值得注意的是 Taskflow 在 ReadWrite 4T 的大幅领先（+49.4%）与 8T 的回落表明其调度在特定并发度下有优势，但整体矩阵未稳定胜出。该快照只用于验证选型，正式结论仍应在目标机器和真实数据集上复现。
 
 ## 与同类工具对比
 

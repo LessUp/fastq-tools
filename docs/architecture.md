@@ -111,7 +111,7 @@ serial_in_order (读取)  →  parallel (处理)  →  serial_in_order (写出 +
 - `SequentialExecutionBackend`：单线程回退和契约基线
 - `TaskflowExecutionBackend`：默认关闭的实验对照，仅用于基准与未来动态图评估
 
-三个 backend 共用 reader、writer、batch operation 和计量契约。Taskflow 只有通过统一基准门槛后才可能成为默认实现；当前实测未达到门槛，因此生产路径仍使用 oneTBB。
+三个 backend 共用 reader、writer、batch operation 和计量契约。Taskflow 只有通过统一基准门槛后才可能成为默认实现；当前实测（见 `docs/benchmark.md` 执行 backend 对照）中 Taskflow 在 ReadWrite 4T 吞吐 +49.4% 与 CPU-only 8T +6.8% 两项胜出，但严格按“至少两项 ≥10%”门槛仅一项达标，未达迁移要求，因此生产路径仍使用 oneTBB。
 
 #### Backend 选择规则
 
