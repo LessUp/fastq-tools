@@ -25,7 +25,7 @@ class FastQTools(ConanFile):
         """
         Declare all dependencies for the project.
         """
-        self.requires("cxxopts/3.1.1")
+        self.requires("cxxopts/3.3.1")
         self.requires("zlib-ng/2.3.3")
         self.requires("fmt/12.1.0")
         self.requires("nlohmann_json/3.12.0")
