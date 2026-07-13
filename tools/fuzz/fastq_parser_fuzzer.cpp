@@ -1,210 +1,201 @@
 /**
  * @file fastq_parser_fuzzer.cpp
- * @brief Fuzz testing for FASTQ file parsing
+ * @brief 真实 FASTQ 解析器模糊测试
  *
- * This fuzzer tests the FASTQ parser with random/malformed input to find
- * crashes, memory errors, and undefined behavior.
+ * 直接调用 fq::io::FastqReader::nextBatch 解析 fuzz 数据，
+ * 覆盖指针算术、string_view 切片、\r\n 边界、跨批次 remainder、
+ * gzip sniff、maxBufferBytes 限制等真实路径。
  *
- * Build: cmake -DENABLE_FUZZING=ON -DCMAKE_CXX_COMPILER=clang++ ..
- * Run:   ./fuzzers/fastq_parser_fuzzer corpus/ -max_len=4096
+ * 实现：将 fuzz 输入写入 tmpfile，构造 FastqReader 读取并迭代所有批次，
+ * 访问每条记录字段以触发 string_view 越界读（ASan/MSan 可捕获）。
+ *
+ * 构建：cmake -DENABLE_FUZZING=ON -DCMAKE_CXX_COMPILER=clang++ -B build-fuzz
+ * 运行：./build-fuzz/fuzzers/fastq_parser_fuzzer tools/fuzz/corpus/ -max_len=4096
  */
 
+#include "fqtools/error/error.h"
+#include "fqtools/io/fastq_reader.h"
+
+#include <cerrno>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <string_view>
 #include <filesystem>
-#include <memory>
+#include <string>
 
-// Forward declarations for internal parsing functions
-// We test the parsing logic directly rather than file I/O
+#include <fcntl.h>
+#include <unistd.h>
 
 namespace {
 
-/**
- * @brief Simple FASTQ record structure for fuzzing
- */
-struct FuzzFastqRecord {
-    std::string header;
-    std::string sequence;
-    std::string quality;
+/// @brief RAII 临时文件，析构时关闭 fd 并 unlink 路径
+/// @note 不在构造时 unlink：FastqReader 需通过 path 再次 open 获取独立 fd
+class TempFile {
+public:
+    TempFile() {
+        const auto* tmpdir = std::getenv("TMPDIR");
+        if (tmpdir == nullptr || tmpdir[0] == '\0') {
+            tmpdir = "/tmp";
+        }
+        const auto tpl = std::filesystem::path(tmpdir) / "fq_fuzz_XXXXXX";
+        std::string buf = tpl.string();
+        fd_ = ::mkstemp(buf.data());
+        if (fd_ >= 0) {
+            path_ = buf;
+        }
+    }
+    ~TempFile() {
+        if (fd_ >= 0) {
+            ::close(fd_);
+        }
+        if (!path_.empty()) {
+            ::unlink(path_.c_str());
+        }
+    }
+    TempFile(const TempFile&) = delete;
+    auto operator=(const TempFile&) -> TempFile& = delete;
+    TempFile(TempFile&&) = delete;
+    auto operator=(TempFile&&) -> TempFile& = delete;
+
+    [[nodiscard]] auto isOpen() const -> bool { return fd_ >= 0; }
+    /// 路径在析构前有效（reader 会通过 path 再 open 独立 fd）
+    [[nodiscard]] auto path() const -> const std::string& { return path_; }
+
+    auto writeAll(const uint8_t* data, size_t size) -> bool {
+        size_t off = 0;
+        while (off < size) {
+            const auto n = ::write(fd_, data + off, size - off);
+            if (n < 0) {
+                if (errno == EINTR) {
+                    continue;
+                }
+                return false;
+            }
+            off += static_cast<size_t>(n);
+        }
+        return true;
+    }
+
+private:
+    int fd_ = -1;
+    std::string path_;
 };
 
-/**
- * @brief Parse a single FASTQ record from string view
- * @param data Input data
- * @param record Output record
- * @return true if parsing succeeded
- */
-bool parseFastqRecord(std::string_view data, FuzzFastqRecord& record) {
-    if (data.empty()) {
-        return false;
+/// @brief 配置多样的 Reader 选项，覆盖不同缓冲区/限制路径
+auto fuzzReaderOptions(uint8_t selector) -> fq::io::FastqReaderOptions {
+    fq::io::FastqReaderOptions opts;
+    switch (selector % 4) {
+        case 0:
+            // 默认（1MB chunk，无上限）
+            break;
+        case 1:
+            // 极小 chunk，逼迫跨批次 remainder 路径
+            opts.readChunkBytes = 16;
+            opts.zlibBufferBytes = 128;
+            break;
+        case 2:
+            // 极小 maxBufferBytes，触发 maxBufferBytes 守卫
+            opts.readChunkBytes = 64;
+            opts.maxBufferBytes = 128;
+            break;
+        case 3:
+            // 大 chunk + 中等上限
+            opts.readChunkBytes = 4096;
+            opts.maxBufferBytes = 8192;
+            break;
     }
-
-    // Find line boundaries
-    size_t pos = 0;
-    size_t lineStart = 0;
-    int lineNum = 0;
-    std::string lines[4];
-
-    while (pos < data.size() && lineNum < 4) {
-        if (data[pos] == '\n' || pos == data.size() - 1) {
-            size_t lineEnd = (data[pos] == '\n') ? pos : pos + 1;
-            lines[lineNum] = std::string(data.substr(lineStart, lineEnd - lineStart));
-            lineStart = pos + 1;
-            lineNum++;
-        }
-        pos++;
-    }
-
-    if (lineNum < 4) {
-        return false;
-    }
-
-    // Validate header line starts with @
-    if (lines[0].empty() || lines[0][0] != '@') {
-        return false;
-    }
-
-    // Validate separator line starts with +
-    if (lines[2].empty() || lines[2][0] != '+') {
-        return false;
-    }
-
-    // Validate sequence and quality lengths match
-    if (lines[1].length() != lines[3].length()) {
-        return false;
-    }
-
-    record.header = std::move(lines[0]);
-    record.sequence = std::move(lines[1]);
-    record.quality = std::move(lines[3]);
-
-    return true;
+    return opts;
 }
 
-/**
- * @brief Validate FASTQ sequence characters
- * @param seq Sequence string
- * @return true if all characters are valid
- */
-bool validateSequence(const std::string& seq) {
-    for (char c : seq) {
-        // Valid IUPAC nucleotide codes
-        switch (c) {
-            case 'A': case 'C': case 'G': case 'T': case 'U':
-            case 'a': case 'c': case 'g': case 't': case 'u':
-            case 'N': case 'n':
-            case 'R': case 'Y': case 'S': case 'W':
-            case 'K': case 'M': case 'B': case 'D':
-            case 'H': case 'V':
-                break;
-            default:
-                return false;
+/// @brief 迭代 reader 所有批次并访问每条记录字段（触发 string_view 越界读）
+auto drainReader(fq::io::FastqReader& reader) -> void {
+    fq::io::FastqBatch batch(64 * 1024);
+    size_t totalRecords = 0;
+    constexpr size_t kMaxRecordsPerRun = 10000;  // 防止恶意超大输入拖垮 fuzzer
+    while (totalRecords < kMaxRecordsPerRun) {
+        bool got = false;
+        try {
+            got = reader.nextBatch(batch);
+        } catch (const fq::error::FastQException&) {
+            // 解析错误是预期行为：fuzz 目标正是畸形输入
+            return;
+        } catch (const std::exception&) {
+            return;
         }
-    }
-    return true;
-}
+        if (!got) {
+            return;
+        }
+        for (const auto& rec : batch) {
+            // 访问所有字段：string_view 越界会被 ASan/MSan 捕获
+            volatile size_t idLen = rec.id.size();
+            volatile size_t commentLen = rec.comment.size();
+            volatile size_t seqLen = rec.seq.size();
+            volatile size_t qualLen = rec.qual.size();
+            volatile size_t plusLen = rec.plus.size();
+            (void)idLen;
+            (void)commentLen;
+            (void)seqLen;
+            (void)qualLen;
+            (void)plusLen;
 
-/**
- * @brief Validate FASTQ quality scores
- * @param qual Quality string
- * @return true if all quality scores are in valid range
- */
-bool validateQuality(const std::string& qual) {
-    for (char c : qual) {
-        // Phred+33 encoding: ASCII 33-126
-        if (c < 33 || c > 126) {
-            return false;
+            // 访问最后一个字节（若存在）触发边界读
+            if (!rec.seq.empty()) {
+                volatile char lastBase = rec.seq.back();
+                (void)lastBase;
+            }
+            if (!rec.qual.empty()) {
+                volatile char lastQual = rec.qual.back();
+                (void)lastQual;
+            }
+
+            // 不变式校验：解析成功的记录 seq/qual 必须等长（解析器已 validateLengths）
+            // 若违反说明解析器有 bug，abort 让 fuzzer 报告
+            if (rec.seq.size() != rec.qual.size()) {
+                __builtin_trap();
+            }
+
+            ++totalRecords;
         }
+        batch.clear();
     }
-    return true;
 }
 
 }  // namespace
 
-/**
- * @brief LibFuzzer entry point
- *
- * This function is called by libFuzzer with random input data.
- * It should return 0 on success (including graceful error handling).
- * Any crash, assertion failure, or sanitizer error indicates a bug.
- */
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-    // Limit input size to prevent OOM
+    // 限制输入大小，防止 OOM
     if (size > 1024 * 1024) {
         return 0;
     }
-
-    // Convert to string_view for parsing
-    std::string_view input(reinterpret_cast<const char*>(data), size);
-
-    // Test 1: Parse single record
-    {
-        FuzzFastqRecord record;
-        bool parsed = parseFastqRecord(input, record);
-        
-        if (parsed) {
-            // If parsing succeeded, validate the record
-            (void)validateSequence(record.sequence);
-            (void)validateQuality(record.quality);
-            
-            // Access all fields to trigger potential memory errors
-            volatile size_t headerLen = record.header.length();
-            volatile size_t seqLen = record.sequence.length();
-            volatile size_t qualLen = record.quality.length();
-            (void)headerLen;
-            (void)seqLen;
-            (void)qualLen;
-        }
+    if (size == 0) {
+        return 0;
     }
 
-    // Test 2: Parse multiple records
-    {
-        size_t pos = 0;
-        int recordCount = 0;
-        const int maxRecords = 100;  // Limit to prevent infinite loops
+    // 用首字节作为 reader 选项 selector，剩余字节作为文件内容
+    const uint8_t selector = data[0];
+    const uint8_t* payload = data + 1;
+    const size_t payloadSize = size - 1;
 
-        while (pos < input.size() && recordCount < maxRecords) {
-            // Find next record start
-            while (pos < input.size() && input[pos] != '@') {
-                pos++;
-            }
-
-            if (pos >= input.size()) {
-                break;
-            }
-
-            // Try to parse record starting at pos
-            std::string_view remaining = input.substr(pos);
-            FuzzFastqRecord record;
-            
-            if (parseFastqRecord(remaining, record)) {
-                recordCount++;
-                // Move past this record
-                pos += record.header.length() + record.sequence.length() + 
-                       record.quality.length() + 4;  // +4 for newlines and +
-            } else {
-                pos++;
-            }
-        }
+    TempFile tmp;
+    if (!tmp.isOpen()) {
+        return 0;
+    }
+    if (!tmp.writeAll(payload, payloadSize)) {
+        return 0;
     }
 
-    // Test 3: String operations on input
-    {
-        std::string inputStr(input);
-        
-        // Test various string operations that might be used in parsing
-        (void)inputStr.find('@');
-        (void)inputStr.find('\n');
-        (void)inputStr.find('+');
-        
-        if (!inputStr.empty()) {
-            (void)inputStr.substr(0, std::min(size_t(100), inputStr.size()));
+    const auto opts = fuzzReaderOptions(selector);
+    try {
+        fq::io::FastqReader reader(tmp.path(), opts);
+        if (!reader.isOpen()) {
+            return 0;
         }
+        drainReader(reader);
+    } catch (const fq::error::FastQException&) {
+        // 预期
+    } catch (const std::exception&) {
+        // 预期
     }
 
     return 0;

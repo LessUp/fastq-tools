@@ -82,6 +82,12 @@ coverage/
 *.profdata
 Testing/
 
+# ===== Fuzz 模糊测试 =====
+# libFuzzer 生成的 corpus/crash 文件，仅保留 seed_*.fq 和 README.md
+tools/fuzz/corpus/*
+!tools/fuzz/corpus/seed_*.fq
+!tools/fuzz/corpus/README.md
+
 # ===== 缓存 =====
 .cache/
 .ccache/

@@ -47,22 +47,37 @@ endif()
 # =============================================================================
 
 if(ENABLE_FUZZING)
-    # libFuzzer flags with AddressSanitizer
-    set(FQ_FUZZER_COMPILE_FLAGS 
-        "-fsanitize=fuzzer,address"
-        "-fno-omit-frame-pointer"
-        "-g"
-    )
-    
-    set(FQ_FUZZER_LINK_FLAGS
-        "-fsanitize=fuzzer,address"
-    )
-    
-    # Optional: Add UBSan for better bug detection
-    option(FUZZING_WITH_UBSAN "Enable UBSan with fuzzing" ON)
-    if(FUZZING_WITH_UBSAN)
-        list(APPEND FQ_FUZZER_COMPILE_FLAGS "-fsanitize=undefined")
-        list(APPEND FQ_FUZZER_LINK_FLAGS "-fsanitize=undefined")
+    # Sanitizer 选择：address（默认）或 memory（互斥，不可同时用）
+    # MSan 用于抓 SIMD 越界读等 ASan 抓不到的未初始化/越界问题
+    set(FUZZING_SANITIZER "address" CACHE STRING "Sanitizer for fuzzing: address|memory")
+    set_property(CACHE FUZZING_SANITIZER PROPERTY STRINGS address memory)
+
+    if(FUZZING_SANITIZER STREQUAL "memory")
+        # MSan 与 ASan 互斥；MSan 也不兼容 UBSan（部分 UB 检查依赖 ASan）
+        set(FQ_FUZZER_COMPILE_FLAGS
+            "-fsanitize=fuzzer,memory"
+            "-fno-omit-frame-pointer"
+            "-fsanitize-memory-track-origins"
+            "-g"
+        )
+        set(FQ_FUZZER_LINK_FLAGS
+            "-fsanitize=fuzzer,memory"
+        )
+    else()
+        set(FQ_FUZZER_COMPILE_FLAGS
+            "-fsanitize=fuzzer,address"
+            "-fno-omit-frame-pointer"
+            "-g"
+        )
+        set(FQ_FUZZER_LINK_FLAGS
+            "-fsanitize=fuzzer,address"
+        )
+        # UBSan 仅在 ASan 模式下叠加
+        option(FUZZING_WITH_UBSAN "Enable UBSan with fuzzing" ON)
+        if(FUZZING_WITH_UBSAN)
+            list(APPEND FQ_FUZZER_COMPILE_FLAGS "-fsanitize=undefined")
+            list(APPEND FQ_FUZZER_LINK_FLAGS "-fsanitize=undefined")
+        endif()
     endif()
 endif()
 
@@ -152,8 +167,8 @@ if(ENABLE_FUZZING)
     message(STATUS "=== Fuzzing Configuration ===")
     message(STATUS "  Fuzzing: ON")
     message(STATUS "  Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
-    set(_fq_fuzzing_sanitizers "address")
-    if(FUZZING_WITH_UBSAN)
+    set(_fq_fuzzing_sanitizers "${FUZZING_SANITIZER}")
+    if(FUZZING_SANITIZER STREQUAL "address" AND FUZZING_WITH_UBSAN)
         string(APPEND _fq_fuzzing_sanitizers ", undefined")
     endif()
     message(STATUS "  Sanitizers: ${_fq_fuzzing_sanitizers}")
