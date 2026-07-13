@@ -16,8 +16,8 @@ namespace {
 
 class OneTbbExecutionBackend final : public ExecutionBackend {
 public:
-    auto execute(ExecutionBackendContext context, ExecutionOperation& operation)
-        -> ErasedExecutionOutcome override {
+    auto execute(ExecutionBackendContext context,
+                 ExecutionOperation& operation) -> ErasedExecutionOutcome override {
         using BatchResult = std::pair<std::shared_ptr<fq::io::FastqBatch>, std::any>;
 
         auto batchPool = fq::io::createFastqBatchPool(context.config.maxLiveTokens,

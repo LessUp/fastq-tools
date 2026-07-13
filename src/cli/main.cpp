@@ -19,8 +19,9 @@
 
 namespace {
 
-auto parseGlobalOptions(int argc, char* argv[], std::vector<char*>& subArgs)
-    -> std::pair<std::string, std::string> {
+auto parseGlobalOptions(int argc,
+                        char* argv[],
+                        std::vector<char*>& subArgs) -> std::pair<std::string, std::string> {
     std::string logLevel = "info";
     std::string subcommand;
     bool foundSubcommand = false;

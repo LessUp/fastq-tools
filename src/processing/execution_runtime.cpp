@@ -33,8 +33,8 @@ namespace fq::processing {
 
 namespace {
 
-auto selectBackend(ExecutionBackendPreference preference, const ResolvedRuntimeConfig& config)
-    -> std::unique_ptr<ExecutionBackend> {
+auto selectBackend(ExecutionBackendPreference preference,
+                   const ResolvedRuntimeConfig& config) -> std::unique_ptr<ExecutionBackend> {
     switch (preference) {
         case ExecutionBackendPreference::Automatic:
             return config.executionMode == ExecutionMode::Parallel

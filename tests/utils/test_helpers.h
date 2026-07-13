@@ -40,8 +40,9 @@ public:
      * @param maxQuality 最大质量值
      * @return 质量分数字符串
      */
-    static auto generateRandomQuality(size_t length, int minQuality = 20, int maxQuality = 40)
-        -> std::string;
+    static auto generateRandomQuality(size_t length,
+                                      int minQuality = 20,
+                                      int maxQuality = 40) -> std::string;
 
     /**
      * @brief 创建临时 FASTQ 文件
@@ -49,8 +50,8 @@ public:
      * @param suffix 文件后缀
      * @return 临时文件路径（自动注册清理）
      */
-    static auto createTempFile(const std::string& content, const std::string& suffix = ".fastq")
-        -> std::filesystem::path;
+    static auto createTempFile(const std::string& content,
+                               const std::string& suffix = ".fastq") -> std::filesystem::path;
 
     /**
      * @brief 清理所有已注册的临时文件

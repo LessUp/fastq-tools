@@ -43,8 +43,8 @@ struct ResolvedRuntimeConfig {
 
     /// @name 执行配置
     /// @{
-    size_t threadCount = 1;                                   ///< 线程数量
-    size_t maxLiveTokens = 4;                                 ///< 最大并行批次（TBB tokens）
+    size_t threadCount = 1;    ///< 线程数量
+    size_t maxLiveTokens = 4;  ///< 最大并行批次（TBB tokens）
     ExecutionMode executionMode = ExecutionMode::Sequential;  ///< 执行模式
     bool allocationTelemetryEnabled = false;                  ///< 是否启用内存遥测
     /// @}

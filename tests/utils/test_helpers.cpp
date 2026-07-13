@@ -8,8 +8,8 @@ namespace fq::test {
 
 std::vector<std::filesystem::path> TestDataGenerator::tempPaths_;
 
-auto TestDataGenerator::createTempFile(const std::string& content, const std::string& suffix)
-    -> std::filesystem::path {
+auto TestDataGenerator::createTempFile(const std::string& content,
+                                       const std::string& suffix) -> std::filesystem::path {
     auto tempDir = std::filesystem::temp_directory_path();
     auto tempFile =
         tempDir / ("fastqtools_test_" + std::to_string(std::random_device{}()) + suffix);
@@ -50,8 +50,9 @@ auto TestDataGenerator::generateRandomDNA(size_t length) -> std::string {
     return sequence;
 }
 
-auto TestDataGenerator::generateRandomQuality(size_t length, int minQuality, int maxQuality)
-    -> std::string {
+auto TestDataGenerator::generateRandomQuality(size_t length,
+                                              int minQuality,
+                                              int maxQuality) -> std::string {
     thread_local std::mt19937 gen(std::random_device{}());
     std::uniform_int_distribution<> dis(minQuality, maxQuality);
 

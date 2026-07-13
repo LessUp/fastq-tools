@@ -36,9 +36,8 @@ public:
      * @throw fq::error::IOError 读取错误
      * @throw fq::error::FormatError 格式错误
      */
-    [[nodiscard]] virtual auto nextBatch(FastqBatch& batch,
-                                         size_t maxRecords = std::numeric_limits<size_t>::max())
-        -> bool = 0;
+    [[nodiscard]] virtual auto nextBatch(
+        FastqBatch& batch, size_t maxRecords = std::numeric_limits<size_t>::max()) -> bool = 0;
 };
 
 /// @brief IReader 的工厂别名，便于测试 mock

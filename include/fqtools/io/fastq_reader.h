@@ -84,9 +84,8 @@ public:
      * @param maxRecords 最大读取记录数
      * @return 是否成功读取到数据
      */
-    [[nodiscard]] auto nextBatch(FastqBatch& batch,
-                                 size_t maxRecords = std::numeric_limits<size_t>::max())
-        -> bool override;
+    [[nodiscard]] auto nextBatch(
+        FastqBatch& batch, size_t maxRecords = std::numeric_limits<size_t>::max()) -> bool override;
 
     /**
      * @brief 检查文件是否成功打开

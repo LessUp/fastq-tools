@@ -47,8 +47,8 @@ enum class ProcessingProfile : std::uint8_t {
 struct ProcessingOptions {
     /// @name 业务参数
     /// @{
-    size_t batchSize = 10000;                                ///< 批处理大小（每个批次的读取数量）
-    size_t threadCount = 1;                                  ///< 线程数量（1 表示串行处理）
+    size_t batchSize = 10000;  ///< 批处理大小（每个批次的读取数量）
+    size_t threadCount = 1;    ///< 线程数量（1 表示串行处理）
     ProcessingProfile profile = ProcessingProfile::Default;  ///< 性能预设
     /// @}
 

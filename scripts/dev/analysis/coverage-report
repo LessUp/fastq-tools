@@ -156,6 +156,7 @@ LCOV_ARGS=(
     --ignore-errors mismatch
     --ignore-errors gcov
     --ignore-errors negative
+    --ignore-errors version
 )
 
 if [[ "$VERBOSE" == "false" ]]; then
@@ -186,6 +187,7 @@ FILTER_ARGS=(
     --ignore-errors mismatch
     --ignore-errors gcov
     --ignore-errors negative
+    --ignore-errors version
 )
 
 if [[ "$VERBOSE" == "false" ]]; then
@@ -214,6 +216,7 @@ if [[ "$GENERATE_HTML" == "true" ]]; then
         --show-details
         --highlight
         --demangle-cpp
+        --ignore-errors version
     )
     
     if [[ "$VERBOSE" == "false" ]]; then
@@ -260,7 +263,7 @@ show_step 4 4 "Coverage summary"
 log_separator "-"
 
 # Extract coverage percentages
-SUMMARY=$(lcov --summary "$COVERAGE_FILTERED" 2>&1)
+SUMMARY=$(lcov --summary "$COVERAGE_FILTERED" --ignore-errors version 2>&1)
 echo "$SUMMARY"
 
 # Parse coverage values

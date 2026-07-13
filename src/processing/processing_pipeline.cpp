@@ -148,8 +148,8 @@ auto ProcessingPipeline::run() -> ProcessingStatistics {
     }
 }
 
-auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats)
-    -> bool {
+auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch,
+                                      ProcessingStatistics& stats) -> bool {
     stats.inputBytes += batch.buffer().size();
     auto& records = batch.records();
     const size_t totalInBatch = records.size();

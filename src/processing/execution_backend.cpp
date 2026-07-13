@@ -10,8 +10,8 @@ namespace {
 
 class SequentialExecutionBackend final : public ExecutionBackend {
 public:
-    auto execute(ExecutionBackendContext context, ExecutionOperation& operation)
-        -> ErasedExecutionOutcome override {
+    auto execute(ExecutionBackendContext context,
+                 ExecutionOperation& operation) -> ErasedExecutionOutcome override {
         auto result = operation.makeResult();
         ExecutionRuntimeMetrics metrics;
         fq::io::FastqBatch batch(context.config.batchCapacityBytes);

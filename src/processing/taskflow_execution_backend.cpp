@@ -27,8 +27,8 @@ struct TaskflowLineState {
 
 class TaskflowExecutionBackend final : public ExecutionBackend {
 public:
-    auto execute(ExecutionBackendContext context, ExecutionOperation& operation)
-        -> ErasedExecutionOutcome override {
+    auto execute(ExecutionBackendContext context,
+                 ExecutionOperation& operation) -> ErasedExecutionOutcome override {
         auto batchPool = fq::io::createFastqBatchPool(context.config.maxLiveTokens,
                                                       context.config.maxLiveTokens * 2);
         std::vector<std::optional<TaskflowLineState>> lines(context.config.maxLiveTokens);
