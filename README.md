@@ -245,6 +245,8 @@ Fuzzer targets in `tools/fuzz/` exercise the FASTQ parser entry — the only pla
 | Integrate the library into C++ code | [docs/api.md](./docs/api.md) |
 | Understand the architecture and design decisions | [docs/architecture.md](./docs/architecture.md) |
 | Understand benchmark numbers | [docs/benchmark.md](./docs/benchmark.md) |
+| Inspect performance data & optimization history | [docs/performance/README.md](./docs/performance/README.md) |
+| Review incident postmortems & root-cause analyses | [docs/postmortems/README.md](./docs/postmortems/README.md) |
 | Contribute docs or code | [CONTRIBUTING.md](./CONTRIBUTING.md) |
 | Follow project-level changes | [CHANGELOG.md](./CHANGELOG.md) |
 

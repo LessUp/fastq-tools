@@ -245,6 +245,8 @@ fuzzer target 位于 `tools/fuzz/`，针对 FASTQ 解析器入口——唯一消
 | 在 C++ 项目中集成库接口 | [API 概览](./docs/api.md) |
 | 了解架构与设计决策 | [架构文档](./docs/architecture.md) |
 | 判断性能数字该如何解读 | [性能总览](./docs/benchmark.md) |
+| 查阅性能数据与优化历程 | [性能数据与优化记录](./docs/performance/README.md) |
+| 复盘问题定位与解决方案 | [问题复盘库](./docs/postmortems/README.md) |
 | 参与文档或代码贡献 | [贡献指南](./CONTRIBUTING.md) |
 | 跟踪项目层面的变更 | [CHANGELOG.md](./CHANGELOG.md) |
 
