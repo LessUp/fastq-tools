@@ -58,7 +58,7 @@ valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins
 
 1. **零内存错误**：stat 和 filter 命令均无内存泄露、越界、未初始化使用。
 2. **零 definitely lost**：所有分配在退出前释放。
-3. **still reachable 1,825 bytes**：全部来自 glibc 动态链接器（`ld-linux`）的 `dlopen` 内部状态，是 libc 正常行为，非项目代码泄露。oneTBB 通过 `dlopen` 加载 `libtbbbind` 产生这些记录。
+3. **still reachable 1,825 bytes**：全部来自 glibc 动态链接器（`ld-linux`）的 `dlopen` 内部状态，是 libc 正常行为，非项目代码泄露。Massif 快照证实 `dlopen` 由 oneTBB `dynamic_load` 发起（加载 `libtbbbind`）。
 4. **`--track-origins=yes` 无发现**：未初始化值追踪未发现任何问题。
 
 ## 原始数据

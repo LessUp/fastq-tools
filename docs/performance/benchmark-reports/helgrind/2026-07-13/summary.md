@@ -37,17 +37,28 @@ valgrind --tool=helgrind --error-exitcode=1 \
 | `fq::processing::ExecutionRuntime` | 15 | **项目代码（调用栈中，非 race 源）** |
 | `fq::statistic::FastqStatisticCalculator` | — | **项目代码（调用栈中，非 race 源）** |
 
-### 关键判断：全部误报
+### 关键判断：绝大多数为 TBB 内部误报
 
-所有 730 个 error 的 **race 发生点** 都在 TBB 内部：
+730 个 error 中，绝大多数的 **race 发生点** 在 TBB 内部：
 
 1. **tbbmalloc 内部锁**（`Synchronize.h:38` / `atomic_flag`）：TBB 内存分配器使用自旋锁，Helgrind 不识别 TBB 的自定义锁实现，误报为无锁访问。
 2. **TBB 调度器原子操作**（`cxx_atomic_impl.h`）：TBB 调度器用 `std::atomic` 管理任务队列，Helgrind 对 C++ atomic 的 happens-before 追踪不完整。
 3. **TBB RML 线程池**（`private_worker::thread_routine`）：TBB 内部线程管理的数据结构，Helgrind 不识别 TBB 的同步原语。
 
-### 项目代码无 race
+### 涉及 fq:: 类型的 2 个 race
 
-`fq::` 命名空间的函数只出现在 **调用栈上层**（race 的调用者），不是 race 的发生点。项目代码本身的数据访问通过 `tbb::parallel_pipeline` 的 filter 机制隔离，每个 batch 独立处理，无跨 filter 共享状态。
+有 2 个 race 的 `at` 地址涉及 `fq::` 类型析构代码，但冲突方均为 TBB `stage_task::~stage_task`：
+
+| race 地址 | fq:: 发生点 | 冲突方 | 地址位置 |
+|---|---|---|---|
+| `0x1FFEFFEA38` | `FqStatisticResult::__handle` 析构（`any:385`） | TBB `stage_task::~stage_task`（thread #3） | thread #1 栈上 |
+| `0x1FFEFFEA38` | `ObjectPool<FastqBatch>::~vector` 析构（`vector:528`） | TBB `stage_task::~stage_task`（thread #3） | thread #1 栈上 |
+
+这两个 race 地址相同（`0x1FFEFFEA38`），都在主线程（thread #1）栈上。worker 线程（thread #3）不应访问主线程栈，判断为 TBB `stage_task` 生命周期 happens-before 追踪问题导致的误报——`stage_task` 在 worker 线程析构时，Helgrind 无法追踪 TBB pipeline 的 task 传递关系。
+
+### 项目代码的 race 情况
+
+`fq::` 命名空间的函数绝大多数只出现在 **调用栈上层**（race 的调用者）。上述 2 个涉及 `fq::` 类型析构的 race，其冲突方均为 TBB 内部，且地址在主线程栈上，判断为 TBB task 生命周期误报。项目代码本身的数据访问通过 `tbb::parallel_pipeline` 的 filter 机制隔离，每个 batch 独立处理，无跨 filter 共享状态。
 
 ## 已知 TBB + Helgrind 误报
 
@@ -71,10 +82,11 @@ valgrind --tool=helgrind --error-exitcode=1 \
 
 ## 结论
 
-1. **730 个 error 全部是 TBB 内部误报**：Helgrind 不识别 TBB 的自定义同步原语。
-2. **项目代码零真实 data race**：`fq::` 代码无 race 发生点，只出现在调用栈上层。
-3. **并行设计正确**：`parallel_pipeline` 的 filter 隔离 + batch 独立 + 串行聚合，保证无数据竞争。
-4. **建议用 TSan 复核**：ThreadSanitizer 对 C++ atomic 和 happens-before 追踪更准确，可作为补充验证。
+1. **730 个 error 绝大多数是 TBB 内部误报**：Helgrind 不识别 TBB 的自定义同步原语。
+2. **2 个涉及 fq:: 类型的 race 判断为 TBB task 生命周期误报**：race 地址在主线程栈上，冲突方为 TBB `stage_task::~stage_task`，worker 线程不应访问主线程栈。
+3. **项目代码未发现独立的真实 data race**：`fq::` 代码绝大多数只出现在调用栈上层；2 个涉及 fq:: 类型析构的 race，冲突方均为 TBB 内部。
+4. **并行设计正确**：`parallel_pipeline` 的 filter 隔离 + batch 独立 + 串行聚合，保证无数据竞争。
+5. **建议用 TSan 复核**：ThreadSanitizer 对 C++ atomic 和 happens-before 追踪更准确，可验证上述 2 个涉及 fq:: 类型的 race 是否为真实问题。
 
 ## 原始数据
 

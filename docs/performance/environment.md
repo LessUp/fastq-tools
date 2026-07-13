@@ -35,7 +35,7 @@
 
 | 项目 | 版本 |
 |------|------|
-| 编译器 | Clang 21.1.8（默认）/ GCC 13 |
+| 编译器 | Clang 21.1.8（默认）/ GCC 15.1.0 |
 | 构建类型 | Release（基准）/ RelWithDebInfo（Valgrind 分析，-O2 + -g） |
 | CMake | 3.28.3 |
 | Conan | 2.19.0 |

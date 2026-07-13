@@ -70,7 +70,7 @@ MB
 ## 关键发现
 
 1. **峰值 6.23 MiB**：1K reads × 100 bp 数据集（214 KiB）的内存峰值 6.23 MiB，约 30x 数据集大小。主要来自 `FastqBatch::reserve` 预分配。
-2. **batch 缓冲区占 98.46%**：`vector<char>`（4 MiB）+ `vector<FastqRecord>`（2.13 MiB）= 6.33 MiB，几乎全部峰值内存。
+2. **batch 缓冲区占 98.68%**：`vector<char>`（4 MiB）+ `vector<FastqRecord>`（2.13 MiB）= 6.33 MiB，几乎全部峰值内存。
 3. **无内存增长**：处理期间内存平稳，batch 复用有效，无累积泄露。
 4. **extra-heap 极低**：14,856 B malloc 元数据，分配次数少。
 
