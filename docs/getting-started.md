@@ -2,7 +2,7 @@
 
 ## 环境要求
 
-- C++23 编译器（GCC 11+ 或 Clang 12+ 最低）
+- C++23 编译器（GCC 13+ 或 Clang 17+ 最低）
 - CMake 3.28+
 - Conan 2.x
 - Linux 或 macOS；Windows 用 Docker 或 WSL

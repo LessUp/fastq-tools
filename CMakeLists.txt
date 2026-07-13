@@ -27,15 +27,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # --- Compiler Version Check ---
 # Enforce minimum compiler versions required for C++23 support.
+# GCC 13+ 和 Clang 17+ 才提供本仓库所需的 C++23 支持；更早版本会编译失败。
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "11.0")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "13.0")
         message(FATAL_ERROR "GCC version ${CMAKE_CXX_COMPILER_VERSION} is too old. "
-                            "FastQTools requires GCC 11.0 or newer for C++23 support.")
+                            "FastQTools requires GCC 13.0 or newer for C++23 support.")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "12.0")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "17.0")
         message(FATAL_ERROR "Clang version ${CMAKE_CXX_COMPILER_VERSION} is too old. "
-                            "FastQTools requires Clang 12.0 or newer for C++23 support.")
+                            "FastQTools requires Clang 17.0 or newer for C++23 support.")
     endif()
 else()
     message(WARNING "Compiler ${CMAKE_CXX_COMPILER_ID} is not officially supported. "

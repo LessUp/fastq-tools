@@ -1,8 +1,8 @@
 <h1 align="center">FastQTools</h1>
 
 <p align="center">
-  <b>聚焦的现代 C++23 FASTQ 质控工具集</b><br>
-  <i>零拷贝记录视图、可替换流式 backend、最小可嵌入接口——把少数 QC 事做到极致。</i>
+  <b>专注的现代 C++23 FASTQ 质控工具集</b><br>
+  <i>零拷贝记录视图、可替换流式 backend、最小可嵌入 API 接口——把少数 QC 任务做到极致。</i>
 </p>
 
 <p align="center">
@@ -37,7 +37,7 @@
 
 ## 目录
 
-- [为什么有 FastQTools](#为什么有-fastqtools)
+- [为何做 FastQTools](#为何做-fastqtools)
 - [定位与同类工具](#定位与同类工具)
 - [核心能力](#核心能力)
 - [快速开始](#快速开始)
@@ -53,16 +53,16 @@
 
 ---
 
-## 为什么有 FastQTools
+## 为何做 FastQTools
 
-多数 FASTQ 质控工具追求广度：功能多、报告格式多、边界情况多。FastQTools 反其道而行。它是一个 **C++23 工程能力展示项目**，刻意把维护面收得很窄——`stat`、`filter`、一个总入口头文件——把工程预算投到那些通常看不见的地方：
+多数 FASTQ 质控工具追求广度：功能多、报告格式多、边界情况多。FastQTools 反其道而行——一个 **C++23 工程能力展示项目**，刻意把维护面收得很窄（`stat`、`filter`、一个总入口头文件），把工程预算投到那些通常看不见的地方：
 
 - 零拷贝记录模型，解析退化为指针算术，不分配字符串。
 - 私有执行 backend seam，默认 oneTBB 流水线天然保序。
 - 批量 + 对象池内存纪律，热点路径不逐条分配。
-- CI 矩阵每次推送都跑 GCC、Clang、ASan、TSan、UBSan，外加解析器入口的模糊测试。
+- CI 矩阵每次推送都跑 GCC、Clang、ASan、TSan、UBSan，外加解析器入口的 fuzzer target（CI 集成待定）。
 
-核心主张很简单：**把少数事做到极致，比把很多事做到及格更难**。本仓库就是这个主张的论据。
+核心主张很简单：**把少数事做到极致，比把很多事做到及格更难**。本仓库就是这一主张的实证。
 
 ## 定位与同类工具
 
@@ -75,16 +75,16 @@ FastQTools 聚焦测序日常 QC 的两个最高频操作——汇总统计与�
 | **seqkit** | 全能 SEQ 工具箱（Go） | Go | 算子面巨大、便于脚本化 | 聚焦 QC 热点路径；原生 C++ 吞吐；二进制更小 |
 | **FastQTools** | `stat` + `filter` + 可嵌入 API | C++23 | 零拷贝 + TBB 流式 + 消毒剂加固 | — |
 
-FastQTools 不是 fastp 的直接替代品。它是一个聚焦、现代内核的替代方案——当你想要一个小巧、可审计、可嵌入的 QC 组件，或一份 C++23 流式流水线的参考实现时，它合适。
+FastQTools 不是 fastp 的直接替代品。它是一个聚焦、现代内核的替代方案——当你想要一个小巧、可审计、可嵌入的 QC 组件，或一份 C++23 流式流水线的参考实现时，它正合适。
 
 ## 核心能力
 
-- **`stat` — FASTQ 统计。** 读段数、长度分布、碱基组成、GC 含量、Q20/Q30 等质量指标，可选签名 sidecar（head k-mer、重复估计）。
+- **`stat` — FASTQ 统计。** 读段数、长度分布、碱基组成、GC 含量、Q20/Q30 等质量指标，可选签名 sidecar 报告（旁路报告，含 head k-mer、重复估计）。
 - **`filter` — 单遍过滤与修剪。** 长度、平均质量、N 比例阈值；质量修剪（5'/3'/两端）；adapter 修剪；polyG / polyX 尾修剪——全部在一次流式扫描中完成。
 - **可嵌入 C++ API。** 单一总入口头 `<fqtools/fq.h>`；CLI 与库共用同一条流水线，行为一致。
 - **零拷贝记录视图。** `FastqRecord` 是五个 `std::string_view`，指向连续批缓冲区；解析是指针算术，不是分配。
 - **可替换流式 backend。** 默认 oneTBB 使用 `serial_in_order → parallel → serial_in_order`；I/O 保序、归约确定，CPU 密集的中间级跨核扩展。
-- **消毒剂加固的 CI。** GCC Release、Clang Release、Clang ASan/TSan/UBSan、clang-tidy、cppcheck，外加解析器入口的 libFuzzer——每次推送都跑。
+- **消毒剂加固的 CI。** GCC Release、Clang Release、Clang ASan/TSan/UBSan、clang-tidy、cppcheck 每次推送都跑；fuzzer target 位于 `tools/fuzz/`（CI 集成待定）。
 
 ## 快速开始
 
@@ -103,7 +103,7 @@ cd fastq-tools
   -o sample.stats.txt
 ```
 
-单遍过滤并修剪 reads：
+单遍过滤并修剪读段：
 
 ```bash
 ./build/clang-release/FastQTools filter \
@@ -144,7 +144,8 @@ pipeline->setInputPath("sample.fastq.gz");
 pipeline->setOutputPath("sample.filtered.fastq.gz");
 
 pipeline->addReadPredicate(std::make_unique<fq::processing::MinQualityPredicate>(20.0));
-pipeline->addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20, "both"));
+pipeline->addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(
+    20.0, 1, fq::processing::QualityTrimmer::TrimMode::Both, 33));
 
 fq::processing::ProcessingOptions opts;
 opts.batchSize   = 50000;
@@ -154,7 +155,7 @@ pipeline->setProcessingOptions(opts);
 auto stats = pipeline->run();
 ```
 
-`ProcessingPipeline::setReader` / `setWriter` 接受 `unique_ptr<IReader>` / `IWriter`，测试可注入 mock。完整头文件映射见 [API 概览](./docs/api.md)。
+`ProcessingPipelineInterface::setReader` / `setWriter` 接受 `unique_ptr<IReader>` / `IWriter`，测试可注入 mock。完整头文件映射见 [API 概览](./docs/api.md)。
 
 ## 架构一览
 
@@ -186,21 +187,21 @@ serial_in_order (读取批次)  →  parallel (过滤/修剪/统计)  →  seria
 - **第二级 — 并行。** CPU 密集工作（谓词、修改器、逐碱基统计）跨核扩展，批次之间相互独立。
 - **第三级 — 串行保序。** 输出 FASTQ 保序；统计按批次确定性归约。
 
-在途批数受 `maxLiveTokens` 限制，内存峰值可预测。批次来自 `ObjectPool`，热点路径连逐批分配都不发生。
+在途批数受 `maxLiveTokens` 限制，内存峰值可预测。批次来自 `ObjectPool`，热点路径无逐批分配开销。
 
 调度框架不暴露给公共 API：默认 oneTBB，另有串行基线和默认关闭的 Taskflow 实验 backend。三者使用相同 I/O、批处理操作与计量契约，便于公平基准和后续演进。
 
-三个值得点明的设计决策：
+三个值得说明的设计决策：
 
-1. **`FastqRecord` 全是 `string_view`。** 生命周期绑定到所属 `FastqBatch`，记录不能逃逸出批次。这是刻意约束，让零拷贝安全。
-2. **`FastqBatch` 持有一块连续缓冲区。** `clear()` 保留容量并复用，下一批直接覆盖——无 `malloc/free` 抖动。
+1. **`FastqRecord` 全是 `string_view`。** 生命周期绑定到所属 `FastqBatch`，记录不能逃逸出批次。这是刻意约束，保证零拷贝的安全性。
+2. **`FastqBatch` 持有一块连续缓冲区。** `clear()` 保留容量并复用，下一批直接覆盖——无 `malloc/free` 开销。
 3. **每个领域一个 `interfaces.h`。** 不搞细粒度接口蔓延；依赖注入仍可用于测试。
 
-完整"为什么"（不只是"是什么"）见 [架构文档](./docs/architecture.md)。
+完整设计缘由（不只是"是什么"）见 [架构文档](./docs/architecture.md)。
 
 ## 代表性性能
 
-**100K reads（150 bp）**、**AMD Ryzen 9 5900X**、Clang Release 下的维护中点时快照。适合判断量级，不是所有数据集、压缩级别或存储环境下的绝对承诺。
+**100K reads（150 bp）**、**AMD Ryzen 9 5900X**、Clang Release 下的点时快照（持续维护）。适合粗略判断量级，不是所有数据集、压缩级别或存储环境下的绝对承诺。
 
 | 工作负载 | 代表性结果 |
 | --- | --- |
@@ -211,18 +212,18 @@ serial_in_order (读取批次)  →  parallel (过滤/修剪/统计)  →  seria
 
 **如何解读这些数字。**
 
-- 读取路径接近 1.7 GB/s——瓶颈在 gzip 解压和磁盘，不在解析。这正是零拷贝 + 批量 + 连续内存设计的回报。
+- 读取路径接近 1.7 GB/s——瓶颈在 gzip 解压和磁盘，不在解析。这正是零拷贝 + 批量 + 连续内存设计的体现。
 - 写出路径主要由 gzip 压缩主导；批量写入分摊系统调用开销。
 - 组合过滤接近纯写出吞吐，说明过滤/修剪的 CPU 开销很小。
 - 统计较低，因为逐碱基质量、GC 滑窗、长度直方图是 CPU 密集的，且没有写出路径可分摊。
 
-**对比背景。** 与 fastp/seqkit 的直接同环境对比数字高度依赖环境与参数，因此没有写死在本表里。`tools/benchmark/` 中的基准套件（Google Benchmark）可复现；要在你的硬件上跑并补一行对比，见 [性能总览](./docs/benchmark.md)。
+**对比背景。** 与 fastp/seqkit 的直接同环境对比数字高度依赖环境与参数，因此未列入本表。`tools/benchmark/` 中的基准套件（Google Benchmark）可复现；要在你的硬件上跑并补一行对比，见 [性能总览](./docs/benchmark.md)。
 
 ## 质量门槛
 
 CI（`.github/workflows/ci.yml`）在每次推送 `master` 和每个 PR 上运行：
 
-| 任务 | 抓什么 |
+| 任务 | 检测内容 |
 | --- | --- |
 | **格式** | clang-format 漂移 |
 | **静态分析** | clang-tidy + cppcheck：API 误用、现代 C++ 反模式 |
@@ -233,7 +234,7 @@ CI（`.github/workflows/ci.yml`）在每次推送 `master` 和每个 PR 上运�
 | **Clang UBSan** | 未定义行为 |
 | **覆盖率** | gcovr 行覆盖率 + Codecov 上传 |
 
-模糊测试（`tools/fuzz/`）针对 FASTQ 解析器入口——唯一消费不可信外部输入的位置。测试分层：单元（镜像 `src/`）、集成（跨模块）、端到端（CLI 黑盒，Bash + Python）。
+fuzzer target 位于 `tools/fuzz/`，针对 FASTQ 解析器入口——唯一消费不可信外部输入的位置。它们尚未接入 CI；可用 libFuzzer 构建在本地运行。测试分层：单元（镜像 `src/`）、集成（跨模块）、端到端（CLI 黑盒，Bash + Python）。
 
 ## 文档入口
 
@@ -249,25 +250,23 @@ CI（`.github/workflows/ci.yml`）在每次推送 `master` 和每个 PR 上运�
 
 ## 构建要求
 
-- 支持 C++23 的编译器（最低 **GCC 11+** 或 **Clang 12+**；CI 跑 GCC 与 Clang 21）
+- 支持 C++23 的编译器（最低 **GCC 13+** 或 **Clang 17+**；CI 跑 GCC 13——Ubuntu runner 默认——与 Clang 21）
 - **CMake 3.28+**
 - **Conan 2.x**
 - 当前支持 Linux 与 macOS；Windows 用 Docker 或 WSL。
 
 ## 贡献
 
-欢迎提交聚焦明确的改进：bug 报告、文档修订、测试补充、基准工作，以及范围清晰的功能调整。
+欢迎提交范围明确的改进：bug 报告、文档修订、测试补充、基准工作，以及边界清晰的功能调整。
 
-- 阅读[贡献指南](./CONTRIBUTING.md)
+- 阅读 [贡献指南](./CONTRIBUTING.md)
 - 通过 [GitHub Issues](https://github.com/LessUp/fastq-tools/issues) 反馈问题
 - 在 [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions) 讨论想法
 
 ## 许可证
 
-FastQTools 基于 [MIT 许可证](LICENSE) 发布。
+FastQTools 基于 [MIT 许可证](LICENSE) 发布。技术叙事——每个决策的"为什么"——见 [docs/architecture.md](./docs/architecture.md)。
 
 ## 作者
 
 **shijiashuai** — [GitHub](https://github.com/LessUp) · jiashuai.shi@qq.com
-
-C++23 FASTQ 工具集。技术叙事——每个决策的"为什么"——见 [docs/architecture.md](./docs/architecture.md)。

@@ -11,7 +11,7 @@ FastQTools 是一个 C++23 FASTQ 质控工具集，覆盖测序数据日常 QC �
 - **窄而深，而非宽而浅。** 与 fastp（全能 QC）、seqkit（全能工具箱）不同，FastQTools 只做 stat + filter + 嵌入 API，但把这三件事的内核做到现代 C++23 的工程上限。
 - **把预算投到看不见的地方。** 零拷贝、对象池、流水线保序、消毒剂 CI——这些是用户感知不到、但决定工程质量的细节。
 - **约束即安全。** `FastqRecord` 不能逃逸批次、`FastqBatch::clear()` 不释放内存、流水线首尾串行——刻意约束换来零拷贝、确定顺序与有界内存。
-- **CI 是质量合同。** 每次推送跑 GCC + Clang + ASan + TSan + UBSan + 静态分析 + 模糊测试，不是可选的"额外"。
+- **CI 是质量合同。** 每次推送跑 GCC + Clang + ASan + TSan + UBSan + 静态分析，不是可选的"额外"；fuzzer target 位于 `tools/fuzz/`（CI 集成待定）。
 
 ### 与同类工具的定位
 
@@ -193,10 +193,10 @@ I/O seam 直接承载 runtime 需要的完整契约，不再探测具体类型�
 CI（`.github/workflows/ci.yml`）跑：
 - clang-format 格式检查
 - clang-tidy + cppcheck 静态分析
-- GCC Release / Clang Release / Clang ASan 三矩阵构建 + 测试
-- 模糊测试在 `tools/fuzz/`（fastq_parser_fuzzer、fastq_record_fuzzer）
+- GCC Release / Clang Release / Clang ASan / Clang TSan / Clang UBSan 五矩阵构建 + 测试
+- fuzzer target 在 `tools/fuzz/`（fastq_parser_fuzzer、fastq_record_fuzzer），尚未接入 CI
 
-**为什么**：C++ 内存安全是核心风险。ASan 在 CI 里常态化跑，能在合并前抓到越界和 UAF。模糊测试针对解析器入口，因为 FASTQ 输入是外部不可信数据。静态分析抓 API 误用和现代 C++ 反模式。
+**为什么**：C++ 内存安全是核心风险。ASan 在 CI 里常态化跑，能在合并前抓到越界和 UAF。fuzzer target 针对解析器入口，因为 FASTQ 输入是外部不可信数据；可用 libFuzzer 构建在本地运行。静态分析抓 API 误用和现代 C++ 反模式。
 
 ## 性能特征
 
