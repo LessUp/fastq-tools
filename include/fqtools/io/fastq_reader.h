@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <string>
 
@@ -78,19 +79,13 @@ public:
     FastqReader& operator=(FastqReader&&) noexcept;
 
     /**
-     * @brief 读取下一批 FASTQ 记录
-     * @param batch 输出批次（会被清空后填充）
-     * @return 是否成功读取到数据（false 表示文件结束或错误）
-     */
-    [[nodiscard]] auto nextBatch(FastqBatch& batch) -> bool override;
-
-    /**
      * @brief 读取下一批 FASTQ 记录（限制记录数）
      * @param batch 输出批次（会被清空后填充）
      * @param maxRecords 最大读取记录数
      * @return 是否成功读取到数据
      */
-    [[nodiscard]] auto nextBatch(FastqBatch& batch, size_t maxRecords) -> bool;
+    [[nodiscard]] auto nextBatch(
+        FastqBatch& batch, size_t maxRecords = std::numeric_limits<size_t>::max()) -> bool override;
 
     /**
      * @brief 检查文件是否成功打开

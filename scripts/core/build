@@ -26,6 +26,7 @@ BUILD_DIR=""
 SANITIZER=""
 COVERAGE=false
 STATIC_ANALYSIS=false
+TASKFLOW=false
 LTO=true
 VERBOSE=false
 DEV_MODE=false
@@ -59,6 +60,7 @@ print_usage() {
   -s, --sanitizer TYPE      启用 Sanitizer: asan | tsan | ubsan
   -C, --coverage            启用代码覆盖率
   --static-analysis         启用静态分析 (clang-tidy)
+  --taskflow                启用实验 Taskflow backend（建议配合独立 --build-dir）
   --conan-compiler-version VERSION  覆盖 Conan 使用的编译器版本
   --conan-profile PATH      显式指定 Conan host profile
   --no-lto                  禁用链接时优化
@@ -124,6 +126,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --static-analysis)
             STATIC_ANALYSIS=true
+            shift
+            ;;
+        --taskflow)
+            TASKFLOW=true
             shift
             ;;
         --conan-compiler-version)
@@ -302,6 +308,7 @@ log_info "构建类型: ${BUILD_TYPE}"
 [[ -n "$SANITIZER" ]] && log_info "Sanitizer: ${SANITIZER}"
 [[ "$COVERAGE" == "true" ]] && log_info "覆盖率: 已启用"
 [[ "$STATIC_ANALYSIS" == "true" ]] && log_info "静态分析: 已启用"
+[[ "$TASKFLOW" == "true" ]] && log_info "Taskflow backend: 已启用（实验）"
 log_info "并行任务: ${JOBS}"
 
 # =============================================================================
@@ -389,6 +396,12 @@ if [[ "$STATIC_ANALYSIS" == "true" ]]; then
     CMAKE_ARGS+=(-DENABLE_CLANG_TIDY=ON)
 fi
 
+if [[ "$TASKFLOW" == "true" ]]; then
+    CMAKE_ARGS+=(-DENABLE_TASKFLOW_BACKEND=ON)
+else
+    CMAKE_ARGS+=(-DENABLE_TASKFLOW_BACKEND=OFF)
+fi
+
 if command -v conan &>/dev/null; then
     TOOLCHAIN_PATH="${BUILD_DIR}/conan_toolchain.cmake"
 
@@ -406,7 +419,14 @@ if command -v conan &>/dev/null; then
         fi
     fi
 
+    NEED_CONAN_INSTALL=false
     if [[ ! -f "${TOOLCHAIN_PATH}" ]]; then
+        NEED_CONAN_INSTALL=true
+    elif [[ "$TASKFLOW" == "true" && ! -f "${BUILD_DIR}/TaskflowConfig.cmake" ]]; then
+        NEED_CONAN_INSTALL=true
+    fi
+
+    if [[ "$NEED_CONAN_INSTALL" == "true" ]]; then
         log_info "检测到 Conan，正在生成依赖（首次构建可能较慢）"
 
         CONAN_BUILD_TYPE="${BUILD_TYPE}"
@@ -432,6 +452,9 @@ if command -v conan &>/dev/null; then
         fi
 
         CONAN_ARGS=(install build-config/dependencies/ --build=missing -of="${BUILD_DIR}" -s "build_type=${CONAN_BUILD_TYPE}")
+        if [[ "$TASKFLOW" == "true" ]]; then
+            CONAN_ARGS+=(-o "fastqtools/*:with_taskflow=True")
+        fi
         if [[ -n "${CONAN_PROFILE}" && -f "${CONAN_PROFILE}" ]]; then
             CONAN_ARGS+=(-pr:h "${CONAN_PROFILE}")
         fi

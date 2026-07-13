@@ -4,6 +4,7 @@
 #include "fqtools/logging.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cerrno>
 #include <cstring>
 #include <stdexcept>
@@ -35,7 +36,7 @@ struct FastqWriter::Impl {
     FastqWriterCompressionMode compression = FastqWriterCompressionMode::Auto;
     std::vector<char> buffer;
 
-    std::uint64_t totalUncompressedBytes = 0;
+    std::atomic<std::uint64_t> totalUncompressedBytes{0};
     static constexpr size_t kBufferThreshold = 64 * 1024;
 
     // 记录已刷写到磁盘的文件偏移，用于 posix_fadvise DONTNEED
@@ -143,7 +144,7 @@ struct FastqWriter::Impl {
             needed += 1 + rec.comment.size();  // Space + Comment
         }
 
-        totalUncompressedBytes += needed;
+        totalUncompressedBytes.fetch_add(needed, std::memory_order_relaxed);
 
         // Flush if buffer full
         if (buffer.size() + needed > buffer.capacity()) {
@@ -201,10 +202,12 @@ bool FastqWriter::isOpen() const {
     return impl_ && (impl_->fd >= 0 || impl_->gzfile != nullptr);
 }
 
-void FastqWriter::write(const FastqBatch& batch) {
+auto FastqWriter::write(const FastqBatch& batch) -> std::uint64_t {
+    const auto before = totalUncompressedBytes();
     for (const auto& rec : batch) {
         impl_->appendRecord(rec);
     }
+    return totalUncompressedBytes() - before;
 }
 
 void FastqWriter::write(const FastqRecord& record) {
@@ -212,7 +215,7 @@ void FastqWriter::write(const FastqRecord& record) {
 }
 
 auto FastqWriter::totalUncompressedBytes() const -> std::uint64_t {
-    return impl_ ? impl_->totalUncompressedBytes : 0;
+    return impl_ ? impl_->totalUncompressedBytes.load(std::memory_order_relaxed) : 0;
 }
 
 }  // namespace fq::io

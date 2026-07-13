@@ -55,6 +55,16 @@ TEST_F(FastqWriterTest, WriteBasic) {
     EXPECT_NE(content.find("@read2 desc\nAAAA\n+\nJJJJ\n"), std::string::npos);
 }
 
+TEST_F(FastqWriterTest, BatchWriteReportsCommittedUncompressedBytesThroughContract) {
+    FastqBatch batch;
+    batch.records().push_back(FastqRecord{"read1", {}, "ACGT", "IIII", "+"});
+
+    FastqWriter concreteWriter(tmpFile_);
+    IWriter& writer = concreteWriter;
+
+    EXPECT_EQ(writer.write(batch), 19U);
+}
+
 TEST_F(FastqWriterTest, PreservesCustomPlusLineWhenWriting) {
     {
         FastqWriter writer(tmpFile_);

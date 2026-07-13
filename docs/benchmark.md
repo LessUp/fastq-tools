@@ -42,8 +42,31 @@ cmake --build build --target run_benchmarks
 | `fastq_io_benchmark.cpp` | 读写吞吐量 |
 | `filter_benchmark.cpp` | filter 端到端 |
 | `stat_benchmark.cpp` | stat 计算性能 |
-| `pipeline_benchmark.cpp` | TBB 流水线吞吐 |
+| `pipeline_benchmark.cpp` | Sequential / oneTBB / Taskflow 同契约对照 |
 | `object_pool_benchmark.cpp` | 对象池分配性能 |
+
+## 执行 backend 对照
+
+实验 Taskflow backend 默认不参与生产构建。使用独立构建目录运行公平对照：
+
+```bash
+./scripts/core/build --taskflow --build-dir build/taskflow-release
+cmake -S . -B build/taskflow-release \
+  -DENABLE_TASKFLOW_BACKEND=ON \
+  -DBUILD_BENCHMARKS=ON
+cmake --build build/taskflow-release --target benchmark_backend_comparison
+```
+
+报告写入 `build/taskflow-release/benchmark-results/backends/summary.md`，包含 7 次重复的 p50、p95、吞吐和峰值 RSS。
+
+2026-07-13 本机验证快照（100K × 150bp，plain FASTQ）：
+
+| 工作负载 | 最佳 backend | p50 | 吞吐 |
+| --- | --- | ---: | ---: |
+| CPU-only | oneTBB 4T | 15.59 ms | 1931.95 MiB/s |
+| 读取 + 处理 + 写出 | oneTBB 2T | 54.69 ms | 550.86 MiB/s |
+
+Taskflow 在该矩阵中未满足“至少两个 CPU 密集负载吞吐提升 ≥10%、RSS 增长 ≤10%”的迁移门槛，因此 oneTBB 保持默认 backend。该快照只用于验证选型，正式结论仍应在目标机器和真实数据集上复现。
 
 ## 与同类工具对比
 

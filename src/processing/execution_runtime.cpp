@@ -1,23 +1,29 @@
 #include "processing/execution_runtime.h"
 
+#include "fqtools/io/fastq_reader.h"
+#include "fqtools/io/fastq_writer.h"
+
 #include <stdexcept>
+#include <utility>
+
+#include "processing/resolved_runtime_config.h"
 
 namespace {
 
-auto makeReaderOptions(const fq::processing::RuntimePolicy& runtimePolicy)
+auto makeReaderOptions(const fq::processing::ResolvedRuntimeConfig& config)
     -> fq::io::FastqReaderOptions {
     fq::io::FastqReaderOptions options;
-    options.readChunkBytes = runtimePolicy.readChunkBytes;
-    options.zlibBufferBytes = runtimePolicy.zlibBufferBytes;
-    options.maxBufferBytes = runtimePolicy.batchCapacityBytes;
+    options.readChunkBytes = config.readChunkBytes;
+    options.zlibBufferBytes = config.zlibBufferBytes;
+    options.maxBufferBytes = config.batchCapacityBytes;
     return options;
 }
 
-auto makeWriterOptions(const fq::processing::RuntimePolicy& runtimePolicy)
+auto makeWriterOptions(const fq::processing::ResolvedRuntimeConfig& config)
     -> fq::io::FastqWriterOptions {
     fq::io::FastqWriterOptions options;
-    options.zlibBufferBytes = runtimePolicy.zlibBufferBytes;
-    options.outputBufferBytes = runtimePolicy.writerBufferBytes;
+    options.zlibBufferBytes = config.zlibBufferBytes;
+    options.outputBufferBytes = config.writerBufferBytes;
     return options;
 }
 
@@ -25,79 +31,87 @@ auto makeWriterOptions(const fq::processing::RuntimePolicy& runtimePolicy)
 
 namespace fq::processing {
 
+namespace {
+
+auto selectBackend(ExecutionBackendPreference preference,
+                   const ResolvedRuntimeConfig& config) -> std::unique_ptr<ExecutionBackend> {
+    switch (preference) {
+        case ExecutionBackendPreference::Automatic:
+            return config.executionMode == ExecutionMode::Parallel
+                ? createOneTbbExecutionBackend()
+                : createSequentialExecutionBackend();
+        case ExecutionBackendPreference::Sequential:
+            return createSequentialExecutionBackend();
+        case ExecutionBackendPreference::OneTbb:
+            return createOneTbbExecutionBackend();
+        case ExecutionBackendPreference::Taskflow:
+            if (auto backend = createTaskflowExecutionBackend()) {
+                return backend;
+            }
+            throw std::invalid_argument("Taskflow execution backend is not enabled");
+    }
+
+    throw std::invalid_argument("Unknown execution backend preference");
+}
+
+}  // namespace
+
+struct ExecutionRuntime::Impl {
+    std::unique_ptr<fq::io::IReader> customReader;
+    std::shared_ptr<fq::io::IWriter> customWriter;
+    bool customReaderConfigured = false;
+};
+
+ExecutionRuntime::ExecutionRuntime() : impl_(std::make_unique<Impl>()) {}
+
 ExecutionRuntime::ExecutionRuntime(std::unique_ptr<fq::io::IReader> customReader,
                                    std::shared_ptr<fq::io::IWriter> customWriter)
-    : customReader_(std::move(customReader)),
-      customWriter_(std::move(customWriter)),
-      customReaderConfigured_(customReader_ != nullptr) {}
-
-auto ExecutionRuntime::derivePolicy(const ExecutionRuntimePlan& plan) const -> RuntimePolicy {
-    return deriveRuntimePolicy(plan.options);
+    : impl_(std::make_unique<Impl>()) {
+    impl_->customReaderConfigured = customReader != nullptr;
+    impl_->customReader = std::move(customReader);
+    impl_->customWriter = std::move(customWriter);
 }
 
-auto ExecutionRuntime::deriveExecutionPlan(const ExecutionRuntimePlan& plan,
-                                           const RuntimePolicy& runtimePolicy) const
-    -> PipelineExecutionPlan {
-    return derivePipelineExecutionPlan(
-        plan.options, runtimePolicy, customReader_ != nullptr, customWriter_ != nullptr);
-}
+ExecutionRuntime::~ExecutionRuntime() = default;
+ExecutionRuntime::ExecutionRuntime(ExecutionRuntime&&) noexcept = default;
+auto ExecutionRuntime::operator=(ExecutionRuntime&&) noexcept -> ExecutionRuntime& = default;
 
-auto ExecutionRuntime::createReader(const ExecutionRuntimePlan& plan,
-                                    const RuntimePolicy& runtimePolicy)
-    -> std::unique_ptr<fq::io::IReader> {
-    if (customReader_) {
-        return std::move(customReader_);
+auto ExecutionRuntime::executeErased(const ExecutionRuntimeRequest& request,
+                                     ExecutionOperation& operation) -> ErasedExecutionOutcome {
+    request.options.validate();
+    if (impl_->customReaderConfigured && !impl_->customReader) {
+        throw std::invalid_argument(
+            "ExecutionRuntime: custom reader must be reset before rerunning");
     }
 
-    auto reader =
-        std::make_unique<fq::io::FastqReader>(plan.inputPath, makeReaderOptions(runtimePolicy));
-    if (!reader->isOpen()) {
-        throw std::runtime_error("Failed to open input file: " + plan.inputPath);
-    }
-    return reader;
-}
+    const auto config = resolveRuntimeConfig(
+        request.options, impl_->customReader != nullptr, impl_->customWriter != nullptr);
 
-auto ExecutionRuntime::createWriter(const ExecutionRuntimePlan& plan,
-                                    const RuntimePolicy& runtimePolicy) const
-    -> std::shared_ptr<fq::io::IWriter> {
-    if (customWriter_) {
-        return customWriter_;
-    }
-    if (!plan.outputPath) {
-        return {};
+    std::shared_ptr<fq::io::IReader> reader;
+    if (impl_->customReader) {
+        reader = std::shared_ptr<fq::io::IReader>(std::move(impl_->customReader));
+    } else {
+        auto concreteReader =
+            std::make_shared<fq::io::FastqReader>(request.inputPath, makeReaderOptions(config));
+        if (!concreteReader->isOpen()) {
+            throw std::runtime_error("Failed to open input file: " + request.inputPath);
+        }
+        reader = std::move(concreteReader);
     }
 
-    auto writer =
-        std::make_shared<fq::io::FastqWriter>(*plan.outputPath, makeWriterOptions(runtimePolicy));
-    if (!writer->isOpen()) {
-        throw std::runtime_error("Failed to open output file: " + *plan.outputPath);
-    }
-    return writer;
-}
-
-auto ExecutionRuntime::nextBatch(fq::io::IReader& reader,
-                                 fq::io::FastqBatch& batch,
-                                 size_t maxRecords) const -> bool {
-    if (auto* fastqReader = dynamic_cast<fq::io::FastqReader*>(&reader)) {
-        return fastqReader->nextBatch(batch, maxRecords);
-    }
-    return reader.nextBatch(batch);
-}
-
-auto ExecutionRuntime::commitBatch(const std::shared_ptr<fq::io::IWriter>& writer,
-                                   const fq::io::FastqBatch& batch) const -> std::uint64_t {
-    if (!writer) {
-        return 0;
+    auto writer = impl_->customWriter;
+    if (!writer && request.outputPath) {
+        auto concreteWriter =
+            std::make_shared<fq::io::FastqWriter>(*request.outputPath, makeWriterOptions(config));
+        if (!concreteWriter->isOpen()) {
+            throw std::runtime_error("Failed to open output file: " + *request.outputPath);
+        }
+        writer = std::move(concreteWriter);
     }
 
-    if (auto* fastqWriter = dynamic_cast<fq::io::FastqWriter*>(writer.get())) {
-        const auto before = fastqWriter->totalUncompressedBytes();
-        writer->write(batch);
-        return fastqWriter->totalUncompressedBytes() - before;
-    }
-
-    writer->write(batch);
-    return batch.buffer().size();
+    auto backend = selectBackend(request.backend, config);
+    return backend->execute(
+        {std::move(reader), std::move(writer), config, request.options.batchSize}, operation);
 }
 
 }  // namespace fq::processing

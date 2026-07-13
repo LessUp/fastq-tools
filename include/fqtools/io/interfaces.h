@@ -8,6 +8,9 @@
 
 #include "fqtools/io/fastq_io.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <limits>
 #include <memory>
 
 namespace fq::io {
@@ -28,11 +31,13 @@ public:
     /**
      * @brief 读取下一批 FASTQ 记录
      * @param batch 输出批次（会被清空后填充）
+     * @param maxRecords 本批最多读取的记录数
      * @return 是否成功读取到数据（false 表示 EOF）
      * @throw fq::error::IOError 读取错误
      * @throw fq::error::FormatError 格式错误
      */
-    [[nodiscard]] virtual auto nextBatch(FastqBatch& batch) -> bool = 0;
+    [[nodiscard]] virtual auto nextBatch(
+        FastqBatch& batch, size_t maxRecords = std::numeric_limits<size_t>::max()) -> bool = 0;
 };
 
 /// @brief IReader 的工厂别名，便于测试 mock
@@ -53,9 +58,10 @@ public:
     /**
      * @brief 写入一批 FASTQ 记录
      * @param batch 要写入的记录批次
+     * @return 本批提交的未压缩 FASTQ 字节数
      * @throw fq::error::IOError 写入错误
      */
-    virtual void write(const FastqBatch& batch) = 0;
+    virtual auto write(const FastqBatch& batch) -> std::uint64_t = 0;
 };
 
 /// @brief IWriter 的工厂别名，便于测试 mock

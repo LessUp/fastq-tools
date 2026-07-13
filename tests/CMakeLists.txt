@@ -12,12 +12,24 @@ enable_testing()
 function(add_fq_test test_name label timeout)
     add_executable(${test_name} ${ARGN})
 
-    target_link_libraries(${test_name} PRIVATE
-        GTest::gtest_main
-        GTest::gmock
-        fq_lib
-        test_utils
-    )
+    # TSan 构建时使用自定义 main（含 TBB 调度器清理），避免进程退出挂起
+    if(ENABLE_TSAN)
+        target_sources(${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/utils/tbb_finalizer.cpp)
+        target_link_libraries(${test_name} PRIVATE
+            GTest::gtest
+            GTest::gmock
+            TBB::tbb
+            fq_lib
+            test_utils
+        )
+    else()
+        target_link_libraries(${test_name} PRIVATE
+            GTest::gtest_main
+            GTest::gmock
+            fq_lib
+            test_utils
+        )
+    endif()
 
     # fq_lib 已传播 include/；src/ 用于访问内部实现头文件
     target_include_directories(${test_name} PRIVATE
@@ -31,6 +43,14 @@ function(add_fq_test test_name label timeout)
         TIMEOUT ${timeout}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
+
+    # TSan 构建时为测试设置 suppressions 等选项（路径必须绝对，因为 ctest 会切换 CWD）
+    if(ENABLE_TSAN)
+        set_tests_properties(${test_name} PROPERTIES
+            ENVIRONMENT
+                "TSAN_OPTIONS=halt_on_error=0:second_deadlock_stack=1:suppressions=${CMAKE_SOURCE_DIR}/build-config/sanitizers/tsan.supp"
+        )
+    endif()
 endfunction()
 
 # --- 子目录 ---
@@ -80,3 +100,11 @@ set_tests_properties(e2e_python_cli PROPERTIES
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     ENVIRONMENT "FASTQTOOLS=${CMAKE_BINARY_DIR}/FastQTools"
 )
+
+# TSan 构建时为 e2e 测试追加 suppressions 选项
+if(ENABLE_TSAN)
+    set_property(TEST e2e_shell_cli e2e_python_cli APPEND PROPERTY
+        ENVIRONMENT
+            "TSAN_OPTIONS=halt_on_error=0:second_deadlock_stack=1:suppressions=${CMAKE_SOURCE_DIR}/build-config/sanitizers/tsan.supp"
+    )
+endif()

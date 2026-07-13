@@ -1,216 +1,209 @@
 /**
  * @file pipeline_benchmark.cpp
- * @brief 处理流水线端到端性能基准测试
- * @details 测试串行和并行处理流水线的实际吞吐量
- *
- * @author FastQTools Team
- * @date 2025
- * @copyright Copyright (c) 2025 FastQTools
+ * @brief 执行后端公平对照基准
+ * @details 三种 backend 共享相同 reader、batch operation、writer 和配置。
  */
 
 #include <benchmark/benchmark.h>
-#include <fqtools/processing/processing_pipeline_interface.h>
-#include <fqtools/processing/mutators.h>
-#include <fqtools/processing/predicates.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
-#include <random>
-#include <sstream>
 #include <string>
+#include <string_view>
+
+#include "processing/execution_backend.h"
+#include "processing/execution_runtime.h"
 
 namespace fq::benchmark {
 
 namespace {
 
-std::string generateFastQFile(std::size_t num_reads, std::size_t read_length = 150) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_int_distribution<> base_dis(0, 3);
-    static std::uniform_int_distribution<> qual_dis(20, 40);
+struct BenchmarkResult {
+    std::uint64_t totalReads = 0;
+    std::uint64_t totalBases = 0;
+    std::uint64_t checksum = 0;
+};
 
-    static const char bases[] = "ATGC";
+class CpuBenchmarkOperation {
+public:
+    using result_type = BenchmarkResult;
 
-    std::ostringstream oss;
-    for (std::size_t i = 0; i < num_reads; ++i) {
-        oss << "@read_" << i << "\n";
-        for (std::size_t j = 0; j < read_length; ++j) {
-            oss << bases[base_dis(gen)];
-        }
-        oss << "\n+\n";
-        for (std::size_t j = 0; j < read_length; ++j) {
-            oss << static_cast<char>(qual_dis(gen) + 33);
-        }
-        oss << "\n";
+    [[nodiscard]] auto makeResult() const -> result_type {
+        return {};
     }
-    return oss.str();
+
+    auto processBatch(fq::io::FastqBatch& batch) const -> result_type {
+        result_type result;
+        result.totalReads = batch.size();
+        for (const auto& record : batch) {
+            result.totalBases += record.seq.size();
+            for (const char base : record.seq) {
+                result.checksum = result.checksum * 131U + static_cast<unsigned char>(base);
+            }
+            for (const char quality : record.qual) {
+                result.checksum = result.checksum * 131U +
+                    static_cast<unsigned char>(quality);
+            }
+        }
+        return result;
+    }
+
+    void afterCommit(result_type& /*partial*/, std::uint64_t /*committedBytes*/) const {}
+
+    void merge(result_type& total, result_type partial) const {
+        total.totalReads += partial.totalReads;
+        total.totalBases += partial.totalBases;
+        total.checksum ^= partial.checksum;
+    }
+};
+
+auto makeInput(size_t readCount, size_t readLength) -> std::string {
+    std::string content;
+    const auto estimatedRecordBytes = readLength * 2 + 32;
+    content.reserve(readCount * estimatedRecordBytes);
+    const std::string sequence(readLength, 'A');
+    const std::string quality(readLength, 'I');
+
+    for (size_t i = 0; i < readCount; ++i) {
+        content += "@read_";
+        content += std::to_string(i);
+        content += '\n';
+        content += sequence;
+        content += "\n+\n";
+        content += quality;
+        content += '\n';
+    }
+    return content;
 }
 
-std::filesystem::path write_temp_fastq(const std::string& prefix, const std::string& content) {
-    namespace fs = std::filesystem;
-    fs::path path = fs::temp_directory_path() / (prefix + ".fastq");
-    std::ofstream ofs(path, std::ios::binary | std::ios::trunc);
-    ofs << content;
-    ofs.close();
-    return path;
+auto backendName(fq::processing::ExecutionBackendPreference backend) -> std::string_view {
+    using fq::processing::ExecutionBackendPreference;
+    switch (backend) {
+        case ExecutionBackendPreference::Automatic:
+            return "automatic";
+        case ExecutionBackendPreference::Sequential:
+            return "sequential";
+        case ExecutionBackendPreference::OneTbb:
+            return "onetbb";
+        case ExecutionBackendPreference::Taskflow:
+            return "taskflow";
+    }
+    return "unknown";
 }
+
+void runBackendBenchmark(::benchmark::State& state,
+                         fq::processing::ExecutionBackendPreference backend,
+                         bool writeOutput) {
+    if (backend == fq::processing::ExecutionBackendPreference::Taskflow &&
+        !fq::processing::isTaskflowExecutionBackendAvailable()) {
+        state.SkipWithError("Taskflow backend was not enabled at build time");
+        return;
+    }
+
+    const auto readCount = static_cast<size_t>(state.range(0));
+    const auto threadCount = static_cast<size_t>(state.range(1));
+    const auto input = std::filesystem::temp_directory_path() /
+        ("fqtools_backend_" + std::string(backendName(backend)) + ".fastq");
+    const auto output = std::filesystem::temp_directory_path() /
+        ("fqtools_backend_" + std::string(backendName(backend)) + "_output.fastq");
+
+    {
+        std::ofstream stream(input, std::ios::binary | std::ios::trunc);
+        stream << makeInput(readCount, 150);
+    }
+    const auto inputBytes = std::filesystem::file_size(input);
+
+    for (auto _ : state) {
+        fq::processing::ExecutionRuntime runtime;
+        fq::processing::ExecutionRuntimeRequest request;
+        request.inputPath = input.string();
+        if (writeOutput) {
+            request.outputPath = output.string();
+        }
+        request.options.batchSize = 1'000;
+        request.options.threadCount = threadCount;
+        request.backend = backend;
+
+        CpuBenchmarkOperation operation;
+        const auto outcome = runtime.execute(request, operation);
+        ::benchmark::DoNotOptimize(outcome.result.totalReads);
+        ::benchmark::DoNotOptimize(outcome.result.checksum);
+        ::benchmark::ClobberMemory();
+    }
+
+    state.SetItemsProcessed(state.iterations() * static_cast<std::int64_t>(readCount));
+    state.SetBytesProcessed(state.iterations() * static_cast<std::int64_t>(inputBytes));
+    state.counters["threads"] = static_cast<double>(threadCount);
+    state.counters["batch_records"] = 1'000.0;
+    state.counters["writes_output"] = writeOutput ? 1.0 : 0.0;
+
+    std::filesystem::remove(input);
+    std::filesystem::remove(output);
+}
+
+void BM_Backend_SequentialCpu(::benchmark::State& state) {
+    runBackendBenchmark(
+        state, fq::processing::ExecutionBackendPreference::Sequential, false);
+}
+
+void BM_Backend_OneTbbCpu(::benchmark::State& state) {
+    runBackendBenchmark(state, fq::processing::ExecutionBackendPreference::OneTbb, false);
+}
+
+void BM_Backend_TaskflowCpu(::benchmark::State& state) {
+    runBackendBenchmark(state, fq::processing::ExecutionBackendPreference::Taskflow, false);
+}
+
+void BM_Backend_SequentialReadWrite(::benchmark::State& state) {
+    runBackendBenchmark(
+        state, fq::processing::ExecutionBackendPreference::Sequential, true);
+}
+
+void BM_Backend_OneTbbReadWrite(::benchmark::State& state) {
+    runBackendBenchmark(state, fq::processing::ExecutionBackendPreference::OneTbb, true);
+}
+
+void BM_Backend_TaskflowReadWrite(::benchmark::State& state) {
+    runBackendBenchmark(state, fq::processing::ExecutionBackendPreference::Taskflow, true);
+}
+
+constexpr std::int64_t kBenchmarkReads = 100'000;
+
+BENCHMARK(BM_Backend_SequentialCpu)
+    ->Args({kBenchmarkReads, 1})
+    ->Unit(::benchmark::kMillisecond)
+    ->UseRealTime();
+BENCHMARK(BM_Backend_OneTbbCpu)
+    ->Args({kBenchmarkReads, 2})
+    ->Args({kBenchmarkReads, 4})
+    ->Args({kBenchmarkReads, 8})
+    ->Unit(::benchmark::kMillisecond)
+    ->UseRealTime();
+BENCHMARK(BM_Backend_TaskflowCpu)
+    ->Args({kBenchmarkReads, 2})
+    ->Args({kBenchmarkReads, 4})
+    ->Args({kBenchmarkReads, 8})
+    ->Unit(::benchmark::kMillisecond)
+    ->UseRealTime();
+
+BENCHMARK(BM_Backend_SequentialReadWrite)
+    ->Args({kBenchmarkReads, 1})
+    ->Unit(::benchmark::kMillisecond)
+    ->UseRealTime();
+BENCHMARK(BM_Backend_OneTbbReadWrite)
+    ->Args({kBenchmarkReads, 2})
+    ->Args({kBenchmarkReads, 4})
+    ->Args({kBenchmarkReads, 8})
+    ->Unit(::benchmark::kMillisecond)
+    ->UseRealTime();
+BENCHMARK(BM_Backend_TaskflowReadWrite)
+    ->Args({kBenchmarkReads, 2})
+    ->Args({kBenchmarkReads, 4})
+    ->Args({kBenchmarkReads, 8})
+    ->Unit(::benchmark::kMillisecond)
+    ->UseRealTime();
 
 }  // namespace
-
-// 串行处理流水线 benchmark
-static void BM_Pipeline_Sequential(::benchmark::State& state) {
-    const std::size_t num_reads = static_cast<std::size_t>(state.range(0));
-    std::string test_data = generateFastQFile(num_reads);
-    std::filesystem::path input_path = write_temp_fastq("pipeline_seq_input", test_data);
-    std::filesystem::path output_path =
-        std::filesystem::temp_directory_path() / "pipeline_seq_output.fastq";
-    const auto file_size = std::filesystem::file_size(input_path);
-
-    for (auto _ : state) {
-        auto pipeline = fq::processing::createProcessingPipeline();
-
-        fq::processing::ProcessingConfig config;
-        config.threadCount = 1;  // 串行模式
-        config.batchSize = 10000;
-
-        pipeline->setInputPath(input_path.string());
-        pipeline->setOutputPath(output_path.string());
-        pipeline->setProcessingConfig(config);
-
-        auto stats = pipeline->run();
-        ::benchmark::DoNotOptimize(stats.totalReads);
-    }
-
-    state.SetItemsProcessed(state.iterations() * static_cast<long long>(num_reads));
-    state.SetBytesProcessed(state.iterations() * static_cast<long long>(file_size));
-    state.counters["reads"] = static_cast<double>(num_reads);
-
-    std::filesystem::remove(input_path);
-    std::filesystem::remove(output_path);
-}
-
-// 并行处理流水线 benchmark (2 线程)
-static void BM_Pipeline_Parallel_2T(::benchmark::State& state) {
-    const std::size_t num_reads = static_cast<std::size_t>(state.range(0));
-    std::string test_data = generateFastQFile(num_reads);
-    std::filesystem::path input_path = write_temp_fastq("pipeline_par2_input", test_data);
-    std::filesystem::path output_path =
-        std::filesystem::temp_directory_path() / "pipeline_par2_output.fastq";
-    const auto file_size = std::filesystem::file_size(input_path);
-
-    for (auto _ : state) {
-        auto pipeline = fq::processing::createProcessingPipeline();
-
-        fq::processing::ProcessingConfig config;
-        config.threadCount = 2;  // 2 线程
-        config.batchSize = 10000;
-
-        pipeline->setInputPath(input_path.string());
-        pipeline->setOutputPath(output_path.string());
-        pipeline->setProcessingConfig(config);
-
-        auto stats = pipeline->run();
-        ::benchmark::DoNotOptimize(stats.totalReads);
-    }
-
-    state.SetItemsProcessed(state.iterations() * static_cast<long long>(num_reads));
-    state.SetBytesProcessed(state.iterations() * static_cast<long long>(file_size));
-    state.counters["reads"] = static_cast<double>(num_reads);
-    state.counters["threads"] = 2;
-
-    std::filesystem::remove(input_path);
-    std::filesystem::remove(output_path);
-}
-
-// 并行处理流水线 benchmark (4 线程)
-static void BM_Pipeline_Parallel_4T(::benchmark::State& state) {
-    const std::size_t num_reads = static_cast<std::size_t>(state.range(0));
-    std::string test_data = generateFastQFile(num_reads);
-    std::filesystem::path input_path = write_temp_fastq("pipeline_par4_input", test_data);
-    std::filesystem::path output_path =
-        std::filesystem::temp_directory_path() / "pipeline_par4_output.fastq";
-    const auto file_size = std::filesystem::file_size(input_path);
-
-    for (auto _ : state) {
-        auto pipeline = fq::processing::createProcessingPipeline();
-
-        fq::processing::ProcessingConfig config;
-        config.threadCount = 4;  // 4 线程
-        config.batchSize = 10000;
-
-        pipeline->setInputPath(input_path.string());
-        pipeline->setOutputPath(output_path.string());
-        pipeline->setProcessingConfig(config);
-
-        auto stats = pipeline->run();
-        ::benchmark::DoNotOptimize(stats.totalReads);
-    }
-
-    state.SetItemsProcessed(state.iterations() * static_cast<long long>(num_reads));
-    state.SetBytesProcessed(state.iterations() * static_cast<long long>(file_size));
-    state.counters["reads"] = static_cast<double>(num_reads);
-    state.counters["threads"] = 4;
-
-    std::filesystem::remove(input_path);
-    std::filesystem::remove(output_path);
-}
-
-// 并行处理流水线 benchmark (8 线程)
-static void BM_Pipeline_Parallel_8T(::benchmark::State& state) {
-    const std::size_t num_reads = static_cast<std::size_t>(state.range(0));
-    std::string test_data = generateFastQFile(num_reads);
-    std::filesystem::path input_path = write_temp_fastq("pipeline_par8_input", test_data);
-    std::filesystem::path output_path =
-        std::filesystem::temp_directory_path() / "pipeline_par8_output.fastq";
-    const auto file_size = std::filesystem::file_size(input_path);
-
-    for (auto _ : state) {
-        auto pipeline = fq::processing::createProcessingPipeline();
-
-        fq::processing::ProcessingConfig config;
-        config.threadCount = 8;  // 8 线程
-        config.batchSize = 10000;
-
-        pipeline->setInputPath(input_path.string());
-        pipeline->setOutputPath(output_path.string());
-        pipeline->setProcessingConfig(config);
-
-        auto stats = pipeline->run();
-        ::benchmark::DoNotOptimize(stats.totalReads);
-    }
-
-    state.SetItemsProcessed(state.iterations() * static_cast<long long>(num_reads));
-    state.SetBytesProcessed(state.iterations() * static_cast<long long>(file_size));
-    state.counters["reads"] = static_cast<double>(num_reads);
-    state.counters["threads"] = 8;
-
-    std::filesystem::remove(input_path);
-    std::filesystem::remove(output_path);
-}
-
-// 注册 benchmark
-BENCHMARK(BM_Pipeline_Sequential)
-    ->Args({10000})
-    ->Args({50000})
-    ->Args({100000})
-    ->Unit(::benchmark::kMillisecond);
-
-BENCHMARK(BM_Pipeline_Parallel_2T)
-    ->Args({10000})
-    ->Args({50000})
-    ->Args({100000})
-    ->Unit(::benchmark::kMillisecond);
-
-BENCHMARK(BM_Pipeline_Parallel_4T)
-    ->Args({10000})
-    ->Args({50000})
-    ->Args({100000})
-    ->Unit(::benchmark::kMillisecond);
-
-BENCHMARK(BM_Pipeline_Parallel_8T)
-    ->Args({10000})
-    ->Args({50000})
-    ->Args({100000})
-    ->Unit(::benchmark::kMillisecond);
 
 }  // namespace fq::benchmark

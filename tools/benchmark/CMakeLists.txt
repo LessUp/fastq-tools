@@ -59,6 +59,7 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/pipeline_benchmark.cpp")
     add_benchmark(benchmark_pipeline
         pipeline_benchmark.cpp
     )
+    target_include_directories(benchmark_pipeline PRIVATE ${CMAKE_SOURCE_DIR}/src)
 endif()
 
 # ObjectPool 对象池基准测试
@@ -98,6 +99,16 @@ endif()
 
 if (TARGET benchmark_pipeline)
     list(APPEND ALL_BENCHMARK_TARGETS benchmark_pipeline)
+    add_custom_target(benchmark_backend_comparison
+        COMMAND bash
+            ${CMAKE_CURRENT_SOURCE_DIR}/scripts/run_backend_comparison.sh
+            $<TARGET_FILE:benchmark_pipeline>
+            ${CMAKE_BINARY_DIR}/benchmark-results/backends
+        DEPENDS benchmark_pipeline
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Comparing sequential, oneTBB, and Taskflow execution backends"
+        VERBATIM
+    )
 endif()
 
 if (TARGET benchmark_object_pool)

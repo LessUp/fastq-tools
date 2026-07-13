@@ -85,8 +85,9 @@ public:
     /**
      * @brief 写入一批 FASTQ 记录
      * @param batch 要写入的记录批次
+     * @return 本批提交的未压缩 FASTQ 字节数
      */
-    void write(const FastqBatch& batch) override;
+    auto write(const FastqBatch& batch) -> std::uint64_t override;
 
     /**
      * @brief 写入单条 FASTQ 记录

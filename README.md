@@ -2,7 +2,7 @@
 
 <p align="center">
   <b>A focused, modern C++23 FASTQ quality-control toolkit</b><br>
-  <i>Zero-copy record views, TBB streaming pipelines, and a small embeddable surface — built to do a few QC things well.</i>
+  <i>Zero-copy record views, replaceable streaming backends, and a small embeddable surface — built to do a few QC things well.</i>
 </p>
 
 <p align="center">
@@ -58,7 +58,7 @@
 Most FASTQ QC tools optimize for breadth: many features, many report formats, many edge cases. FastQTools goes the other way. It is a **C++23 engineering showcase** that deliberately keeps the maintained surface small — `stat`, `filter`, and one umbrella header — and puts the engineering budget into the parts that are usually invisible:
 
 - A zero-copy record model where parsing collapses to pointer arithmetic.
-- A streaming TBB pipeline that stays in-order without hand-rolled synchronization.
+- A private execution-backend seam with an ordered oneTBB pipeline by default.
 - A batch + object-pool memory discipline that avoids per-record allocation on the hot path.
 - A CI matrix that runs GCC, Clang, ASan, TSan, and UBSan on every push, plus fuzzing at the parser entry.
 
@@ -83,7 +83,7 @@ FastQTools is not a drop-in fastp replacement. It is a focused, modern-core alte
 - **`filter` — filtering and trimming in one pass.** Length, average quality, N-ratio thresholds; quality trimming (5'/3'/both); adapter trimming; polyG / polyX tail trimming — all in a single streaming scan.
 - **Embeddable C++ API.** One umbrella header `<fqtools/fq.h>`; CLI and library share the same pipeline, so behavior is identical.
 - **Zero-copy record views.** `FastqRecord` is five `std::string_view`s pointing into a contiguous batch buffer; parsing is pointer arithmetic, not allocation.
-- **TBB streaming pipeline.** `serial_in_order → parallel → serial_in_order` keeps I/O ordered and statistics lock-free while the CPU-bound middle stage scales.
+- **Replaceable streaming backend.** The default oneTBB path uses `serial_in_order → parallel → serial_in_order`, keeping I/O ordered and reduction deterministic while the CPU-bound middle stage scales.
 - **Sanitizer-hardened CI.** GCC Release, Clang Release, Clang ASan/TSan/UBSan, clang-tidy, cppcheck, and libFuzzer at the parser entry — all on every push.
 
 ## Quick start
@@ -169,14 +169,14 @@ auto stats = pipeline->run();
           ▼               ▼               ▼
    src/io            src/processing    src/statistics
    Reader/Writer     Pipeline          Calculator/Writer
-   (gzip, batch)     (TBB, predicates) (Q20/Q30, GC, length)
+   (gzip, batch)     (backend, rules)  (Q20/Q30, GC, length)
           │               │               │
           └───────────────┼───────────────┘
                           ▼
                    include/fqtools/  ← public Façade (fq.h)
 ```
 
-The hot path is a three-stage TBB `parallel_pipeline`:
+The hot path runs behind a private `ExecutionBackend` seam. Its default oneTBB implementation is a three-stage `parallel_pipeline`:
 
 ```
 serial_in_order (read batch)  →  parallel (filter/trim/stat)  →  serial_in_order (write + reduce)
@@ -184,9 +184,11 @@ serial_in_order (read batch)  →  parallel (filter/trim/stat)  →  serial_in_o
 
 - **Stage 1 — serial in-order.** gzip streams are sequential; reads come out in file order.
 - **Stage 2 — parallel.** The CPU-bound work (predicates, mutators, per-base statistics) scales across cores. Batches are independent.
-- **Stage 3 — serial in-order.** Output FASTQ stays ordered; statistics reduction is lock-free.
+- **Stage 3 — serial in-order.** Output FASTQ stays ordered; statistics reduce deterministically by batch.
 
 In-flight batch count is bounded by `maxLiveTokens`, so memory peaks are predictable. Batches come from an `ObjectPool`, so the hot path does not allocate per-batch either.
+
+The scheduling framework does not leak into the public API: oneTBB is the default, with a sequential baseline and an opt-in experimental Taskflow backend. All three share the same I/O, batch-operation, and metrics contracts for fair comparison.
 
 Three design decisions worth calling out:
 

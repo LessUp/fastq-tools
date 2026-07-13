@@ -25,5 +25,5 @@ detect_deadlocks=1
 # Print full stack trace
 print_full_thread_history=1
 
-# Suppress known false positives (use suppressions file)
-# suppressions=build-config/sanitizers/tsan.supp
+# Suppress known false positives (oneTBB internal races)
+suppressions=build-config/sanitizers/tsan.supp

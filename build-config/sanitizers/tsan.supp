@@ -1,0 +1,15 @@
+# ThreadSanitizer 抑制列表
+#
+# 仅抑制第三方库内部已知的数据竞争（非项目代码）。
+
+# oneTBB 内部：destroy_process_mask 与 protect_affinity_mask 之间的竞争
+# 这是 oneTBB 2022.3.0 的已知问题，线程清理时 affinity mask 的读写无同步
+race:tbb::detail::r1::destroy_process_mask
+race:tbb::detail::r1::affinity_helper::protect_affinity_mask
+
+# oneTBB 内部：parallel_pipeline filter 设置与执行之间的竞争
+# TBB filter_node 构造在主线程，filter 执行在 worker 线程，TBB 内部同步对 TSan 不可见
+race:tbb::detail::d1::concrete_filter
+race:tbb::detail::d1::filter_node_leaf
+race:tbb::detail::r1::pipeline::fill_pipeline
+race:tbb::detail::r1::stage_task::execute_filter

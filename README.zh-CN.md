@@ -2,7 +2,7 @@
 
 <p align="center">
   <b>聚焦的现代 C++23 FASTQ 质控工具集</b><br>
-  <i>零拷贝记录视图、TBB 流式流水线、最小可嵌入接口——把少数 QC 事做到极致。</i>
+  <i>零拷贝记录视图、可替换流式 backend、最小可嵌入接口——把少数 QC 事做到极致。</i>
 </p>
 
 <p align="center">
@@ -58,7 +58,7 @@
 多数 FASTQ 质控工具追求广度：功能多、报告格式多、边界情况多。FastQTools 反其道而行。它是一个 **C++23 工程能力展示项目**，刻意把维护面收得很窄——`stat`、`filter`、一个总入口头文件——把工程预算投到那些通常看不见的地方：
 
 - 零拷贝记录模型，解析退化为指针算术，不分配字符串。
-- 流式 TBB 流水线，天然保序，无需手写同步原语。
+- 私有执行 backend seam，默认 oneTBB 流水线天然保序。
 - 批量 + 对象池内存纪律，热点路径不逐条分配。
 - CI 矩阵每次推送都跑 GCC、Clang、ASan、TSan、UBSan，外加解析器入口的模糊测试。
 
@@ -83,7 +83,7 @@ FastQTools 不是 fastp 的直接替代品。它是一个聚焦、现代内核�
 - **`filter` — 单遍过滤与修剪。** 长度、平均质量、N 比例阈值；质量修剪（5'/3'/两端）；adapter 修剪；polyG / polyX 尾修剪——全部在一次流式扫描中完成。
 - **可嵌入 C++ API。** 单一总入口头 `<fqtools/fq.h>`；CLI 与库共用同一条流水线，行为一致。
 - **零拷贝记录视图。** `FastqRecord` 是五个 `std::string_view`，指向连续批缓冲区；解析是指针算术，不是分配。
-- **TBB 流式流水线。** `serial_in_order → parallel → serial_in_order`，I/O 保序、统计无锁，CPU 密集的中间级跨核扩展。
+- **可替换流式 backend。** 默认 oneTBB 使用 `serial_in_order → parallel → serial_in_order`；I/O 保序、归约确定，CPU 密集的中间级跨核扩展。
 - **消毒剂加固的 CI。** GCC Release、Clang Release、Clang ASan/TSan/UBSan、clang-tidy、cppcheck，外加解析器入口的 libFuzzer——每次推送都跑。
 
 ## 快速开始
@@ -169,14 +169,14 @@ auto stats = pipeline->run();
           ▼               ▼               ▼
    src/io            src/processing    src/statistics
    Reader/Writer     Pipeline          Calculator/Writer
-   (gzip, 批量)      (TBB, 谓词)       (Q20/Q30, GC, 长度)
+   (gzip, 批量)      (backend, 谓词)   (Q20/Q30, GC, 长度)
           │               │               │
           └───────────────┼───────────────┘
                           ▼
                    include/fqtools/  ← 公共 Façade (fq.h)
 ```
 
-热点路径是一条三级 TBB `parallel_pipeline`：
+热点路径通过私有 `ExecutionBackend` seam 执行；默认 oneTBB 路径是一条三级 `parallel_pipeline`：
 
 ```
 serial_in_order (读取批次)  →  parallel (过滤/修剪/统计)  →  serial_in_order (写出 + 归约)
@@ -184,9 +184,11 @@ serial_in_order (读取批次)  →  parallel (过滤/修剪/统计)  →  seria
 
 - **第一级 — 串行保序。** gzip 流是顺序格式，读段按文件顺序产出。
 - **第二级 — 并行。** CPU 密集工作（谓词、修改器、逐碱基统计）跨核扩展，批次之间相互独立。
-- **第三级 — 串行保序。** 输出 FASTQ 保序；统计归约无锁。
+- **第三级 — 串行保序。** 输出 FASTQ 保序；统计按批次确定性归约。
 
 在途批数受 `maxLiveTokens` 限制，内存峰值可预测。批次来自 `ObjectPool`，热点路径连逐批分配都不发生。
+
+调度框架不暴露给公共 API：默认 oneTBB，另有串行基线和默认关闭的 Taskflow 实验 backend。三者使用相同 I/O、批处理操作与计量契约，便于公平基准和后续演进。
 
 三个值得点明的设计决策：
 

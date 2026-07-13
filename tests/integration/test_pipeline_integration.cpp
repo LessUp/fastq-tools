@@ -37,7 +37,7 @@ class VectorReader final : public fq::io::IReader {
 public:
     explicit VectorReader(std::vector<fq::io::FastqBatch> batches) : batches_(std::move(batches)) {}
 
-    auto nextBatch(fq::io::FastqBatch& batch) -> bool override {
+    auto nextBatch(fq::io::FastqBatch& batch, size_t /*maxRecords*/) -> bool override {
         if (cursor_ >= batches_.size()) {
             return false;
         }

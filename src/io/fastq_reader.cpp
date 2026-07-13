@@ -118,10 +118,6 @@ auto FastqReader::isOpen() const -> bool {
     return impl_ && impl_->isOpen();
 }
 
-auto FastqReader::nextBatch(FastqBatch& batch) -> bool {
-    return nextBatch(batch, std::numeric_limits<size_t>::max());
-}
-
 auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
     if (!impl_ || !impl_->isOpen()) {
         return false;

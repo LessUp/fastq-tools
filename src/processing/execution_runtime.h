@@ -1,40 +1,35 @@
 #pragma once
 
-#include "fqtools/io/fastq_batch_pool.h"
-#include "fqtools/io/fastq_io.h"
-#include "fqtools/io/fastq_reader.h"
-#include "fqtools/io/fastq_writer.h"
 #include "fqtools/io/interfaces.h"
 #include "fqtools/processing/processing_options.h"
 
-#include <cstddef>
+#include <any>
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
 
-#include "processing/pipeline_execution_plan.h"
-#include "processing/runtime_policy.h"
-#include <tbb/global_control.h>
-#include <tbb/parallel_pipeline.h>
+#include "processing/execution_backend.h"
 
 namespace fq::processing {
+
+enum class ExecutionBackendPreference : std::uint8_t {
+    Automatic,
+    Sequential,
+    OneTbb,
+    Taskflow,
+};
 
 struct ExecutionRuntimeRequest {
     std::string inputPath;
     std::optional<std::string> outputPath;
     ProcessingOptions options;
+    ExecutionBackendPreference backend = ExecutionBackendPreference::Automatic;
 };
 
 using ExecutionRuntimePlan = ExecutionRuntimeRequest;
-
-struct ExecutionRuntimeMetrics {
-    std::uint64_t batchCount = 0;
-    std::uint64_t committedBytes = 0;
-};
 
 template <typename Result>
 struct ExecutionRuntimeOutcome {
@@ -42,154 +37,64 @@ struct ExecutionRuntimeOutcome {
     ExecutionRuntimeMetrics metrics;
 };
 
+/**
+ * @brief FASTQ 执行 runtime
+ * @details 公共 interface 不暴露具体调度框架；后端选择和 I/O 创建均位于实现文件。
+ */
 class ExecutionRuntime {
 public:
-    ExecutionRuntime() = default;
+    ExecutionRuntime();
     ExecutionRuntime(std::unique_ptr<fq::io::IReader> customReader,
                      std::shared_ptr<fq::io::IWriter> customWriter = {});
+    ~ExecutionRuntime();
+
+    ExecutionRuntime(const ExecutionRuntime&) = delete;
+    auto operator=(const ExecutionRuntime&) -> ExecutionRuntime& = delete;
+    ExecutionRuntime(ExecutionRuntime&&) noexcept;
+    auto operator=(ExecutionRuntime&&) noexcept -> ExecutionRuntime&;
 
     template <typename Adapter>
     auto execute(const ExecutionRuntimeRequest& request, Adapter&& adapter)
         -> ExecutionRuntimeOutcome<typename std::decay_t<Adapter>::result_type> {
         using Result = typename std::decay_t<Adapter>::result_type;
 
-        ExecutionRuntimeMetrics metrics;
-        auto result = run<Result>(
-            request,
-            [&adapter](fq::io::FastqBatch& batch) { return adapter.processBatch(batch); },
-            [&adapter](Result& total, Result partial) { adapter.merge(total, std::move(partial)); },
-            [&adapter, &metrics](Result& partial, std::uint64_t committedBytes) {
-                ++metrics.batchCount;
-                metrics.committedBytes += committedBytes;
-                adapter.afterCommit(partial, committedBytes);
-            },
-            adapter.makeResult());
-        return {std::move(result), metrics};
+        class AdapterOperation final : public ExecutionOperation {
+        public:
+            explicit AdapterOperation(Adapter& value) : adapter_(value) {}
+
+            auto makeResult() -> std::any override {
+                return std::any(adapter_.makeResult());
+            }
+
+            auto processBatch(fq::io::FastqBatch& batch) -> std::any override {
+                return std::any(adapter_.processBatch(batch));
+            }
+
+            void afterCommit(std::any& partial, std::uint64_t committedBytes) override {
+                adapter_.afterCommit(std::any_cast<Result&>(partial), committedBytes);
+            }
+
+            void merge(std::any& total, std::any partial) override {
+                adapter_.merge(std::any_cast<Result&>(total),
+                               std::move(std::any_cast<Result&>(partial)));
+            }
+
+        private:
+            Adapter& adapter_;
+        };
+
+        AdapterOperation operation(adapter);
+        auto outcome = executeErased(request, operation);
+        return {std::any_cast<Result>(std::move(outcome.result)), outcome.metrics};
     }
 
 private:
-    template <typename Final, typename BatchWork, typename Reduce, typename AfterCommit>
-    auto run(const ExecutionRuntimePlan& plan,
-             BatchWork&& batchWork,
-             Reduce&& reduce,
-             AfterCommit&& afterCommit,
-             Final initial) -> Final {
-        plan.options.validate();
-        if (customReaderConfigured_ && !customReader_) {
-            throw std::invalid_argument(
-                "ExecutionRuntime: custom reader must be reset before rerunning");
-        }
+    struct Impl;
 
-        const auto runtimePolicy = derivePolicy(plan);
-        const auto executionPlan = deriveExecutionPlan(plan, runtimePolicy);
-        if (executionPlan.mode == PipelineExecutionMode::Parallel) {
-            return runParallel(plan,
-                               runtimePolicy,
-                               executionPlan,
-                               std::forward<BatchWork>(batchWork),
-                               std::forward<Reduce>(reduce),
-                               std::forward<AfterCommit>(afterCommit),
-                               std::move(initial));
-        }
+    [[nodiscard]] auto executeErased(const ExecutionRuntimeRequest& request,
+                                     ExecutionOperation& operation) -> ErasedExecutionOutcome;
 
-        return runSequential(plan,
-                             runtimePolicy,
-                             std::forward<BatchWork>(batchWork),
-                             std::forward<Reduce>(reduce),
-                             std::forward<AfterCommit>(afterCommit),
-                             std::move(initial));
-    }
-
-    template <typename Final, typename BatchWork, typename Reduce, typename AfterCommit>
-    auto runSequential(const ExecutionRuntimePlan& plan,
-                       const RuntimePolicy& runtimePolicy,
-                       BatchWork&& batchWork,
-                       Reduce&& reduce,
-                       AfterCommit&& afterCommit,
-                       Final initial) -> Final {
-        auto reader = createReader(plan, runtimePolicy);
-        auto writer = createWriter(plan, runtimePolicy);
-        fq::io::FastqBatch batch;
-        Final finalResult = std::move(initial);
-        while (nextBatch(*reader, batch, plan.options.batchSize)) {
-            auto partial = batchWork(batch);
-            const auto committedBytes = commitBatch(writer, batch);
-            afterCommit(partial, committedBytes);
-            reduce(finalResult, std::move(partial));
-        }
-        return finalResult;
-    }
-
-    template <typename Final, typename BatchWork, typename Reduce, typename AfterCommit>
-    auto runParallel(const ExecutionRuntimePlan& plan,
-                     const RuntimePolicy& runtimePolicy,
-                     const PipelineExecutionPlan& executionPlan,
-                     BatchWork&& batchWork,
-                     Reduce&& reduce,
-                     AfterCommit&& afterCommit,
-                     Final initial) -> Final {
-        using Partial = std::decay_t<std::invoke_result_t<BatchWork&, fq::io::FastqBatch&>>;
-        using BatchResult = std::pair<std::shared_ptr<fq::io::FastqBatch>, Partial>;
-
-        auto reader = std::shared_ptr<fq::io::IReader>(createReader(plan, runtimePolicy).release());
-        auto writer = createWriter(plan, runtimePolicy);
-        auto batchPool = fq::io::createFastqBatchPool(executionPlan.maxLiveTokens,
-                                                      executionPlan.maxLiveTokens * 2);
-        Final finalResult = std::move(initial);
-
-        tbb::global_control globalLimit(tbb::global_control::max_allowed_parallelism,
-                                        executionPlan.threadCount);
-
-        tbb::parallel_pipeline(
-            executionPlan.maxLiveTokens,
-            tbb::make_filter<void, std::shared_ptr<fq::io::FastqBatch>>(
-                tbb::filter_mode::serial_in_order,
-                [this, reader = std::move(reader), batchPool, batchSize = plan.options.batchSize](
-                    tbb::flow_control& fc) -> std::shared_ptr<fq::io::FastqBatch> {
-                    auto batch = batchPool->acquire();
-                    if (nextBatch(*reader, *batch, batchSize)) {
-                        return batch;
-                    }
-                    fc.stop();
-                    return nullptr;
-                }) &
-                tbb::make_filter<std::shared_ptr<fq::io::FastqBatch>, BatchResult>(
-                    tbb::filter_mode::parallel,
-                    [work = std::forward<BatchWork>(batchWork)](
-                        std::shared_ptr<fq::io::FastqBatch> batch) -> BatchResult {
-                        auto partial = work(*batch);
-                        return std::make_pair(std::move(batch), std::move(partial));
-                    }) &
-                tbb::make_filter<BatchResult, void>(
-                    tbb::filter_mode::serial_in_order,
-                    [this, writer = std::move(writer), &reduce, &afterCommit, &finalResult](
-                        BatchResult result) {
-                        const auto committedBytes = commitBatch(writer, *result.first);
-                        afterCommit(result.second, committedBytes);
-                        reduce(finalResult, std::move(result.second));
-                    }));
-
-        return finalResult;
-    }
-
-    [[nodiscard]] auto derivePolicy(const ExecutionRuntimePlan& plan) const -> RuntimePolicy;
-    [[nodiscard]] auto deriveExecutionPlan(const ExecutionRuntimePlan& plan,
-                                           const RuntimePolicy& runtimePolicy) const
-        -> PipelineExecutionPlan;
-    auto createReader(const ExecutionRuntimePlan& plan,
-                      const RuntimePolicy& runtimePolicy) -> std::unique_ptr<fq::io::IReader>;
-    [[nodiscard]] auto createWriter(const ExecutionRuntimePlan& plan,
-                                    const RuntimePolicy& runtimePolicy) const
-        -> std::shared_ptr<fq::io::IWriter>;
-    auto nextBatch(fq::io::IReader& reader,
-                   fq::io::FastqBatch& batch,
-                   size_t maxRecords) const -> bool;
-    [[nodiscard]] auto commitBatch(const std::shared_ptr<fq::io::IWriter>& writer,
-                                   const fq::io::FastqBatch& batch) const -> std::uint64_t;
-
-    std::unique_ptr<fq::io::IReader> customReader_;
-    std::shared_ptr<fq::io::IWriter> customWriter_;
-    bool customReaderConfigured_ = false;
+    std::unique_ptr<Impl> impl_;
 };
 
 }  // namespace fq::processing

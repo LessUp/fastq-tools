@@ -9,6 +9,8 @@ class FastQTools(ConanFile):
     
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
+    options = {"with_taskflow": [True, False]}
+    default_options = {"with_taskflow": False}
     
     # Sources are located in the same place as this recipe, copy them to the recipe
     exports_sources = "CMakeLists.txt", "src/*", "include/*", "cmake/*", "config/*", "tests/*", "tools/*"
@@ -29,6 +31,8 @@ class FastQTools(ConanFile):
         self.requires("nlohmann_json/3.11.3")
         # Intel's Threading Building Blocks for high-level parallelism
         self.requires("onetbb/2022.3.0")
+        if self.options.with_taskflow:
+            self.requires("taskflow/4.0.0")
         self.requires("benchmark/1.8.3")
 
     def build_requirements(self):

@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -13,6 +14,26 @@
 
 namespace fq::processing {
 namespace {
+
+struct ReaderCallState {
+    size_t requestedMaxRecords = 0;
+    size_t callCount = 0;
+};
+
+class RecordingLimitReader final : public fq::io::IReader {
+public:
+    explicit RecordingLimitReader(std::shared_ptr<ReaderCallState> state)
+        : state_(std::move(state)) {}
+
+    auto nextBatch(fq::io::FastqBatch& /*batch*/, size_t maxRecords) -> bool override {
+        state_->requestedMaxRecords = maxRecords;
+        ++state_->callCount;
+        return false;
+    }
+
+private:
+    std::shared_ptr<ReaderCallState> state_;
+};
 
 struct BatchSummary {
     std::vector<std::string> firstIds;
@@ -96,6 +117,22 @@ TEST(ExecutionRuntimeTest, ExecuteProcessesBatchesThroughSingleAdapter) {
     EXPECT_THAT(outcome.result.batchSizes, ::testing::ElementsAre(1U, 1U));
 }
 
+TEST(ExecutionRuntimeTest, ExecutePassesConfiguredBatchSizeThroughReaderContract) {
+    auto state = std::make_shared<ReaderCallState>();
+    ExecutionRuntime runtime(std::make_unique<RecordingLimitReader>(state));
+    RecordingCommandAdapter adapter;
+
+    ExecutionRuntimeRequest request;
+    request.options.batchSize = 37;
+    request.options.threadCount = 1;
+
+    const auto outcome = runtime.execute(request, adapter);
+
+    EXPECT_EQ(outcome.metrics.batchCount, 0U);
+    EXPECT_EQ(state->callCount, 1U);
+    EXPECT_EQ(state->requestedMaxRecords, 37U);
+}
+
 TEST(ExecutionRuntimeTest, ExecuteRespectsConfiguredBatchSize) {
     fq::test::TempDirectory tempDir("execution_runtime_");
     ExecutionRuntime runtime;
@@ -170,6 +207,43 @@ TEST(ExecutionRuntimeTest, ExecuteKeepsBatchCommitOrderInParallelMode) {
     EXPECT_EQ(outcome.metrics.batchCount, 2U);
     EXPECT_THAT(outcome.result.firstIds, ::testing::ElementsAre("read1", "read2"));
     EXPECT_THAT(outcome.result.committedBytes, ::testing::Each(::testing::Gt(0U)));
+}
+
+TEST(ExecutionRuntimeTest, ExecuteBackendsHonorTheSameObservableContract) {
+    fq::test::TempDirectory tempDir("execution_runtime_");
+    const auto input = writeGeneratedFastqInput(tempDir, "input.fastq", 5);
+
+    auto executeWith = [&input](ExecutionBackendPreference backend) {
+        ExecutionRuntime runtime;
+        RecordingCommandAdapter adapter;
+        ExecutionRuntimeRequest request;
+        request.inputPath = input;
+        request.options.batchSize = 2;
+        request.options.threadCount = 2;
+        request.backend = backend;
+        return runtime.execute(request, adapter);
+    };
+
+    const auto sequential = executeWith(ExecutionBackendPreference::Sequential);
+    const auto oneTbb = executeWith(ExecutionBackendPreference::OneTbb);
+
+    EXPECT_EQ(oneTbb.result.totalReads, sequential.result.totalReads);
+    EXPECT_EQ(oneTbb.result.firstIds, sequential.result.firstIds);
+    EXPECT_EQ(oneTbb.result.batchSizes, sequential.result.batchSizes);
+    EXPECT_EQ(oneTbb.metrics.batchCount, sequential.metrics.batchCount);
+    EXPECT_EQ(oneTbb.metrics.committedBytes, sequential.metrics.committedBytes);
+
+    if (isTaskflowExecutionBackendAvailable()) {
+        const auto taskflow = executeWith(ExecutionBackendPreference::Taskflow);
+        EXPECT_EQ(taskflow.result.totalReads, sequential.result.totalReads);
+        EXPECT_EQ(taskflow.result.firstIds, sequential.result.firstIds);
+        EXPECT_EQ(taskflow.result.batchSizes, sequential.result.batchSizes);
+        EXPECT_EQ(taskflow.metrics.batchCount, sequential.metrics.batchCount);
+        EXPECT_EQ(taskflow.metrics.committedBytes, sequential.metrics.committedBytes);
+    } else {
+        EXPECT_THROW(static_cast<void>(executeWith(ExecutionBackendPreference::Taskflow)),
+                     std::invalid_argument);
+    }
 }
 
 }  // namespace fq::processing
