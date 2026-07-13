@@ -6,33 +6,52 @@
 
 | 项目 | 规格 |
 |------|------|
-| CPU | AMD Ryzen 9 5900X |
-| 核心数 | 12 核 24 线程 |
-| 内存 | <待补> |
-| 存储 | <待补：NVMe 型号/顺序读写> |
+| CPU | AMD Ryzen 7 5800H with Radeon Graphics |
+| 架构 | Zen3，8 核 16 线程，单 socket |
+| 基频/加速 | 3.2 GHz / 4.4 GHz |
+| L1d / L1i | 32 KiB × 8（每核 8-way，64 B 行） |
+| L2 | 512 KiB × 8（每核 8-way） |
+| L3 | 16 MiB（共享，16-way） |
+| 内存 | 15 GiB DDR4 |
+| 存储 | WSL2 虚拟盘（顺序写 ~1.1 GB/s，虚拟化层透传） |
 | OS  | Linux 6.18.33.2-microsoft-standard-WSL2 |
 
 > WSL2 环境下 I/O 性能受虚拟化影响，跨环境对比需谨慎。涉及磁盘吞吐的结论建议在原生 Linux 复核。
+
+### PMU 可用性（影响 perf/VTune 选型）
+
+| 资源 | 状态 | 说明 |
+|------|------|------|
+| 通用 arch 事件 | ✅ 7 个 | cycles / instructions / cache-references / cache-misses / branch-instructions / branch-misses / stalled-cycles-frontend |
+| AMD 专有 IBS | ❌ | Hyper-V vPMU 不透传 IBS MSR |
+| Uncore（L3/UMC/DF） | ❌ | vPMU 不暴露 uncore 设备 |
+| RAPL 功耗 | ❌ | vPMU 不透传 |
+| `perf_event_paranoid` | 2 | 默认限制用户态硬件事件访问 |
+| `perf` 工具 | ❌ | 无匹配 `linux-tools-6.18.33.2-microsoft` 包 |
+
+**结论**：WSL2 下只能做函数级热点 + 粗粒度 cache 命中率分析。微架构 Top-Down / 内存延迟 / DRAM 带宽 / 功耗分析不可用，需裸金属云实例或原生 Linux。本仓库性能分析采用 Valgrind 指令级模拟 + Google Benchmark 吞吐基准的组合策略。
 
 ## 软件工具链
 
 | 项目 | 版本 |
 |------|------|
-| 编译器 | Clang 21 / GCC 13（CI 默认） |
-| 构建类型 | Release |
-| CMake | 3.28+ |
-| Conan | 2.x |
-| oneTBB | <待补：conan 依赖版本> |
-| Google Benchmark | 1.14+ |
+| 编译器 | Clang 21.1.8（默认）/ GCC 13 |
+| 构建类型 | Release（基准）/ RelWithDebInfo（Valgrind 分析，-O2 + -g） |
+| CMake | 3.28.3 |
+| Conan | 2.19.0 |
+| oneTBB | 2022.3.0（Conan 依赖） |
+| Google Benchmark | 1.9.5（Conan 依赖） |
+| Valgrind | 3.22.0 |
+| libc++ | LLVM 21 配套 |
 
 ## 数据集
 
 | 名称 | 规模 | 来源 | 用途 |
 |------|------|------|------|
-| 默认基准集 | 100K reads，150 bp | 合成生成 | 读写/过滤/统计基准 |
-| <待补> | — | — | — |
+| sample_10k_len100 | 10K reads × 100 bp，2.1 MiB | `tests/e2e/.tmp_python/sample_10k_len100.fastq` | Google Benchmark / 端到端 |
+| sample_1k | 1K reads × 100 bp，214 KiB | `sample_10k_len100` 前 1000 条 | Valgrind 分析（慢工具用小数据） |
 
-> 数据集生成脚本/下载链接待补。新数据集需在此登记。
+> Valgrind 工具慢 20-50x，用 1K reads 子集保证可接受运行时间。Google Benchmark 用 10K/100K 内置合成数据。
 
 ## 调用方式
 
@@ -40,9 +59,14 @@
 # 默认 Release 构建
 ./scripts/core/build
 
-# 运行基准
-cmake --build build --target benchmarks
-./build/tools/benchmark/benchmark_fastq_io --benchmark_format=json
+# Valgrind 分析构建（带调试符号）
+./scripts/core/build --type RelWithDebInfo --build-dir build/clang-relwithdebinfo
+
+# 运行 IO 基准
+cmake -S . -B build/clang-release -DBUILD_BENCHMARKS=ON
+cmake --build build/clang-release --target benchmark_fastq_io
+./build/clang-release/tools/benchmark/benchmark_fastq_io \
+  --benchmark_format=json --benchmark_repetitions=3
 ```
 
 执行 backend 对照（Taskflow 默认不参与生产构建）：

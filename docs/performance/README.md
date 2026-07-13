@@ -35,9 +35,15 @@
 
 ### 快照归档
 
-| 场景 | 路径 |
-|------|------|
-| 执行 backend 对照 | [`benchmark-reports/backends/summary.md`](./benchmark-reports/backends/summary.md) |
+| 场景 | 路径 | 说明 |
+|------|------|------|
+| 执行 backend 对照 | [`benchmark-reports/backends/summary.md`](./benchmark-reports/backends/summary.md) | oneTBB vs Taskflow |
+| Callgrind 热点分析 | [`benchmark-reports/callgrind/2026-07-13/summary.md`](./benchmark-reports/callgrind/2026-07-13/summary.md) | stat + filter 函数级热点 |
+| Cachegrind 缓存分析 | [`benchmark-reports/cachegrind/2026-07-13/summary.md`](./benchmark-reports/cachegrind/2026-07-13/summary.md) | L1/L2/LL 命中率模拟 |
+| Memcheck 内存正确性 | [`benchmark-reports/memcheck/2026-07-13/summary.md`](./benchmark-reports/memcheck/2026-07-13/summary.md) | 内存泄露 + 越界检测 |
+| Massif 堆内存分析 | [`benchmark-reports/massif/2026-07-13/summary.md`](./benchmark-reports/massif/2026-07-13/summary.md) | 堆内存峰值 + 增长曲线 |
+| Helgrind 线程正确性 | [`benchmark-reports/helgrind/2026-07-13/summary.md`](./benchmark-reports/helgrind/2026-07-13/summary.md) | 多线程数据竞争检测 |
+| FASTQ IO 吞吐 | [`benchmark-reports/fastq-io/2026-07-13/summary.md`](./benchmark-reports/fastq-io/2026-07-13/summary.md) | Reader/Writer 吞吐基准 |
 
 ## 如何跑基准
 

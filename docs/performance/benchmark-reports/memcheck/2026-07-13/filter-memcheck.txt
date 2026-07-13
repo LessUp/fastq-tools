@@ -1,0 +1,112 @@
+==190252== Memcheck, a memory error detector
+==190252== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==190252== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
+==190252== Command: build/clang-relwithdebinfo/FastQTools filter -i /tmp/sample_1k.fastq -o /dev/null --min-quality 20 --min-length 50
+==190252== 
+
+    ███████╗ █████╗ ███████╗████████╗ ██████╗ ████████╗ ██████╗  ██████╗ ██║     ███████╗
+    ██╔════╝██╔══██╗██╔════╝╚══██╔══╝██╔═══██╗╚══██╔══╝██╔═══██╗██╔═══██╗██║     ██╔════╝
+    █████╗  ███████║███████╗   ██║   ██║   ██║   ██║   ██║   ██║██║   ██║██║     ███████╗
+    ██╔══╝  ██╔══██║╚════██║   ██║   ██║▄▄ ██║   ██║   ██║   ██║██║   ██║██║     ╚════██║
+    ██║     ██║  ██║███████║   ██║   ╚██████╔╝   ██║   ╚██████╔╝╚██████╔╝███████╗███████║
+    ╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝    ╚══▀▀═╝    ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝╚══════╝
+        
+处理统计信息:
+  总读取数: 1000
+  通过读取数: 1000 (100.00%)
+  过滤读取数: 0 (0.00%)
+  修改读取数: 0
+  错误读取数: 0
+  处理时间: 44.00 ms
+  处理吞吐量: 4.64 MB/s
+==190252== 
+==190252== HEAP SUMMARY:
+==190252==     in use at exit: 1,825 bytes in 5 blocks
+==190252==   total heap usage: 2,829 allocs, 2,824 frees, 6,782,065 bytes allocated
+==190252== 
+==190252== 67 bytes in 1 blocks are still reachable in loss record 1 of 5
+==190252==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==190252==    by 0x4028ABF: malloc (rtld-malloc.h:56)
+==190252==    by 0x4028ABF: strdup (strdup.c:42)
+==190252==    by 0x400948D: _dl_map_object (dl-load.c:2201)
+==190252==    by 0x400D8DB: dl_open_worker_begin (dl-open.c:578)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x400D163: _dl_open (dl-open.c:905)
+==190252==    by 0x4BFF1A3: dlopen_doit (dlopen.c:56)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x4001668: _dl_catch_error (dl-catch.c:256)
+==190252==    by 0x4BFEC82: _dlerror_run (dlerror.c:138)
+==190252== 
+==190252== 67 bytes in 1 blocks are still reachable in loss record 2 of 5
+==190252==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==190252==    by 0x400CA68: malloc (rtld-malloc.h:56)
+==190252==    by 0x400CA68: _dl_new_object (dl-object.c:199)
+==190252==    by 0x4007ABE: _dl_map_object_from_fd (dl-load.c:1053)
+==190252==    by 0x4009528: _dl_map_object (dl-load.c:2268)
+==190252==    by 0x400D8DB: dl_open_worker_begin (dl-open.c:578)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x400D163: _dl_open (dl-open.c:905)
+==190252==    by 0x4BFF1A3: dlopen_doit (dlopen.c:56)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x4001668: _dl_catch_error (dl-catch.c:256)
+==190252== 
+==190252== 168 bytes in 1 blocks are still reachable in loss record 3 of 5
+==190252==    at 0x4846828: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==190252==    by 0x400CF3F: malloc (rtld-malloc.h:56)
+==190252==    by 0x400CF3F: add_to_global_resize (dl-open.c:152)
+==190252==    by 0x400DF0F: dl_open_worker_begin (dl-open.c:737)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x400D163: _dl_open (dl-open.c:905)
+==190252==    by 0x4BFF1A3: dlopen_doit (dlopen.c:56)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x4001668: _dl_catch_error (dl-catch.c:256)
+==190252==    by 0x4BFEC82: _dlerror_run (dlerror.c:138)
+==190252==    by 0x4BFF25E: dlopen_implementation (dlopen.c:71)
+==190252==    by 0x4BFF25E: dlopen@@GLIBC_2.34 (dlopen.c:81)
+==190252== 
+==190252== 216 bytes in 1 blocks are still reachable in loss record 4 of 5
+==190252==    at 0x484D953: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==190252==    by 0x401622F: calloc (rtld-malloc.h:44)
+==190252==    by 0x401622F: _dl_check_map_versions (dl-version.c:280)
+==190252==    by 0x400DC7C: dl_open_worker_begin (dl-open.c:646)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x400D163: _dl_open (dl-open.c:905)
+==190252==    by 0x4BFF1A3: dlopen_doit (dlopen.c:56)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x4001668: _dl_catch_error (dl-catch.c:256)
+==190252==    by 0x4BFEC82: _dlerror_run (dlerror.c:138)
+==190252==    by 0x4BFF25E: dlopen_implementation (dlopen.c:71)
+==190252==    by 0x4BFF25E: dlopen@@GLIBC_2.34 (dlopen.c:81)
+==190252== 
+==190252== 1,307 bytes in 1 blocks are still reachable in loss record 5 of 5
+==190252==    at 0x484D953: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==190252==    by 0x400C72C: calloc (rtld-malloc.h:44)
+==190252==    by 0x400C72C: _dl_new_object (dl-object.c:92)
+==190252==    by 0x4007ABE: _dl_map_object_from_fd (dl-load.c:1053)
+==190252==    by 0x4009528: _dl_map_object (dl-load.c:2268)
+==190252==    by 0x400D8DB: dl_open_worker_begin (dl-open.c:578)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x400CD1F: dl_open_worker (dl-open.c:803)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x400D163: _dl_open (dl-open.c:905)
+==190252==    by 0x4BFF1A3: dlopen_doit (dlopen.c:56)
+==190252==    by 0x400151B: _dl_catch_exception (dl-catch.c:237)
+==190252==    by 0x4001668: _dl_catch_error (dl-catch.c:256)
+==190252== 
+==190252== LEAK SUMMARY:
+==190252==    definitely lost: 0 bytes in 0 blocks
+==190252==    indirectly lost: 0 bytes in 0 blocks
+==190252==      possibly lost: 0 bytes in 0 blocks
+==190252==    still reachable: 1,825 bytes in 5 blocks
+==190252==         suppressed: 0 bytes in 0 blocks
+==190252== 
+==190252== For lists of detected and suppressed errors, rerun with: -s
+==190252== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
