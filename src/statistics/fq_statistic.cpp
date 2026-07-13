@@ -46,7 +46,7 @@ public:
         return {};
     }
 
-    auto processBatch(fq::io::FastqBatch& batch) const -> result_type {
+    auto processBatch(const fq::io::FastqBatch& batch) const -> result_type {
         FqStatisticWorker worker(
             qualityEncoding_, signatureKmerSize_, duplicateEstimateSampleModulo_);
         return worker.calculateStats(batch);

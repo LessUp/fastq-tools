@@ -37,7 +37,6 @@ struct FastqWriter::Impl {
     std::vector<char> buffer;
 
     std::atomic<std::uint64_t> totalUncompressedBytes{0};
-    static constexpr size_t kBufferThreshold = 64 * 1024;
 
     // 记录已刷写到磁盘的文件偏移，用于 posix_fadvise DONTNEED
     off_t flushedOffset = 0;

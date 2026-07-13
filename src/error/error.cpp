@@ -150,7 +150,7 @@ auto ErrorHandler::handleError(const FastQException& error) -> bool {
     std::lock_guard lock(mutex_);
     auto it = handlers_.find(error.category());
     if (it != handlers_.end()) {
-        for (auto& handler : it->second) {
+        for (const auto& handler : it->second) {
             if (handler(error)) {
                 return true;
             }
