@@ -114,3 +114,7 @@ clang-tidy-fixes.yml
 *.sarif
 benchmark-*.json
 benchmark-*.csv
+# Valgrind 未压缩 annotate 输出（仅归档 .gz 压缩版）
+docs/performance/benchmark-reports/**/*-annotate.txt
+docs/performance/benchmark-reports/**/stat-helgrind.txt
+docs/performance/benchmark-reports/**/stat-massif.txt
