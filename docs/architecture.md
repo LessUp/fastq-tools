@@ -109,9 +109,9 @@ serial_in_order (读取)  →  parallel (处理)  →  serial_in_order (写出 +
 同一 `ExecutionBackend` seam 还提供：
 
 - `SequentialExecutionBackend`：单线程回退和契约基线
-- `TaskflowExecutionBackend`：默认关闭的实验对照，仅用于基准与未来动态图评估
+- Taskflow backend：v4 已移除；历史对照仅保留在性能归档中。
 
-三个 backend 共用 reader、writer、batch operation 和计量契约。Taskflow 只有通过统一基准门槛后才可能成为默认实现；当前实测（见 `docs/benchmark.md` 执行 backend 对照）中 Taskflow 在 ReadWrite 4T 吞吐 +49.4% 与 CPU-only 8T +6.8% 两项胜出，但严格按“至少两项 ≥10%”门槛仅一项达标，未达迁移要求，因此生产路径仍使用 oneTBB。
+Sequential 与 oneTBB 共用 reader、writer、batch operation 和计量契约；旧 Taskflow 对照结论保留为历史记录，不再参与 v4 构建。
 
 #### Backend 选择规则
 
@@ -121,7 +121,7 @@ serial_in_order (读取)  →  parallel (处理)  →  serial_in_order (写出 +
 | `Automatic` + 自定义 Reader/Writer | Sequential | 保持外部 adapter 的保守线程契约 |
 | `Automatic` + 原生 I/O + 多线程 | oneTBB | CLI 默认并行路径 |
 | 显式 Sequential / oneTBB | 对应 backend | 契约测试和公平基准 |
-| 显式 Taskflow | Taskflow（需编译启用） | 实验对照；未启用时明确报错 |
+| 历史 Taskflow | 已移除 | 仅保留历史 benchmark/决策记录 |
 
 CLI 始终使用 `Automatic`；实验 backend 选择不扩散到 CLI 参数或公共嵌入 API。
 
@@ -152,7 +152,7 @@ CLI 始终使用 `Automatic`；实验 backend 选择不扩散到 CLI 参数或�
 - 写出串行：输出 FASTQ 必须保序，且 gzip 流需顺序写入
 - 中间级并行：这才是 CPU 瓶颈所在（过滤、修剪、统计计算）
 
-oneTBB 和 Taskflow 的串行 stage 已提供互斥语义；implementation 仍保留 reader/writer mutex，为 ThreadSanitizer 建立明确的 happens-before。锁位于串行 stage，正常执行不产生竞争，不改变流水线并行度。
+oneTBB 的串行 stage 提供互斥语义；implementation 保留 reader/writer mutex，为 ThreadSanitizer 建立明确的 happens-before。锁位于串行 stage，正常执行不产生竞争，不改变流水线并行度。
 
 ### 4. 接口最小化：3 个 interfaces.h
 
@@ -227,5 +227,5 @@ CI（`.github/workflows/ci.yml`）通过 GitHub Actions 页面手动触发，运
 - C++23，`CMAKE_CXX_EXTENSIONS` 关闭（纯标准，无 GNU 扩展）
 - CMake 3.28+ + Ninja + Conan 2.x
 - 关键依赖：Intel oneTBB（默认并行 backend）、fmt（格式化）、zlib-ng（gzip）、cxxopts（CLI）、GoogleTest（测试）
-- 可选依赖：Taskflow 4（实验 backend，`ENABLE_TASKFLOW_BACKEND=ON`）
+- benchmark/gtest 为构建选项依赖；Taskflow backend 已在 v4 移除，历史对照报告保留在性能归档中。
 - 构建脚本：`./scripts/core/build`（默认 Clang Release）

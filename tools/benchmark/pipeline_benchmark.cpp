@@ -84,8 +84,6 @@ auto backendName(fq::processing::ExecutionBackendPreference backend) -> std::str
             return "sequential";
         case ExecutionBackendPreference::OneTbb:
             return "onetbb";
-        case ExecutionBackendPreference::Taskflow:
-            return "taskflow";
     }
     return "unknown";
 }
@@ -93,12 +91,6 @@ auto backendName(fq::processing::ExecutionBackendPreference backend) -> std::str
 void runBackendBenchmark(::benchmark::State& state,
                          fq::processing::ExecutionBackendPreference backend,
                          bool writeOutput) {
-    if (backend == fq::processing::ExecutionBackendPreference::Taskflow &&
-        !fq::processing::isTaskflowExecutionBackendAvailable()) {
-        state.SkipWithError("Taskflow backend was not enabled at build time");
-        return;
-    }
-
     const auto readCount = static_cast<size_t>(state.range(0));
     const auto threadCount = static_cast<size_t>(state.range(1));
     const auto input = std::filesystem::temp_directory_path() /
@@ -148,20 +140,12 @@ void BM_Backend_OneTbbCpu(::benchmark::State& state) {
     runBackendBenchmark(state, fq::processing::ExecutionBackendPreference::OneTbb, false);
 }
 
-void BM_Backend_TaskflowCpu(::benchmark::State& state) {
-    runBackendBenchmark(state, fq::processing::ExecutionBackendPreference::Taskflow, false);
-}
-
 void BM_Backend_SequentialReadWrite(::benchmark::State& state) {
     runBackendBenchmark(state, fq::processing::ExecutionBackendPreference::Sequential, true);
 }
 
 void BM_Backend_OneTbbReadWrite(::benchmark::State& state) {
     runBackendBenchmark(state, fq::processing::ExecutionBackendPreference::OneTbb, true);
-}
-
-void BM_Backend_TaskflowReadWrite(::benchmark::State& state) {
-    runBackendBenchmark(state, fq::processing::ExecutionBackendPreference::Taskflow, true);
 }
 
 constexpr std::int64_t kBenchmarkReads = 100'000;
@@ -176,13 +160,6 @@ BENCHMARK(BM_Backend_OneTbbCpu)
     ->Args({kBenchmarkReads, 8})
     ->Unit(::benchmark::kMillisecond)
     ->UseRealTime();
-BENCHMARK(BM_Backend_TaskflowCpu)
-    ->Args({kBenchmarkReads, 2})
-    ->Args({kBenchmarkReads, 4})
-    ->Args({kBenchmarkReads, 8})
-    ->Unit(::benchmark::kMillisecond)
-    ->UseRealTime();
-
 BENCHMARK(BM_Backend_SequentialReadWrite)
     ->Args({kBenchmarkReads, 1})
     ->Unit(::benchmark::kMillisecond)
@@ -193,13 +170,6 @@ BENCHMARK(BM_Backend_OneTbbReadWrite)
     ->Args({kBenchmarkReads, 8})
     ->Unit(::benchmark::kMillisecond)
     ->UseRealTime();
-BENCHMARK(BM_Backend_TaskflowReadWrite)
-    ->Args({kBenchmarkReads, 2})
-    ->Args({kBenchmarkReads, 4})
-    ->Args({kBenchmarkReads, 8})
-    ->Unit(::benchmark::kMillisecond)
-    ->UseRealTime();
-
 }  // namespace
 
 }  // namespace fq::benchmark

@@ -63,11 +63,6 @@ auto selectBackend(ExecutionBackendPreference preference, const ResolvedRuntimeC
             return createSequentialExecutionBackend();
         case ExecutionBackendPreference::OneTbb:
             return createOneTbbExecutionBackend();
-        case ExecutionBackendPreference::Taskflow:
-            if (auto backend = createTaskflowExecutionBackend()) {
-                return backend;
-            }
-            throw std::invalid_argument("Taskflow execution backend is not enabled");
     }
 
     throw std::invalid_argument("Unknown execution backend preference");

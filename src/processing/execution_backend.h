@@ -56,7 +56,5 @@ public:
 
 [[nodiscard]] auto createSequentialExecutionBackend() -> std::unique_ptr<ExecutionBackend>;
 [[nodiscard]] auto createOneTbbExecutionBackend() -> std::unique_ptr<ExecutionBackend>;
-[[nodiscard]] auto createTaskflowExecutionBackend() -> std::unique_ptr<ExecutionBackend>;
-[[nodiscard]] auto isTaskflowExecutionBackendAvailable() noexcept -> bool;
 
 }  // namespace fq::processing

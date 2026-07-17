@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(FastQToolsConsumer LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -10,4 +10,4 @@ find_package(FastQTools CONFIG REQUIRED)
 
 add_executable(fqtools_consumer main.cpp)
 
-target_link_libraries(fqtools_consumer PRIVATE fq_processing fq_statistics)
+target_link_libraries(fqtools_consumer PRIVATE FastQTools::FastQTools)

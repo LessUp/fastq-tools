@@ -7,7 +7,6 @@ add_library(fq_processing STATIC
     processing_options.cpp
     processing_pipeline.cpp
     processing_statistics.cpp
-    taskflow_execution_backend.cpp
     mutators/quality_trimmer.cpp
     predicates/min_quality_predicate.cpp
 )
@@ -31,8 +30,3 @@ target_link_libraries(fq_processing
 )
 
 target_compile_features(fq_processing PUBLIC cxx_std_23)
-
-if(ENABLE_TASKFLOW_BACKEND)
-    target_compile_definitions(fq_processing PRIVATE FQ_ENABLE_TASKFLOW_BACKEND=1)
-    target_link_libraries(fq_processing PRIVATE Taskflow::Taskflow)
-endif()

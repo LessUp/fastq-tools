@@ -5,15 +5,21 @@ import os
 
 class FastQTools(ConanFile):
     name = "fastqtools"
-    version = "3.2.0"
+    version = "4.0.0"
     
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
-    options = {"with_taskflow": [True, False]}
-    default_options = {"with_taskflow": False}
+    options = {
+        "build_testing": [True, False],
+        "build_benchmarks": [True, False],
+    }
+    default_options = {
+        "build_testing": True,
+        "build_benchmarks": False,
+    }
     
     # Sources are located in the same place as this recipe, copy them to the recipe
-    exports_sources = "CMakeLists.txt", "src/*", "include/*", "cmake/*", "config/*", "tests/*", "tools/*"
+    exports_sources = "CMakeLists.txt", "src/*", "include/*", "cmake/*", "tests/*", "tools/*"
 
     def configure(self):
         # 避免编译 fmt 库本体在新版本 GCC/Clang 下触发 consteval 相关编译失败，改为纯头文件模式
@@ -28,19 +34,18 @@ class FastQTools(ConanFile):
         self.requires("cxxopts/3.3.1")
         self.requires("zlib-ng/2.3.3")
         self.requires("fmt/12.1.0")
-        self.requires("nlohmann_json/3.12.0")
         # Intel's Threading Building Blocks for high-level parallelism
         self.requires("onetbb/2022.3.0")
-        if self.options.with_taskflow:
-            self.requires("taskflow/4.0.0")
-        self.requires("benchmark/1.9.5")
+        if self.options.build_benchmarks:
+            self.requires("benchmark/1.9.5")
+            self.requires("nlohmann_json/3.12.0")
 
     def build_requirements(self):
         """
         Dependencies required only for building the project, like testing frameworks.
         """
         self.tool_requires("cmake/[>=3.20]")
-        if self.options.get_safe("build_testing", True):
+        if self.options.build_testing:
             self.requires("gtest/1.17.0")
 
     def generate(self):

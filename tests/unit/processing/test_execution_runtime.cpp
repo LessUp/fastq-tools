@@ -309,18 +309,6 @@ TEST(ExecutionRuntimeTest, ExecuteBackendsHonorTheSameObservableContract) {
     EXPECT_EQ(oneTbb.result.batchSizes, sequential.result.batchSizes);
     EXPECT_EQ(oneTbb.metrics.batchCount, sequential.metrics.batchCount);
     EXPECT_EQ(oneTbb.metrics.committedBytes, sequential.metrics.committedBytes);
-
-    if (isTaskflowExecutionBackendAvailable()) {
-        const auto taskflow = executeWith(ExecutionBackendPreference::Taskflow);
-        EXPECT_EQ(taskflow.result.totalReads, sequential.result.totalReads);
-        EXPECT_EQ(taskflow.result.firstIds, sequential.result.firstIds);
-        EXPECT_EQ(taskflow.result.batchSizes, sequential.result.batchSizes);
-        EXPECT_EQ(taskflow.metrics.batchCount, sequential.metrics.batchCount);
-        EXPECT_EQ(taskflow.metrics.committedBytes, sequential.metrics.committedBytes);
-    } else {
-        EXPECT_THROW(static_cast<void>(executeWith(ExecutionBackendPreference::Taskflow)),
-                     std::invalid_argument);
-    }
 }
 
 }  // namespace fq::processing

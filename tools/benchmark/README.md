@@ -9,7 +9,7 @@
 | `fastq_io_benchmark.cpp` | FASTQ 读写吞吐量（Reader/Writer） |
 | `filter_benchmark.cpp` | Filter 命令端到端性能 |
 | `stat_benchmark.cpp` | Stat 命令统计计算性能 |
-| `pipeline_benchmark.cpp` | Sequential / oneTBB / Taskflow 公平对照 |
+| `pipeline_benchmark.cpp` | Sequential / oneTBB 公平对照 |
 | `object_pool_benchmark.cpp` | ObjectPool 对象池分配性能 |
 
 ### 构建与运行
@@ -27,11 +27,6 @@ cmake --build build/clang-release --target run_benchmarks
 # 完整基准测试（5 次重复，输出 raw JSON、reads/s、MiB/s、峰值内存和 CV）
 cmake --build build/clang-release --target benchmark_full
 
-# Taskflow 可选 backend 构建完成后，生成 p50/p95/RSS 对照报告
-./scripts/core/build --taskflow --build-dir build/taskflow-release
-cmake -S . -B build/taskflow-release -DENABLE_TASKFLOW_BACKEND=ON -DBUILD_BENCHMARKS=ON
-cmake --build build/taskflow-release --target benchmark_backend_comparison
-# 报告：build/taskflow-release/benchmark-results/backends/summary.md
 ```
 
 ## 分析脚本（`scripts/` 子目录）

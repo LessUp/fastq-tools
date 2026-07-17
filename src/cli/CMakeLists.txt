@@ -15,8 +15,8 @@ add_library(fq_cli STATIC
 )
 
 target_link_libraries(fq_cli
-    PUBLIC
-        fq_lib
+    PRIVATE
+        fq_runtime
         cxxopts::cxxopts
 )
 
@@ -42,6 +42,9 @@ target_link_libraries(FastQTools
     PRIVATE
         fq_cli
         fmt::fmt
+        cxxopts::cxxopts
 )
+
+target_include_directories(FastQTools PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 target_compile_features(FastQTools PRIVATE cxx_std_23)

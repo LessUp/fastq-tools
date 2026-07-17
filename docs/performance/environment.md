@@ -71,15 +71,7 @@ python3 tools/benchmark/scripts/run_benchmarks.py \
   --repetitions 5
 ```
 
-执行 backend 对照（Taskflow 默认不参与生产构建）：
-
-```bash
-./scripts/core/build --taskflow --build-dir build/taskflow-release
-cmake -S . -B build/taskflow-release \
-  -DENABLE_TASKFLOW_BACKEND=ON \
-  -DBUILD_BENCHMARKS=ON
-cmake --build build/taskflow-release --target benchmark_backend_comparison
-```
+Backend 对照仅覆盖 v4 保留的 Sequential 与 oneTBB；Taskflow 旧数据作为历史快照保留。
 
 ## 偏离基线的记录要求
 

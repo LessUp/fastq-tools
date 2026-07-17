@@ -19,7 +19,6 @@ enum class ExecutionBackendPreference : std::uint8_t {
     Automatic,
     Sequential,
     OneTbb,
-    Taskflow,
 };
 
 struct ExecutionRuntimeRequest {

@@ -24,19 +24,7 @@
 
 构建产物在 `build/clang-release/FastQTools`。
 
-### 可选 Taskflow 实验 backend
-
-Taskflow 不进入默认依赖树。仅在运行 backend 对照时启用独立构建目录：
-
-```bash
-./scripts/core/build --taskflow --build-dir build/taskflow-release
-cmake -S . -B build/taskflow-release \
-  -DENABLE_TASKFLOW_BACKEND=ON \
-  -DBUILD_BENCHMARKS=ON
-cmake --build build/taskflow-release --target benchmark_backend_comparison
-```
-
-生产 CLI 仍使用 `Automatic`（多线程原生 I/O 默认 oneTBB）。Taskflow 只通过内部测试/benchmark 请求显式选择。
+v4 生产和 benchmark 构建只保留 Sequential 与 oneTBB backend；历史 Taskflow 对照数据仍保存在性能归档中，不再作为可选依赖构建。
 
 ## 首次运行
 

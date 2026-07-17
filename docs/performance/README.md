@@ -39,7 +39,7 @@
 
 | 场景 | 路径 | 说明 |
 |------|------|------|
-| 执行 backend 对照 | [`benchmark-reports/backends/summary.md`](./benchmark-reports/backends/summary.md) | oneTBB vs Taskflow |
+| 历史 backend 对照 | [`benchmark-reports/backends/summary.md`](./benchmark-reports/backends/summary.md) | oneTBB vs Taskflow（v3 归档） |
 | Callgrind 热点分析 | [`benchmark-reports/callgrind/2026-07-13/summary.md`](./benchmark-reports/callgrind/2026-07-13/summary.md) | stat + filter 函数级热点 |
 | Cachegrind 缓存分析 | [`benchmark-reports/cachegrind/2026-07-13/summary.md`](./benchmark-reports/cachegrind/2026-07-13/summary.md) | L1/L2/LL 命中率模拟 |
 | Memcheck 内存正确性 | [`benchmark-reports/memcheck/2026-07-13/summary.md`](./benchmark-reports/memcheck/2026-07-13/summary.md) | 内存泄露 + 越界检测 |

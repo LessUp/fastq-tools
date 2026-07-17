@@ -39,22 +39,12 @@ python3 tools/benchmark/scripts/run_benchmarks.py \
 | `fastq_io_benchmark.cpp` | 读写吞吐量 |
 | `filter_benchmark.cpp` | filter 端到端 |
 | `stat_benchmark.cpp` | stat 计算性能 |
-| `pipeline_benchmark.cpp` | Sequential / oneTBB / Taskflow 同契约对照 |
+| `pipeline_benchmark.cpp` | Sequential / oneTBB 同契约对照 |
 | `object_pool_benchmark.cpp` | 对象池分配性能 |
 
-## 执行 backend 对照
+## 历史 Backend 对照（仅归档）
 
-实验 Taskflow backend 默认不参与生产构建。使用独立构建目录运行公平对照：
-
-```bash
-./scripts/core/build --taskflow --build-dir build/taskflow-release
-cmake -S . -B build/taskflow-release \
-  -DENABLE_TASKFLOW_BACKEND=ON \
-  -DBUILD_BENCHMARKS=ON
-cmake --build build/taskflow-release --target benchmark_backend_comparison
-```
-
-报告写入 `build/taskflow-release/benchmark-results/backends/summary.md`，包含 7 次重复的 p50、p95、吞吐和峰值 RSS。该报告已入库快照：`docs/performance/benchmark-reports/backends/summary.md`。
+v4 benchmark 只运行 Sequential 与 oneTBB；Taskflow backend 已移除。旧的 Taskflow p50/p95/RSS 对照报告保留在 `docs/performance/benchmark-reports/backends/`，作为历史决策记录。
 
 2026-07-13 本机验证快照（16 X 3193.9 MHz，100K × 150bp，plain FASTQ，Clang 21 Release + libc++，每 case 7 次重复）：
 

@@ -114,16 +114,17 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     endif()
 endif()
 
+# --- Optional build features ---
+option(BUILD_BENCHMARKS "Build benchmark executables" OFF)
+
 # --- Find Dependencies (handled by Conan) ---
 find_package(cxxopts CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(TBB CONFIG REQUIRED)
-find_package(nlohmann_json CONFIG REQUIRED)
-
-option(ENABLE_TASKFLOW_BACKEND "Build the experimental Taskflow execution backend" OFF)
-if(ENABLE_TASKFLOW_BACKEND)
-    find_package(Taskflow CONFIG REQUIRED)
+if(BUILD_BENCHMARKS)
+    find_package(benchmark CONFIG REQUIRED)
+    find_package(nlohmann_json CONFIG REQUIRED)
 endif()
 
 if(TARGET fmt::fmt-header-only AND NOT TARGET fmt::fmt)
@@ -154,7 +155,6 @@ endif()
 # This now handles all library definitions and dependencies internally.
 add_subdirectory(src)
 
-option(BUILD_BENCHMARKS "Build benchmarks" OFF)
 if(BUILD_BENCHMARKS)
     add_subdirectory(tools/benchmark)
 endif()
@@ -175,7 +175,6 @@ endif()
 
 # --- Installation ---
 install(TARGETS FastQTools
-    EXPORT FastQToolsTargets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     COMPONENT Runtime
 )
@@ -199,6 +198,7 @@ install(FILES ${CMAKE_SOURCE_DIR}/include/fqtools/fq.h
 
 # Export public library targets
 install(TARGETS
+    fq_runtime
     fq_error
     fq_modern_io
     fq_processing
@@ -235,6 +235,7 @@ install(FILES
 
 install(EXPORT FastQToolsTargets
     FILE FastQToolsTargets.cmake
+    NAMESPACE FastQTools::
     DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
     COMPONENT Development
 )

@@ -193,7 +193,7 @@ echo ">>> Conan 配置..."
 conan profile detect --force
 
 echo ">>> Conan 安装依赖..."
-CONAN_ARGS="--build=missing -s build_type=Release -of=${BUILD_DIR}"
+CONAN_ARGS="--build=missing -s build_type=Release -of=${BUILD_DIR} -o fastqtools/*:build_testing=False -o fastqtools/*:build_benchmarks=False"
 
 if [ "$COMPILER" = "clang" ] && [ -f "build-config/conan/profile-clang" ]; then
     CONAN_ARGS="${CONAN_ARGS} -pr:h build-config/conan/profile-clang"
