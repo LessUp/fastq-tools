@@ -1,16 +1,24 @@
-#include "fqtools/statistics/interfaces.h"
+#include <utility>
 
 #include "statistics/fq_statistic.h"
 
-namespace fq::statistic {
+namespace fq::statistics {
 
-/**
- * @brief 统计计算器工厂函数实现
- * @details 创建 FastqStatisticCalculator 的具体实例，隐藏实现细节
- */
-auto createStatisticCalculator(const StatisticOptions& options)
-    -> std::unique_ptr<StatisticCalculatorInterface> {
-    return std::make_unique<FastqStatisticCalculator>(options);
+class Calculator::Impl {
+public:
+    explicit Impl(StatisticOptions options) : calculator(std::move(options)) {}
+
+    FastqStatisticCalculator calculator;
+};
+
+Calculator::Calculator(StatisticOptions options)
+    : impl_(std::make_unique<Impl>(std::move(options))) {}
+Calculator::~Calculator() = default;
+Calculator::Calculator(Calculator&&) noexcept = default;
+auto Calculator::operator=(Calculator&&) noexcept -> Calculator& = default;
+
+void Calculator::run() {
+    impl_->calculator.run();
 }
 
-}  // namespace fq::statistic
+}  // namespace fq::statistics

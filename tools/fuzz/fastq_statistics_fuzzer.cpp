@@ -2,7 +2,7 @@
  * @file fastq_statistics_fuzzer.cpp
  * @brief 真实 FASTQ 统计工作器模糊测试
  *
- * 直接调用 fq::statistic::FqStatisticWorker::calculateStats，
+ * 直接调用 fq::statistics::FqStatisticWorker::calculateStats，
  * 覆盖累加/取模/除法、ensureCapacity 扩容、kBaseLut 越界索引、
  * ASCII < qualOffset_ 的 clamp 路径。
  *
@@ -52,7 +52,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     const auto sampleMod = dp.ConsumeIntegralInRange<size_t>(1, 4096);
     const auto recordCount = dp.ConsumeIntegralInRange<size_t>(0, 64);
 
-    fq::statistic::FqStatisticWorker worker(qualOffset, kmerSize, sampleMod);
+    fq::statistics::FqStatisticWorker worker(qualOffset, kmerSize, sampleMod);
 
     // 阶段 1：生成所有 seq/qual 到局部 vector，累加总字节
     // 避免逐条 appendRecord 时 vector reallocation 使前一条 record 的 view 失效

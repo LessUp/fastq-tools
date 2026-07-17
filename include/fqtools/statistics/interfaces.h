@@ -14,7 +14,7 @@
 #include <memory>
 #include <string>
 
-namespace fq::statistic {
+namespace fq::statistics {
 
 // 前向声明
 struct FqStatisticResult;
@@ -40,7 +40,7 @@ public:
     virtual auto calculateStats(const Batch& batch) -> Result = 0;
 };
 
-/// @brief StatisticInterface 的类型别名（兼容旧代码）
+/// @brief StatisticInterface 的类型别名
 using IStatistic = StatisticInterface;
 
 /**
@@ -78,18 +78,18 @@ struct StatisticOptions {
 };
 
 /**
- * @brief 统计计算器接口
- * @details 高层统计计算任务抽象，封装完整的计算流程。
- *
- * 使用工厂函数创建实例：
- * @code
- * auto calculator = createStatisticCalculator(options);
- * calculator->run();
- * @endcode
+ * @brief FASTQ 统计计算器
+ * @details move-only 的具体 API，内部通过 PIMPL 隐藏统计运行实现。
  */
-class StatisticCalculatorInterface {
+class Calculator {
 public:
-    virtual ~StatisticCalculatorInterface() = default;
+    explicit Calculator(StatisticOptions options);
+    ~Calculator();
+
+    Calculator(const Calculator&) = delete;
+    auto operator=(const Calculator&) -> Calculator& = delete;
+    Calculator(Calculator&&) noexcept;
+    auto operator=(Calculator&&) noexcept -> Calculator&;
 
     /**
      * @brief 执行统计计算
@@ -99,15 +99,11 @@ public:
      *   - 合并统计结果
      *   - 输出到文件
      */
-    virtual void run() = 0;
+    void run();
+
+private:
+    class Impl;
+    std::unique_ptr<Impl> impl_;
 };
 
-/**
- * @brief 创建统计计算器实例
- * @param options 统计计算配置
- * @return 统计计算器实例（unique_ptr）
- */
-auto createStatisticCalculator(const StatisticOptions& options)
-    -> std::unique_ptr<StatisticCalculatorInterface>;
-
-}  // namespace fq::statistic
+}  // namespace fq::statistics

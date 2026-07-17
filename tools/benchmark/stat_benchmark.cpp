@@ -15,9 +15,9 @@ void benchmarkProductionStatisticWorker(::benchmark::State& state) {
     const auto inputBytes = BenchmarkDataset::fileSize();
     state.ResumeTiming();
 
-    fq::statistic::FqStatisticResult result;
+    fq::statistics::FqStatisticResult result;
     for (auto _ : state) {
-        fq::statistic::FqStatisticWorker worker(33, 15, 1024);
+        fq::statistics::FqStatisticWorker worker(33, 15, 1024);
         result = {};
         for (const auto& batch : batches) {
             result += worker.calculateStats(batch);

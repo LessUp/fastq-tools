@@ -5,7 +5,7 @@
 #include <fqtools/statistics/statistics_writer.h>
 #include <gtest/gtest.h>
 
-namespace fq::statistic {
+namespace fq::statistics {
 
 TEST(StatisticsReportTest, BuildsSummaryPositionAndSignatureLines) {
     FqStatisticResult result;
@@ -86,4 +86,4 @@ TEST(StatisticsReportTest, HandlesZeroTotalBasesWithoutInfOrNanSummary) {
               report.summaryLines.end());
 }
 
-}  // namespace fq::statistic
+}  // namespace fq::statistics

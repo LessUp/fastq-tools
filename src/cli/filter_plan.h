@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "common_options.h"
@@ -19,7 +20,20 @@ struct FilterPlan {
     std::vector<std::unique_ptr<fq::processing::ReadPredicateInterface>> predicates;
     std::vector<std::unique_ptr<fq::processing::ReadMutatorInterface>> mutators;
 
-    auto applyTo(fq::processing::ProcessingPipelineInterface& pipeline) -> void;
+    template <typename PipelineLike>
+    void applyTo(PipelineLike& pipeline) {
+        pipeline.setInputPath(inputPath);
+        pipeline.setOutputPath(outputPath);
+        pipeline.setProcessingOptions(processingOptions);
+
+        for (auto& mutator : mutators) {
+            pipeline.addReadMutator(std::move(mutator));
+        }
+
+        for (auto& predicate : predicates) {
+            pipeline.addReadPredicate(std::move(predicate));
+        }
+    }
 };
 
 void addFilterPlanOptions(cxxopts::Options& options);

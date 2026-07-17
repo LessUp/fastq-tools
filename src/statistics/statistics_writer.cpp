@@ -11,7 +11,7 @@
 
 #include "statistics/statistics_report.h"
 
-namespace fq::statistic {
+namespace fq::statistics {
 
 StatisticsWriter::StatisticsWriter(StatisticsWriterOptions options)
     : options_(std::move(options)) {}
@@ -38,4 +38,4 @@ void StatisticsWriter::writeSignature(std::ostream& os, const FqStatisticResult&
     }
 }
 
-}  // namespace fq::statistic
+}  // namespace fq::statistics

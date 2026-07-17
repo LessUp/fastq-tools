@@ -62,7 +62,7 @@ public:
     [[nodiscard]] auto getDescription() const -> std::string override;
 
 private:
-    std::unique_ptr<fq::processing::ProcessingPipelineInterface> pipeline_;
+    fq::processing::Pipeline pipeline_;
 };
 
 }  // namespace fq::cli::commands

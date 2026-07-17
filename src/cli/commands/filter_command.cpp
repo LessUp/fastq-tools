@@ -24,8 +24,7 @@
 
 namespace fq::cli::commands {
 
-// Use the factory in the constructor
-FilterCommand::FilterCommand() : pipeline_(fq::processing::createProcessingPipeline()) {}
+FilterCommand::FilterCommand() = default;
 
 FilterCommand::~FilterCommand() = default;
 
@@ -59,9 +58,9 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     }
 
     auto plan = buildFilterPlan(result, common);
-    plan.applyTo(*pipeline_);
+    plan.applyTo(pipeline_);
 
-    auto stats = pipeline_->run();
+    auto stats = pipeline_.run();
     if (fq::logging::getLevel() < fq::logging::Level::Error) {
         std::cout << stats.toString() << '\n';
     }

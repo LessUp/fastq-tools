@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.28)
 
 project(FastQTools
     LANGUAGES CXX
-    VERSION 3.2.0
+    VERSION 4.0.0
     DESCRIPTION "A modern toolkit for FASTQ file processing"
     HOMEPAGE_URL "https://github.com/LessUp/fastq-tools"
 )

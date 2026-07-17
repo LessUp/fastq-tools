@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace fq::statistic {
+namespace fq::statistics {
 
 // 统计常量（供 FqStatisticResult 和 FqStatisticWorker 共用）
 constexpr int kMaxQual = 42;    ///< 最大质量分数值
@@ -86,12 +86,12 @@ struct FqStatisticResult {
 /**
  * @brief FASTQ 统计信息管理器
  * @details 该类使用 TBB 管道管理完整的 FASTQ 统计信息生成过程，
- *          是 StatisticCalculatorInterface 接口的具体实现
+ *          由 statistics::Calculator 通过 PIMPL 持有
  *
  * @note 该类利用并行处理提高大文件的处理效率
  * @warning 处理过程中需要足够的内存空间
  */
-class FastqStatisticCalculator : public StatisticCalculatorInterface {
+class FastqStatisticCalculator {
 public:
     /**
      * @brief 构造函数
@@ -108,7 +108,7 @@ public:
      * @details 使用 TBB 并行管道执行完整的 FASTQ 统计信息生成过程
      * @post 统计结果被写入到指定的输出文件中
      */
-    void run() override;
+    void run();
 
 private:
     /**
@@ -125,4 +125,4 @@ private:
     StatisticOptions options_;  ///< 统计配置选项
 };
 
-}  // namespace fq::statistic
+}  // namespace fq::statistics

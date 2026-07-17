@@ -22,7 +22,7 @@
 
 #include "statistics/fq_statistic.h"
 
-namespace fq::statistic {
+namespace fq::statistics {
 
 /**
  * @brief FASTQ 统计信息工作器
@@ -61,4 +61,4 @@ private:
     size_t duplicateEstimateSampleModulo_ = 1024;  ///< duplicate 采样模数
 };
 
-}  // namespace fq::statistic
+}  // namespace fq::statistics

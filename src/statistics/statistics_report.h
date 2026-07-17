@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace fq::statistic {
+namespace fq::statistics {
 
 struct StatisticsReport {
     std::vector<std::string> summaryLines;
@@ -17,4 +17,4 @@ struct StatisticsReport {
                                          const StatisticsWriterOptions& options)
     -> StatisticsReport;
 
-}  // namespace fq::statistic
+}  // namespace fq::statistics

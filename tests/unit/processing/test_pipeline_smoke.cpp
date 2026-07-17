@@ -4,11 +4,18 @@
 #include "fqtools/processing/processing_pipeline_interface.h"
 #include "fqtools/statistics/interfaces.h"
 
+#include <type_traits>
+#include <utility>
+
 #include <gtest/gtest.h>
 
-TEST(PipelineSmokeTest, CanCreatePipelineFromFactory) {
-    auto pipeline = fq::processing::createProcessingPipeline();
-    ASSERT_TRUE(static_cast<bool>(pipeline));
+TEST(PipelineSmokeTest, PipelineIsMoveOnlyConcreteApi) {
+    static_assert(!std::is_copy_constructible_v<fq::processing::Pipeline>);
+    static_assert(std::is_move_constructible_v<fq::processing::Pipeline>);
+    fq::processing::Pipeline pipeline;
+    auto moved = std::move(pipeline);
+    static_cast<void>(moved);
+    SUCCEED();
 }
 
 TEST(PipelineSmokeTest, ProcessingOptionsDefaults) {
@@ -21,7 +28,7 @@ TEST(PipelineSmokeTest, ProcessingOptionsDefaults) {
 }
 
 TEST(PipelineSmokeTest, StatisticOptionsDefaults) {
-    fq::statistic::StatisticOptions options;
+    fq::statistics::StatisticOptions options;
 
     EXPECT_EQ(options.processing.batchSize, 10000);
     EXPECT_EQ(options.processing.threadCount, 1);

@@ -71,16 +71,16 @@ TEST_F(PipelineIntegrationTest, ReaderPipelineWriterPreservesCustomPlusLine) {
             << "####\n";
     }
 
-    auto pipeline = fq::processing::createProcessingPipeline();
-    pipeline->setInputPath(input.string());
-    pipeline->setOutputPath(output.string());
+    fq::processing::Pipeline pipeline;
+    pipeline.setInputPath(input.string());
+    pipeline.setOutputPath(output.string());
 
     fq::processing::ProcessingOptions options;
     options.threadCount = 1;
     options.batchSize = 2;
-    pipeline->setProcessingOptions(options);
+    pipeline.setProcessingOptions(options);
 
-    const auto stats = pipeline->run();
+    const auto stats = pipeline.run();
 
     EXPECT_EQ(stats.totalReads, 2);
     EXPECT_EQ(stats.passedReads, 2);
@@ -102,15 +102,15 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorWritesConfiguredPhredHeader) 
             << "@\n";
     }
 
-    fq::statistic::StatisticOptions options;
+    fq::statistics::StatisticOptions options;
     options.inputFastqPath = input.string();
     options.outputStatPath = output.string();
     options.processing.batchSize = 1;
     options.processing.threadCount = 1;
     options.qualityEncoding = 64;
 
-    auto calculator = fq::statistic::createStatisticCalculator(options);
-    calculator->run();
+    fq::statistics::Calculator calculator(options);
+    calculator.run();
 
     const auto content = FixtureLoader::loadTextFile(output);
     EXPECT_NE(content.find("#PhredQual\t64\n"), std::string::npos);
@@ -133,16 +133,16 @@ TEST_F(PipelineIntegrationTest, PipelineRunsWithMultipleThreads) {
             << "IIII\n";
     }
 
-    auto pipeline = fq::processing::createProcessingPipeline();
-    pipeline->setInputPath(input.string());
-    pipeline->setOutputPath(output.string());
+    fq::processing::Pipeline pipeline;
+    pipeline.setInputPath(input.string());
+    pipeline.setOutputPath(output.string());
 
     fq::processing::ProcessingOptions options;
     options.threadCount = 2;
     options.batchSize = 1;
-    pipeline->setProcessingOptions(options);
+    pipeline.setProcessingOptions(options);
 
-    const auto stats = pipeline->run();
+    const auto stats = pipeline.run();
 
     EXPECT_EQ(stats.totalReads, 2);
     EXPECT_EQ(stats.passedReads, 2);
@@ -165,17 +165,17 @@ TEST_F(PipelineIntegrationTest, PipelineReportsModifiedReadsAcrossRuntimeBatches
             << "IIII\n";
     }
 
-    auto pipeline = fq::processing::createProcessingPipeline();
-    pipeline->setInputPath(input.string());
-    pipeline->setOutputPath(output.string());
+    fq::processing::Pipeline pipeline;
+    pipeline.setInputPath(input.string());
+    pipeline.setOutputPath(output.string());
 
     fq::processing::ProcessingOptions options;
     options.threadCount = 2;
     options.batchSize = 1;
-    pipeline->setProcessingOptions(options);
-    pipeline->addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20.0));
+    pipeline.setProcessingOptions(options);
+    pipeline.addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20.0));
 
-    const auto stats = pipeline->run();
+    const auto stats = pipeline.run();
 
     EXPECT_EQ(stats.totalReads, 2);
     EXPECT_EQ(stats.modifiedReads, 1);
@@ -194,17 +194,17 @@ TEST_F(PipelineIntegrationTest, AppliesTrimmingBeforeMinimumLengthPredicate) {
             << "!!II\n";
     }
 
-    auto pipeline = fq::processing::createProcessingPipeline();
-    pipeline->setInputPath(input.string());
-    pipeline->setOutputPath(output.string());
+    fq::processing::Pipeline pipeline;
+    pipeline.setInputPath(input.string());
+    pipeline.setOutputPath(output.string());
     fq::processing::ProcessingOptions options;
     options.threadCount = 1;
     options.batchSize = 1;
-    pipeline->setProcessingOptions(options);
-    pipeline->addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20.0));
-    pipeline->addReadPredicate(std::make_unique<fq::processing::MinLengthPredicate>(3));
+    pipeline.setProcessingOptions(options);
+    pipeline.addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20.0));
+    pipeline.addReadPredicate(std::make_unique<fq::processing::MinLengthPredicate>(3));
 
-    const auto stats = pipeline->run();
+    const auto stats = pipeline.run();
 
     EXPECT_EQ(stats.totalReads, 1);
     EXPECT_EQ(stats.passedReads, 0);
@@ -225,17 +225,17 @@ TEST_F(PipelineIntegrationTest, AppliesTrimmingBeforeAverageQualityPredicate) {
             << "!!II\n";
     }
 
-    auto pipeline = fq::processing::createProcessingPipeline();
-    pipeline->setInputPath(input.string());
-    pipeline->setOutputPath(output.string());
+    fq::processing::Pipeline pipeline;
+    pipeline.setInputPath(input.string());
+    pipeline.setOutputPath(output.string());
     fq::processing::ProcessingOptions options;
     options.threadCount = 1;
     options.batchSize = 1;
-    pipeline->setProcessingOptions(options);
-    pipeline->addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20.0));
-    pipeline->addReadPredicate(std::make_unique<fq::processing::MinQualityPredicate>(30.0));
+    pipeline.setProcessingOptions(options);
+    pipeline.addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20.0));
+    pipeline.addReadPredicate(std::make_unique<fq::processing::MinQualityPredicate>(30.0));
 
-    const auto stats = pipeline->run();
+    const auto stats = pipeline.run();
 
     EXPECT_EQ(stats.passedReads, 1);
     EXPECT_EQ(stats.filteredReads, 0);
@@ -255,18 +255,18 @@ TEST_F(PipelineIntegrationTest, AppliesTrimmingBeforeNRatioPredicate) {
             << "IIIIII\n";
     }
 
-    auto pipeline = fq::processing::createProcessingPipeline();
-    pipeline->setInputPath(input.string());
-    pipeline->setOutputPath(output.string());
+    fq::processing::Pipeline pipeline;
+    pipeline.setInputPath(input.string());
+    pipeline.setOutputPath(output.string());
     fq::processing::ProcessingOptions options;
     options.threadCount = 1;
     options.batchSize = 1;
-    pipeline->setProcessingOptions(options);
-    pipeline->addReadMutator(
+    pipeline.setProcessingOptions(options);
+    pipeline.addReadMutator(
         std::make_unique<fq::processing::AdapterTrimmer>(std::vector<std::string>{"NN"}, 2, 0));
-    pipeline->addReadPredicate(std::make_unique<fq::processing::MaxNRatioPredicate>(0.0));
+    pipeline.addReadPredicate(std::make_unique<fq::processing::MaxNRatioPredicate>(0.0));
 
-    const auto stats = pipeline->run();
+    const auto stats = pipeline.run();
 
     EXPECT_EQ(stats.passedReads, 1);
     EXPECT_EQ(stats.filteredReads, 0);
@@ -291,14 +291,14 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorRunsWithMultipleThreads) {
             << "I\n";
     }
 
-    fq::statistic::StatisticOptions options;
+    fq::statistics::StatisticOptions options;
     options.inputFastqPath = input.string();
     options.outputStatPath = output.string();
     options.processing.batchSize = 1;
     options.processing.threadCount = 2;
 
-    auto calculator = fq::statistic::createStatisticCalculator(options);
-    calculator->run();
+    fq::statistics::Calculator calculator(options);
+    calculator.run();
 
     const auto content = FixtureLoader::loadTextFile(output);
     EXPECT_NE(content.find("#ReadNum\t2\n"), std::string::npos);
@@ -324,14 +324,14 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorAggregatesAcrossRuntimeBatche
             << "I\n";
     }
 
-    fq::statistic::StatisticOptions options;
+    fq::statistics::StatisticOptions options;
     options.inputFastqPath = input.string();
     options.outputStatPath = output.string();
     options.processing.batchSize = 1;
     options.processing.threadCount = 2;
 
-    auto calculator = fq::statistic::createStatisticCalculator(options);
-    calculator->run();
+    fq::statistics::Calculator calculator(options);
+    calculator.run();
 
     const auto content = FixtureLoader::loadTextFile(output);
     EXPECT_NE(content.find("#ReadNum\t3\n"), std::string::npos);
@@ -349,17 +349,17 @@ TEST_F(PipelineIntegrationTest, PipelineRunsInLowMemoryMode) {
             << "IIII\n";
     }
 
-    auto pipeline = fq::processing::createProcessingPipeline();
-    pipeline->setInputPath(input.string());
-    pipeline->setOutputPath(output.string());
+    fq::processing::Pipeline pipeline;
+    pipeline.setInputPath(input.string());
+    pipeline.setOutputPath(output.string());
 
     fq::processing::ProcessingOptions options;
     options.threadCount = 2;
     options.batchSize = 1;
     options.profile = fq::processing::ProcessingProfile::LowMemory;
-    pipeline->setProcessingOptions(options);
+    pipeline.setProcessingOptions(options);
 
-    const auto stats = pipeline->run();
+    const auto stats = pipeline.run();
 
     EXPECT_EQ(stats.totalReads, 1);
     EXPECT_EQ(stats.passedReads, 1);
@@ -367,19 +367,19 @@ TEST_F(PipelineIntegrationTest, PipelineRunsInLowMemoryMode) {
 
 TEST_F(PipelineIntegrationTest, PipelineRequiresResettingCustomReaderBeforeRerun) {
     TestRecordStorage storage;
-    auto pipeline = fq::processing::createProcessingPipeline();
+    fq::processing::Pipeline pipeline;
 
     fq::processing::ProcessingOptions options;
     options.threadCount = 1;
     options.batchSize = 1;
-    pipeline->setProcessingOptions(options);
-    pipeline->setReader(std::make_unique<VectorReader>(
+    pipeline.setProcessingOptions(options);
+    pipeline.setReader(std::make_unique<VectorReader>(
         std::vector<fq::io::FastqBatch>{storage.makeBatch("read1", "ACGT")}));
 
-    const auto firstRunStats = pipeline->run();
+    const auto firstRunStats = pipeline.run();
     EXPECT_EQ(firstRunStats.totalReads, 1);
 
-    EXPECT_THROW(static_cast<void>(pipeline->run()), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(pipeline.run()), std::invalid_argument);
 }
 
 TEST_F(PipelineIntegrationTest, StatisticCalculatorRunsInHighThroughputMode) {
@@ -394,15 +394,15 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorRunsInHighThroughputMode) {
             << "I\n";
     }
 
-    fq::statistic::StatisticOptions options;
+    fq::statistics::StatisticOptions options;
     options.inputFastqPath = input.string();
     options.outputStatPath = output.string();
     options.processing.batchSize = 1;
     options.processing.threadCount = 2;
     options.processing.profile = fq::processing::ProcessingProfile::HighThroughput;
 
-    auto calculator = fq::statistic::createStatisticCalculator(options);
-    calculator->run();
+    fq::statistics::Calculator calculator(options);
+    calculator.run();
 
     const auto content = FixtureLoader::loadTextFile(output);
     EXPECT_NE(content.find("#ReadNum\t1\n"), std::string::npos);
@@ -429,7 +429,7 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorWritesSignatureSidecarWhenEna
             << "IIIIIIII\n";
     }
 
-    fq::statistic::StatisticOptions options;
+    fq::statistics::StatisticOptions options;
     options.inputFastqPath = input.string();
     options.outputStatPath = output.string();
     options.signatureReportPath = sidecar.string();
@@ -439,8 +439,8 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorWritesSignatureSidecarWhenEna
     options.processing.batchSize = 2;
     options.processing.threadCount = 2;
 
-    auto calculator = fq::statistic::createStatisticCalculator(options);
-    calculator->run();
+    fq::statistics::Calculator calculator(options);
+    calculator.run();
 
     const auto report = FixtureLoader::loadTextFile(output);
     const auto signatures = FixtureLoader::loadTextFile(sidecar);

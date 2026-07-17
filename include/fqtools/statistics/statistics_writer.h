@@ -20,7 +20,7 @@
 #include <ostream>
 #include <string>
 
-namespace fq::statistic {
+namespace fq::statistics {
 
 /**
  * @brief 统计报告输出配置
@@ -74,4 +74,4 @@ private:
     StatisticsWriterOptions options_;
 };
 
-}  // namespace fq::statistic
+}  // namespace fq::statistics

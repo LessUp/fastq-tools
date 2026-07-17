@@ -125,37 +125,37 @@ The CLI and the library share the same pipeline. Embedding gives you the same be
 #include <fqtools/fq.h>
 
 // Statistics
-fq::statistic::StatisticOptions options;
+fq::statistics::StatisticOptions options;
 options.inputFastqPath = "sample.fastq.gz";
 options.outputStatPath  = "sample.stats.txt";
 options.processing.batchSize   = 50000;
 options.processing.threadCount = 8;
 
-auto calculator = fq::statistic::createStatisticCalculator(options);
-calculator->run();
+fq::statistics::Calculator calculator(std::move(options));
+calculator.run();
 ```
 
 ```cpp
 #include <fqtools/fq.h>
 
 // Filter + trim, composable via predicates and mutators
-auto pipeline = fq::processing::createProcessingPipeline();
-pipeline->setInputPath("sample.fastq.gz");
-pipeline->setOutputPath("sample.filtered.fastq.gz");
+fq::processing::Pipeline pipeline;
+pipeline.setInputPath("sample.fastq.gz");
+pipeline.setOutputPath("sample.filtered.fastq.gz");
 
-pipeline->addReadPredicate(std::make_unique<fq::processing::MinQualityPredicate>(20.0));
-pipeline->addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(
+pipeline.addReadPredicate(std::make_unique<fq::processing::MinQualityPredicate>(20.0));
+pipeline.addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(
     20.0, 1, fq::processing::QualityTrimmer::TrimMode::Both, 33));
 
 fq::processing::ProcessingOptions opts;
 opts.batchSize   = 50000;
 opts.threadCount = 8;
-pipeline->setProcessingOptions(opts);
+pipeline.setProcessingOptions(opts);
 
-auto stats = pipeline->run();
+auto stats = pipeline.run();
 ```
 
-`ProcessingPipelineInterface::setReader` / `setWriter` accept `unique_ptr<IReader>` / `IWriter`, so tests can inject mocks. See [docs/api.md](./docs/api.md) for the full header map.
+`Pipeline` is move-only and hides its implementation behind PIMPL. `setReader` / `setWriter` accept `unique_ptr<IReader>` / `IWriter`, so tests can inject mocks. See [docs/api.md](./docs/api.md) for the full header map.
 
 ## Architecture at a glance
 

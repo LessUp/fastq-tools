@@ -10,18 +10,15 @@ FastQTools 的公共 C++ API 以 `include/fqtools/fq.h` 为 Façade 入口，聚
 
 | 模块 | 头文件 | 用途 |
 |------|--------|------|
-| common | `fqtools/common/common.h` | 共享工具 |
-| config | `fqtools/config/config.h` | 配置 |
 | error | `fqtools/error/error.h` | 异常基类与宏 |
-| logging | `fqtools/logging.h` | 日志 |
 | io | `fqtools/io/fastq_io.h` | `FastqRecord`/`FastqBatch` 核心数据结构 |
 | io | `fqtools/io/fastq_reader.h` / `fastq_writer.h` | 读取器/写入器 |
 | io | `fqtools/io/interfaces.h` | `IReader`/`IWriter` 抽象接口 |
 | processing | `fqtools/processing/processing_options.h` | `ProcessingOptions`/`ProcessingProfile` |
 | processing | `fqtools/processing/interfaces.h` | `ReadPredicateInterface`/`ReadMutatorInterface` |
 | processing | `fqtools/processing/predicates.h` / `mutators.h` | 内置谓词/修改器 |
-| processing | `fqtools/processing/processing_pipeline_interface.h` | 管道接口 |
-| statistics | `fqtools/statistics/interfaces.h` | `StatisticOptions`/`StatisticCalculatorInterface` |
+| processing | `fqtools/processing/processing_pipeline_interface.h` | move-only `Pipeline` |
+| statistics | `fqtools/statistics/interfaces.h` | `StatisticOptions`/move-only `Calculator` |
 | statistics | `fqtools/statistics/statistics_writer.h` | 统计报告写入 |
 
 ## 核心数据结构
@@ -69,14 +66,14 @@ public:
 ```cpp
 #include <fqtools/fq.h>
 
-fq::statistic::StatisticOptions options;
+fq::statistics::StatisticOptions options;
 options.inputFastqPath = "sample.fastq.gz";
 options.outputStatPath = "sample.stats.txt";
 options.processing.batchSize = 50000;
 options.processing.threadCount = 8;
 
-auto calculator = fq::statistic::createStatisticCalculator(options);
-calculator->run();
+fq::statistics::Calculator calculator(std::move(options));
+calculator.run();
 ```
 
 ## 过滤工作流
@@ -84,27 +81,27 @@ calculator->run();
 ```cpp
 #include <fqtools/fq.h>
 
-auto pipeline = fq::processing::createProcessingPipeline();
-pipeline->setInputPath("sample.fastq.gz");
-pipeline->setOutputPath("sample.filtered.fastq.gz");
+fq::processing::Pipeline pipeline;
+pipeline.setInputPath("sample.fastq.gz");
+pipeline.setOutputPath("sample.filtered.fastq.gz");
 
 // 谓词：保留满足条件的读段
-pipeline->addReadPredicate(std::make_unique<fq::processing::MinQualityPredicate>(20.0));
+pipeline.addReadPredicate(std::make_unique<fq::processing::MinQualityPredicate>(20.0));
 
 // 修改器：变换读段
-pipeline->addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20, "both"));
+pipeline.addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20, "both"));
 
 fq::processing::ProcessingOptions opts;
 opts.batchSize = 50000;
 opts.threadCount = 8;
-pipeline->setProcessingOptions(opts);
+pipeline.setProcessingOptions(opts);
 
-auto stats = pipeline->run();
+auto stats = pipeline.run();
 ```
 
 ## 依赖注入
 
-`ProcessingPipeline::setReader` / `setWriter` 接受 `unique_ptr<IReader>` / `unique_ptr<IWriter>`，测试可注入 mock。接口定义在 `fqtools/io/interfaces.h`。
+`Pipeline::setReader` / `setWriter` 接受 `unique_ptr<IReader>` / `unique_ptr<IWriter>`，测试可注入 mock。接口定义在 `fqtools/io/interfaces.h`。
 
 注入任一自定义 I/O adapter 时，`Automatic` runtime 会选择 Sequential backend，避免对调用方实现施加隐式线程安全要求。自定义 Reader 在一次 `run()` 中被消费；再次运行前必须调用 `setReader()` 注入新实例。自定义 Writer 会被转换为共享所有权，其 `write()` 返回值必须遵守上述计量契约。
 

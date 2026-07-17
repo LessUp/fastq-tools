@@ -23,7 +23,7 @@ class ReadPredicateInterface;
  * @invariant 配置设置必须在运行前完成
  * @warning 处理大文件时建议使用并行模式以提高性能
  */
-class ProcessingPipeline : public ProcessingPipelineInterface {
+class ProcessingPipeline {
 public:
     /**
      * @brief 默认构造函数
@@ -36,16 +36,16 @@ public:
      * @brief 析构函数
      * @details 清理所有资源，确保文件句柄正确关闭
      */
-    ~ProcessingPipeline() override;
+    ~ProcessingPipeline();
 
-    void setInputPath(const std::string& inputPath) override;
-    void setOutputPath(const std::string& outputPath) override;
-    void setReader(std::unique_ptr<fq::io::IReader> reader) override;
-    void setWriter(std::unique_ptr<fq::io::IWriter> writer) override;
-    void setProcessingOptions(const ProcessingOptions& options) override;
-    void addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator) override;
-    void addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicate) override;
-    auto run() -> ProcessingStatistics override;
+    void setInputPath(const std::string& inputPath);
+    void setOutputPath(const std::string& outputPath);
+    void setReader(std::unique_ptr<fq::io::IReader> reader);
+    void setWriter(std::unique_ptr<fq::io::IWriter> writer);
+    void setProcessingOptions(const ProcessingOptions& options);
+    void addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator);
+    void addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicate);
+    auto run() -> ProcessingStatistics;
 
 private:
     /**

@@ -36,20 +36,6 @@ void validateLengthBounds(const cxxopts::ParseResult& result) {
 
 }  // namespace
 
-auto FilterPlan::applyTo(fq::processing::ProcessingPipelineInterface& pipeline) -> void {
-    pipeline.setInputPath(inputPath);
-    pipeline.setOutputPath(outputPath);
-    pipeline.setProcessingOptions(processingOptions);
-
-    for (auto& mutator : mutators) {
-        pipeline.addReadMutator(std::move(mutator));
-    }
-
-    for (auto& predicate : predicates) {
-        pipeline.addReadPredicate(std::move(predicate));
-    }
-}
-
 void addFilterPlanOptions(cxxopts::Options& options) {
     options.add_options()("quality-encoding",
                           "Quality encoding offset (33 or 64)",

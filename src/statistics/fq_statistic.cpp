@@ -29,7 +29,7 @@
 #include "processing/execution_runtime.h"
 #include "statistics/fq_statistic_worker.h"
 
-namespace fq::statistic {
+namespace fq::statistics {
 
 namespace {
 
@@ -177,4 +177,4 @@ void FastqStatisticCalculator::writeSignatureSidecar(const FqStatisticResult& re
     statsWriter.writeSignature(writer, result);
 }
 
-}  // namespace fq::statistic
+}  // namespace fq::statistics

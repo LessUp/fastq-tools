@@ -13,34 +13,33 @@
 namespace fq::cli {
 namespace {
 
-class CapturingPipeline : public fq::processing::ProcessingPipelineInterface {
+class CapturingPipeline {
 public:
-    void setInputPath(const std::string& inputPath) override {
+    void setInputPath(const std::string& inputPath) {
         inputPath_ = inputPath;
     }
 
-    void setOutputPath(const std::string& outputPath) override {
+    void setOutputPath(const std::string& outputPath) {
         outputPath_ = outputPath;
     }
 
-    void setReader(std::unique_ptr<fq::io::IReader> /*reader*/) override {}
+    void setReader(std::unique_ptr<fq::io::IReader> /*reader*/) {}
 
-    void setWriter(std::unique_ptr<fq::io::IWriter> /*writer*/) override {}
+    void setWriter(std::unique_ptr<fq::io::IWriter> /*writer*/) {}
 
-    void setProcessingOptions(const fq::processing::ProcessingOptions& options) override {
+    void setProcessingOptions(const fq::processing::ProcessingOptions& options) {
         options_ = options;
     }
 
-    void addReadMutator(std::unique_ptr<fq::processing::ReadMutatorInterface> mutator) override {
+    void addReadMutator(std::unique_ptr<fq::processing::ReadMutatorInterface> mutator) {
         mutators_.push_back(std::move(mutator));
     }
 
-    void addReadPredicate(
-        std::unique_ptr<fq::processing::ReadPredicateInterface> predicate) override {
+    void addReadPredicate(std::unique_ptr<fq::processing::ReadPredicateInterface> predicate) {
         predicates_.push_back(std::move(predicate));
     }
 
-    auto run() -> fq::processing::ProcessingStatistics override {
+    auto run() -> fq::processing::ProcessingStatistics {
         return {};
     }
 

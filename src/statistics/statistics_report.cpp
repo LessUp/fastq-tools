@@ -10,7 +10,7 @@
 
 #include "statistics/fq_statistic.h"
 
-namespace fq::statistic {
+namespace fq::statistics {
 
 namespace {
 
@@ -169,4 +169,4 @@ auto buildStatisticsReport(const FqStatisticResult& result, const StatisticsWrit
     return report;
 }
 
-}  // namespace fq::statistic
+}  // namespace fq::statistics

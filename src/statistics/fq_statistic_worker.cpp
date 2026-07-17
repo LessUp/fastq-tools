@@ -8,7 +8,7 @@
 
 #include "statistics/fq_statistic.h"
 
-namespace fq::statistic {
+namespace fq::statistics {
 
 namespace {
 
@@ -129,4 +129,4 @@ auto FqStatisticWorker::calculateStats(const Batch& batch) -> IStatistic::Result
     return result;
 }
 
-}  // namespace fq::statistic
+}  // namespace fq::statistics

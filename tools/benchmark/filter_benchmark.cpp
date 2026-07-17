@@ -15,8 +15,8 @@ namespace {
 
 enum class FilterScenario { Baseline, MinLength, MinQuality, MaxNRatio, Combined };
 
-void configurePipeline(fq::processing::ProcessingPipelineInterface& pipeline,
-                       FilterScenario scenario) {
+template <typename PipelineLike>
+void configurePipeline(PipelineLike& pipeline, FilterScenario scenario) {
     switch (scenario) {
         case FilterScenario::Baseline:
             return;
@@ -50,17 +50,17 @@ void benchmarkFilter(::benchmark::State& state, FilterScenario scenario) {
     std::uint64_t filteredReads = 0;
     std::uint64_t modifiedReads = 0;
     for (auto _ : state) {
-        auto pipeline = fq::processing::createProcessingPipeline();
-        pipeline->setInputPath(inputPath.string());
-        pipeline->setOutputPath(outputPath.string());
+        fq::processing::Pipeline pipeline;
+        pipeline.setInputPath(inputPath.string());
+        pipeline.setOutputPath(outputPath.string());
 
         fq::processing::ProcessingOptions options;
         options.batchSize = kBenchmarkBatchSize;
         options.threadCount = 1;
-        pipeline->setProcessingOptions(options);
-        configurePipeline(*pipeline, scenario);
+        pipeline.setProcessingOptions(options);
+        configurePipeline(pipeline, scenario);
 
-        const auto stats = pipeline->run();
+        const auto stats = pipeline.run();
         passedReads = stats.passedReads;
         filteredReads = stats.filteredReads;
         modifiedReads = stats.modifiedReads;

@@ -6,7 +6,7 @@
 #include "statistics/fq_statistic_worker.h"
 #include <gtest/gtest.h>
 
-namespace fq::statistic {
+namespace fq::statistics {
 
 TEST(FqStatisticResultTest, OperatorPlusEquals) {
     FqStatisticResult res1;
@@ -141,4 +141,4 @@ TEST(FqStatisticWorkerTest, TracksDuplicatesAndHeadKmers) {
     EXPECT_EQ(result.headKmerCounts.at("TTTT"), 1);
 }
 
-}  // namespace fq::statistic
+}  // namespace fq::statistics

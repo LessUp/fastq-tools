@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <utility>
 
 #include "common_options.h"
 #include <cxxopts.hpp>
@@ -63,7 +64,7 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
     }
 
     // 4. 构建选项
-    fq::statistic::StatisticOptions statOpts;
+    fq::statistics::StatisticOptions statOpts;
     statOpts.processing = common.toProcessingOptions();
     statOpts.inputFastqPath = common.inputPath;
     statOpts.outputStatPath = common.outputPath;
@@ -77,11 +78,8 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
         statOpts.signatureReportPath = result["signature-report"].as<std::string>();
     }
 
-    // Use the factory to create an instance of the calculator
-    auto stater = fq::statistic::createStatisticCalculator(statOpts);
-
-    // Call run via the interface pointer
-    stater->run();
+    fq::statistics::Calculator calculator(std::move(statOpts));
+    calculator.run();
     return 0;
 }
 
