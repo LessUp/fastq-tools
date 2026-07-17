@@ -60,7 +60,7 @@
 - 零拷贝记录模型，解析退化为指针算术，不分配字符串。
 - 私有执行 backend seam，默认 oneTBB 流水线天然保序。
 - 批量 + 对象池内存纪律，热点路径不逐条分配。
-- CI 矩阵每次推送都跑 GCC、Clang、ASan、TSan、UBSan，外加解析器入口的 fuzzer target（CI 集成待定）。
+- CI 矩阵通过 GitHub Actions 页面手动触发，运行 GCC、Clang、ASan、TSan、UBSan，外加解析器入口的 fuzzer target（CI 集成待定）。
 
 核心主张很简单：**把少数事做到极致，比把很多事做到及格更难**。本仓库就是这一主张的实证。
 
@@ -84,7 +84,7 @@ FastQTools 不是 fastp 的直接替代品。它是一个聚焦、现代内核�
 - **可嵌入 C++ API。** 单一总入口头 `<fqtools/fq.h>`；CLI 与库共用同一条流水线，行为一致。
 - **零拷贝记录视图。** `FastqRecord` 是五个 `std::string_view`，指向连续批缓冲区；解析是指针算术，不是分配。
 - **可替换流式 backend。** 默认 oneTBB 使用 `serial_in_order → parallel → serial_in_order`；I/O 保序、归约确定，CPU 密集的中间级跨核扩展。
-- **消毒剂加固的 CI。** GCC Release、Clang Release、Clang ASan/TSan/UBSan、clang-tidy、cppcheck 每次推送都跑；fuzzer target 位于 `tools/fuzz/`（CI 集成待定）。
+- **消毒剂加固的 CI。** 手动触发后运行 GCC Release、Clang Release、Clang ASan/TSan/UBSan、clang-tidy、cppcheck；fuzzer target 位于 `tools/fuzz/`（CI 集成待定）。
 
 ## 快速开始
 
@@ -221,7 +221,7 @@ serial_in_order (读取批次)  →  parallel (过滤/修剪/统计)  →  seria
 
 ## 质量门槛
 
-CI（`.github/workflows/ci.yml`）在每次推送 `master` 和每个 PR 上运行：
+CI（`.github/workflows/ci.yml`）通过 GitHub Actions 页面手动触发；每次运行执行：
 
 | 任务 | 检测内容 |
 | --- | --- |

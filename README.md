@@ -60,7 +60,7 @@ Most FASTQ QC tools optimize for breadth: many features, many report formats, ma
 - A zero-copy record model where parsing collapses to pointer arithmetic.
 - A private execution-backend seam with an ordered oneTBB pipeline by default.
 - A batch + object-pool memory discipline that avoids per-record allocation on the hot path.
-- A CI matrix that runs GCC, Clang, ASan, TSan, and UBSan on every push, plus fuzzer targets at the parser entry (CI integration pending).
+- A manually triggered CI matrix that runs GCC, Clang, ASan, TSan, and UBSan when started from the GitHub Actions UI, plus fuzzer targets at the parser entry (CI integration pending).
 
 The thesis is simple: **doing a few things well is harder than doing many things adequately**. This repository is that argument in code.
 
@@ -84,7 +84,7 @@ FastQTools is not a drop-in fastp replacement. It is a focused, modern-core alte
 - **Embeddable C++ API.** One umbrella header `<fqtools/fq.h>`; CLI and library share the same pipeline, so behavior is identical.
 - **Zero-copy record views.** `FastqRecord` is five `std::string_view`s pointing into a contiguous batch buffer; parsing is pointer arithmetic, not allocation.
 - **Replaceable streaming backend.** The default oneTBB path uses `serial_in_order → parallel → serial_in_order`, keeping I/O ordered and reduction deterministic while the CPU-bound middle stage scales across cores.
-- **Sanitizer-hardened CI.** GCC Release, Clang Release, Clang ASan/TSan/UBSan, clang-tidy, and cppcheck on every push; fuzzer targets live in `tools/fuzz/` (CI integration pending).
+- **Sanitizer-hardened CI.** A manually triggered run executes GCC Release, Clang Release, Clang ASan/TSan/UBSan, clang-tidy, and cppcheck; fuzzer targets live in `tools/fuzz/` (CI integration pending).
 
 ## Quick start
 
@@ -221,7 +221,7 @@ A point-in-time snapshot (maintained) for **100K reads (150 bp)** on an **AMD Ry
 
 ## Quality bar
 
-CI (`.github/workflows/ci.yml`) runs on every push to `master` and on every PR:
+CI (`.github/workflows/ci.yml`) is manually triggered from the GitHub Actions UI; each run executes:
 
 | Job | What it catches |
 | --- | --- |

@@ -135,7 +135,6 @@ jobs:
 
   coverage:
     name: Coverage
-    if: github.event_name == 'push'
     needs: build-and-test
     runs-on: ubuntu-latest
 
