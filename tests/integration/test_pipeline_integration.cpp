@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <vector>
 
 #include "fixture_loader.h"
 #include "test_helpers.h"
@@ -179,6 +180,99 @@ TEST_F(PipelineIntegrationTest, PipelineReportsModifiedReadsAcrossRuntimeBatches
     EXPECT_EQ(stats.totalReads, 2);
     EXPECT_EQ(stats.modifiedReads, 1);
     EXPECT_NE(FixtureLoader::loadTextFile(output).find("@read1\nGT\n+\nII\n"), std::string::npos);
+}
+
+TEST_F(PipelineIntegrationTest, AppliesTrimmingBeforeMinimumLengthPredicate) {
+    const auto input = tempDir_.path() / "input.fastq";
+    const auto output = tempDir_.path() / "output.fastq";
+
+    {
+        std::ofstream out(input);
+        out << "@read1\n"
+            << "ACGT\n"
+            << "+\n"
+            << "!!II\n";
+    }
+
+    auto pipeline = fq::processing::createProcessingPipeline();
+    pipeline->setInputPath(input.string());
+    pipeline->setOutputPath(output.string());
+    fq::processing::ProcessingOptions options;
+    options.threadCount = 1;
+    options.batchSize = 1;
+    pipeline->setProcessingOptions(options);
+    pipeline->addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20.0));
+    pipeline->addReadPredicate(std::make_unique<fq::processing::MinLengthPredicate>(3));
+
+    const auto stats = pipeline->run();
+
+    EXPECT_EQ(stats.totalReads, 1);
+    EXPECT_EQ(stats.passedReads, 0);
+    EXPECT_EQ(stats.filteredReads, 1);
+    EXPECT_EQ(stats.modifiedReads, 0);
+    EXPECT_TRUE(FixtureLoader::loadTextFile(output).empty());
+}
+
+TEST_F(PipelineIntegrationTest, AppliesTrimmingBeforeAverageQualityPredicate) {
+    const auto input = tempDir_.path() / "input.fastq";
+    const auto output = tempDir_.path() / "output.fastq";
+
+    {
+        std::ofstream out(input);
+        out << "@read1\n"
+            << "ACGT\n"
+            << "+\n"
+            << "!!II\n";
+    }
+
+    auto pipeline = fq::processing::createProcessingPipeline();
+    pipeline->setInputPath(input.string());
+    pipeline->setOutputPath(output.string());
+    fq::processing::ProcessingOptions options;
+    options.threadCount = 1;
+    options.batchSize = 1;
+    pipeline->setProcessingOptions(options);
+    pipeline->addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20.0));
+    pipeline->addReadPredicate(std::make_unique<fq::processing::MinQualityPredicate>(30.0));
+
+    const auto stats = pipeline->run();
+
+    EXPECT_EQ(stats.passedReads, 1);
+    EXPECT_EQ(stats.filteredReads, 0);
+    EXPECT_EQ(stats.modifiedReads, 1);
+    EXPECT_NE(FixtureLoader::loadTextFile(output).find("@read1\nGT\n+\nII\n"), std::string::npos);
+}
+
+TEST_F(PipelineIntegrationTest, AppliesTrimmingBeforeNRatioPredicate) {
+    const auto input = tempDir_.path() / "input.fastq";
+    const auto output = tempDir_.path() / "output.fastq";
+
+    {
+        std::ofstream out(input);
+        out << "@read1\n"
+            << "ACGTNN\n"
+            << "+\n"
+            << "IIIIII\n";
+    }
+
+    auto pipeline = fq::processing::createProcessingPipeline();
+    pipeline->setInputPath(input.string());
+    pipeline->setOutputPath(output.string());
+    fq::processing::ProcessingOptions options;
+    options.threadCount = 1;
+    options.batchSize = 1;
+    pipeline->setProcessingOptions(options);
+    pipeline->addReadMutator(
+        std::make_unique<fq::processing::AdapterTrimmer>(std::vector<std::string>{"NN"}, 2, 0));
+    pipeline->addReadPredicate(std::make_unique<fq::processing::MaxNRatioPredicate>(0.0));
+
+    const auto stats = pipeline->run();
+
+    EXPECT_EQ(stats.passedReads, 1);
+    EXPECT_EQ(stats.filteredReads, 0);
+    EXPECT_EQ(stats.modifiedReads, 1);
+    EXPECT_NE(FixtureLoader::loadTextFile(output).find("@read1\nACGT\n+\nIIII\n"),
+              std::string::npos);
 }
 
 TEST_F(PipelineIntegrationTest, StatisticCalculatorRunsWithMultipleThreads) {

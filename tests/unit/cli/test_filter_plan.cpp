@@ -103,12 +103,12 @@ TEST(FilterPlanTest, BuildsAndAppliesRepresentativeFilterOptions) {
               nullptr);
 
     ASSERT_EQ(pipeline.mutators_.size(), 3U);
-    EXPECT_NE(dynamic_cast<fq::processing::QualityTrimmer*>(pipeline.mutators_[0].get()), nullptr);
-    EXPECT_NE(dynamic_cast<fq::processing::AdapterTrimmer*>(pipeline.mutators_[1].get()), nullptr);
-    EXPECT_NE(dynamic_cast<fq::processing::PolyTailTrimmer*>(pipeline.mutators_[2].get()), nullptr);
+    EXPECT_NE(dynamic_cast<fq::processing::AdapterTrimmer*>(pipeline.mutators_[0].get()), nullptr);
+    EXPECT_NE(dynamic_cast<fq::processing::PolyTailTrimmer*>(pipeline.mutators_[1].get()), nullptr);
+    EXPECT_NE(dynamic_cast<fq::processing::QualityTrimmer*>(pipeline.mutators_[2].get()), nullptr);
 
     fq::io::FastqRecord read{"read1", {}, "ACGT", "II!!", "+"};
-    pipeline.mutators_[0]->process(read);
+    pipeline.mutators_[2]->process(read);
     EXPECT_EQ(read.seq, "AC");
     EXPECT_EQ(read.qual, "II");
 }

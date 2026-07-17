@@ -41,12 +41,12 @@ auto FilterPlan::applyTo(fq::processing::ProcessingPipelineInterface& pipeline) 
     pipeline.setOutputPath(outputPath);
     pipeline.setProcessingOptions(processingOptions);
 
-    for (auto& predicate : predicates) {
-        pipeline.addReadPredicate(std::move(predicate));
-    }
-
     for (auto& mutator : mutators) {
         pipeline.addReadMutator(std::move(mutator));
+    }
+
+    for (auto& predicate : predicates) {
+        pipeline.addReadPredicate(std::move(predicate));
     }
 }
 
@@ -87,13 +87,6 @@ auto buildFilterPlan(const cxxopts::ParseResult& result, const CommonCliOptions&
 
     const int qualityEncoding = validateQualityEncoding(result["quality-encoding"].as<int>());
 
-    if (result.count("min-quality")) {
-        const double minQuality = result["min-quality"].as<double>();
-        validateNonNegativeThreshold("min-quality", minQuality);
-        plan.predicates.push_back(
-            std::make_unique<fq::processing::MinQualityPredicate>(minQuality, qualityEncoding));
-    }
-
     if (result.count("min-length")) {
         plan.predicates.push_back(std::make_unique<fq::processing::MinLengthPredicate>(
             result["min-length"].as<size_t>()));
@@ -104,22 +97,20 @@ auto buildFilterPlan(const cxxopts::ParseResult& result, const CommonCliOptions&
             result["max-length"].as<size_t>()));
     }
 
+    if (result.count("min-quality")) {
+        const double minQuality = result["min-quality"].as<double>();
+        validateNonNegativeThreshold("min-quality", minQuality);
+        plan.predicates.push_back(
+            std::make_unique<fq::processing::MinQualityPredicate>(minQuality, qualityEncoding));
+    }
+
     if (result.count("max-n-ratio")) {
         const double maxNRatio = result["max-n-ratio"].as<double>();
         validateMaxNRatio(maxNRatio);
         plan.predicates.push_back(std::make_unique<fq::processing::MaxNRatioPredicate>(maxNRatio));
     }
 
-    if (result.count("trim-quality")) {
-        const double trimQuality = result["trim-quality"].as<double>();
-        validateNonNegativeThreshold("trim-quality", trimQuality);
-        plan.mutators.push_back(std::make_unique<fq::processing::QualityTrimmer>(
-            trimQuality,
-            static_cast<size_t>(1),
-            parseTrimMode(result["trim-mode"].as<std::string>()),
-            qualityEncoding));
-    }
-
+    // CLI 契约：adapter → poly-G/poly-X → quality trim，所有 predicate 在其后评估。
     if (result.count("adapter-seq")) {
         plan.mutators.push_back(std::make_unique<fq::processing::AdapterTrimmer>(
             result["adapter-seq"].as<std::vector<std::string>>(),
@@ -135,6 +126,16 @@ auto buildFilterPlan(const cxxopts::ParseResult& result, const CommonCliOptions&
     if (result.count("trim-poly-x")) {
         plan.mutators.push_back(std::make_unique<fq::processing::PolyTailTrimmer>(
             fq::processing::PolyTailTrimmer::TailKind::PolyX, result["trim-poly-x"].as<size_t>()));
+    }
+
+    if (result.count("trim-quality")) {
+        const double trimQuality = result["trim-quality"].as<double>();
+        validateNonNegativeThreshold("trim-quality", trimQuality);
+        plan.mutators.push_back(std::make_unique<fq::processing::QualityTrimmer>(
+            trimQuality,
+            static_cast<size_t>(1),
+            parseTrimMode(result["trim-mode"].as<std::string>()),
+            qualityEncoding));
     }
 
     return plan;

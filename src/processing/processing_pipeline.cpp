@@ -25,6 +25,12 @@ namespace fq::processing {
 
 namespace {
 
+[[nodiscard]] auto recordsEqual(const fq::io::FastqRecord& lhs, const fq::io::FastqRecord& rhs)
+    -> bool {
+    return lhs.id == rhs.id && lhs.comment == rhs.comment && lhs.seq == rhs.seq &&
+        lhs.qual == rhs.qual && lhs.plus == rhs.plus;
+}
+
 class FilterRuntimeAdapter {
 public:
     using result_type = ProcessingStatistics;
@@ -162,8 +168,13 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch, ProcessingStati
     for (size_t i = 0; i < totalInBatch; ++i) {
         auto& read = records[i];
 
-        bool passed = true;
-        if (hasPredicates) {
+        const auto originalRead = read;
+        for (const auto& mutator : mutators_) {
+            mutator->process(read);
+        }
+
+        bool passed = !read.empty();
+        if (passed && hasPredicates) {
             for (const auto& predicate : predicates_) {
                 if (!predicate->evaluate(read)) {
                     passed = false;
@@ -172,16 +183,8 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch, ProcessingStati
             }
         }
 
-        if (passed && hasMutators) {
-            const size_t originalLen = read.length();
-            for (const auto& mutator : mutators_) {
-                mutator->process(read);
-            }
-            if (read.empty()) {
-                passed = false;
-            } else if (read.length() != originalLen) {
-                ++modifiedCount;
-            }
+        if (passed && hasMutators && !recordsEqual(originalRead, read)) {
+            ++modifiedCount;
         }
 
         if (passed) {
