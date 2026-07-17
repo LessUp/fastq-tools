@@ -4,8 +4,6 @@
  * @details 三种 backend 共享相同 reader、batch operation、writer 和配置。
  */
 
-#include <benchmark/benchmark.h>
-
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -14,6 +12,7 @@
 
 #include "processing/execution_backend.h"
 #include "processing/execution_runtime.h"
+#include <benchmark/benchmark.h>
 
 namespace fq::benchmark {
 
@@ -33,7 +32,7 @@ public:
         return {};
     }
 
-    auto processBatch(fq::io::FastqBatch& batch) const -> result_type {
+    auto processBatch(const fq::io::FastqBatch& batch) const -> result_type {
         result_type result;
         result.totalReads = batch.size();
         for (const auto& record : batch) {
@@ -42,8 +41,7 @@ public:
                 result.checksum = result.checksum * 131U + static_cast<unsigned char>(base);
             }
             for (const char quality : record.qual) {
-                result.checksum = result.checksum * 131U +
-                    static_cast<unsigned char>(quality);
+                result.checksum = result.checksum * 131U + static_cast<unsigned char>(quality);
             }
         }
         return result;
@@ -143,8 +141,7 @@ void runBackendBenchmark(::benchmark::State& state,
 }
 
 void BM_Backend_SequentialCpu(::benchmark::State& state) {
-    runBackendBenchmark(
-        state, fq::processing::ExecutionBackendPreference::Sequential, false);
+    runBackendBenchmark(state, fq::processing::ExecutionBackendPreference::Sequential, false);
 }
 
 void BM_Backend_OneTbbCpu(::benchmark::State& state) {
@@ -156,8 +153,7 @@ void BM_Backend_TaskflowCpu(::benchmark::State& state) {
 }
 
 void BM_Backend_SequentialReadWrite(::benchmark::State& state) {
-    runBackendBenchmark(
-        state, fq::processing::ExecutionBackendPreference::Sequential, true);
+    runBackendBenchmark(state, fq::processing::ExecutionBackendPreference::Sequential, true);
 }
 
 void BM_Backend_OneTbbReadWrite(::benchmark::State& state) {

@@ -14,7 +14,7 @@ namespace fq::benchmark {
 class ResultStorage {
 public:
     explicit ResultStorage(
-        const std::filesystem::path& base_dir = "docs/performance/benchmark-reports");
+        const std::filesystem::path& baseDir = "docs/performance/benchmark-reports");
 
     /**
      * @brief 保存基准测试报告
@@ -34,7 +34,7 @@ public:
      * @brief 获取所有历史结果文件
      * @return 文件名列表（按时间排序）
      */
-    std::vector<std::string> listResults() const;
+    [[nodiscard]] std::vector<std::string> listResults() const;
 
     /**
      * @brief 获取最新的结果
@@ -61,19 +61,19 @@ public:
      * @brief 获取所有基线名称
      * @return 基线名称列表
      */
-    std::vector<std::string> listBaselines() const;
+    [[nodiscard]] std::vector<std::string> listBaselines() const;
 
     /**
      * @brief 检查基线是否存在
      * @param name 基线名称
      * @return 是否存在
      */
-    bool baselineExists(const std::string& name) const;
+    [[nodiscard]] bool baselineExists(const std::string& name) const;
 
 private:
-    std::filesystem::path base_dir_;
-    std::filesystem::path results_dir_;
-    std::filesystem::path baselines_dir_;
+    std::filesystem::path baseDir_;
+    std::filesystem::path resultsDir_;
+    std::filesystem::path baselinesDir_;
 
     void ensureDirectories();
 };

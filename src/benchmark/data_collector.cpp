@@ -108,7 +108,7 @@ std::string DataCollector::getOsVersion() {
     std::ifstream osRelease("/etc/os-release");
     std::string line;
     while (std::getline(osRelease, line)) {
-        if (line.find("PRETTY_NAME=") == 0) {
+        if (line.starts_with("PRETTY_NAME=")) {
             std::string name = line.substr(12);
             // 移除引号
             if (!name.empty() && name.front() == '"') {

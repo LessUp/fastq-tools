@@ -50,6 +50,7 @@ struct BenchmarkReport {
 };
 
 // JSON 序列化支持
+// cppcheck-suppress unknownMacro
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(BenchmarkResult,
                                    name,
                                    category,
