@@ -43,6 +43,8 @@ class ObjectPool : public std::enable_shared_from_this<ObjectPool<T>> {
 public:
     /// 对象重置函数类型
     using ResetFunc = std::function<void(T&)>;
+    /// 对象创建函数类型
+    using CreateFunc = std::function<std::unique_ptr<T>()>;
 
     /**
      * @brief 构造对象池
@@ -50,8 +52,11 @@ public:
      * @param maxSize 池的最大容量，0 表示无限制
      * @param resetFunc 对象重置回调函数，获取对象时调用
      */
-    explicit ObjectPool(size_t initialSize = 0, size_t maxSize = 0, ResetFunc resetFunc = nullptr)
-        : resetFunc_(std::move(resetFunc)), maxSize_(maxSize) {
+    explicit ObjectPool(size_t initialSize = 0,
+                        size_t maxSize = 0,
+                        ResetFunc resetFunc = nullptr,
+                        CreateFunc createFunc = nullptr)
+        : resetFunc_(std::move(resetFunc)), createFunc_(std::move(createFunc)), maxSize_(maxSize) {
         if (initialSize > 0) {
             reserve(initialSize);
         }
@@ -87,7 +92,7 @@ public:
         }
 
         if (!obj) {
-            obj = std::make_unique<T>();
+            obj = createObject();
             totalCreated_.fetch_add(1, std::memory_order_relaxed);
         }
 
@@ -122,7 +127,7 @@ public:
             if (maxSize_ > 0 && pool_.size() >= maxSize_) {
                 break;
             }
-            pool_.push_back(std::make_unique<T>());
+            pool_.push_back(createObject());
             totalCreated_.fetch_add(1, std::memory_order_relaxed);
         }
     }
@@ -162,6 +167,10 @@ public:
     }
 
 private:
+    [[nodiscard]] auto createObject() const -> std::unique_ptr<T> {
+        return createFunc_ ? createFunc_() : std::make_unique<T>();
+    }
+
     /**
      * @brief 归还对象到池中（内部实现）
      * @param obj 要归还的对象
@@ -179,6 +188,7 @@ private:
     std::vector<std::unique_ptr<T>> pool_;
     mutable std::mutex mutex_;
     ResetFunc resetFunc_;
+    CreateFunc createFunc_;
     size_t maxSize_;
     std::atomic<size_t> activeCount_{0};
     std::atomic<size_t> totalCreated_{0};

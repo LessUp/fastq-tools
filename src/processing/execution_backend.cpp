@@ -14,7 +14,7 @@ public:
         -> ErasedExecutionOutcome override {
         auto result = operation.makeResult();
         ExecutionRuntimeMetrics metrics;
-        fq::io::FastqBatch batch(context.config.batchCapacityBytes);
+        fq::io::FastqBatch batch(context.config.batchCapacityBytes, context.batchSize);
 
         while (context.reader->nextBatch(batch, context.batchSize)) {
             auto partial = operation.processBatch(batch);

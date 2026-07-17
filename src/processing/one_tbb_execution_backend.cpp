@@ -21,7 +21,9 @@ public:
         using BatchResult = std::pair<std::shared_ptr<fq::io::FastqBatch>, std::any>;
 
         auto batchPool = fq::io::createFastqBatchPool(context.config.maxLiveTokens,
-                                                      context.config.maxLiveTokens * 2);
+                                                      context.config.maxLiveTokens * 2,
+                                                      context.config.batchCapacityBytes,
+                                                      context.batchSize);
         auto result = operation.makeResult();
         std::atomic<std::uint64_t> batchCount{0};
         std::atomic<std::uint64_t> committedBytes{0};

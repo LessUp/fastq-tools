@@ -30,7 +30,9 @@ public:
     auto execute(ExecutionBackendContext context, ExecutionOperation& operation)
         -> ErasedExecutionOutcome override {
         auto batchPool = fq::io::createFastqBatchPool(context.config.maxLiveTokens,
-                                                      context.config.maxLiveTokens * 2);
+                                                      context.config.maxLiveTokens * 2,
+                                                      context.config.batchCapacityBytes,
+                                                      context.batchSize);
         std::vector<std::optional<TaskflowLineState>> lines(context.config.maxLiveTokens);
         auto result = operation.makeResult();
         std::atomic<std::uint64_t> batchCount{0};

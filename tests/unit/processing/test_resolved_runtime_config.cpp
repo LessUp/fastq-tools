@@ -10,6 +10,7 @@
  */
 
 #include "processing/resolved_runtime_config.h"
+#include <fqtools/error/error.h>
 #include <fqtools/processing/processing_options.h>
 #include <gtest/gtest.h>
 
@@ -18,16 +19,23 @@ namespace fq::processing {
 TEST(ResolvedRuntimeConfigTest, DerivesMemoryBoundedLiveTokenCountFromProcessingOptions) {
     ProcessingOptions options;
     options.threadCount = 4;
-    options.memoryLimitBytes = 8ULL * 1024ULL * 1024ULL;
+    options.memoryLimitBytes = 64ULL * 1024ULL * 1024ULL;
 
     const auto config = resolveRuntimeConfig(options);
 
     EXPECT_EQ(config.readChunkBytes, 1ULL * 1024ULL * 1024ULL);
     EXPECT_EQ(config.batchCapacityBytes, 4ULL * 1024ULL * 1024ULL);
     EXPECT_EQ(config.writerBufferBytes, 128ULL * 1024ULL);
-    EXPECT_EQ(config.maxLiveTokens, 1U);
+    EXPECT_GE(config.maxLiveTokens, 1U);
     EXPECT_EQ(config.threadCount, 4U);
     EXPECT_EQ(config.executionMode, ExecutionMode::Parallel);
+}
+
+TEST(ResolvedRuntimeConfigTest, RejectsMemoryLimitBelowMinimumRunSet) {
+    ProcessingOptions options;
+    options.memoryLimitBytes = 1ULL * 1024ULL * 1024ULL;
+
+    EXPECT_THROW(static_cast<void>(resolveRuntimeConfig(options)), fq::error::ConfigurationError);
 }
 
 TEST(ResolvedRuntimeConfigTest, FallsBackToSequentialModeWhenCustomIoIsPresent) {

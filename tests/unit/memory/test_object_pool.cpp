@@ -298,4 +298,13 @@ TEST_F(ObjectPoolTest, FastqBatchPoolIntegration) {
     EXPECT_TRUE(batch2->buffer().empty());
 }
 
+TEST_F(ObjectPoolTest, FastqBatchPoolUsesConfiguredBatchCapacityAndSize) {
+    auto pool = fq::io::createFastqBatchPool(1, 1, 8192, 7);
+
+    auto batch = pool->acquire();
+    ASSERT_NE(batch, nullptr);
+    EXPECT_GE(batch->buffer().capacity(), 8192U);
+    EXPECT_GE(batch->records().capacity(), 7U);
+}
+
 }  // namespace fq::memory::test

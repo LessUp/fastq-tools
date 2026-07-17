@@ -11,7 +11,11 @@
 
 #include "processing/resolved_runtime_config.h"
 
+#include "fqtools/error/error.h"
+#include "fqtools/io/fastq_io.h"
+
 #include <algorithm>
+#include <limits>
 
 namespace fq::processing {
 
@@ -43,28 +47,45 @@ auto applyProfileDefaults(ResolvedRuntimeConfig& config, ProcessingProfile profi
 }
 
 auto resolveMaxLiveTokens(size_t memoryLimitBytes,
-                          size_t batchCapacityBytes,
+                          size_t memoryPerTokenBytes,
                           size_t threadCount,
                           ProcessingProfile profile) -> size_t {
-    // LowMemory preset uses fixed token count
-    if (profile == ProcessingProfile::LowMemory) {
-        return 2;
+    const size_t requested = profile == ProcessingProfile::LowMemory
+        ? 2
+        : std::max(static_cast<size_t>(4), threadCount * 2);
+
+    if (memoryLimitBytes == 0) {
+        return requested;
+    }
+    if (memoryPerTokenBytes == 0 || memoryLimitBytes < memoryPerTokenBytes) {
+        throw fq::error::ConfigurationError(
+            "memory limit is below the minimum runtime working set");
     }
 
-    // Auto-calculate based on thread count
-    size_t requested = std::max(static_cast<size_t>(4), threadCount * 2);
+    return std::max(static_cast<size_t>(1),
+                    std::min(requested, memoryLimitBytes / memoryPerTokenBytes));
+}
 
-    // Apply memory cap if specified
-    if (memoryLimitBytes == 0 || batchCapacityBytes == 0) {
-        return std::max(static_cast<size_t>(1), requested);
+auto estimateMemoryPerToken(const ResolvedRuntimeConfig& config, size_t batchSize) -> size_t {
+    constexpr size_t kRecordBytes = sizeof(fq::io::FastqRecord);
+    if (batchSize > std::numeric_limits<size_t>::max() / kRecordBytes) {
+        throw fq::error::ConfigurationError("batch size is too large for memory accounting");
     }
 
-    const size_t cap = (memoryLimitBytes * 7 / 10) / batchCapacityBytes;
-    if (cap == 0) {
-        return 1;
+    const size_t recordBytes = batchSize * kRecordBytes;
+    const size_t components[] = {config.batchCapacityBytes,
+                                 recordBytes,
+                                 config.readChunkBytes,
+                                 config.writerBufferBytes,
+                                 config.zlibBufferBytes};
+    size_t total = 0;
+    for (const size_t component : components) {
+        if (component > std::numeric_limits<size_t>::max() - total) {
+            throw fq::error::ConfigurationError("runtime memory accounting overflow");
+        }
+        total += component;
     }
-
-    return std::max(static_cast<size_t>(1), std::min(requested, cap));
+    return total;
 }
 
 }  // namespace
@@ -81,10 +102,12 @@ auto resolveRuntimeConfig(const ProcessingOptions& options,
 
     // Apply profile defaults
     applyProfileDefaults(config, options.profile);
+    config.batchSize = options.batchSize;
+    config.memoryPerTokenBytes = estimateMemoryPerToken(config, options.batchSize);
 
     // Resolve max live tokens
     config.maxLiveTokens = resolveMaxLiveTokens(options.memoryLimitBytes.value_or(0),
-                                                config.batchCapacityBytes,
+                                                config.memoryPerTokenBytes,
                                                 config.threadCount,
                                                 options.profile);
 

@@ -48,9 +48,14 @@ using FastqBatchPool = fq::memory::ObjectPool<FastqBatch>;
  * // 使用 batch...
  * @endcode
  */
-inline auto createFastqBatchPool(size_t initialSize, size_t maxSize)
-    -> std::shared_ptr<FastqBatchPool> {
-    return std::make_shared<FastqBatchPool>(initialSize, maxSize, resetFastqBatch);
+inline auto createFastqBatchPool(size_t initialSize,
+                                 size_t maxSize,
+                                 size_t batchCapacityBytes = 4 * 1024 * 1024,
+                                 size_t batchSize = 10000) -> std::shared_ptr<FastqBatchPool> {
+    return std::make_shared<FastqBatchPool>(
+        initialSize, maxSize, resetFastqBatch, [batchCapacityBytes, batchSize] {
+            return std::make_unique<FastqBatch>(batchCapacityBytes, batchSize);
+        });
 }
 
 }  // namespace fq::io
