@@ -11,10 +11,12 @@
 
 #include "statistics/fq_statistic.h"
 
+#include "fqtools/error/error.h"
 #include "fqtools/logging.h"
 #include "fqtools/statistics/statistics_writer.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -143,8 +145,7 @@ void FastqStatisticCalculator::run() {
 void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
     std::ofstream writer(options_.outputStatPath);
     if (!writer) {
-        throw std::runtime_error("Failed to open output statistics file: " +
-                                 options_.outputStatPath);
+        throw fq::error::IOError(options_.outputStatPath, errno);
     }
 
     StatisticsWriterOptions writerOptions;
@@ -165,8 +166,7 @@ void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
 void FastqStatisticCalculator::writeSignatureSidecar(const FqStatisticResult& result) const {
     std::ofstream writer(options_.signatureReportPath);
     if (!writer) {
-        throw std::runtime_error("Failed to open signature report file: " +
-                                 options_.signatureReportPath);
+        throw fq::error::IOError(options_.signatureReportPath, errno);
     }
 
     StatisticsWriterOptions writerOptions;

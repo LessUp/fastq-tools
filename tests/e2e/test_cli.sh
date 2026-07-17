@@ -77,7 +77,7 @@ set +euo pipefail
 $FASTQTOOLS > "$TMP_DIR/no-subcommand.txt" 2>&1
 STATUS=$?
 set -euo pipefail
-if [[ $STATUS -ne 0 ]] && grep -q "Available commands" "$TMP_DIR/no-subcommand.txt"; then
+if [[ $STATUS -eq 2 ]] && grep -q "Available commands" "$TMP_DIR/no-subcommand.txt"; then
     pass "No subcommand prints help and exits non-zero"
 else
     fail "No subcommand did not print help with non-zero exit"
@@ -89,7 +89,7 @@ set +euo pipefail
 $FASTQTOOLS unknown-command > "$TMP_DIR/unknown-subcommand.txt" 2>&1
 STATUS=$?
 set -euo pipefail
-if [[ $STATUS -ne 0 ]] && grep -q "Unknown subcommand" "$TMP_DIR/unknown-subcommand.txt"; then
+if [[ $STATUS -eq 2 ]] && grep -q "Unknown subcommand" "$TMP_DIR/unknown-subcommand.txt"; then
     pass "Unknown subcommand reports an error and exits non-zero"
 else
     fail "Unknown subcommand did not report an error with non-zero exit"
@@ -147,7 +147,7 @@ STATUS_OUTPUT=$?
 $FASTQTOOLS --quiet filter --output "$TMP_DIR/filter.fastq" > "$TMP_DIR/filter-missing-input.txt" 2>&1
 STATUS_INPUT=$?
 set -euo pipefail
-if [[ $STATUS_OUTPUT -ne 0 ]] && [[ $STATUS_INPUT -ne 0 ]] &&
+if [[ $STATUS_OUTPUT -eq 2 ]] && [[ $STATUS_INPUT -eq 2 ]] &&
    grep -q "both --input and --output options are required" "$TMP_DIR/filter-missing-output.txt" &&
    grep -q "both --input and --output options are required" "$TMP_DIR/filter-missing-input.txt"; then
     pass "filter rejects missing input/output arguments"
@@ -163,7 +163,7 @@ STATUS_OUTPUT=$?
 $FASTQTOOLS --quiet stat --output "$TMP_DIR/stat.txt" > "$TMP_DIR/stat-missing-input.txt" 2>&1
 STATUS_INPUT=$?
 set -euo pipefail
-if [[ $STATUS_OUTPUT -ne 0 ]] && [[ $STATUS_INPUT -ne 0 ]] &&
+if [[ $STATUS_OUTPUT -eq 2 ]] && [[ $STATUS_INPUT -eq 2 ]] &&
    grep -q "both --input and --output options are required" "$TMP_DIR/stat-missing-output.txt" &&
    grep -q "both --input and --output options are required" "$TMP_DIR/stat-missing-input.txt"; then
     pass "stat rejects missing input/output arguments"
@@ -199,9 +199,30 @@ else
     warn "Skipping stat test: sample data not found"
 fi
 
-# Test 12: trim-quality 实际裁剪生效
+# Test 12: 错误类别使用稳定退出码
+echo "Test 12: stable error exit codes"
+MALFORMED_FASTQ="$TMP_DIR/malformed.fastq"
+cat > "$MALFORMED_FASTQ" <<'EOF'
+@malformed-read
+ACGT
+-
+!!!!
+EOF
+set +euo pipefail
+$FASTQTOOLS -q filter --input "$MALFORMED_FASTQ" --output "$TMP_DIR/malformed-output.fastq" > "$TMP_DIR/format-error.txt" 2>&1
+STATUS_FORMAT=$?
+$FASTQTOOLS -q filter --input "$TMP_DIR/does-not-exist.fastq" --output "$TMP_DIR/io-output.fastq" > "$TMP_DIR/io-error.txt" 2>&1
+STATUS_IO=$?
+set -euo pipefail
+if [[ $STATUS_FORMAT -eq 3 ]] && [[ $STATUS_IO -eq 4 ]]; then
+    pass "format and I/O failures use distinct stable exit codes"
+else
+    fail "format/I/O exit code mapping changed (format=$STATUS_FORMAT io=$STATUS_IO)"
+fi
 
-echo "Test 12: trim-quality changes output"
+# Test 13: trim-quality 实际裁剪生效
+
+echo "Test 13: trim-quality changes output"
 TRIM_INPUT="$TMP_DIR/trim-input.fastq"
 cat > "$TRIM_INPUT" <<'EOF'
 @trim-read

@@ -12,11 +12,11 @@
 #include "stat_command.h"
 
 #include <iostream>
+#include <stdexcept>
 
 #include "common_options.h"
 #include <cxxopts.hpp>
 
-#include <fqtools/logging.h>
 #include <fqtools/statistics/interfaces.h>
 
 namespace fq::cli::commands {
@@ -59,37 +59,29 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
     // 3. 解析共享参数
     auto common = CommonCliOptions::parse(result);
     if (common.inputPath.empty() || common.outputPath.empty()) {
-        fq::logging::error("Error: both --input and --output options are required.");
-        std::cout << options.help() << '\n';
-        return 1;
+        throw std::invalid_argument("both --input and --output options are required");
     }
 
-    try {
-        // 4. 构建选项
-        fq::statistic::StatisticOptions statOpts;
-        statOpts.processing = common.toProcessingOptions();
-        statOpts.inputFastqPath = common.inputPath;
-        statOpts.outputStatPath = common.outputPath;
-        statOpts.qualityEncoding =
-            fq::cli::validateQualityEncoding(result["quality-encoding"].as<int>());
-        statOpts.signatureKmerSize = result["signature-kmer-size"].as<size_t>();
-        statOpts.maxReportedSignatures = result["signature-limit"].as<size_t>();
-        statOpts.duplicateEstimateSampleModulo = result["duplicate-sample-modulo"].as<size_t>();
+    // 4. 构建选项
+    fq::statistic::StatisticOptions statOpts;
+    statOpts.processing = common.toProcessingOptions();
+    statOpts.inputFastqPath = common.inputPath;
+    statOpts.outputStatPath = common.outputPath;
+    statOpts.qualityEncoding =
+        fq::cli::validateQualityEncoding(result["quality-encoding"].as<int>());
+    statOpts.signatureKmerSize = result["signature-kmer-size"].as<size_t>();
+    statOpts.maxReportedSignatures = result["signature-limit"].as<size_t>();
+    statOpts.duplicateEstimateSampleModulo = result["duplicate-sample-modulo"].as<size_t>();
 
-        if (result.count("signature-report")) {
-            statOpts.signatureReportPath = result["signature-report"].as<std::string>();
-        }
-
-        // Use the factory to create an instance of the calculator
-        auto stater = fq::statistic::createStatisticCalculator(statOpts);
-
-        // Call run via the interface pointer
-        stater->run();
-    } catch (const std::exception& e) {
-        fq::logging::error("Error: {}", e.what());
-        return 1;
+    if (result.count("signature-report")) {
+        statOpts.signatureReportPath = result["signature-report"].as<std::string>();
     }
 
+    // Use the factory to create an instance of the calculator
+    auto stater = fq::statistic::createStatisticCalculator(statOpts);
+
+    // Call run via the interface pointer
+    stater->run();
     return 0;
 }
 

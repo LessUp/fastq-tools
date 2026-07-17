@@ -13,6 +13,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <stdexcept>
 
 #include "common_options.h"
 #include "filter_plan.h"
@@ -53,10 +54,8 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     // 3. 解析共享参数
     auto common = CommonCliOptions::parse(result);
     if (common.inputPath.empty() || common.outputPath.empty()) {
-        fq::logging::error(
-            "Error: both --input and --output options are required for the filter command.");
-        std::cout << options.help() << '\n';
-        return 1;
+        throw std::invalid_argument(
+            "both --input and --output options are required for the filter command");
     }
 
     auto plan = buildFilterPlan(result, common);

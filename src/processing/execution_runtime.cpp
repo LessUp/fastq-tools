@@ -4,6 +4,7 @@
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/io/fastq_writer.h"
 
+#include <cerrno>
 #include <filesystem>
 #include <stdexcept>
 #include <utility>
@@ -115,7 +116,7 @@ auto ExecutionRuntime::executeErased(const ExecutionRuntimeRequest& request,
         auto concreteReader =
             std::make_shared<fq::io::FastqReader>(request.inputPath, makeReaderOptions(config));
         if (!concreteReader->isOpen()) {
-            throw std::runtime_error("Failed to open input file: " + request.inputPath);
+            throw fq::error::IOError(request.inputPath, errno);
         }
         reader = std::move(concreteReader);
     }
@@ -125,7 +126,7 @@ auto ExecutionRuntime::executeErased(const ExecutionRuntimeRequest& request,
         auto concreteWriter =
             std::make_shared<fq::io::FastqWriter>(*request.outputPath, makeWriterOptions(config));
         if (!concreteWriter->isOpen()) {
-            throw std::runtime_error("Failed to open output file: " + *request.outputPath);
+            throw fq::error::IOError(*request.outputPath, errno);
         }
         writer = std::move(concreteWriter);
     }
