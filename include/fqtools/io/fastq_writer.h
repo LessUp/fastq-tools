@@ -91,6 +91,12 @@ public:
     auto write(const FastqBatch& batch) -> std::uint64_t override;
 
     /**
+     * @brief Flush、关闭压缩流并原子发布输出文件
+     * @throw fq::error::IOError 写入、关闭或 rename 失败
+     */
+    void finish() override;
+
+    /**
      * @brief 写入单条 FASTQ 记录
      * @param record 要写入的单条记录
      * @note 此方法不在 IWriter 接口中，为具体类额外提供

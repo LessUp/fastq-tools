@@ -77,6 +77,10 @@ public:
         tf::Executor executor(context.config.threadCount);
         executor.run(taskflow).get();
 
+        if (context.writer) {
+            context.writer->finish();
+        }
+
         return {std::move(result),
                 {batchCount.load(std::memory_order_relaxed),
                  committedBytes.load(std::memory_order_relaxed)}};

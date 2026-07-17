@@ -25,6 +25,10 @@ public:
             metrics.committedBytes += committedBytes;
         }
 
+        if (context.writer) {
+            context.writer->finish();
+        }
+
         return {std::move(result), metrics};
     }
 };

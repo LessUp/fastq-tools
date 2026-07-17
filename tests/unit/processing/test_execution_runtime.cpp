@@ -9,6 +9,7 @@
 #include "test_helpers.h"
 
 #include "processing/execution_runtime.h"
+#include <fqtools/error/error.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -18,6 +19,32 @@ namespace {
 struct ReaderCallState {
     size_t requestedMaxRecords = 0;
     size_t callCount = 0;
+};
+
+struct WriterCallState {
+    size_t writeCalls = 0;
+    size_t finishCalls = 0;
+    bool failOnFinish = false;
+};
+
+class RecordingWriter final : public fq::io::IWriter {
+public:
+    explicit RecordingWriter(std::shared_ptr<WriterCallState> state) : state_(std::move(state)) {}
+
+    auto write(const fq::io::FastqBatch& batch) -> std::uint64_t override {
+        ++state_->writeCalls;
+        return batch.buffer().size();
+    }
+
+    void finish() override {
+        ++state_->finishCalls;
+        if (state_->failOnFinish) {
+            throw fq::error::IOError("recording-writer", 5);
+        }
+    }
+
+private:
+    std::shared_ptr<WriterCallState> state_;
 };
 
 class RecordingLimitReader final : public fq::io::IReader {
@@ -173,6 +200,56 @@ TEST(ExecutionRuntimeTest, ExecuteReportsCommittedBytesForCommittedBatches) {
     EXPECT_EQ(outcome.metrics.committedBytes, committedTotal);
     EXPECT_TRUE(std::filesystem::exists(*request.outputPath));
     EXPECT_EQ(outcome.metrics.committedBytes, std::filesystem::file_size(*request.outputPath));
+}
+
+TEST(ExecutionRuntimeTest, ExecuteFinishesInjectedWriterExactlyOnce) {
+    fq::test::TempDirectory tempDir("execution_runtime_");
+    auto state = std::make_shared<WriterCallState>();
+    ExecutionRuntime runtime({}, std::make_shared<RecordingWriter>(state));
+    RecordingCommandAdapter adapter;
+
+    ExecutionRuntimeRequest request;
+    request.inputPath = writeFastqInput(tempDir, "input.fastq", "@read1\nACGT\n+\nIIII\n");
+    request.options.batchSize = 1;
+    request.options.threadCount = 1;
+
+    static_cast<void>(runtime.execute(request, adapter));
+
+    EXPECT_EQ(state->writeCalls, 1U);
+    EXPECT_EQ(state->finishCalls, 1U);
+}
+
+TEST(ExecutionRuntimeTest, PropagatesWriterFinishFailure) {
+    fq::test::TempDirectory tempDir("execution_runtime_");
+    auto state = std::make_shared<WriterCallState>();
+    state->failOnFinish = true;
+    ExecutionRuntime runtime({}, std::make_shared<RecordingWriter>(state));
+    RecordingCommandAdapter adapter;
+
+    ExecutionRuntimeRequest request;
+    request.inputPath = writeFastqInput(tempDir, "input.fastq", "@read1\nACGT\n+\nIIII\n");
+    request.options.batchSize = 1;
+    request.options.threadCount = 1;
+
+    EXPECT_THROW(static_cast<void>(runtime.execute(request, adapter)), fq::error::IOError);
+    EXPECT_EQ(state->finishCalls, 1U);
+}
+
+TEST(ExecutionRuntimeTest, RejectsInputAndOutputAliasing) {
+    fq::test::TempDirectory tempDir("execution_runtime_");
+    ExecutionRuntime runtime;
+    RecordingCommandAdapter adapter;
+
+    ExecutionRuntimeRequest request;
+    request.inputPath = writeFastqInput(tempDir, "input.fastq", "@read1\nACGT\n+\nIIII\n");
+    request.outputPath = request.inputPath;
+    request.options.batchSize = 1;
+    request.options.threadCount = 1;
+
+    EXPECT_THROW(static_cast<void>(runtime.execute(request, adapter)),
+                 fq::error::ConfigurationError);
+    std::ifstream in(request.inputPath);
+    EXPECT_TRUE(in.good());
 }
 
 TEST(ExecutionRuntimeTest, ExecuteValidatesProcessingOptionsBeforeTraversal) {

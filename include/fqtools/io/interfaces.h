@@ -63,6 +63,12 @@ public:
      * @throw fq::error::IOError 写入错误
      */
     virtual auto write(const FastqBatch& batch) -> std::uint64_t = 0;
+
+    /**
+     * @brief 完成输出并报告 flush/压缩流关闭错误
+     * @throw fq::error::IOError 输出或关闭失败
+     */
+    virtual void finish() = 0;
 };
 
 /// @brief IWriter 的工厂别名，便于测试 mock

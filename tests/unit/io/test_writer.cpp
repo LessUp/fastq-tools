@@ -1,4 +1,6 @@
+#include "fqtools/error/error.h"
 #include "fqtools/io/fastq_io.h"
+#include "fqtools/io/fastq_reader.h"
 #include "fqtools/io/fastq_writer.h"
 
 #include <filesystem>
@@ -85,6 +87,58 @@ TEST_F(FastqWriterTest, PreservesCustomPlusLineWhenWriting) {
                               std::istreambuf_iterator<char>());
 
     EXPECT_NE(content.find("@read1 desc\nACGT\n+read1 desc\nIIII\n"), std::string::npos);
+}
+
+TEST_F(FastqWriterTest, FinishPublishesOutputAtomically) {
+    FastqRecord rec{"read1", {}, "ACGT", "IIII", "+"};
+    {
+        FastqWriter writer(tmpFile_);
+        writer.write(rec);
+        EXPECT_FALSE(std::filesystem::exists(tmpFile_));
+        writer.finish();
+        EXPECT_TRUE(std::filesystem::exists(tmpFile_));
+    }
+
+    std::ifstream in(tmpFile_);
+    const std::string content((std::istreambuf_iterator<char>(in)),
+                              std::istreambuf_iterator<char>());
+    EXPECT_EQ(content, "@read1\nACGT\n+\nIIII\n");
+}
+
+TEST_F(FastqWriterTest, FinishClosesGzipStreamBeforePublishing) {
+    tmpFile_ += ".gz";
+    FastqWriterOptions options;
+    options.compression = FastqWriterCompressionMode::Gzip;
+    options.compressionLevel = 1;
+    FastqRecord rec{"read1", {}, "ACGT", "IIII", "+"};
+
+    {
+        FastqWriter writer(tmpFile_, options);
+        writer.write(rec);
+        writer.finish();
+    }
+
+    FastqReader reader(tmpFile_);
+    FastqBatch batch;
+    ASSERT_TRUE(reader.nextBatch(batch));
+    ASSERT_EQ(batch.size(), 1U);
+    EXPECT_EQ(batch.records().front().seq, "ACGT");
+    EXPECT_FALSE(reader.nextBatch(batch));
+}
+
+TEST_F(FastqWriterTest, FinishFailurePreservesExistingTarget) {
+    std::filesystem::remove(tmpFile_);
+    ASSERT_TRUE(std::filesystem::create_directory(tmpFile_));
+
+    {
+        FastqWriter writer(tmpFile_);
+        FastqRecord rec{"read1", {}, "ACGT", "IIII", "+"};
+        writer.write(rec);
+
+        EXPECT_THROW(writer.finish(), fq::error::IOError);
+        EXPECT_TRUE(std::filesystem::is_directory(tmpFile_));
+    }
+    std::filesystem::remove_all(tmpFile_);
 }
 
 }  // namespace fq::io
