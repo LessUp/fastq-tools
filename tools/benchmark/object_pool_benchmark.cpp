@@ -9,9 +9,10 @@
  */
 
 #include <benchmark/benchmark.h>
-#include <fqtools/memory/object_pool.h>
 #include <fqtools/io/fastq_io.h>
-#include <fqtools/io/fastq_batch_pool.h>
+
+#include "processing/fastq_batch_pool.h"
+#include "processing/object_pool.h"
 
 #include <memory>
 #include <string>
@@ -90,7 +91,7 @@ static void BM_FastqBatch_NoPool(::benchmark::State& state) {
 static void BM_FastqBatch_WithPool(::benchmark::State& state) {
     const std::size_t iterations = static_cast<std::size_t>(state.range(0));
 
-    auto pool = fq::io::createFastqBatchPool(4, 16);
+    auto pool = fq::processing::createFastqBatchPool(4, 16);
 
     for (auto _ : state) {
         for (std::size_t i = 0; i < iterations; ++i) {

@@ -119,7 +119,6 @@ function(fq_add_fuzzer name)
     # Link default libraries
     target_link_libraries(${name} PRIVATE
         fq_modern_io
-        fq_common
         fq_error
     )
     

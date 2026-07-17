@@ -180,17 +180,26 @@ install(TARGETS FastQTools
     COMPONENT Runtime
 )
 
-# Install public headers
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+# Install only the v4 public surface. Runtime pools and CLI-only helpers stay private.
+install(DIRECTORY
+    ${CMAKE_SOURCE_DIR}/include/fqtools/error
+    ${CMAKE_SOURCE_DIR}/include/fqtools/io
+    ${CMAKE_SOURCE_DIR}/include/fqtools/processing
+    ${CMAKE_SOURCE_DIR}/include/fqtools/statistics
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fqtools
+    COMPONENT Development
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "fastq_batch_pool.h" EXCLUDE
+)
+install(FILES ${CMAKE_SOURCE_DIR}/include/fqtools/fq.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fqtools
     COMPONENT Development
 )
 
 # Export public library targets
 install(TARGETS
-    fq_common
     fq_error
-    fq_config
     fq_modern_io
     fq_processing
     fq_statistics

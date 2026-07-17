@@ -13,5 +13,4 @@ target_include_directories(test_utils PUBLIC
 target_link_libraries(test_utils
     PUBLIC
         GTest::gtest
-        fq_common
 )

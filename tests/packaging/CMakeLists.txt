@@ -9,5 +9,3 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(FastQTools CONFIG REQUIRED)
 
 add_executable(fqtools_consumer main.cpp)
-
-target_link_libraries(fqtools_consumer PRIVATE fq_common)

@@ -27,6 +27,17 @@ constexpr int kExitParameterError = 2;
 constexpr int kExitFormatError = 3;
 constexpr int kExitIoError = 4;
 
+void printLogo() {
+    std::cout << R"(
+    ███████╗ █████╗ ███████╗████████╗ ██████╗ ████████╗ ██████╗  ██████╗ ██║     ███████╗
+    ██╔════╝██╔══██╗██╔════╝╚══██╔══╝██╔═══██╗╚══██╔══╝██╔═══██╗██╔═══██╗██║     ██╔════╝
+    █████╗  ███████║███████╗   ██║   ██║   ██║   ██║   ██║   ██║██║   ██║██║     ███████╗
+    ██╔══╝  ██╔══██║╚════██║   ██║   ██║   ██║   ██║   ██║   ██║██║   ██║██║     ╚════██║
+    ██║     ██║  ██║███████║   ██║   ╚██████╔╝   ██║   ╚██████╔╝╚██████╔╝███████╗███████║
+    ╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝    ╚══▀▀═╝    ╚═╝    ╚═════╝  ╚═════╝  ╚══════╝╚══════╝
+        )" << '\n';
+}
+
 auto parseGlobalOptions(int argc, char* argv[], std::vector<char*>& subArgs)
     -> std::pair<std::string, std::string> {
     std::string logLevel = "info";
@@ -71,11 +82,8 @@ auto main(int argc, char* argv[]) -> int {
 
         // 打印项目 Logo
         if (!quietMode) {
-            fq::common::printLogo();
+            printLogo();
         }
-
-        // 启动主计时器
-        fq::common::Timer mainTimer("FastQTools");
 
         // 创建命令注册表
         auto registry = fq::cli::createDefaultCommandRegistry();

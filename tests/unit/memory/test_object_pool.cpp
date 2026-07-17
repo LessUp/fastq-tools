@@ -3,15 +3,14 @@
  * @brief ObjectPool 单元测试
  */
 
-#include "fqtools/io/fastq_batch_pool.h"
-#include "fqtools/memory/object_pool.h"
-
 #include <atomic>
 #include <mutex>
 #include <set>
 #include <thread>
 #include <vector>
 
+#include "processing/fastq_batch_pool.h"
+#include "processing/object_pool.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -279,7 +278,7 @@ TEST_F(ObjectPoolTest, SafeDeleteWhenPoolDestroyed) {
 
 // FastqBatchPool 集成测试
 TEST_F(ObjectPoolTest, FastqBatchPoolIntegration) {
-    auto pool = fq::io::createFastqBatchPool(2, 4);
+    auto pool = fq::processing::createFastqBatchPool(2, 4);
 
     EXPECT_EQ(pool->poolSize(), 2);
 
@@ -299,7 +298,7 @@ TEST_F(ObjectPoolTest, FastqBatchPoolIntegration) {
 }
 
 TEST_F(ObjectPoolTest, FastqBatchPoolUsesConfiguredBatchCapacityAndSize) {
-    auto pool = fq::io::createFastqBatchPool(1, 1, 8192, 7);
+    auto pool = fq::processing::createFastqBatchPool(1, 1, 8192, 7);
 
     auto batch = pool->acquire();
     ASSERT_NE(batch, nullptr);

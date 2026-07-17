@@ -5,16 +5,9 @@
  * @details 一站式入口，聚合所有对外公共接口
  */
 
-// 公共工具
-#include "fqtools/common/common.h"
-#include "fqtools/config/config.h"
 #include "fqtools/error/error.h"
 
-// 内存
-#include "fqtools/memory/object_pool.h"
-
 // I/O
-#include "fqtools/io/fastq_batch_pool.h"
 #include "fqtools/io/fastq_io.h"
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/io/fastq_writer.h"

@@ -6,7 +6,6 @@ add_library(fq_statistics STATIC
     statistics_writer.cpp
 )
 
-# fq_common PUBLIC 传递 include 路径，无需重复声明 PUBLIC include
 target_include_directories(fq_statistics
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -15,7 +14,6 @@ target_include_directories(fq_statistics
 
 target_link_libraries(fq_statistics
     PUBLIC
-        fq_common
         fq_error
         fq_modern_io
     PRIVATE

@@ -10,8 +10,6 @@
 
 #include "fqtools/error/error.h"
 
-#include "fqtools/logging.h"
-
 #include <cstring>
 #include <utility>
 
@@ -36,15 +34,6 @@ FormatError::FormatError(std::string_view message)
 
 ConfigurationError::ConfigurationError(std::string_view message)
     : FastQException(ErrorCategory::Configuration, ErrorSeverity::Error, std::string(message)) {}
-
-/**
- * @brief 获取 ErrorHandler 单例实例
- * @return ErrorHandler 实例的引用
- */
-auto ErrorHandler::instance() -> ErrorHandler& {
-    static ErrorHandler handler;
-    return handler;
-}
 
 /**
  * @brief 获取异常的错误类别
@@ -139,25 +128,6 @@ auto FastQException::severityString(ErrorSeverity sev) -> std::string_view {
 void FastQException::formatWhatMessage() {
     whatMessage_ =
         fmt::format("[{}:{}] {}", categoryString(category_), severityString(severity_), message_);
-}
-
-void ErrorHandler::registerHandler(ErrorCategory category, HandlerFunc handler) {
-    std::lock_guard lock(mutex_);
-    handlers_[category].push_back(std::move(handler));
-}
-
-auto ErrorHandler::handleError(const FastQException& error) -> bool {
-    std::lock_guard lock(mutex_);
-    auto it = handlers_.find(error.category());
-    if (it != handlers_.end()) {
-        for (const auto& handler : it->second) {
-            if (handler(error)) {
-                return true;
-            }
-        }
-    }
-    fq::logging::error("Unhandled exception: {}", error.what());
-    return false;
 }
 
 }  // namespace fq::error

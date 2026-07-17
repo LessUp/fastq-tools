@@ -6,9 +6,7 @@
 tests/
 ├── CMakeLists.txt            # 测试根配置 + add_fq_test() 函数定义
 ├── unit/                     # 单元测试（GTest，按模块镜像 src/ 目录）
-│   ├── common/               #   Timer、StringUtils、Logger
-│   ├── config/               #   Configuration 加载与解析
-│   ├── error/                #   异常体系、ErrorHandler
+│   ├── error/                #   类型化异常体系
 │   ├── io/                   #   FastqReader、FastqWriter
 │   ├── memory/               #   ObjectPool、FastqBatchPool
 │   ├── processing/           #   Pipeline 冒烟测试

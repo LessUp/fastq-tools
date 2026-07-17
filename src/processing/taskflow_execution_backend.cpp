@@ -2,8 +2,6 @@
 
 #if defined(FQ_ENABLE_TASKFLOW_BACKEND)
 
-#include "fqtools/io/fastq_batch_pool.h"
-
 #include <any>
 #include <atomic>
 #include <bit>
@@ -13,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "processing/fastq_batch_pool.h"
 #include <taskflow/algorithm/pipeline.hpp>
 #include <taskflow/taskflow.hpp>
 
@@ -29,10 +28,10 @@ class TaskflowExecutionBackend final : public ExecutionBackend {
 public:
     auto execute(ExecutionBackendContext context, ExecutionOperation& operation)
         -> ErasedExecutionOutcome override {
-        auto batchPool = fq::io::createFastqBatchPool(context.config.maxLiveTokens,
-                                                      context.config.maxLiveTokens * 2,
-                                                      context.config.batchCapacityBytes,
-                                                      context.batchSize);
+        auto batchPool = createFastqBatchPool(context.config.maxLiveTokens,
+                                              context.config.maxLiveTokens * 2,
+                                              context.config.batchCapacityBytes,
+                                              context.batchSize);
         std::vector<std::optional<TaskflowLineState>> lines(context.config.maxLiveTokens);
         auto result = operation.makeResult();
         std::atomic<std::uint64_t> batchCount{0};

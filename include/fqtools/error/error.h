@@ -9,15 +9,9 @@
 
 #pragma once
 
-#include "fqtools/common/common.h"
-
 #include <exception>
-#include <functional>
-#include <mutex>
 #include <string>
 #include <string_view>
-#include <unordered_map>
-#include <vector>
 
 namespace fq::error {
 
@@ -100,44 +94,6 @@ public:
      * @param message 错误消息
      */
     explicit ConfigurationError(std::string_view message);
-};
-
-/**
- * @brief 一个单例的错误处理器，用于分发和处理异常。
- */
-class ErrorHandler {
-public:
-    using HandlerFunc = std::function<bool(const FastQException&)>;
-
-    /**
-     * @brief 获取单例实例
-     * @details 获取 ErrorHandler 的单例实例
-     *
-     * @return ErrorHandler 实例的引用
-     */
-    static auto instance() -> ErrorHandler&;
-
-    /**
-     * @brief 注册错误处理器
-     * @details 为指定的错误类别注册一个处理函数
-     *
-     * @param category 错误类别
-     * @param handler 处理函数
-     */
-    void registerHandler(ErrorCategory category, HandlerFunc handler);
-
-    /**
-     * @brief 处理错误
-     * @details 根据错误的类别调用相应的处理函数进行处理
-     *
-     * @param error 要处理的错误
-     * @return 处理成功返回 true，否则返回 false
-     */
-    auto handleError(const FastQException& error) -> bool;
-
-private:
-    mutable std::mutex mutex_;
-    std::unordered_map<ErrorCategory, std::vector<HandlerFunc>> handlers_;
 };
 
 // Convenience Macros

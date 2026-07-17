@@ -12,7 +12,6 @@ add_library(fq_processing STATIC
     predicates/min_quality_predicate.cpp
 )
 
-# fq_common PUBLIC 传递 include 路径，无需重复声明 PUBLIC include
 target_include_directories(fq_processing
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src
@@ -20,11 +19,10 @@ target_include_directories(fq_processing
 )
 
 # fq_modern_io: 公共头文件引用了 FastqBatch 等类型，需 PUBLIC
-# fq_common/fq_error: 公共头文件间接引用，需 PUBLIC
+# fq_error: 公共头文件间接引用，需 PUBLIC
 # 调度框架仅存在于 backend 实现文件，不向消费者暴露。
 target_link_libraries(fq_processing
     PUBLIC
-        fq_common
         fq_error
         fq_modern_io
     PRIVATE

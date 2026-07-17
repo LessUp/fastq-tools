@@ -1,5 +1,3 @@
-#include "fqtools/io/fastq_batch_pool.h"
-
 #include <any>
 #include <atomic>
 #include <memory>
@@ -7,6 +5,7 @@
 #include <utility>
 
 #include "processing/execution_backend.h"
+#include "processing/fastq_batch_pool.h"
 #include <tbb/global_control.h>
 #include <tbb/parallel_pipeline.h>
 
@@ -20,10 +19,10 @@ public:
         -> ErasedExecutionOutcome override {
         using BatchResult = std::pair<std::shared_ptr<fq::io::FastqBatch>, std::any>;
 
-        auto batchPool = fq::io::createFastqBatchPool(context.config.maxLiveTokens,
-                                                      context.config.maxLiveTokens * 2,
-                                                      context.config.batchCapacityBytes,
-                                                      context.batchSize);
+        auto batchPool = createFastqBatchPool(context.config.maxLiveTokens,
+                                              context.config.maxLiveTokens * 2,
+                                              context.config.batchCapacityBytes,
+                                              context.batchSize);
         auto result = operation.makeResult();
         std::atomic<std::uint64_t> batchCount{0};
         std::atomic<std::uint64_t> committedBytes{0};
