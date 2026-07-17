@@ -8,6 +8,7 @@
 #include <cerrno>
 #include <cstring>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -50,8 +51,13 @@ struct FastqWriter::Impl {
         }
 
         if (compression == FastqWriterCompressionMode::Gzip) {
-            // 使用 zlib gz API 写入 gzip 文件，压缩级别 6
-            gzfile = gzopen(path.c_str(), "wb6");
+            if (options.compressionLevel < 1 || options.compressionLevel > 9) {
+                throw fq::error::ConfigurationError(
+                    "gzip compression level must be between 1 and 9");
+            }
+            // 使用 zlib gz API 写入 gzip 文件，默认压缩级别 6。
+            const std::string mode = "wb" + std::to_string(options.compressionLevel);
+            gzfile = gzopen(path.c_str(), mode.c_str());
             if (!gzfile) {
                 throw fq::error::IOError(path, errno);
             }

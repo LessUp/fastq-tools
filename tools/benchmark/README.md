@@ -21,11 +21,11 @@ cmake --build build --target benchmarks
 # 运行单个基准测试
 ./build/tools/benchmark/benchmark_fastq_io --benchmark_format=json
 
-# 运行所有基准测试（输出 JSON）
-cmake --build build --target run_benchmarks
+# 运行所有基准测试（1M×150 bp、5 次重复、JSON + median/CV 摘要）
+cmake --build build/clang-release --target run_benchmarks
 
-# 完整基准测试（多次重复取平均）
-cmake --build build --target benchmark_full
+# 完整基准测试（5 次重复，输出 raw JSON、reads/s、MiB/s、峰值内存和 CV）
+cmake --build build/clang-release --target benchmark_full
 
 # Taskflow 可选 backend 构建完成后，生成 p50/p95/RSS 对照报告
 ./scripts/core/build --taskflow --build-dir build/taskflow-release

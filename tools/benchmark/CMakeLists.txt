@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.20)
 # 查找 Google Benchmark
 find_package(benchmark CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 # 通用链接库：Google Benchmark + 项目主库
 set(BENCHMARK_COMMON_LIBS
@@ -45,6 +46,7 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/filter_benchmark.cpp")
     add_benchmark(benchmark_filter
         filter_benchmark.cpp
     )
+    target_include_directories(benchmark_filter PRIVATE ${CMAKE_SOURCE_DIR}/src)
 endif()
 
 # Stat 命令基准测试
@@ -52,6 +54,7 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/stat_benchmark.cpp")
     add_benchmark(benchmark_stat
         stat_benchmark.cpp
     )
+    target_include_directories(benchmark_stat PRIVATE ${CMAKE_SOURCE_DIR}/src)
 endif()
 
 # Pipeline 流水线基准测试
@@ -124,39 +127,37 @@ add_custom_target(benchmarks
 # 定义输出目录
 set(BENCHMARK_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/docs/performance/benchmark-reports/results")
 
-# 运行所有基准测试的目标（输出 JSON 格式）
+# 运行所有基准测试的目标（固定 1M×150 bp 数据，5 次重复并生成 median/CV）
+set(BENCHMARK_RUNNER "${CMAKE_CURRENT_SOURCE_DIR}/scripts/run_benchmarks.py")
+
 add_custom_target(run_benchmarks
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${BENCHMARK_OUTPUT_DIR}
-    COMMAND benchmark_fastq_io 
-        --benchmark_format=json 
-        --benchmark_out=${BENCHMARK_OUTPUT_DIR}/fastq_io_results.json
+    COMMAND ${Python3_EXECUTABLE} ${BENCHMARK_RUNNER}
+        --build-dir ${CMAKE_BINARY_DIR}
+        --output-dir ${BENCHMARK_OUTPUT_DIR}
+        --repetitions 5
     DEPENDS benchmarks
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Running all benchmarks with JSON output"
 )
 
 # 完整基准测试目标（包含所有测试和报告生成）
 add_custom_target(benchmark_full
-    COMMAND ${CMAKE_COMMAND} -E echo "Running full benchmark suite..."
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${BENCHMARK_OUTPUT_DIR}
-    COMMAND benchmark_fastq_io 
-        --benchmark_format=json 
-        --benchmark_out=${BENCHMARK_OUTPUT_DIR}/fastq_io_results.json
-        --benchmark_repetitions=3
-        --benchmark_report_aggregates_only=true
+    COMMAND ${Python3_EXECUTABLE} ${BENCHMARK_RUNNER}
+        --build-dir ${CMAKE_BINARY_DIR}
+        --output-dir ${BENCHMARK_OUTPUT_DIR}
+        --repetitions 5
     DEPENDS benchmarks
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Running full benchmark suite with multiple repetitions"
 )
 
 # CI 模式基准测试目标
 add_custom_target(benchmark_ci
-    COMMAND ${CMAKE_COMMAND} -E echo "Running CI benchmark suite..."
-    COMMAND benchmark_fastq_io 
-        --benchmark_format=console 
-        --benchmark_out=${BENCHMARK_OUTPUT_DIR}/ci_results.json
-        --benchmark_out_format=json
+    COMMAND ${Python3_EXECUTABLE} ${BENCHMARK_RUNNER}
+        --build-dir ${CMAKE_BINARY_DIR}
+        --output-dir ${BENCHMARK_OUTPUT_DIR}/ci
+        --repetitions 5
     DEPENDS benchmarks
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Running benchmarks in CI mode"
 )

@@ -38,6 +38,7 @@ enum class FastqWriterCompressionMode : std::uint8_t {
 struct FastqWriterOptions {
     size_t zlibBufferBytes = static_cast<size_t>(128) * 1024;    ///< zlib 压缩缓冲区大小（字节）
     size_t outputBufferBytes = static_cast<size_t>(128) * 1024;  ///< 输出缓冲区大小（字节）
+    int compressionLevel = 6;                                    ///< gzip 压缩级别（1-9）
     FastqWriterCompressionMode compression = FastqWriterCompressionMode::Auto;  ///< 压缩模式
 };
 
