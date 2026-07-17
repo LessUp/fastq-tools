@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-07-17T06:30:30.798160+00:00",
+  "source": "benchmark_stat",
+  "repetitions_requested": 5,
+  "benchmarks": [
+    {
+      "name": "benchmarkProductionStatisticWorker",
+      "repetitions": 5,
+      "median_time": 6807.496209,
+      "median_reads_per_s": 146896.8867992799,
+      "median_mib_per_s": 44.39353122928568,
+      "peak_memory_bytes": 651194368.0,
+      "time_source": "cpu_time",
+      "cv_percent": 45.6448623739302,
+      "target_cv_percent": 5.0,
+      "cv_status": "high-cv"
+    }
+  ],
+  "cv_violations": [
+    "benchmarkProductionStatisticWorker"
+  ]
+}

@@ -32,6 +32,7 @@ def run_executable(
         "--benchmark_format=json",
         f"--benchmark_out={output_path}",
         f"--benchmark_repetitions={repetitions}",
+        "--benchmark_min_time=0.001",
         "--benchmark_report_aggregates_only=false",
     ]
     if benchmark_filter:
@@ -40,17 +41,18 @@ def run_executable(
     if completed.returncode != 0:
         output = f"{completed.stdout}\n{completed.stderr}"
         if "Failed to match any benchmarks" in output:
+            output_path.unlink(missing_ok=True)
             print(f"Skipping {executable.name}: filter matched no benchmarks")
             return None
         print(output, file=sys.stderr, end="")
         raise subprocess.CalledProcessError(completed.returncode, command)
     if not output_path.exists() or output_path.stat().st_size == 0:
+        output_path.unlink(missing_ok=True)
         return None
     return json.loads(output_path.read_text(encoding="utf-8"))
 
 
 def sample_name(name: str) -> str:
-    name = re.sub(r"/\d+$", "", name)
     return re.sub(r"_(?:mean|median|stddev)$", "", name)
 
 

@@ -2,37 +2,34 @@
 
 ## 测试环境
 
-- CPU：AMD Ryzen 9 5900X
-- 数据：100K reads，150 bp
-- 构建：Clang Release
+- CPU：AMD Ryzen 7 5800H（WSL2，8 核 16 线程）
+- 数据：固定 seed=42，1M reads × 150 bp（316,888,890 bytes）
+- 构建：Clang 21 Release，Google Benchmark 1.9.5，5 次重复
+- 详细快照：[v4-baseline/2026-07-17](./performance/benchmark-reports/v4-baseline/2026-07-17/summary.md)
 
 ## 代表性结果
 
 | 工作负载 | 结果 |
 |----------|------|
-| FASTQ 读取路径 | 1696 MB/s |
-| FASTQ 写出路径 | 1.76M reads/s |
-| 组合过滤处理 | 1.67M reads/s |
-| 完整统计分析 | 302 MB/s |
+| FASTQ 读取/写出 | 见 v4 raw JSON 与 median/CV 摘要 |
+| 组合过滤处理 | 真实 Pipeline + trim/predicate 场景，见 v4 摘要 |
+| 完整统计分析 | 真实 `FqStatisticWorker`，见 v4 摘要 |
 
 ## 解读
 
-- **读取路径 1696 MB/s**：接近 gzip 解压 + 磁盘 I/O 瓶颈。零拷贝 `string_view` 视图让解析退化为指针算术，不构成瓶颈。
-- **写出路径 1.76M reads/s**：gzip 压缩是主要成本。批量写入分摊系统调用开销。
-- **组合过滤 1.67M reads/s**：过滤 + 修剪单遍扫描，额外 CPU 开销小，吞吐接近纯写出。
-- **统计 302 MB/s**：低于其他路径，因为统计是 CPU 密集（逐碱基质量统计、GC 滑窗、长度直方图），且无写出路径分摊。
+- v4 基线同时覆盖 plain、gzip-1/6/9、single/batch API，不能用旧的单一 Writer 数字代表所有场景。
+- 当前 WSL2 sandbox 的 real-time 绝对值存在放大，跨环境比较必须以同一机器、同一命令为准；详见快照 `environment.md`。
+- 只有 profile 达到 inclusive CPU ≥15% 且优化后 median 提升 ≥10% 时，才把热点纳入性能路线。
 
 ## 基准测试工具
 
 ```bash
-# 构建基准
-cmake --build build --target benchmarks
-
-# 运行单个
-./build/tools/benchmark/benchmark_fastq_io --benchmark_format=json
-
-# 运行全部
-cmake --build build --target run_benchmarks
+# 构建并运行全部生产基准，保存 raw JSON + median/CV
+cmake --build build/clang-release --target benchmarks
+python3 tools/benchmark/scripts/run_benchmarks.py \
+  --build-dir build/clang-release \
+  --output-dir docs/performance/benchmark-reports/v4-baseline/2026-07-17 \
+  --repetitions 5
 ```
 
 基准套件在 `tools/benchmark/`，基于 Google Benchmark：
@@ -101,7 +98,7 @@ cmake --build build/taskflow-release --target benchmark_backend_comparison
 | --- | --- | --- |
 | fastp | 多线程下数十 M reads/min（150bp PE） | 功能面远大于 FastQTools；FastQTools 聚焦 stat+filter 热点路径，内核更现代 |
 | seqkit | Go 实现，单线程数十 M reads/min | 算子面巨大；FastQTools 原生 C++、二进制更小、可嵌入 |
-| FastQTools | 读取 1696 MB/s，过滤 167 万 reads/s | 见上表 |
+| FastQTools | 见 v4 生产基线快照 | 生产 C++ Reader/Writer/filter/stat |
 
 **如何在本仓库跑一次对比**：
 

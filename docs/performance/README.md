@@ -10,8 +10,9 @@
 ## 阅读顺序
 
 1. [`environment.md`](./environment.md) — 测试环境基线，所有快照的口径。
-2. [`optimizations/2026-07-13-backlog.md`](./optimizations/2026-07-13-backlog.md) — 性能优化路线图，待执行的优化方向。
-3. [`benchmark-reports/`](./benchmark-reports/) — 历次原始数据。
+2. [`benchmark-reports/v4-baseline/2026-07-17/summary.md`](./benchmark-reports/v4-baseline/2026-07-17/summary.md) — v4 生产路径基线、原始 JSON 和 median/CV 摘要。
+3. [`optimizations/2026-07-13-backlog.md`](./optimizations/2026-07-13-backlog.md) — 已按 v4 证据校正的性能优化路线图。
+4. [`benchmark-reports/`](./benchmark-reports/) — 历次原始数据。
 4. [`optimizations/`](./optimizations/) — 数据背后的故事（已完成的优化叙事）。
 5. [`../benchmark.md`](../benchmark.md) — 面向用户的代表性结果摘要。
 
@@ -44,7 +45,8 @@
 | Memcheck 内存正确性 | [`benchmark-reports/memcheck/2026-07-13/summary.md`](./benchmark-reports/memcheck/2026-07-13/summary.md) | 内存泄露 + 越界检测 |
 | Massif 堆内存分析 | [`benchmark-reports/massif/2026-07-13/summary.md`](./benchmark-reports/massif/2026-07-13/summary.md) | 堆内存峰值 + 增长曲线 |
 | Helgrind 线程正确性 | [`benchmark-reports/helgrind/2026-07-13/summary.md`](./benchmark-reports/helgrind/2026-07-13/summary.md) | 多线程数据竞争检测 |
-| FASTQ IO 吞吐 | [`benchmark-reports/fastq-io/2026-07-13/summary.md`](./benchmark-reports/fastq-io/2026-07-13/summary.md) | Reader/Writer 吞吐基准 |
+| v4 生产基线 | [`benchmark-reports/v4-baseline/2026-07-17/summary.md`](./benchmark-reports/v4-baseline/2026-07-17/summary.md) | 1M×150 bp，Reader/Writer/filter/stat，5 次重复 |
+| FASTQ IO 历史快照 | [`benchmark-reports/fastq-io/2026-07-13/summary.md`](./benchmark-reports/fastq-io/2026-07-13/summary.md) | 旧版 Reader/Writer 吞吐，仅作历史记录 |
 
 ## 如何跑基准
 
@@ -54,11 +56,8 @@
 # 构建基准目标
 cmake --build build --target benchmarks
 
-# 运行单个
-./build/tools/benchmark/benchmark_fastq_io --benchmark_format=json
-
-# 运行全部
-cmake --build build --target run_benchmarks
+# 运行全部生产基准并保存 raw JSON + median/CV
+cmake --build build/clang-release --target run_benchmarks
 ```
 
 新快照入库前，确认：

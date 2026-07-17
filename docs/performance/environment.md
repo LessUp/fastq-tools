@@ -50,8 +50,9 @@
 |------|------|------|------|
 | sample_10k_len100 | 10K reads × 100 bp，2.1 MiB | `tests/e2e/.tmp_python/sample_10k_len100.fastq` | Google Benchmark / 端到端 |
 | sample_1k | 1K reads × 100 bp，214 KiB | `sample_10k_len100` 前 1000 条 | Valgrind 分析（慢工具用小数据） |
+| v4_production_seed42 | 1M reads × 150 bp，316,888,890 bytes | benchmark 进程临时生成，`std::mt19937(42)` | 生产 Reader/Writer/filter/stat 基线 |
 
-> Valgrind 工具慢 20-50x，用 1K reads 子集保证可接受运行时间。Google Benchmark 用 10K/100K 内置合成数据。
+> Valgrind 工具慢 20-50x，用 1K reads 子集保证可接受运行时间。v4 生产基准固定使用 1M×150 bp；旧的 10K/100K Google Benchmark 快照只保留为历史记录。
 
 ## 调用方式
 
@@ -62,11 +63,12 @@
 # Valgrind 分析构建（带调试符号）
 ./scripts/core/build --type RelWithDebInfo --build-dir build/clang-relwithdebinfo
 
-# 运行 IO 基准
-cmake -S . -B build/clang-release -DBUILD_BENCHMARKS=ON
-cmake --build build/clang-release --target benchmark_fastq_io
-./build/clang-release/tools/benchmark/benchmark_fastq_io \
-  --benchmark_format=json --benchmark_repetitions=3
+# 运行 v4 生产基准（raw JSON + median/CV）
+cmake --build build/clang-release --target benchmarks
+python3 tools/benchmark/scripts/run_benchmarks.py \
+  --build-dir build/clang-release \
+  --output-dir docs/performance/benchmark-reports/v4-baseline/2026-07-17 \
+  --repetitions 5
 ```
 
 执行 backend 对照（Taskflow 默认不参与生产构建）：

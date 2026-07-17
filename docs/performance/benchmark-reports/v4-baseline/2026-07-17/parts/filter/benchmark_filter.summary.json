@@ -1,0 +1,68 @@
+{
+  "generated_at": "2026-07-17T06:30:22.264881+00:00",
+  "source": "benchmark_filter",
+  "repetitions_requested": 5,
+  "benchmarks": [
+    {
+      "name": "benchmarkFilter/baseline",
+      "repetitions": 5,
+      "median_time": 10812189.985366002,
+      "median_reads_per_s": 125623.12963475278,
+      "median_mib_per_s": 37.96441469982425,
+      "peak_memory_bytes": 15319040.0,
+      "time_source": "real_time",
+      "cv_percent": 0.02610570016485883,
+      "target_cv_percent": 10.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "benchmarkFilter/combined_with_trim",
+      "repetitions": 5,
+      "median_time": 10836504.805151999,
+      "median_reads_per_s": 37947.79004877186,
+      "median_mib_per_s": 11.468155924328194,
+      "peak_memory_bytes": 5091328.0,
+      "time_source": "real_time",
+      "cv_percent": 0.013842118012654267,
+      "target_cv_percent": 10.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "benchmarkFilter/max_n_ratio",
+      "repetitions": 5,
+      "median_time": 10830462.892522998,
+      "median_reads_per_s": 49004.299154711494,
+      "median_mib_per_s": 14.809530224194015,
+      "peak_memory_bytes": 5091328.0,
+      "time_source": "real_time",
+      "cv_percent": 0.009440349818927033,
+      "target_cv_percent": 10.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "benchmarkFilter/min_length",
+      "repetitions": 5,
+      "median_time": 10816773.300128,
+      "median_reads_per_s": 79603.64546973676,
+      "median_mib_per_s": 24.056921818598187,
+      "peak_memory_bytes": 5091328.0,
+      "time_source": "real_time",
+      "cv_percent": 0.013197042279255815,
+      "target_cv_percent": 10.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "benchmarkFilter/min_quality",
+      "repetitions": 5,
+      "median_time": 10826037.874983002,
+      "median_reads_per_s": 61673.50162127982,
+      "median_mib_per_s": 18.63827464216286,
+      "peak_memory_bytes": 5091328.0,
+      "time_source": "real_time",
+      "cv_percent": 0.028206474420354698,
+      "target_cv_percent": 10.0,
+      "cv_status": "pass"
+    }
+  ],
+  "cv_violations": []
+}

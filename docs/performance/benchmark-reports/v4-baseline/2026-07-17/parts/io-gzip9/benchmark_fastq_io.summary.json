@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-07-17T06:37:12.349321+00:00",
+  "source": "benchmark_fastq_io",
+  "repetitions_requested": 5,
+  "benchmarks": [
+    {
+      "name": "benchmarkWriter/gzip_9_batch",
+      "repetitions": 5,
+      "median_time": 11186001.610810999,
+      "median_reads_per_s": 1685.5066647516035,
+      "median_mib_per_s": 0.5093749390418413,
+      "peak_memory_bytes": 651214848.0,
+      "time_source": "real_time",
+      "cv_percent": 0.8983515635621022,
+      "target_cv_percent": 10.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "benchmarkWriter/gzip_9_single",
+      "repetitions": 5,
+      "median_time": 10867382.163201999,
+      "median_reads_per_s": 3636.426852113821,
+      "median_mib_per_s": 1.0989601790738515,
+      "peak_memory_bytes": 651214848.0,
+      "time_source": "real_time",
+      "cv_percent": 0.8340193350481436,
+      "target_cv_percent": 10.0,
+      "cv_status": "pass"
+    }
+  ],
+  "cv_violations": []
+}

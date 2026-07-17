@@ -1,0 +1,192 @@
+{
+  "generated_at": "2026-07-17T06:45:21.768662+00:00",
+  "source": "benchmark_object_pool",
+  "repetitions_requested": 5,
+  "benchmarks": [
+    {
+      "name": "BM_FastqBatch_NoPool/10",
+      "repetitions": 5,
+      "median_time": 0.7201158221067178,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 2.7249700472020035,
+      "target_cv_percent": 5.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "BM_FastqBatch_NoPool/100",
+      "repetitions": 5,
+      "median_time": 6.923760001882329,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 2.260052971673613,
+      "target_cv_percent": 5.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "BM_FastqBatch_NoPool/1000",
+      "repetitions": 5,
+      "median_time": 68.35060003140825,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 2.414209645160236,
+      "target_cv_percent": 5.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "BM_FastqBatch_WithPool/10",
+      "repetitions": 5,
+      "median_time": 0.5383253810891031,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 2.1892673111654246,
+      "target_cv_percent": 5.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "BM_FastqBatch_WithPool/100",
+      "repetitions": 5,
+      "median_time": 5.362617979672029,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 2.0902317251408573,
+      "target_cv_percent": 5.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "BM_FastqBatch_WithPool/1000",
+      "repetitions": 5,
+      "median_time": 51.67662958329957,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 1.715479675882949,
+      "target_cv_percent": 5.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "BM_NoPool_NewDelete/100",
+      "repetitions": 5,
+      "median_time": 4.361420590558898,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 2.010815385923645,
+      "target_cv_percent": 5.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "BM_NoPool_NewDelete/1000",
+      "repetitions": 5,
+      "median_time": 46.14470972521831,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 1.9203321512356917,
+      "target_cv_percent": 5.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "BM_NoPool_NewDelete/10000",
+      "repetitions": 5,
+      "median_time": 485.94733380014077,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 4.376285173791932,
+      "target_cv_percent": 5.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "BM_ObjectPool_AcquireRelease/100",
+      "repetitions": 5,
+      "median_time": 7.021772723943066,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 2.258582493401393,
+      "target_cv_percent": 5.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "BM_ObjectPool_AcquireRelease/1000",
+      "repetitions": 5,
+      "median_time": 69.87352629182983,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 1.5052442252339486,
+      "target_cv_percent": 5.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "BM_ObjectPool_AcquireRelease/10000",
+      "repetitions": 5,
+      "median_time": 762.2754992553382,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 1.9711032550128078,
+      "target_cv_percent": 5.0,
+      "cv_status": "pass"
+    },
+    {
+      "name": "BM_ObjectPool_Concurrent/2",
+      "repetitions": 5,
+      "median_time": 0.23625924995940295,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 9.003102992855137,
+      "target_cv_percent": 5.0,
+      "cv_status": "high-cv"
+    },
+    {
+      "name": "BM_ObjectPool_Concurrent/4",
+      "repetitions": 5,
+      "median_time": 0.39260899984583375,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 11.264309974145595,
+      "target_cv_percent": 5.0,
+      "cv_status": "high-cv"
+    },
+    {
+      "name": "BM_ObjectPool_Concurrent/8",
+      "repetitions": 5,
+      "median_time": 0.74842300000455,
+      "median_reads_per_s": 0.0,
+      "median_mib_per_s": 0.0,
+      "peak_memory_bytes": 0.0,
+      "time_source": "real_time",
+      "cv_percent": 14.469533551964945,
+      "target_cv_percent": 5.0,
+      "cv_status": "high-cv"
+    }
+  ],
+  "cv_violations": [
+    "BM_ObjectPool_Concurrent/2",
+    "BM_ObjectPool_Concurrent/4",
+    "BM_ObjectPool_Concurrent/8"
+  ]
+}
