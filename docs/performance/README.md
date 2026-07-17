@@ -46,6 +46,7 @@
 | Massif 堆内存分析 | [`benchmark-reports/massif/2026-07-13/summary.md`](./benchmark-reports/massif/2026-07-13/summary.md) | 堆内存峰值 + 增长曲线 |
 | Helgrind 线程正确性 | [`benchmark-reports/helgrind/2026-07-13/summary.md`](./benchmark-reports/helgrind/2026-07-13/summary.md) | 多线程数据竞争检测 |
 | v4 生产基线 | [`benchmark-reports/v4-baseline/2026-07-17/summary.md`](./benchmark-reports/v4-baseline/2026-07-17/summary.md) | 1M×150 bp，Reader/Writer/filter/stat，5 次重复 |
+| Writer 热点复核 | [`optimizations/2026-07-17-writer-profile.md`](./optimizations/2026-07-17-writer-profile.md) | 未达到 profile 优化门槛 |
 | FASTQ IO 历史快照 | [`benchmark-reports/fastq-io/2026-07-13/summary.md`](./benchmark-reports/fastq-io/2026-07-13/summary.md) | 旧版 Reader/Writer 吞吐，仅作历史记录 |
 
 ## 如何跑基准
