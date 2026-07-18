@@ -2,7 +2,7 @@
 
 <p align="center">
   <b>A focused, modern C++23 FASTQ quality-control toolkit</b><br>
-  <i>Zero-copy record views, replaceable streaming backends, and a small embeddable API surface — built to do a few QC things well.</i>
+  <i>Zero-copy record views, a bounded streaming pipeline, and a small embeddable API surface — built to do a few QC things well.</i>
 </p>
 
 <p align="center">
@@ -58,7 +58,7 @@
 Most FASTQ QC tools optimize for breadth: many features, many report formats, many edge cases. FastQTools goes the other way. It is a **C++23 engineering showcase** that deliberately keeps the maintenance surface small — `stat`, `filter`, and one umbrella header — and puts the engineering budget into the parts that are usually invisible:
 
 - A zero-copy record model where parsing collapses to pointer arithmetic.
-- A private execution-backend seam with an ordered oneTBB pipeline by default.
+- A private execution-backend seam with an ordered oneTBB pipeline by default; v4 keeps only Sequential and oneTBB.
 - A batch + object-pool memory discipline that avoids per-record allocation on the hot path.
 - A manually triggered CI matrix that runs GCC, Clang, ASan, TSan, and UBSan when started from the GitHub Actions UI, plus fuzzer targets at the parser entry (CI integration pending).
 
@@ -83,7 +83,7 @@ FastQTools is not a drop-in fastp replacement. It is a focused, modern-core alte
 - **`filter` — filtering and trimming in one pass.** Length, average quality, N-ratio thresholds; quality trimming (5'/3'/both); adapter trimming; polyG / polyX tail trimming — all in a single streaming scan.
 - **Embeddable C++ API.** One umbrella header `<fqtools/fq.h>`; CLI and library share the same pipeline, so behavior is identical.
 - **Zero-copy record views.** `FastqRecord` is five `std::string_view`s pointing into a contiguous batch buffer; parsing is pointer arithmetic, not allocation.
-- **Replaceable streaming backend.** The default oneTBB path uses `serial_in_order → parallel → serial_in_order`, keeping I/O ordered and reduction deterministic while the CPU-bound middle stage scales across cores.
+- **Bounded streaming pipeline.** The oneTBB path uses `serial_in_order → parallel → serial_in_order`, keeping I/O ordered and reduction deterministic while the CPU-bound middle stage scales across cores. A sequential backend remains available as the contract baseline.
 - **Sanitizer-hardened CI.** A manually triggered run executes GCC Release, Clang Release, Clang ASan/TSan/UBSan, clang-tidy, and cppcheck; fuzzer targets live in `tools/fuzz/` (CI integration pending).
 
 ## Quick start
@@ -157,6 +157,14 @@ auto stats = pipeline.run();
 
 `Pipeline` is move-only and hides its implementation behind PIMPL. `setReader` / `setWriter` accept `unique_ptr<IReader>` / `IWriter`, so tests can inject mocks. See [docs/api.md](./docs/api.md) for the full header map.
 
+### v4 contract
+
+FastQTools 4.0.0 is intentionally a breaking release. The public factory functions are replaced by move-only `fq::processing::Pipeline` and `fq::statistics::Calculator`; statistics use `fq::statistics`; config, legacy logging, public object pools, and the Taskflow backend are no longer public or built. The installed CMake consumer target is `FastQTools::FastQTools`.
+
+`IWriter::write()` means that a batch was accepted by the writer. Call `IWriter::finish()` exactly once to flush buffers, close compression, and publish a default `FastqWriter` output. The default writer writes a same-directory temporary file and atomically renames it only after a successful finish; failed output leaves the previous target intact and removes the temporary file.
+
+`LowMemory`, `Default`, and `HighThroughput` profiles account for batch storage, record views, reader remainder, and writer/zlib buffers when deriving `maxLiveTokens`. A memory limit smaller than one runtime working set raises `ConfigurationError` instead of silently exceeding the limit.
+
 ## Architecture at a glance
 
 ```
@@ -189,7 +197,7 @@ serial_in_order (read batch)  →  parallel (filter/trim/stat)  →  serial_in_o
 
 In-flight batch count is bounded by `maxLiveTokens`, so memory peaks are predictable. Batches come from an `ObjectPool`, so the hot path does not allocate per-batch.
 
-The scheduling framework does not leak into the public API: oneTBB is the default, with a sequential baseline and an opt-in experimental Taskflow backend. All three share the same I/O, batch-operation, and metrics contracts for fair comparison.
+The scheduling framework does not leak into the public API: v4 ships a sequential baseline and oneTBB as the production backend. Historical Taskflow comparisons remain in the performance archive only.
 
 Three design decisions worth calling out:
 
@@ -201,21 +209,20 @@ Full rationale (the *why*, not just the *what*) is in [docs/architecture.md](./d
 
 ## Representative performance
 
-A point-in-time snapshot (maintained) for **100K reads (150 bp)** on an **AMD Ryzen 9 5900X**, Clang Release. Useful for rough sizing, not a blanket guarantee across datasets, compression levels, or storage.
+The maintained v4 baseline uses **1M reads × 150 bp**, fixed `seed=42`, five repetitions, and production Reader/Writer/Pipeline/StatisticWorker paths. It covers plain output, gzip levels 1/6/9, and single/batch writer APIs. See the [raw JSON and median/CV summary](./docs/performance/benchmark-reports/v4-baseline/2026-07-17/summary.md) for the exact environment and commands.
 
-| Workload | Representative result |
+| Workload | v4 baseline |
 | --- | --- |
-| FASTQ read path | 1696 MB/s |
-| FASTQ write path | 1.76M reads/s |
-| Combined filtering pass | 1.67M reads/s |
-| Full statistics pass | 302 MB/s |
+| FASTQ reader | 202,903 reads/s (61.3 MiB/s) |
+| Plain writer, single API | 117,444 reads/s (35.5 MiB/s) |
+| gzip-6 writer, single API | 7,194 reads/s (2.2 MiB/s) |
+| Filter baseline | 125,623 reads/s (38.0 MiB/s) |
 
 **How to read these numbers.**
 
-- The read path sits near 1.7 GB/s — the bottleneck is gzip decompression and disk, not parsing. That is the zero-copy + batch + contiguous-memory design paying off.
-- The write path is dominated by gzip compression; batched writes amortize syscall overhead.
-- Combined filtering stays close to pure write throughput, so the filter/trim CPU overhead is small.
-- Statistics is lower because per-base quality, GC sliding windows, and length histograms are CPU-bound, with no write path to amortize against.
+- These numbers are a same-machine reference, not a cross-environment promise. The WSL2 snapshot has inflated `real_time` values; compare only with the same command and environment.
+- gzip level and single/batch API materially change Writer throughput, so one “Writer speed” number is not representative.
+- The statistics run is marked high-CV in the current WSL2 snapshot; no optimization decision is made from that unstable timing.
 
 **Comparison context.** Direct head-to-head numbers against fastp/seqkit are environment- and flag-sensitive, so they are not included in this table. The benchmark suite in `tools/benchmark/` (Google Benchmark) is reproducible; for running it and adding a comparison row on your hardware, see [docs/benchmark.md](./docs/benchmark.md).
 

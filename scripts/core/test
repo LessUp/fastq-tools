@@ -78,7 +78,7 @@ Valgrind:
 示例:
   ./scripts/core/test                         # 运行所有测试
   ./scripts/core/test --unit -v               # 详细运行单元测试
-  ./scripts/core/test -f "*config*"           # 只运行配置相关测试
+  ./scripts/core/test -f "*processing*"        # 只运行处理相关测试
   ./scripts/core/test --coverage              # 生成覆盖率报告
   ./scripts/core/test --preset clang-asan     # 使用 preset 对应构建目录
   ./scripts/core/test --e2e --repeat 3        # 重复运行 E2E 测试 3 次

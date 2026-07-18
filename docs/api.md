@@ -53,12 +53,15 @@ public:
 class IWriter {
 public:
     virtual auto write(const FastqBatch& batch) -> std::uint64_t = 0;
+    virtual void finish() = 0;
 };
 ```
 
 - Reader 每次调用前应清理并重新填充 `batch`，不得返回超过 `maxRecords` 的记录。
 - `false` 只表示 EOF；格式或 I/O 错误应抛出项目异常，不能静默转换为 EOF。
-- Writer 返回本批接受的未压缩 FASTQ 序列化字节数，用于吞吐和提交计量；它不表示已经 `fsync`。
+- Writer 返回本批接受的未压缩 FASTQ 序列化字节数，用于吞吐和提交计量；它不表示已经 `fsync` 或完成发布。
+- `finish()` 是显式完成协议：调用方必须在正常结束时调用一次，确认缓冲区刷写、压缩流关闭和输出完成。析构只负责兜底清理，不能替代错误报告。
+- 默认 `FastqWriter` 在目标文件同目录创建临时文件，`finish()` 成功后原子 rename；写入、关闭或 rename 失败会删除临时文件并保留原目标。
 - 自定义 adapter 不需要继承或识别 `FastqReader` / `FastqWriter` 具体类型。
 
 ## 统计工作流（受支持路径）
@@ -89,7 +92,8 @@ pipeline.setOutputPath("sample.filtered.fastq.gz");
 pipeline.addReadPredicate(std::make_unique<fq::processing::MinQualityPredicate>(20.0));
 
 // 修改器：变换读段
-pipeline.addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(20, "both"));
+pipeline.addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(
+    20.0, 1, fq::processing::QualityTrimmer::TrimMode::Both, 33));
 
 fq::processing::ProcessingOptions opts;
 opts.batchSize = 50000;
@@ -106,6 +110,14 @@ auto stats = pipeline.run();
 注入任一自定义 I/O adapter 时，`Automatic` runtime 会选择 Sequential backend，避免对调用方实现施加隐式线程安全要求。自定义 Reader 在一次 `run()` 中被消费；再次运行前必须调用 `setReader()` 注入新实例。自定义 Writer 会被转换为共享所有权，其 `write()` 返回值必须遵守上述计量契约。
 
 > C++ adapter 兼容性提示：旧的单参数 `IReader::nextBatch` 和返回 `void` 的 `IWriter::write` 实现需要更新；CLI 参数和行为不受影响。
+
+## v3 → v4 迁移要点
+
+- `createProcessingPipeline()` 和 `createStatisticCalculator()` 已删除，分别改用 move-only 的 `fq::processing::Pipeline` 与 `fq::statistics::Calculator`。
+- 统计命名空间从 `fq::statistic` 统一为 `fq::statistics`。
+- config、旧 Logger、ErrorHandler、公共 ObjectPool/FastqBatchPool 和 Taskflow backend 不属于 v4 公共面；`<fqtools/fq.h>` 只聚合 error、I/O、processing、statistics。
+- CMake 安装包只提供 `FastQTools::FastQTools` 消费目标；CLI 可执行文件和 cxxopts 保持私有依赖。
+- `LowMemory` / `Default` / `HighThroughput` profile 的 `maxLiveTokens` 预算包含 batch buffer、record vector、reader remainder、writer/zlib buffer。预算不足最小运行集时抛 `ConfigurationError`。
 
 ## 错误处理
 

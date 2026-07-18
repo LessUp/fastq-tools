@@ -2,7 +2,7 @@
 
 <p align="center">
   <b>专注的现代 C++23 FASTQ 质控工具集</b><br>
-  <i>零拷贝记录视图、可替换流式 backend、最小可嵌入 API 接口——把少数 QC 任务做到极致。</i>
+  <i>零拷贝记录视图、有界流式流水线、最小可嵌入 API 接口——把少数 QC 任务做到极致。</i>
 </p>
 
 <p align="center">
@@ -58,7 +58,7 @@
 多数 FASTQ 质控工具追求广度：功能多、报告格式多、边界情况多。FastQTools 反其道而行——一个 **C++23 工程能力展示项目**，刻意把维护面收得很窄（`stat`、`filter`、一个总入口头文件），把工程预算投到那些通常看不见的地方：
 
 - 零拷贝记录模型，解析退化为指针算术，不分配字符串。
-- 私有执行 backend seam，默认 oneTBB 流水线天然保序。
+- 私有执行 backend seam，v4 默认 oneTBB，并保留 Sequential 契约基线。
 - 批量 + 对象池内存纪律，热点路径不逐条分配。
 - CI 矩阵通过 GitHub Actions 页面手动触发，运行 GCC、Clang、ASan、TSan、UBSan，外加解析器入口的 fuzzer target（CI 集成待定）。
 
@@ -83,7 +83,7 @@ FastQTools 不是 fastp 的直接替代品。它是一个聚焦、现代内核�
 - **`filter` — 单遍过滤与修剪。** 长度、平均质量、N 比例阈值；质量修剪（5'/3'/两端）；adapter 修剪；polyG / polyX 尾修剪——全部在一次流式扫描中完成。
 - **可嵌入 C++ API。** 单一总入口头 `<fqtools/fq.h>`；CLI 与库共用同一条流水线，行为一致。
 - **零拷贝记录视图。** `FastqRecord` 是五个 `std::string_view`，指向连续批缓冲区；解析是指针算术，不是分配。
-- **可替换流式 backend。** 默认 oneTBB 使用 `serial_in_order → parallel → serial_in_order`；I/O 保序、归约确定，CPU 密集的中间级跨核扩展。
+- **有界流式流水线。** oneTBB 使用 `serial_in_order → parallel → serial_in_order`；I/O 保序、归约确定，CPU 密集的中间级跨核扩展，同时保留 Sequential 基线。
 - **消毒剂加固的 CI。** 手动触发后运行 GCC Release、Clang Release、Clang ASan/TSan/UBSan、clang-tidy、cppcheck；fuzzer target 位于 `tools/fuzz/`（CI 集成待定）。
 
 ## 快速开始
@@ -157,6 +157,14 @@ auto stats = pipeline.run();
 
 `Pipeline` 是 move-only 具体类，并通过 PIMPL 隐藏实现；`setReader` / `setWriter` 接受 `unique_ptr<IReader>` / `IWriter`，测试可注入 mock。完整头文件映射见 [API 概览](./docs/api.md)。
 
+### v4 契约
+
+FastQTools 4.0.0 是有意的破坏性版本：工厂函数替换为 move-only 的 `fq::processing::Pipeline` 与 `fq::statistics::Calculator`，统计命名空间统一为 `fq::statistics`；config、旧日志、公共对象池和 Taskflow backend 不再公开或构建。安装后的 CMake 消费目标统一为 `FastQTools::FastQTools`。
+
+`IWriter::write()` 只表示 writer 已接受数据；必须显式调用一次 `IWriter::finish()` 才表示缓冲区刷写、压缩流关闭和输出发布成功。默认 `FastqWriter` 先写同目录临时文件，finish 成功后才原子 rename；失败会删除临时文件并保留原目标。
+
+`LowMemory`、`Default`、`HighThroughput` profile 在计算 `maxLiveTokens` 时统一计入 batch、record view、reader remainder、writer/zlib buffer。内存上限不足以容纳一个最小运行集时抛出 `ConfigurationError`，不会静默突破上限。
+
 ## 架构一览
 
 ```
@@ -189,7 +197,7 @@ serial_in_order (读取批次)  →  parallel (过滤/修剪/统计)  →  seria
 
 在途批数受 `maxLiveTokens` 限制，内存峰值可预测。批次来自 `ObjectPool`，热点路径无逐批分配开销。
 
-调度框架不暴露给公共 API：默认 oneTBB，另有串行基线和默认关闭的 Taskflow 实验 backend。三者使用相同 I/O、批处理操作与计量契约，便于公平基准和后续演进。
+调度框架不暴露给公共 API：v4 生产构建只保留 Sequential 与 oneTBB；Taskflow 对照仅留在性能归档中。
 
 三个值得说明的设计决策：
 
@@ -201,21 +209,20 @@ serial_in_order (读取批次)  →  parallel (过滤/修剪/统计)  →  seria
 
 ## 代表性性能
 
-**100K reads（150 bp）**、**AMD Ryzen 9 5900X**、Clang Release 下的点时快照（持续维护）。适合粗略判断量级，不是所有数据集、压缩级别或存储环境下的绝对承诺。
+v4 基线固定为 **1M reads × 150 bp**、`seed=42`、5 次重复，并直接调用生产 Reader/Writer/Pipeline/StatisticWorker；覆盖 plain、gzip-1/6/9 及 single/batch writer API。完整环境、命令、原始 JSON 与 median/CV 摘要见[性能快照](./docs/performance/benchmark-reports/v4-baseline/2026-07-17/summary.md)。
 
-| 工作负载 | 代表性结果 |
+| 工作负载 | v4 基线 |
 | --- | --- |
-| FASTQ 读取路径 | 1696 MB/s |
-| FASTQ 写出路径 | 176 万 reads/s |
-| 组合过滤处理 | 167 万 reads/s |
-| 完整统计分析 | 302 MB/s |
+| FASTQ reader | 202,903 reads/s（61.3 MiB/s） |
+| plain writer，single API | 117,444 reads/s（35.5 MiB/s） |
+| gzip-6 writer，single API | 7,194 reads/s（2.2 MiB/s） |
+| filter baseline | 125,623 reads/s（38.0 MiB/s） |
 
 **如何解读这些数字。**
 
-- 读取路径接近 1.7 GB/s——瓶颈在 gzip 解压和磁盘，不在解析。这正是零拷贝 + 批量 + 连续内存设计的体现。
-- 写出路径主要由 gzip 压缩主导；批量写入分摊系统调用开销。
-- 组合过滤接近纯写出吞吐，说明过滤/修剪的 CPU 开销很小。
-- 统计较低，因为逐碱基质量、GC 滑窗、长度直方图是 CPU 密集的，且没有写出路径可分摊。
+- 这些数字只用于同一机器、同一命令下的相对比较；当前 WSL2 快照的 `real_time` 被放大，不能跨环境比较。
+- gzip level 与 single/batch API 会显著改变 Writer 吞吐，不能用单一数字代表 Writer。
+- 当前 stat 快照 CV 过高，未据此做性能优化决策。
 
 **对比背景。** 与 fastp/seqkit 的直接同环境对比数字高度依赖环境与参数，因此未列入本表。`tools/benchmark/` 中的基准套件（Google Benchmark）可复现；要在你的硬件上跑并补一行对比，见 [性能总览](./docs/benchmark.md)。
 

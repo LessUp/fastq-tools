@@ -80,7 +80,7 @@ scripts/
 ./scripts/core/test --integration            # 集成测试
 ./scripts/core/test --e2e                    # 端到端测试
 ./scripts/core/test --coverage               # 覆盖率报告
-./scripts/core/test --filter "*config*"      # 过滤测试
+./scripts/core/test --filter "*processing*"   # 过滤处理测试
 ./scripts/core/test --help                   # 查看所有选项
 ```
 

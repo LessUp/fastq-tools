@@ -57,7 +57,7 @@
 ./scripts/core/test --coverage               # 生成覆盖率报告
 
 # 高级用法
-./scripts/core/test --filter "*config*"      # 过滤测试
+./scripts/core/test --filter "*processing*"   # 过滤处理测试
 ./scripts/core/test --repeat 5               # 重复测试 5 次
 ./scripts/core/test --verbose                # 详细输出
 

@@ -23,7 +23,7 @@ FastQTools 是一个 C++23 FASTQ 质控工具集，覆盖测序数据日常 QC �
 
 FastQTools 不是 fastp 的替代品，而是一个聚焦、现代内核的 QC 组件与 C++23 流式流水线参考实现。
 
-技术选型上采用现代 C++ 工程实践：C++23、概念与范围、零拷贝视图、可替换执行 backend（默认 Intel oneTBB）、Conan 2 依赖管理、GoogleTest 全层测试、clang-tidy/cppcheck/ASan/coverage 多重质量门。
+技术选型上采用现代 C++ 工程实践：C++23、概念与范围、零拷贝视图、私有执行 backend（Sequential + Intel oneTBB）、Conan 2 依赖管理、GoogleTest 全层测试、clang-tidy/cppcheck/ASan/coverage 多重质量门。
 
 ## 模块拓扑
 
@@ -51,7 +51,7 @@ FastQTools 不是 fastp 的替代品，而是一个聚焦、现代内核的 QC �
 | `io` | gzip 解压、批量读取、批量写入、零拷贝记录视图 | `include/fqtools/io/fastq_io.h`, `src/io/fastq_reader.cpp`, `fastq_writer.cpp` |
 | `processing` | 规则组合、统一运行时配置、执行 backend 选择 | `src/processing/execution_runtime.*`, `execution_backend.*` |
 | `statistics` | 统计计算与报告输出 | `src/statistics/fq_statistic.cpp`, `statistics_report.cpp` |
-| `common` / `config` / `error` / `logging` | 共享基础设施 | `include/fqtools/core/core.h`, `error/error.h`, `logging.h` |
+| `error` | 类型化异常和错误宏 | `include/fqtools/error/error.h` |
 
 公共 API 入口是 `include/fqtools/fq.h`，一个 Façade 头文件，聚合所有对外接口。
 
@@ -109,9 +109,7 @@ serial_in_order (读取)  →  parallel (处理)  →  serial_in_order (写出 +
 同一 `ExecutionBackend` seam 还提供：
 
 - `SequentialExecutionBackend`：单线程回退和契约基线
-- Taskflow backend：v4 已移除；历史对照仅保留在性能归档中。
-
-Sequential 与 oneTBB 共用 reader、writer、batch operation 和计量契约；旧 Taskflow 对照结论保留为历史记录，不再参与 v4 构建。
+Sequential 与 oneTBB 共用 reader、writer、batch operation 和计量契约；历史 Taskflow 对照只保留在性能归档中，不参与 v4 构建。
 
 #### Backend 选择规则
 
@@ -121,7 +119,7 @@ Sequential 与 oneTBB 共用 reader、writer、batch operation 和计量契约�
 | `Automatic` + 自定义 Reader/Writer | Sequential | 保持外部 adapter 的保守线程契约 |
 | `Automatic` + 原生 I/O + 多线程 | oneTBB | CLI 默认并行路径 |
 | 显式 Sequential / oneTBB | 对应 backend | 契约测试和公平基准 |
-| 历史 Taskflow | 已移除 | 仅保留历史 benchmark/决策记录 |
+| Taskflow | v4 已移除 | 仅保留历史 benchmark/决策记录 |
 
 CLI 始终使用 `Automatic`；实验 backend 选择不扩散到 CLI 参数或公共嵌入 API。
 
@@ -133,7 +131,7 @@ CLI 始终使用 `Automatic`；实验 backend 选择不扩散到 CLI 参数或�
 - thread count、最大在途 token 数、执行模式
 - `LowMemory` / `Default` / `HighThroughput` profile 的确定性默认值
 
-内存上限按 batch capacity 约束 `maxLiveTokens`，因此 backend 替换不会改变内存预算语义。
+内存上限按每个在途 token 的完整工作集计算：`batchCapacityBytes`、`FastqRecord` vector、reader remainder、writer buffer 与 zlib buffer。profile 会把 batch capacity 和 batch size 传入对象池；`maxLiveTokens` 据此裁剪。预算不足以容纳一个最小工作集时抛 `ConfigurationError`，不会静默突破上限。
 
 #### Backend 契约不变量
 
@@ -145,7 +143,7 @@ CLI 始终使用 `Automatic`；实验 backend 选择不扩散到 CLI 参数或�
 | 错误 | reader、operation、writer 的异常同步传播到 `run()` 调用方，不静默降级或重试 |
 | 资源 | backend 返回前完成 worker；Reader/Writer 析构不会与最后一个任务并发 |
 
-输出不是事务：若后续 batch 失败，之前已经提交的内容不会回滚。CLI 在边界记录异常并返回失败状态，调用方负责删除或隔离部分输出。
+默认 `FastqWriter` 将输出写入目标同目录临时文件，`finish()` 成功后原子 rename；写入、关闭或 rename 失败时删除临时文件并保留已有目标。对自定义 Writer，runtime 只保证调用一次 `finish()` 并传播异常，事务语义由 adapter 自己定义。
 
 **为什么第一级和第三级是串行**：
 - 读取串行：gzip 流是顺序格式，无法随机访问
@@ -158,12 +156,13 @@ oneTBB 的串行 stage 提供互斥语义；implementation 保留 reader/writer 
 
 每个领域的全部抽象聚合到一个 `interfaces.h`（io/processing/statistics），读一个文件就能理解该领域的契约。
 
-**为什么**：细粒度接口在没有多实现时是纯成本——多一层间接、多一处维护、多一个理解单元。接口仍支持依赖注入（`ProcessingPipeline::setReader/setWriter` 接受 `unique_ptr<IReader/IWriter>`），测试可注入 mock。
+**为什么**：细粒度接口在没有多实现时是纯成本——多一层间接、多一处维护、多一个理解单元。接口仍支持依赖注入（`Pipeline::setReader/setWriter` 接受 `unique_ptr<IReader/IWriter>`），测试可注入 mock。
 
 I/O seam 直接承载 runtime 需要的完整契约，不再探测具体类型：
 
 - `IReader::nextBatch(batch, maxRecords)`：所有 reader 都接收批记录上限
 - `IWriter::write(batch) -> uint64_t`：返回本批接受的未压缩 FASTQ 序列化字节数
+- `IWriter::finish()`：显式完成 flush、压缩流关闭和输出发布；析构不承担唯一错误报告职责
 
 这里的“提交字节”表示 writer 已接受到自身 buffer/压缩流，不等同于执行 `fsync` 后的持久化字节。准确计量属于 adapter 契约，因此 runtime 不再对 `FastqReader` / `FastqWriter` 使用 `dynamic_cast`。
 
@@ -186,6 +185,8 @@ I/O seam 直接承载 runtime 需要的完整契约，不再探测具体类型�
 - 宏 `FQ_THROW_IO_ERROR`/`FQ_THROW_FORMAT_ERROR`/`FQ_THROW_CONFIG_ERROR` 统一抛点
 - 库内部不静默吞异常；CLI 边界（`main.cpp`）捕获并记录后退出
 
+退出码在 CLI 边界稳定映射：参数/配置错误为 2，FASTQ 格式错误为 3，I/O 错误为 4，其它运行时错误为 1。库层只抛出类型化异常，不重复记录同一错误。
+
 **为什么用异常而非错误码**：FASTQ 处理是"正常路径占绝大多数"的场景，错误（文件打不开、格式损坏）是例外。异常让正常路径代码保持线性，错误处理集中在边界。C++23 没有稳定的错误类型，`std::expected` 在需要多错误码分类时才更合适，这里异常是更轻量的选择。
 
 ### 7. 质量门：CI 矩阵 + 消毒剂 + 模糊测试
@@ -200,16 +201,16 @@ CI（`.github/workflows/ci.yml`）通过 GitHub Actions 页面手动触发，运
 
 ## 性能特征
 
-100K reads（150 bp）、AMD Ryzen 9 5900X 环境下的代表性快照：
+v4 性能快照固定为 1M reads × 150 bp、seed=42、5 次重复，并直接调用生产 Reader/Writer/Pipeline/`FqStatisticWorker`：
 
 | 工作负载 | 结果 |
 |----------|------|
-| FASTQ 读取路径 | 1696 MB/s |
-| FASTQ 写出路径 | 1.76M reads/s |
-| 组合过滤处理 | 1.67M reads/s |
-| 完整统计分析 | 302 MB/s |
+| FASTQ reader | 202,903 reads/s（61.3 MiB/s） |
+| plain writer，single API | 117,444 reads/s（35.5 MiB/s） |
+| gzip-6 writer，single API | 7,194 reads/s（2.2 MiB/s） |
+| filter baseline | 125,623 reads/s（38.0 MiB/s） |
 
-读取路径接近 1.7 GB/s，说明零拷贝 + 批量 + 连续内存设计生效——瓶颈在 gzip 解压和磁盘，而非解析。统计路径 302 MB/s 较低，因为统计计算本身是 CPU 密集的（逐碱基质量统计、GC 滑窗、长度直方图），且统计场景下没有写出路径分摊。
+这些数值仅用于同机器、同命令的相对比较；当前 WSL2 的 `real_time` 被放大，stat CPU clock 的重复 CV 也超过 5%，因此没有据此实施 Writer 或统计热点优化。完整原始 JSON、环境和优化门槛见 [`docs/performance`](./performance/README.md)。
 
 ## 测试策略
 
@@ -226,6 +227,6 @@ CI（`.github/workflows/ci.yml`）通过 GitHub Actions 页面手动触发，运
 
 - C++23，`CMAKE_CXX_EXTENSIONS` 关闭（纯标准，无 GNU 扩展）
 - CMake 3.28+ + Ninja + Conan 2.x
-- 关键依赖：Intel oneTBB（默认并行 backend）、fmt（格式化）、zlib-ng（gzip）、cxxopts（CLI）、GoogleTest（测试）
-- benchmark/gtest 为构建选项依赖；Taskflow backend 已在 v4 移除，历史对照报告保留在性能归档中。
+- 关键依赖：Intel oneTBB（默认并行 backend）、fmt（格式化）、zlib-ng（gzip）；cxxopts 仅为 CLI 私有依赖。
+- benchmark、nlohmann_json 和 GoogleTest 按构建选项启用；Taskflow backend 已在 v4 移除，历史对照报告保留在性能归档中。
 - 构建脚本：`./scripts/core/build`（默认 Clang Release）

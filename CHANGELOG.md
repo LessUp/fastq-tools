@@ -9,6 +9,30 @@ This root changelog is the maintained project history. Older granular work logs 
 
 ---
 
+## [4.0.0] - 2026-07-17
+
+FastQTools v4 is an intentional breaking release that narrows the public surface and makes runtime/resource contracts explicit.
+
+### Breaking
+- Replaced `createProcessingPipeline()` and `createStatisticCalculator()` with move-only PIMPL classes `fq::processing::Pipeline` and `fq::statistics::Calculator`.
+- Renamed the statistics namespace from `fq::statistic` to `fq::statistics`.
+- Added `IWriter::finish()`; `write()` only accepts data, while `finish()` reports flush, compression-close, and publication errors.
+- Removed config, ErrorHandler, legacy Logger, public object pools, and the Taskflow backend. No v3 compatibility layer is provided.
+- Consolidated the installed CMake consumer target to `FastQTools::FastQTools`; CLI-only dependencies remain private.
+
+### Correctness and runtime
+- Filter order is fixed to adapter trim → poly-G/poly-X trim → quality trim → predicates; all predicates use the final trimmed read.
+- Default file output is staged in a same-directory temporary file and atomically renamed after a successful `finish()`; failed writes preserve the previous target.
+- Memory profiles account for batch storage, record vectors, reader remainder, and writer/zlib buffers. Limits below one runtime working set raise `ConfigurationError`.
+- Sequential and oneTBB paths share deterministic output/statistics contracts; CLI is the single exception/logging/exit-code boundary.
+
+### Performance and verification
+- Rebuilt production benchmarks around a fixed seed=42, 1M×150 bp dataset, real Reader/Writer/Pipeline/StatisticWorker code, and five repetitions with median/CV summaries.
+- Writer measurements cover plain and gzip-1/6/9, each with single and batch APIs; unstable WSL2 clock data did not meet the evidence threshold for speculative Writer/statistics optimization.
+- Manual CI runs format, static analysis, GCC/Clang, ASan, TSan, UBSan, and coverage jobs when dispatched from GitHub Actions.
+
+---
+
 ## [Unreleased]
 
 ### Changed

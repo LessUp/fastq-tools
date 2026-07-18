@@ -14,6 +14,8 @@
 | `--memory-limit-gb` | 内存上限 GB（0=不限） | 0 |
 | `--quality-encoding` | 质量编码偏移（33 或 64） | 33 |
 
+`--profile` 只调整运行时资源预算：`lowMemory` 使用较小的 batch/缓冲区，`highThroughput` 使用较大的 batch/缓冲区。`--memory-limit-gb` 会把 batch buffer、record vector、reader remainder、writer/zlib buffer 一并计入；不足以容纳最小运行集时命令以配置错误退出。
+
 全局选项（`main.cpp`）：`--verbose`/`-v`、`--quiet`/`-q`、`--log-level=<level>`。
 
 ## stat — 统计
@@ -58,3 +60,19 @@ FastQTools filter \
 | `--trim-poly-x` | 修剪低复杂度 polyX 尾（最小连续长度） | — |
 
 过滤与修剪在同一条处理链中完成，单遍扫描。
+
+固定处理顺序为 adapter trim → poly-G/poly-X trim → quality trim → predicates。长度、平均质量和 N 比例都基于最终修剪后的 read；任一修剪产生空 read 时整条 read 被过滤。
+
+## 输出与退出码
+
+`filter` 的默认 `FastqWriter` 先写同目录临时文件，成功完成后原子替换目标；写入、gzip close 或 rename 失败会删除临时文件并保留原目标。处理中途异常不会发布半成品。
+
+CLI 在唯一边界捕获并记录异常，退出码稳定为：
+
+| 退出码 | 含义 |
+|--------|------|
+| 0 | 成功 |
+| 1 | 其它运行时错误 |
+| 2 | 参数或配置错误 |
+| 3 | FASTQ 格式错误 |
+| 4 | 输入/输出 I/O 错误 |
