@@ -1,16 +1,16 @@
 <h1 align="center">FastQTools</h1>
 
 <p align="center">
-  <b>A focused, modern C++23 FASTQ quality-control toolkit</b><br>
-  <i>Zero-copy record views, a bounded streaming pipeline, and a small embeddable API surface — built to do a few QC things well.</i>
+  <b>一个用 C++23 写的 FASTQ 质控小工具</b><br>
+  只做统计（stat）和过滤/修剪（filter）两件事，把核心路径做得快一点、稳一点。
 </p>
 
 <p align="center">
   <a href="https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml">
-    <img src="https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml/badge.svg" alt="CI Status">
+    <img src="https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml/badge.svg" alt="CI 状态">
   </a>
   <a href="https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/badge/build-GCC%20%7C%20Clang%20%7C%20ASan%20%7C%20TSan%20%7C%20UBSan-success?logo=githubactions" alt="CI Matrix">
+    <img src="https://img.shields.io/badge/build-GCC%20%7C%20Clang%20%7C%20ASan%20%7C%20TSan%20%7C%20UBSan-success?logo=githubactions" alt="CI 矩阵">
   </a>
   <a href="https://github.com/LessUp/fastq-tools/releases">
     <img src="https://img.shields.io/github/v/release/LessUp/fastq-tools?label=Release&logo=github" alt="GitHub Release">
@@ -27,66 +27,23 @@
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> •
-  <a href="README.zh-CN.md">简体中文</a> •
-  <a href="./docs/architecture.md">Architecture</a> •
-  <a href="https://github.com/LessUp/fastq-tools/releases">Releases</a>
+  <a href="README.md">中文</a> ·
+  <a href="README.en.md">English</a> ·
+  <a href="./docs/getting-started.md">快速开始</a> ·
+  <a href="./docs/architecture.md">架构</a> ·
+  <a href="https://github.com/LessUp/fastq-tools/releases">发布版本</a>
 </p>
 
 ---
 
-## Table of contents
+## FastQTools 是做什么的
 
-- [Why FastQTools](#why-fastqtools)
-- [Where it fits](#where-it-fits)
-- [Highlights](#highlights)
-- [Quick start](#quick-start)
-- [Embeddable C++ API](#embeddable-c-api)
-- [Architecture at a glance](#architecture-at-a-glance)
-- [Representative performance](#representative-performance)
-- [Quality bar](#quality-bar)
-- [Documentation map](#documentation-map)
-- [Build requirements](#build-requirements)
-- [Contributing](#contributing)
-- [License](#license)
-- [Author](#author)
+日常测序质控里，最常用的就是两个操作：
 
----
+- **stat**：读入 FASTQ，输出读段数、长度分布、碱基组成、GC 含量、Q20/Q30 等统计指标。
+- **filter**：一趟扫描完成长度过滤、质量过滤、N 比例过滤、质量修剪、adapter 修剪、polyG/polyX 尾修剪。
 
-## Why FastQTools
-
-Most FASTQ QC tools optimize for breadth: many features, many report formats, many edge cases. FastQTools goes the other way. It is a **C++23 engineering showcase** that deliberately keeps the maintenance surface small — `stat`, `filter`, and one umbrella header — and puts the engineering budget into the parts that are usually invisible:
-
-- A zero-copy record model where parsing collapses to pointer arithmetic.
-- A private execution-backend seam with an ordered oneTBB pipeline by default; v4 keeps only Sequential and oneTBB.
-- A batch + object-pool memory discipline that avoids per-record allocation on the hot path.
-- A manually triggered CI matrix that runs GCC, Clang, ASan, TSan, and UBSan when started from the GitHub Actions UI, plus fuzzer targets at the parser entry (CI integration pending).
-
-The thesis is simple: **doing a few things well is harder than doing many things adequately**. This repository is that argument in code.
-
-## Where it fits
-
-FastQTools targets the two highest-frequency operations in everyday sequencing QC — summary statistics and read filtering/trimming — and a minimal embeddable C++ API for integrating them into larger pipelines. It deliberately does **not** do alignment, variant calling, assembly, or visualization.
-
-| Tool | Scope | Language | Strength | FastQTools vs. it |
-| --- | --- | --- | --- | --- |
-| **fastp** | All-in-one QC + adapter/trimming + report | C++11 | Mature, feature-rich, de facto standard | Smaller surface; modern C++23 core; embeddable API; stricter CI/sanitizers |
-| **fastqc** | QC report only (Java) | Java | Rich visual report, broad adoption | CLI-native; composable; no JVM; C++ embeddable |
-| **seqkit** | Swiss-army SEQ toolkit (Go) | Go | Huge operator surface, scripting-friendly | Focused on QC hot path; native C++ throughput; smaller binary |
-| **FastQTools** | `stat` + `filter` + embeddable API | C++23 | Zero-copy + TBB streaming + sanitizer-hardened | — |
-
-FastQTools is not a drop-in fastp replacement. It is a focused, modern-core alternative when you want a small, auditable, embeddable QC component — or a reference for how a C++23 streaming pipeline is built.
-
-## Highlights
-
-- **`stat` — FASTQ statistics.** Read counts, length distribution, base composition, GC content, Q20/Q30-style quality metrics, optional signature sidecar report (head k-mer, duplicate estimation).
-- **`filter` — filtering and trimming in one pass.** Length, average quality, N-ratio thresholds; quality trimming (5'/3'/both); adapter trimming; polyG / polyX tail trimming — all in a single streaming scan.
-- **Embeddable C++ API.** One umbrella header `<fqtools/fq.h>`; CLI and library share the same pipeline, so behavior is identical.
-- **Zero-copy record views.** `FastqRecord` is five `std::string_view`s pointing into a contiguous batch buffer; parsing is pointer arithmetic, not allocation.
-- **Bounded streaming pipeline.** The oneTBB path uses `serial_in_order → parallel → serial_in_order`, keeping I/O ordered and reduction deterministic while the CPU-bound middle stage scales across cores. A sequential backend remains available as the contract baseline.
-- **Sanitizer-hardened CI.** A manually triggered run executes GCC Release, Clang Release, Clang ASan/TSan/UBSan, clang-tidy, and cppcheck; fuzzer targets live in `tools/fuzz/` (CI integration pending).
-
-## Quick start
+## 快速开始
 
 ```bash
 git clone https://github.com/LessUp/fastq-tools.git
@@ -95,7 +52,7 @@ cd fastq-tools
 ./build/clang-release/FastQTools --help
 ```
 
-Generate a QC report:
+生成统计报告：
 
 ```bash
 ./build/clang-release/FastQTools stat \
@@ -103,7 +60,7 @@ Generate a QC report:
   -o sample.stats.txt
 ```
 
-Filter and trim reads in one pass:
+过滤并修剪读段：
 
 ```bash
 ./build/clang-release/FastQTools filter \
@@ -115,167 +72,67 @@ Filter and trim reads in one pass:
   --trim-mode both
 ```
 
-For environment setup, install notes, and deployment options, see [docs/getting-started.md](./docs/getting-started.md). For full option reference, see [docs/cli-reference.md](./docs/cli-reference.md).
+环境配置、安装说明和更多命令参数分别见 [快速开始指南](./docs/getting-started.md) 和 [CLI 参考](./docs/cli-reference.md)。
 
-## Embeddable C++ API
+## 设计思路
 
-The CLI and the library share the same pipeline. Embedding gives you the same behavior without a subprocess.
+FastQTools 不是“瑞士军刀”式工具，而是一个聚焦、可嵌入的质控组件。核心设计很直接：
 
-```cpp
-#include <fqtools/fq.h>
+- **零拷贝记录视图**：`FastqRecord` 由几个 `std::string_view` 指向同一批缓冲区，解析只做指针运算，不额外分配字符串。
+- **有界流水线**：默认用 oneTBB 的三段并行流水线，I/O 阶段保序，中间计算并行；内存峰值由 `maxLiveTokens` 限制。
+- **小 API 面**：公共头只有 `<fqtools/fq.h>`，CLI 和库共享同一套实现。
+- **写后原子重命名**：默认先写同目录临时文件，`finish()` 成功后原子重命名；失败不会留下半成品输出。
 
-// Statistics
-fq::statistics::StatisticOptions options;
-options.inputFastqPath = "sample.fastq.gz";
-options.outputStatPath  = "sample.stats.txt";
-options.processing.batchSize   = 50000;
-options.processing.threadCount = 8;
+更完整的设计说明见 [架构文档](./docs/architecture.md)。
 
-fq::statistics::Calculator calculator(std::move(options));
-calculator.run();
-```
+## 什么时候用
 
-```cpp
-#include <fqtools/fq.h>
+适合：
 
-// Filter + trim, composable via predicates and mutators
-fq::processing::Pipeline pipeline;
-pipeline.setInputPath("sample.fastq.gz");
-pipeline.setOutputPath("sample.filtered.fastq.gz");
+- 需要在 C++ 项目里嵌入一个轻量 FASTQ 质控模块。
+- 想要一个可控、可审计的 stat/filter 组件。
+- 对 C++23 流式流水线实现感兴趣，想参考具体代码。
 
-pipeline.addReadPredicate(std::make_unique<fq::processing::MinQualityPredicate>(20.0));
-pipeline.addReadMutator(std::make_unique<fq::processing::QualityTrimmer>(
-    20.0, 1, fq::processing::QualityTrimmer::TrimMode::Both, 33));
+不适合：
 
-fq::processing::ProcessingOptions opts;
-opts.batchSize   = 50000;
-opts.threadCount = 8;
-pipeline.setProcessingOptions(opts);
+- 需要全自动 adapter 识别、可视化报告、比对或变异检测。这类需求请用 fastp、fastqc 等成熟工具。
 
-auto stats = pipeline.run();
-```
+## 构建要求
 
-`Pipeline` is move-only and hides its implementation behind PIMPL. `setReader` / `setWriter` accept `unique_ptr<IReader>` / `IWriter`, so tests can inject mocks. See [docs/api.md](./docs/api.md) for the full header map.
-
-### v4 contract
-
-FastQTools 4.0.0 is intentionally a breaking release. The public factory functions are replaced by move-only `fq::processing::Pipeline` and `fq::statistics::Calculator`; statistics use `fq::statistics`; config, legacy logging, public object pools, and the Taskflow backend are no longer public or built. The installed CMake consumer target is `FastQTools::FastQTools`.
-
-`IWriter::write()` means that a batch was accepted by the writer. Call `IWriter::finish()` exactly once to flush buffers, close compression, and publish a default `FastqWriter` output. The default writer writes a same-directory temporary file and atomically renames it only after a successful finish; failed output leaves the previous target intact and removes the temporary file.
-
-`LowMemory`, `Default`, and `HighThroughput` profiles account for batch storage, record views, reader remainder, and writer/zlib buffers when deriving `maxLiveTokens`. A memory limit smaller than one runtime working set raises `ConfigurationError` instead of silently exceeding the limit.
-
-## Architecture at a glance
-
-```
-                 ┌─────────── src/cli ────────────┐
-                 │  main → CommandRegistry         │
-                 │   ├─ StatCommand                │
-                 │   └─ FilterCommand              │
-                 └────────┬────────────────────────┘
-                          │ assemble options + inject deps
-          ┌───────────────┼───────────────┐
-          ▼               ▼               ▼
-   src/io            src/processing    src/statistics
-   Reader/Writer     Pipeline          Calculator/Writer
-   (gzip, batch)     (backend, rules)  (Q20/Q30, GC, length)
-          │               │               │
-          └───────────────┼───────────────┘
-                          ▼
-                   include/fqtools/  ← public Façade (fq.h)
-```
-
-The hot path runs behind a private `ExecutionBackend` seam. Its default oneTBB implementation is a three-stage `parallel_pipeline`:
-
-```
-serial_in_order (read batch)  →  parallel (filter/trim/stat)  →  serial_in_order (write + reduce)
-```
-
-- **Stage 1 — serial in-order.** gzip streams are sequential; reads come out in file order.
-- **Stage 2 — parallel.** The CPU-bound work (predicates, mutators, per-base statistics) scales across cores. Batches are independent.
-- **Stage 3 — serial in-order.** Output FASTQ stays ordered; statistics reduce deterministically by batch.
-
-In-flight batch count is bounded by `maxLiveTokens`, so memory peaks are predictable. Batches come from an `ObjectPool`, so the hot path does not allocate per-batch.
-
-The scheduling framework does not leak into the public API: v4 ships a sequential baseline and oneTBB as the production backend. Historical Taskflow comparisons remain in the performance archive only.
-
-Three design decisions worth calling out:
-
-1. **`FastqRecord` is all `string_view`.** Lifetime is bound to its `FastqBatch`; records cannot escape a batch. This is a deliberate constraint that makes zero-copy safe.
-2. **`FastqBatch` owns one contiguous buffer.** `clear()` keeps capacity and recycles memory for the next batch — no `malloc/free` churn.
-3. **One `interfaces.h` per domain.** No fine-grained interface sprawl; dependency injection still works for testing.
-
-Full rationale (the *why*, not just the *what*) is in [docs/architecture.md](./docs/architecture.md).
-
-## Representative performance
-
-The maintained v4 baseline uses **1M reads × 150 bp**, fixed `seed=42`, five repetitions, and production Reader/Writer/Pipeline/StatisticWorker paths. It covers plain output, gzip levels 1/6/9, and single/batch writer APIs. See the [raw JSON and median/CV summary](./docs/performance/benchmark-reports/v4-baseline/2026-07-17/summary.md) for the exact environment and commands.
-
-| Workload | v4 baseline |
-| --- | --- |
-| FASTQ reader | 202,903 reads/s (61.3 MiB/s) |
-| Plain writer, single API | 117,444 reads/s (35.5 MiB/s) |
-| gzip-6 writer, single API | 7,194 reads/s (2.2 MiB/s) |
-| Filter baseline | 125,623 reads/s (38.0 MiB/s) |
-
-**How to read these numbers.**
-
-- These numbers are a same-machine reference, not a cross-environment promise. The WSL2 snapshot has inflated `real_time` values; compare only with the same command and environment.
-- gzip level and single/batch API materially change Writer throughput, so one “Writer speed” number is not representative.
-- The statistics run is marked high-CV in the current WSL2 snapshot; no optimization decision is made from that unstable timing.
-
-**Comparison context.** Direct head-to-head numbers against fastp/seqkit are environment- and flag-sensitive, so they are not included in this table. The benchmark suite in `tools/benchmark/` (Google Benchmark) is reproducible; for running it and adding a comparison row on your hardware, see [docs/benchmark.md](./docs/benchmark.md).
-
-## Quality bar
-
-CI (`.github/workflows/ci.yml`) is manually triggered from the GitHub Actions UI; each run executes:
-
-| Job | What it catches |
-| --- | --- |
-| **Format** | clang-format drift |
-| **Static Analysis** | clang-tidy + cppcheck: API misuse, modern-C++ anti-patterns |
-| **GCC Release** | Portability across compilers |
-| **Clang Release** | Primary production toolchain |
-| **Clang ASan** | Out-of-bounds, use-after-free, leaks |
-| **Clang TSan** | Data races in the TBB pipeline |
-| **Clang UBSan** | Undefined behavior |
-| **Coverage** | Line coverage via gcovr + Codecov upload |
-
-Fuzzer targets in `tools/fuzz/` exercise the FASTQ parser entry — the only place that consumes untrusted external input. They are not yet wired into CI; run them locally with a libFuzzer build. Tests are layered: unit (mirror `src/`), integration (cross-module), and e2e (CLI black-box via Bash + Python).
-
-## Documentation map
-
-| If you want to… | Start here |
-| --- | --- |
-| Build FastQTools and run your first command | [docs/getting-started.md](./docs/getting-started.md) |
-| Check command syntax and options | [docs/cli-reference.md](./docs/cli-reference.md) |
-| Integrate the library into C++ code | [docs/api.md](./docs/api.md) |
-| Understand the architecture and design decisions | [docs/architecture.md](./docs/architecture.md) |
-| Understand benchmark numbers | [docs/benchmark.md](./docs/benchmark.md) |
-| Inspect performance data & optimization history | [docs/performance/README.md](./docs/performance/README.md) |
-| Review incident postmortems & root-cause analyses | [docs/postmortems/README.md](./docs/postmortems/README.md) |
-| Contribute docs or code | [CONTRIBUTING.md](./CONTRIBUTING.md) |
-| Follow project-level changes | [CHANGELOG.md](./CHANGELOG.md) |
-
-## Build requirements
-
-- C++23-compatible compiler (**GCC 13+** or **Clang 17+** minimum; CI runs GCC 13 — Ubuntu runner default — and Clang 21)
+- C++23 编译器：**GCC 13+** 或 **Clang 17+**
 - **CMake 3.28+**
 - **Conan 2.x**
-- Linux and macOS are supported build environments today; on Windows, use Docker or WSL.
+- Linux / macOS；Windows 建议用 WSL 或 Docker
 
-## Contributing
+## 质量
 
-FastQTools welcomes focused improvements: bug reports, docs fixes, tests, benchmark work, and narrow feature changes.
+CI 在 GitHub Actions 上手动触发，包含：
 
-- Read the [contributing guide](./CONTRIBUTING.md)
-- Open issues via [GitHub Issues](https://github.com/LessUp/fastq-tools/issues)
-- Discuss ideas in [GitHub Discussions](https://github.com/LessUp/fastq-tools/discussions)
+- 格式：clang-format
+- 静态分析：clang-tidy、cppcheck
+- 编译：GCC Release、Clang Release
+- 动态检查：ASan、TSan、UBSan
+- 测试：单元、集成、端到端
+- 覆盖率：gcovr
 
-## License
+`tools/fuzz/` 下的 fuzzer target 用于测试 FASTQ 解析器入口——唯一消费不可信外部输入的位置。
 
-FastQTools is released under the [MIT License](LICENSE). The technical narrative — why each decision was made — is in [docs/architecture.md](./docs/architecture.md).
+## 文档入口
 
-## Author
+| 想做的事 | 看这里 |
+| --- | --- |
+| 第一次构建运行 | [快速开始](./docs/getting-started.md) |
+| 查询命令语法与参数 | [CLI 参考](./docs/cli-reference.md) |
+| 在 C++ 项目中集成库接口 | [API 概览](./docs/api.md) |
+| 了解架构与设计决策 | [架构文档](./docs/architecture.md) |
+| 判断性能数字该如何解读 | [性能总览](./docs/benchmark.md) |
+| 参与文档或代码贡献 | [贡献指南](./CONTRIBUTING.md) |
+| 跟踪项目层面的变更 | [CHANGELOG.md](./CHANGELOG.md) |
+
+## 许可证
+
+FastQTools 基于 [MIT 许可证](LICENSE) 发布。
+
+## 作者
 
 **shijiashuai** — [GitHub](https://github.com/LessUp) · jiashuai.shi@qq.com
