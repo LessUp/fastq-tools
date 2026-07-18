@@ -87,7 +87,7 @@ v4 benchmark 只运行 Sequential 与 oneTBB；Taskflow backend 已移除。旧�
 | 工具 | 典型量级（公开基准） | 与 FastQTools 的定位差异 |
 | --- | --- | --- |
 | fastp | 多线程下数十 M reads/min（150bp PE） | 功能面远大于 FastQTools；FastQTools 聚焦 stat+filter 热点路径，内核更现代 |
-| seqkit | Go 实现，单线程数十 M reads/min | 算子面巨大；FastQTools 原生 C++、二进制更小、可嵌入 |
+| seqkit | Go 实现，单线程数十 M reads/min | 算子面巨大；FastQTools 原生 C++、二进制更小、可作为 C++ 库链接 |
 | FastQTools | 见 v4 生产基线快照 | 生产 C++ Reader/Writer/filter/stat |
 
 **如何在本仓库跑一次对比**：
@@ -112,4 +112,4 @@ cmake --build build --target benchmarks
 
 ## 注意
 
-这些数字是维护中的点时快照，适合判断量级，不是所有数据集、压缩级别或存储环境下的绝对承诺。与同类工具的对比请在你自己的硬件上按上述方法复现，不要把本表数字当作跨工具的绝对结论。
+这些数字是维护中的快照，用于判断量级。跨工具对比请在你自己的硬件上按上述方法复现，不要直接当作绝对结论。

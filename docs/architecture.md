@@ -4,11 +4,11 @@
 
 ## 项目定位
 
-FastQTools 是一个 C++23 FASTQ 质控工具集，覆盖测序数据日常 QC 的两个最高频操作：统计（`stat`）与过滤修剪（`filter`）。它同时提供一个最小可嵌入 C++ API。项目刻意把维护面收得很窄——不做比对、不做变异检测、不做可视化——把工程精力集中在**把少数事做到极致**。
+FastQTools 是一个 C++23 FASTQ 质控工具集，覆盖测序数据日常 QC 的两个最高频操作：统计（`stat`）与过滤修剪（`filter`）。它同时提供一个最小 C++ 库 API。项目刻意把维护面收得很窄——不做比对、不做变异检测、不做可视化——把工程精力集中在**把少数事做到极致**。
 
 ### 设计哲学
 
-- **窄而深，而非宽而浅。** 与 fastp（全能 QC）、seqkit（全能工具箱）不同，FastQTools 只做 stat + filter + 嵌入 API，但把这三件事的内核做到现代 C++23 的工程上限。
+- **窄而深，而非宽而浅。** 与 fastp（全能 QC）、seqkit（全能工具箱）不同，FastQTools 只做 stat + filter + 库 API，但把这三件事的内核做到现代 C++23 的工程上限。
 - **把预算投到看不见的地方。** 零拷贝、对象池、流水线保序、消毒剂 CI——这些是用户感知不到、但决定工程质量的细节。
 - **约束即安全。** `FastqRecord` 不能逃逸批次、`FastqBatch::clear()` 不释放内存、流水线首尾串行——刻意约束换来零拷贝、确定顺序与有界内存。
 - **CI 是质量合同。** 通过 GitHub Actions 页面手动触发时运行 GCC + Clang + ASan + TSan + UBSan + 静态分析，不是可选的"额外"；fuzzer target 位于 `tools/fuzz/`（CI 集成待定）。
@@ -17,8 +17,8 @@ FastQTools 是一个 C++23 FASTQ 质控工具集，覆盖测序数据日常 QC �
 
 | 工具 | 范围 | 语言 | FastQTools 与之的差异 |
 | --- | --- | --- | --- |
-| fastp | 全能 QC + 报告 | C++11 | 维护面更窄；C++23 内核；可嵌入 API；更严格 CI |
-| fastqc | QC 报告 | Java | 原生 CLI；无 JVM；C++ 可嵌入 |
+| fastp | 全能 QC + 报告 | C++11 | 维护面更窄；C++23 内核；库 API；更严格 CI |
+| fastqc | QC 报告 | Java | 原生 CLI；无 JVM；C++ 库可链接 |
 | seqkit | 全能工具箱 | Go | 聚焦 QC 热点路径；原生 C++ 吞吐；二进制更小 |
 
 FastQTools 不是 fastp 的替代品，而是一个聚焦、现代内核的 QC 组件与 C++23 流式流水线参考实现。
@@ -121,7 +121,7 @@ Sequential 与 oneTBB 共用 reader、writer、batch operation 和计量契约�
 | 显式 Sequential / oneTBB | 对应 backend | 契约测试和公平基准 |
 | Taskflow | v4 已移除 | 仅保留历史 benchmark/决策记录 |
 
-CLI 始终使用 `Automatic`；实验 backend 选择不扩散到 CLI 参数或公共嵌入 API。
+CLI 始终使用 `Automatic`；实验 backend 选择不扩散到 CLI 参数或公共库 API。
 
 #### 统一运行时配置
 
