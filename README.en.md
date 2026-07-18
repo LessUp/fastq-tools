@@ -1,8 +1,7 @@
 <h1 align="center">FastQTools</h1>
 
 <p align="center">
-  <b>A small C++23 FASTQ quality-control tool</b><br>
-  Does just stat and filter/trim, and tries to do them fast and reliably.
+  <b>A C++23 FASTQ quality-control tool with stat and filter commands.</b>
 </p>
 
 <p align="center">
@@ -36,12 +35,10 @@
 
 ---
 
-## What it does
+## Features
 
-The two most common QC operations on FASTQ files:
-
-- **stat**: read counts, length distribution, base composition, GC content, Q20/Q30.
-- **filter**: length, quality, and N-ratio filtering; quality trimming (5'/3'/both); adapter trimming; polyG/polyX tail trimming — all in one streaming pass.
+- `stat`: read counts, length distribution, base composition, GC content, Q20/Q30.
+- `filter`: length/quality/N-ratio filtering; quality trimming (5'/3'/both); adapter trimming; polyG/polyX tail trimming — all in one streaming pass.
 
 ## Quick start
 
@@ -52,7 +49,7 @@ cd fastq-tools
 ./build/clang-release/FastQTools --help
 ```
 
-Generate a QC report:
+Generate stats:
 
 ```bash
 ./build/clang-release/FastQTools stat \
@@ -60,7 +57,7 @@ Generate a QC report:
   -o sample.stats.txt
 ```
 
-Filter and trim reads:
+Filter and trim:
 
 ```bash
 ./build/clang-release/FastQTools filter \
@@ -72,30 +69,26 @@ Filter and trim reads:
   --trim-mode both
 ```
 
-For setup, install notes, and the full option list, see [docs/getting-started.md](./docs/getting-started.md) and [docs/cli-reference.md](./docs/cli-reference.md).
+Full options: [docs/cli-reference.md](./docs/cli-reference.md).
 
 ## Design
 
-FastQTools is not a Swiss-army tool. It is a focused, embeddable QC component.
+- Zero-copy records: `FastqRecord` uses `std::string_view`s into a batch buffer; parsing is pointer arithmetic.
+- Bounded pipeline: a three-stage oneTBB `parallel_pipeline` keeps I/O ordered while compute scales across cores; memory is capped by `maxLiveTokens`.
+- Small API surface: public header is `<fqtools/fq.h>`; CLI and library share the same implementation.
+- Atomic output: writes to a same-directory temp file and renames it on success; a failed run leaves the previous output intact.
 
-- **Zero-copy record views**: `FastqRecord` holds a few `std::string_view`s into a contiguous batch buffer; parsing is pointer arithmetic, not string allocation.
-- **Bounded streaming pipeline**: a three-stage oneTBB `parallel_pipeline` keeps I/O ordered while the CPU-bound stage scales across cores; memory is capped by `maxLiveTokens`.
-- **Small API surface**: the public header is `<fqtools/fq.h>`; CLI and library share the same pipeline implementation.
-- **Atomic output**: writes to a temp file in the same directory and renames it on success; a failed run leaves the previous output intact.
+Full rationale: [docs/architecture.md](./docs/architecture.md).
 
-The full rationale is in [docs/architecture.md](./docs/architecture.md).
-
-## When to use it
+## Use cases
 
 Good for:
 
 - Embedding a lightweight FASTQ QC module into a C++ project.
-- Needing a small, auditable stat/filter component.
-- Reading the code as a reference for a C++23 streaming pipeline.
+- A small, auditable stat/filter component.
+- A reference implementation of a C++23 streaming pipeline.
 
-Not for:
-
-- Full adapter inference, visual reports, alignment, or variant calling. Use fastp, fastqc, or similar mature tools for that.
+Not for: full adapter inference, visual reports, alignment, or variant calling. Use fastp, fastqc, or similar mature tools for that.
 
 ## Build requirements
 
@@ -115,7 +108,7 @@ CI is triggered manually on GitHub Actions and includes:
 - Tests: unit, integration, end-to-end
 - Coverage: gcovr
 
-Fuzzer targets in `tools/fuzz/` exercise the FASTQ parser entry point, the only place that consumes untrusted external input.
+Fuzzer targets in `tools/fuzz/` exercise the FASTQ parser entry point.
 
 ## Documentation
 
@@ -127,11 +120,11 @@ Fuzzer targets in `tools/fuzz/` exercise the FASTQ parser entry point, the only 
 | Understand the design | [docs/architecture.md](./docs/architecture.md) |
 | Read benchmark data | [docs/benchmark.md](./docs/benchmark.md) |
 | Contribute | [CONTRIBUTING.md](./CONTRIBUTING.md) |
-| Track project changes | [CHANGELOG.md](./CHANGELOG.md) |
+| Track changes | [CHANGELOG.md](./CHANGELOG.md) |
 
 ## License
 
-FastQTools is released under the [MIT License](LICENSE).
+[MIT License](LICENSE).
 
 ## Author
 
