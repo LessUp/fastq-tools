@@ -71,14 +71,42 @@ cd fastq-tools
 
 更多参数见 [CLI 参考](./docs/cli-reference.md)。
 
-## 设计
+## 技术栈
 
-- 零拷贝记录：`FastqRecord` 由 `std::string_view` 指向批次缓冲区，解析为指针运算。
-- 有界流水线：oneTBB 三段 `parallel_pipeline`，I/O 保序，计算并行，内存峰值受 `maxLiveTokens` 限制。
-- 小 API 面：公共头 `<fqtools/fq.h>`，CLI 与库共用同一实现。
+| 层级 | 技术 |
+|------|------|
+| 语言 | C++23（GCC 13+ / Clang 17+） |
+| 构建 | CMake 3.28+ + Ninja |
+| 包管理 | Conan 2.x |
+| 并行 | Intel oneTBB |
+| 压缩 | zlib-ng |
+| 格式化 | fmt |
+| 测试 | GoogleTest |
+
+## 设计要点
+
+- 零拷贝记录：`FastqRecord` 全字段使用 `std::string_view`，指向 `FastqBatch` 连续缓冲区；解析退化为指针运算。
+- 批量复用：`FastqBatch::clear()` 保留容量，配合对象池避免热点路径逐批分配。
+- 三级流水线：`serial_in_order（读取） → parallel（过滤/修剪/统计） → serial_in_order（写出 + 归约）`，I/O 保序，计算并行。
+- 有界内存：`maxLiveTokens` 限制在途批数；`LowMemory` / `Default` / `HighThroughput` profile 按完整工作集推导。
+- 小接口面：每域一个 `interfaces.h`（io/processing/statistics），支持测试注入 mock。
 - 原子输出：先写同目录临时文件，成功后重命名；失败不污染旧输出。
+- 错误边界：异常基类 `FastQException` 派生 `IOError` / `FormatError` / `ConfigurationError`，CLI 边界捕获并映射退出码。
 
 完整说明见 [架构文档](./docs/architecture.md)。
+
+## 性能参考
+
+环境：AMD Ryzen 7 5800H（WSL2，8 核 16 线程），Clang 21 Release，1M reads × 150 bp，seed=42，5 次重复 median。
+
+| 场景 | 吞吐 |
+|------|------|
+| Reader | 202,903 reads/s（61.3 MiB/s） |
+| plain writer（single API） | 117,444 reads/s（35.5 MiB/s） |
+| gzip-6 writer（single API） | 7,194 reads/s（2.2 MiB/s） |
+| filter baseline | 125,623 reads/s（38.0 MiB/s） |
+
+说明：WSL2 的 `real_time` 绝对值被放大，以上数字仅适合同一机器、同一命令的相对比较。完整数据见 [v4 基线](./docs/performance/benchmark-reports/v4-baseline/2026-07-17/summary.md)。
 
 ## 使用场景
 

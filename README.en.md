@@ -71,14 +71,42 @@ Filter and trim:
 
 Full options: [docs/cli-reference.md](./docs/cli-reference.md).
 
-## Design
+## Tech stack
 
-- Zero-copy records: `FastqRecord` uses `std::string_view`s into a batch buffer; parsing is pointer arithmetic.
-- Bounded pipeline: a three-stage oneTBB `parallel_pipeline` keeps I/O ordered while compute scales across cores; memory is capped by `maxLiveTokens`.
-- Small API surface: public header is `<fqtools/fq.h>`; CLI and library share the same implementation.
+| Layer | Technology |
+|------|------|
+| Language | C++23 (GCC 13+ / Clang 17+) |
+| Build | CMake 3.28+ + Ninja |
+| Package manager | Conan 2.x |
+| Parallelism | Intel oneTBB |
+| Compression | zlib-ng |
+| Formatting | fmt |
+| Testing | GoogleTest |
+
+## Design highlights
+
+- Zero-copy records: `FastqRecord` uses `std::string_view`s into a contiguous `FastqBatch` buffer; parsing is pointer arithmetic.
+- Batch reuse: `FastqBatch::clear()` keeps capacity and works with an object pool to avoid per-batch allocation on the hot path.
+- Three-stage pipeline: `serial_in_order (read) → parallel (filter/trim/stat) → serial_in_order (write + reduce)` keeps I/O ordered while compute scales across cores.
+- Bounded memory: `maxLiveTokens` caps in-flight batches; `LowMemory` / `Default` / `HighThroughput` profiles derive the full working set.
+- Small API surface: one `interfaces.h` per domain (io/processing/statistics); supports mock injection for tests.
 - Atomic output: writes to a same-directory temp file and renames it on success; a failed run leaves the previous output intact.
+- Error boundary: exception base class `FastQException` with `IOError` / `FormatError` / `ConfigurationError` subclasses; the CLI boundary catches and maps exit codes.
 
 Full rationale: [docs/architecture.md](./docs/architecture.md).
+
+## Performance
+
+Environment: AMD Ryzen 7 5800H (WSL2, 8 cores / 16 threads), Clang 21 Release, 1M reads × 150 bp, seed=42, median of 5 repetitions.
+
+| Scenario | Throughput |
+|------|------|
+| Reader | 202,903 reads/s (61.3 MiB/s) |
+| plain writer (single API) | 117,444 reads/s (35.5 MiB/s) |
+| gzip-6 writer (single API) | 7,194 reads/s (2.2 MiB/s) |
+| filter baseline | 125,623 reads/s (38.0 MiB/s) |
+
+Note: WSL2 inflates absolute `real_time`, so these numbers are for same-machine, same-command comparison only. Full data: [v4 baseline](./docs/performance/benchmark-reports/v4-baseline/2026-07-17/summary.md).
 
 ## Use cases
 
