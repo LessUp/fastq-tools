@@ -2,6 +2,17 @@
 
 基于 [Google Benchmark](https://github.com/google/benchmark) 的性能基准测试套件。
 
+## 架构说明
+
+本目录的 benchmark 代码与 `src/benchmark/` 是**互补关系**，分工如下：
+
+| 目录 | 角色 | 内容 |
+|------|------|------|
+| `src/benchmark/` | 内部支撑库（`fq_benchmark` 静态库） | 数据收集器（`DataCollector`）、结果存储（`ResultStorage`）、共享类型定义 |
+| `tools/benchmark/` | 可执行文件 | 基于 Google Benchmark 的具体测试用例（`filter_benchmark`、`stat_benchmark` 等） |
+
+`src/benchmark/` 不作为公共 API 导出，仅供本目录的可执行文件链接使用。详见 `src/benchmark/CMakeLists.txt`。
+
 ## C++ 基准测试
 
 | 文件 | 测试内容 |

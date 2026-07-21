@@ -73,6 +73,7 @@ cascade/
 .claude/
 .omc/
 superpowers/
+.planning/
 
 # ===== OS 特定文件 =====
 .DS_Store

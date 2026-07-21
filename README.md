@@ -19,7 +19,6 @@
 </p>
 
 <p align="center">
-  <a href="README.en.md">English</a> ·
   <a href="./docs/getting-started.md">快速开始</a> ·
   <a href="./docs/architecture.md">架构</a> ·
   <a href="https://github.com/LessUp/fastq-tools/releases">发布版本</a>
