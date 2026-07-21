@@ -1,7 +1,10 @@
 name: CI
 
-# 改为手动触发，避免每次 push 都跑耗时安装
+# push/PR 自动触发 format + build-and-test(Release)；sanitizer 仅手动触发
 on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
   workflow_dispatch:
     inputs:
       reason:
@@ -81,6 +84,10 @@ jobs:
   build-and-test:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+    # PR 时跳过 sanitizer 构建（耗时较长），push 和手动触发时全跑
+    if: |
+      github.event_name != 'pull_request' ||
+      !contains(matrix.name, 'San')
     strategy:
       fail-fast: false
       matrix:
