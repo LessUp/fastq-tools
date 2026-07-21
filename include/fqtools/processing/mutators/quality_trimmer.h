@@ -2,7 +2,6 @@
 
 #include "fqtools/processing/interfaces.h"
 
-#include <atomic>
 #include <string>
 #include <vector>
 
@@ -21,17 +20,12 @@ public:
 
     [[nodiscard]] auto getName() const -> std::string;
     [[nodiscard]] auto getDescription() const -> std::string;
-    void reset();
 
 private:
     double qualityThreshold_;
     size_t minLength_;
     TrimMode trimMode_;
     int qualityEncoding_;
-
-    std::atomic<size_t> totalProcessed_{0};
-    std::atomic<size_t> trimmedCount_{0};
-    std::atomic<size_t> totalBasesRemoved_{0};
 
     [[nodiscard]] auto trimFivePrime(std::string_view sequence, std::string_view quality) const
         -> size_t;
@@ -50,15 +44,10 @@ public:
 
     [[nodiscard]] auto getName() const -> std::string;
     [[nodiscard]] auto getDescription() const -> std::string;
-    void reset();
 
 private:
     size_t targetLength_;
     TrimStrategy strategy_;
-
-    std::atomic<size_t> totalProcessed_{0};
-    std::atomic<size_t> trimmedCount_{0};
-    std::atomic<size_t> totalBasesRemoved_{0};
 };
 
 class AdapterTrimmer : public ReadMutatorInterface {
@@ -71,16 +60,11 @@ public:
 
     [[nodiscard]] auto getName() const -> std::string;
     [[nodiscard]] auto getDescription() const -> std::string;
-    void reset();
 
 private:
     std::vector<std::string> adapters_;
     size_t minOverlap_;
     size_t maxMismatches_;
-
-    std::atomic<size_t> totalProcessed_{0};
-    std::atomic<size_t> adapterFound_{0};
-    std::atomic<size_t> totalBasesRemoved_{0};
 
     [[nodiscard]] auto findAdapter(std::string_view sequence, std::string_view adapter) const
         -> size_t;
@@ -98,15 +82,10 @@ public:
 
     [[nodiscard]] auto getName() const -> std::string;
     [[nodiscard]] auto getDescription() const -> std::string;
-    void reset();
 
 private:
     TailKind kind_;
     size_t minRunLength_;
-
-    std::atomic<size_t> totalProcessed_{0};
-    std::atomic<size_t> trimmedCount_{0};
-    std::atomic<size_t> totalBasesRemoved_{0};
 
     [[nodiscard]] auto trimPosition(std::string_view sequence) const -> size_t;
     [[nodiscard]] static auto normalizeBase(char base) -> char;

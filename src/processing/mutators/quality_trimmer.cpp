@@ -22,8 +22,6 @@ QualityTrimmer::QualityTrimmer(double qualityThreshold,
       qualityEncoding_(qualityEncoding) {}
 
 void QualityTrimmer::process(fq::io::FastqRecord& read) {
-    totalProcessed_++;
-
     if (read.empty()) {
         return;
     }
@@ -56,15 +54,11 @@ void QualityTrimmer::process(fq::io::FastqRecord& read) {
         // Filter out (make empty)
         read.seq = {};
         read.qual = {};
-        totalBasesRemoved_ += originalLen;
-        trimmedCount_++;  // Considered trimmed completely
     } else {
         // Apply trim
         if (newLen < originalLen) {
             read.seq = read.seq.substr(start, newLen);
             read.qual = read.qual.substr(start, newLen);
-            totalBasesRemoved_ += (originalLen - newLen);
-            trimmedCount_++;
         }
     }
 }
@@ -139,19 +133,12 @@ auto QualityTrimmer::getName() const -> std::string {
 auto QualityTrimmer::getDescription() const -> std::string {
     return fmt::format("Trims bases with quality < {:.2f}", qualityThreshold_);
 }
-void QualityTrimmer::reset() {
-    totalProcessed_ = 0;
-    trimmedCount_ = 0;
-    totalBasesRemoved_ = 0;
-}
-
 // --- LengthTrimmer ---
 
 LengthTrimmer::LengthTrimmer(size_t targetLength, TrimStrategy strategy)
     : targetLength_(targetLength), strategy_(strategy) {}
 
 void LengthTrimmer::process(fq::io::FastqRecord& read) {
-    totalProcessed_++;
     size_t len = read.seq.size();
 
     if (len <= targetLength_ && strategy_ != TrimStrategy::FixedLength) {
@@ -187,8 +174,6 @@ void LengthTrimmer::process(fq::io::FastqRecord& read) {
     if (newLen < len) {
         read.seq = read.seq.substr(start, newLen);
         read.qual = read.qual.substr(start, newLen);
-        totalBasesRemoved_ += (len - newLen);
-        trimmedCount_++;
     }
 }
 
@@ -198,12 +183,6 @@ auto LengthTrimmer::getName() const -> std::string {
 auto LengthTrimmer::getDescription() const -> std::string {
     return fmt::format("Trims reads to length {}", targetLength_);
 }
-void LengthTrimmer::reset() {
-    totalProcessed_ = 0;
-    trimmedCount_ = 0;
-    totalBasesRemoved_ = 0;
-}
-
 // --- AdapterTrimmer ---
 
 AdapterTrimmer::AdapterTrimmer(const std::vector<std::string>& adapterSequences,
@@ -212,7 +191,6 @@ AdapterTrimmer::AdapterTrimmer(const std::vector<std::string>& adapterSequences,
     : adapters_(adapterSequences), minOverlap_(minOverlap), maxMismatches_(maxMismatches) {}
 
 void AdapterTrimmer::process(fq::io::FastqRecord& read) {
-    totalProcessed_++;
     if (read.empty()) {
         return;
     }
@@ -232,13 +210,9 @@ void AdapterTrimmer::process(fq::io::FastqRecord& read) {
     }
 
     if (bestPos != std::string::npos) {
-        size_t originalLen = read.seq.size();
         // Trim everything from bestPos
         read.seq = read.seq.substr(0, bestPos);
         read.qual = read.qual.substr(0, bestPos);
-
-        totalBasesRemoved_ += (originalLen - bestPos);
-        adapterFound_++;
     }
 }
 
@@ -311,19 +285,12 @@ auto AdapterTrimmer::getName() const -> std::string {
 auto AdapterTrimmer::getDescription() const -> std::string {
     return "Trims adapter sequences";
 }
-void AdapterTrimmer::reset() {
-    totalProcessed_ = 0;
-    adapterFound_ = 0;
-    totalBasesRemoved_ = 0;
-}
-
 // --- PolyTailTrimmer ---
 
 PolyTailTrimmer::PolyTailTrimmer(TailKind kind, size_t minRunLength)
     : kind_(kind), minRunLength_(std::max<size_t>(1, minRunLength)) {}
 
 void PolyTailTrimmer::process(fq::io::FastqRecord& read) {
-    totalProcessed_++;
     if (read.empty()) {
         return;
     }
@@ -333,11 +300,8 @@ void PolyTailTrimmer::process(fq::io::FastqRecord& read) {
         return;
     }
 
-    const size_t removed = read.seq.size() - trimPos;
     read.seq = read.seq.substr(0, trimPos);
     read.qual = read.qual.substr(0, trimPos);
-    totalBasesRemoved_ += removed;
-    trimmedCount_++;
 }
 
 auto PolyTailTrimmer::getName() const -> std::string {
@@ -348,12 +312,6 @@ auto PolyTailTrimmer::getDescription() const -> std::string {
     return kind_ == TailKind::PolyG
         ? fmt::format("Trims polyG tails with run >= {}", minRunLength_)
         : fmt::format("Trims low-complexity polyX tails with run >= {}", minRunLength_);
-}
-
-void PolyTailTrimmer::reset() {
-    totalProcessed_ = 0;
-    trimmedCount_ = 0;
-    totalBasesRemoved_ = 0;
 }
 
 auto PolyTailTrimmer::trimPosition(std::string_view sequence) const -> size_t {

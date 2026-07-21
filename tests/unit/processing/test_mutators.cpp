@@ -123,17 +123,6 @@ TEST_F(QualityTrimmerTest, GetDescriptionReturnsNonEmpty) {
     EXPECT_FALSE(trimmer.getDescription().empty());
 }
 
-TEST_F(QualityTrimmerTest, ResetClearsStatistics) {
-    QualityTrimmer trimmer(20.0);
-
-    FastqRecord read{"read1", {}, "ACGT", "!!II", "+"};
-    trimmer.process(read);
-
-    trimmer.reset();
-
-    // 重置后统计应清零
-}
-
 // ============================================================================
 // LengthTrimmer 测试
 // ============================================================================
@@ -311,15 +300,6 @@ TEST_F(AdapterTrimmerTest, GetNameReturnsNonEmpty) {
     AdapterTrimmer trimmer({"TTAA"}, 3, 0);
 
     EXPECT_FALSE(trimmer.getName().empty());
-}
-
-TEST_F(AdapterTrimmerTest, ResetClearsStatistics) {
-    AdapterTrimmer trimmer({"TTAA"}, 3, 0);
-
-    FastqRecord read{"read1", {}, "ACGTTTAA", "IIIIIIII", "+"};
-    trimmer.process(read);
-
-    trimmer.reset();
 }
 
 class PolyTailTrimmerTest : public ::testing::Test {
