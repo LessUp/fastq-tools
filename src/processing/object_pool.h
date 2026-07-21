@@ -4,8 +4,8 @@
 #include <atomic>
 #include <functional>
 #include <memory>
-#include <mutex>
-#include <vector>
+
+#include <tbb/concurrent_queue.h>
 
 namespace fq::memory {
 
@@ -19,7 +19,10 @@ public:
                         size_t maxSize = 0,
                         ResetFunc resetFunc = nullptr,
                         CreateFunc createFunc = nullptr)
-        : resetFunc_(std::move(resetFunc)), createFunc_(std::move(createFunc)), maxSize_(maxSize) {
+        : resetFunc_(std::move(resetFunc)), createFunc_(std::move(createFunc)) {
+        if (maxSize > 0) {
+            queue_.set_capacity(maxSize);
+        }
         if (initialSize > 0) {
             reserve(initialSize);
         }
@@ -33,15 +36,7 @@ public:
 
     [[nodiscard]] auto acquire() -> std::shared_ptr<T> {
         std::unique_ptr<T> object;
-        {
-            std::lock_guard lock(mutex_);
-            if (!pool_.empty()) {
-                object = std::move(pool_.back());
-                pool_.pop_back();
-            }
-        }
-
-        if (!object) {
+        if (!queue_.try_pop(object)) {
             object = createObject();
             totalCreated_.fetch_add(1, std::memory_order_relaxed);
         }
@@ -61,26 +56,24 @@ public:
     }
 
     void reserve(size_t count) {
-        std::lock_guard lock(mutex_);
-        pool_.reserve(pool_.size() + count);
         for (size_t i = 0; i < count; ++i) {
-            if (maxSize_ > 0 && pool_.size() >= maxSize_) {
+            auto object = createObject();
+            if (!queue_.try_push(std::move(object))) {
                 break;
             }
-            pool_.push_back(createObject());
             totalCreated_.fetch_add(1, std::memory_order_relaxed);
         }
     }
 
     void shrink() noexcept {
-        std::lock_guard lock(mutex_);
-        pool_.clear();
-        pool_.shrink_to_fit();
+        std::unique_ptr<T> object;
+        while (queue_.try_pop(object)) {
+            // 对象析构释放
+        }
     }
 
     [[nodiscard]] auto poolSize() const -> size_t {
-        std::lock_guard lock(mutex_);
-        return pool_.size();
+        return queue_.size();
     }
 
     [[nodiscard]] auto activeCount() const -> size_t {
@@ -98,17 +91,13 @@ private:
 
     void releaseImpl(std::unique_ptr<T> object) {
         activeCount_.fetch_sub(1, std::memory_order_relaxed);
-        std::lock_guard lock(mutex_);
-        if (maxSize_ == 0 || pool_.size() < maxSize_) {
-            pool_.push_back(std::move(object));
-        }
+        // try_push 不阻塞；队列满时返回 false，对象由 unique_ptr 析构释放
+        queue_.try_push(std::move(object));
     }
 
-    std::vector<std::unique_ptr<T>> pool_;
-    mutable std::mutex mutex_;
+    tbb::concurrent_bounded_queue<std::unique_ptr<T>> queue_;
     ResetFunc resetFunc_;
     CreateFunc createFunc_;
-    size_t maxSize_;
     std::atomic<size_t> activeCount_{0};
     std::atomic<size_t> totalCreated_{0};
 };
