@@ -5,13 +5,12 @@ This directory contains all configuration files for the FastQTools project, orga
 ## Directory Structure
 
 ```
-config/
+build-config/
 ├── conan/              # Conan compiler profiles
 │   ├── profile-clang   # Clang + libc++（本地开发）
 │   ├── profile-clang-ci# Clang + libstdc++（CI）
 │   └── profile-gcc     # GCC 15 + libstdc++
 ├── cppcheck/           # Cppcheck static analysis
-│   ├── cppcheck.cfg    # Project configuration (paths, defines, platform)
 │   └── suppressions.txt# Known false-positive suppressions
 ├── dependencies/       # Conan dependency recipes
 │   └── conanfile.py    # All third-party dependency declarations
@@ -41,8 +40,13 @@ conan install build-config/dependencies/ -pr:h build-config/conan/profile-gcc   
 ### Cppcheck
 
 ```bash
-cppcheck --project=build-config/cppcheck/cppcheck.cfg \
+# 使用编译数据库（推荐，先构建以生成 compile_commands.json）
+cppcheck --project=build/clang-debug/compile_commands.json \
          --suppressions-list=build-config/cppcheck/suppressions.txt
+
+# 或直接扫描源码目录
+cppcheck --suppressions-list=build-config/cppcheck/suppressions.txt \
+         src include
 ```
 
 ### Include-What-You-Use
