@@ -4,9 +4,8 @@
  * @details 生成 FASTQ 文件的统计信息
  *
  * @author LessUp
- * @date 2023-10-05
- * @version 2.0
- * @copyright (c) 2023 LessUp. All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #include "stat_command.h"

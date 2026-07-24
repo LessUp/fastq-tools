@@ -3,9 +3,8 @@
  * @brief 统一的字符串-枚举转换实现
  *
  * @author LessUp
- * @date 2026-05-08
- * @version 2.0
- * @copyright (c) 2026 LessUp. All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #include "enum_parser.h"

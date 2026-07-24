@@ -21,7 +21,7 @@ auto ProcessingStatistics::toString() const -> std::string {
         << getFilterRate() * 100.0 << "%)\n";
     oss << "  修改读取数: " << modifiedReads << "\n";
     oss << "  错误读取数: " << errorReads << "\n";
-    oss << "  处理时间: " << std::fixed << std::setprecision(2) << processingTimeMs << " ms\n";
+    oss << "  处理时间: " << elapsedMs << " ms\n";
     oss << "  处理吞吐量: " << std::fixed << std::setprecision(2) << throughputMbps << " MB/s";
 
     return oss.str();

@@ -3,9 +3,8 @@
  * @brief ProcessingOptions 验证实现
  *
  * @author LessUp
- * @date 2026-05-08
- * @version 2.0
- * @copyright (c) 2026 LessUp. All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #include "fqtools/processing/processing_options.h"

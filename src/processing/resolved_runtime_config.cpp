@@ -4,9 +4,8 @@
  * @details 合并 runtime_policy.cpp 和 pipeline_execution_plan.cpp 的逻辑
  *
  * @author LessUp
- * @date 2026-05-08
- * @version 2.0
- * @copyright (c) 2026 LessUp. All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #include "processing/resolved_runtime_config.h"

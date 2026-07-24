@@ -28,13 +28,11 @@
 
 ## 简介
 
-FastQTools 是一个 C++23 并行流水线框架。它提供：
+FastQTools 是一个 C++23 并行流水线框架，当前面向 FASTQ 质控场景。它提供：
 
-- **通用的批处理执行层**：`ExecutionRuntime` + `ExecutionBackend`（Sequential / oneTBB），通过 Adapter 模式接入任意计算逻辑，不绑定特定数据格式。
-- **可扩展的算子体系**：`Predicate`（过滤器）、`Mutator`（修改器）接口，通过策略模式自由组合，依赖注入便于测试。
+- **批处理执行层**：`ExecutionRuntime` + `ExecutionBackend`（Sequential / oneTBB），执行后端不感知数据格式，通过 Adapter 契约接入具体计算逻辑；当前 Adapter 面向 `FastqBatch`，替换批类型即可接入其他格式。
+- **可扩展的算子体系**：`Predicate`（过滤器）、`Mutator`（修改器）接口，策略模式组合，依赖注入便于测试。
 - **FASTQ 质控作为首要应用**：`stat`（统计）和 `filter`（过滤修剪）两个命令，覆盖测序数据日常 QC 的核心需求。
-
-如果你需要一个可嵌入、可审计、高性能的 C++ 并行批处理框架——或者直接拿来处理 FASTQ——这个仓库就是参考实现。
 
 ## 架构概览
 
@@ -51,7 +49,7 @@ FastQTools 是一个 C++23 并行流水线框架。它提供：
 |---|---|---|
 | ExecutionRuntime | 接收任意 Adapter，选择后端，管理生命周期 | 实现 Adapter 契约 |
 | ExecutionBackend | 具体调度框架（Sequential / oneTBB） | 新增 Backend 实现 |
-| ExecutionOperation | 类型擦除的批处理契约 | 不感知数据类型 |
+| ExecutionOperation | 类型擦除的批结果契约（当前批类型为 FastqBatch） | 替换批类型可接入其他格式 |
 | Pipeline（FASTQ） | FASTQ 专用管道，注册 Predicate / Mutator | 实现接口注入 |
 
 ### 核心要点
@@ -82,7 +80,7 @@ FastQTools 不是黑盒。你可以：
 - **自定义过滤/修改逻辑**：实现 `ReadPredicateInterface` 或 `ReadMutatorInterface`，通过 `Pipeline::addReadPredicate()` / `addReadMutator()` 注册。
 - **自定义 I/O**：实现 `IReader` / `IWriter`，通过 `Pipeline::setReader()` / `setWriter()` 注入。
 - **自定义后端**：实现 `ExecutionBackend`，接入你自己的调度框架。
-- **接入其他数据格式**：实现 Adapter 契约（`makeResult` / `processBatch` / `afterCommit` / `merge`），复用 `ExecutionRuntime`。
+- **接入其他数据格式**：替换 `ExecutionOperation` 的批类型参数，复用 `ExecutionRuntime` 和 `ExecutionBackend`。
 
 ```cpp
 // 自定义质量过滤器示例
@@ -159,7 +157,7 @@ cd fastq-tools
 
 ## 测试与质量保证
 
-CI（GitHub Actions 手动触发）覆盖：
+CI（GitHub Actions，push/PR 自动触发 format + build-and-test；sanitizer 仅手动触发）覆盖：
 
 - 静态检查：clang-format、clang-tidy、cppcheck
 - 多编译器：GCC + Clang，Release 模式
@@ -177,7 +175,7 @@ CI（GitHub Actions 手动触发）覆盖：
 | Adapter 推断 | 不支持（需显式指定） | 内置自动检测 | 不支持 |
 | 可视化 | 无 | HTML + JSON 报告 | 交互式 HTML |
 | 并行模型 | tbb::parallel_pipeline | 线程池 | 单线程 |
-| 可嵌入 | 库 API + 接口注入 | 命令行工具 | 命令行工具 |
+| 可嵌入 | 库 API（Pipeline / Calculator） | 命令行工具 | 命令行工具 |
 | 语言 | C++23 | C++11 | Java |
 
 需要自动 adapter 检测或可视化报告？请用 fastp 或 fastqc。需要确定性、可复现、高性能的统计与过滤——或者想基于并行流水线框架构建自己的批处理应用？请用 FastQTools。

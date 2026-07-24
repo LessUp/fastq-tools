@@ -4,9 +4,8 @@
  * @details 提供类型安全的字符串到枚举的转换，消除分散的转换逻辑。
  *
  * @author LessUp
- * @date 2026-05-08
- * @version 2.0
- * @copyright (c) 2026 LessUp. All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #pragma once

@@ -3,11 +3,9 @@
  * @brief 处理管道实现
  * @details 实现 FastQ 数据处理管道的串行和并行处理逻辑
  *
- * @author FastQTools Team
- * @date 2026
- * @version 2.0
- * @copyright Copyright (c) 2026 FastQTools
- * @license MIT License
+ * @author LessUp
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #include "processing/processing_pipeline.h"
@@ -105,7 +103,7 @@ auto ProcessingPipeline::run() -> ProcessingStatistics {
             "ProcessingPipeline: custom reader must be reset before rerunning");
     }
 
-    ExecutionRuntimePlan runtimePlan;
+    ExecutionRuntimeRequest runtimePlan;
     runtimePlan.inputPath = inputPath_;
     if (!outputPath_.empty()) {
         runtimePlan.outputPath = outputPath_;
@@ -140,7 +138,6 @@ auto ProcessingPipeline::run() -> ProcessingStatistics {
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
     stats.elapsedMs = static_cast<uint64_t>(duration);
-    stats.processingTimeMs = static_cast<double>(stats.elapsedMs);
     if (stats.elapsedMs > 0) {
         stats.throughputMbps = (static_cast<double>(stats.outputBytes) / 1024.0 / 1024.0) /
             (static_cast<double>(stats.elapsedMs) / 1000.0);
@@ -149,7 +146,7 @@ auto ProcessingPipeline::run() -> ProcessingStatistics {
 }
 
 auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats)
-    -> bool {
+    -> void {
     stats.inputBytes += batch.buffer().size();
     auto& records = batch.records();
     const size_t totalInBatch = records.size();
@@ -195,7 +192,5 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch, ProcessingStati
     stats.filteredReads += (totalInBatch - passedCount);
     stats.modifiedReads += modifiedCount;
     records.resize(passedCount);
-
-    return true;
 }
 }  // namespace fq::processing

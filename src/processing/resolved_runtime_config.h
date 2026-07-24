@@ -5,9 +5,8 @@
  *          消除多层配置转换，提高局部性。
  *
  * @author LessUp
- * @date 2026-05-08
- * @version 2.0
- * @copyright (c) 2026 LessUp. All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #pragma once

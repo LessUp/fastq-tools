@@ -30,8 +30,6 @@ inline std::atomic<Level> currentLevel{Level::Info};
 /// @brief 日志配置选项
 struct LogOptions {
     std::string level = "info";  ///< 日志级别: trace, debug, info, warn, error, critical, off
-    std::string pattern;         ///< 保留兼容，当前实现忽略
-    bool colored = true;         ///< 保留兼容，当前实现忽略
 };
 
 /// @brief 解析日志级别字符串

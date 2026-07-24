@@ -2,11 +2,10 @@
  * @file fq_statistic.cpp
  * @brief FASTQ 统计功能实现文件
  * @details 包含 FqStatistic 类及相关统计方法的实现，支持 TBB 并行统计。
- * @author FastQTools Team
- * @date 2025-08-01
- * @version 2.0
- * @copyright Copyright (c) 2025 FastQTools
- * @license MIT License
+ *
+ * @author LessUp
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #include "statistics/fq_statistic.h"
@@ -127,7 +126,7 @@ void FastqStatisticCalculator::run() {
                       options_.inputFastqPath);
 
     processing::ExecutionRuntime runtime;
-    processing::ExecutionRuntimePlan plan;
+    processing::ExecutionRuntimeRequest plan;
     plan.inputPath = options_.inputFastqPath;
     plan.options = options_.processing;
 

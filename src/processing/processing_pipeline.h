@@ -10,32 +10,11 @@ namespace fq::processing {
 class ReadMutatorInterface;
 class ReadPredicateInterface;
 
-/**
- * @brief FastQ 数据处理管道实现类
- * @details 该类实现了 FastQ 文件的完整处理流程，包括：
- *          - 文件读取和解析
- *          - 数据过滤和转换
- *          - 并行处理支持
- *          - 结果写入和统计
- *
- * 支持串行和并行（TBB）两种处理模式，可根据配置自动选择最优策略
- *
- * @invariant 配置设置必须在运行前完成
- * @warning 处理大文件时建议使用并行模式以提高性能
- */
+/// @brief FastQ 数据处理管道实现类
+/// @details 支持串行和并行（TBB）两种处理模式，根据配置自动选择。
 class ProcessingPipeline {
 public:
-    /**
-     * @brief 默认构造函数
-     * @details 初始化处理管道，设置默认配置
-     * @post 管道处于就绪状态，可以接受配置
-     */
     ProcessingPipeline();
-
-    /**
-     * @brief 析构函数
-     * @details 清理所有资源，确保文件句柄正确关闭
-     */
     ~ProcessingPipeline();
 
     void setInputPath(const std::string& inputPath);
@@ -48,11 +27,8 @@ public:
     auto run() -> ProcessingStatistics;
 
 private:
-    /**
-     * @brief 处理数据批次
-     * @details 对一批 FastQ 数据进行处理，应用所有修改器和过滤器
-     */
-    auto processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats) -> bool;
+    /// @brief 对一批数据应用所有修改器和过滤器
+    auto processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats) -> void;
 
     std::string inputPath_;                                            ///< 输入文件路径
     std::string outputPath_;                                           ///< 输出文件路径

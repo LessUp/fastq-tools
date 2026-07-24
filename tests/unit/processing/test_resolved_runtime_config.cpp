@@ -4,9 +4,8 @@
  * @details 合并 test_runtime_policy.cpp 和 test_pipeline_execution_plan.cpp 的测试
  *
  * @author LessUp
- * @date 2026-05-08
- * @version 2.0
- * @copyright (c) 2026 LessUp. All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #include "processing/resolved_runtime_config.h"

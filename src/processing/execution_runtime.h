@@ -28,8 +28,6 @@ struct ExecutionRuntimeRequest {
     ExecutionBackendPreference backend = ExecutionBackendPreference::Automatic;
 };
 
-using ExecutionRuntimePlan = ExecutionRuntimeRequest;
-
 template <typename Result>
 struct ExecutionRuntimeOutcome {
     Result result;

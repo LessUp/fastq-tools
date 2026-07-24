@@ -3,9 +3,9 @@
  * @brief ObjectPool 对象池性能基准测试
  * @details 验证对象池在高频借出/归还场景下的性能表现
  *
- * @author FastQTools Team
- * @date 2025
- * @copyright Copyright (c) 2025 FastQTools
+ * @author LessUp
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #include <benchmark/benchmark.h>

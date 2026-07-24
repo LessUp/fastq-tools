@@ -1,10 +1,10 @@
 /**
  * @file command_interface.h
  * @brief 定义了命令行命令的抽象接口。
+ *
  * @author LessUp
- * @version 1.0
- * @date 2025-07-31
- * @copyright Copyright (c) 2025 LessUp
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #pragma once

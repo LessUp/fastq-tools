@@ -3,11 +3,9 @@
  * @brief 统计结果输出器
  * @details 将 FqStatisticResult 格式化输出到流，支持文本报告和签名报告。
  *
- * @author FastQTools Team
- * @date 2026
- * @version 2.0
- * @copyright Copyright (c) 2026 FastQTools
- * @license MIT License
+ * @author LessUp
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #pragma once

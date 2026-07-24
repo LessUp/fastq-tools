@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.28)
 project(FastQTools
     LANGUAGES CXX
     VERSION 4.0.0
-    DESCRIPTION "A modern toolkit for FASTQ file processing"
+    DESCRIPTION "C++23 parallel pipeline framework for FASTQ quality control"
     HOMEPAGE_URL "https://github.com/LessUp/fastq-tools"
 )
 

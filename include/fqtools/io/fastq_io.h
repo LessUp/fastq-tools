@@ -8,9 +8,8 @@
  * - FastqBatch: 批量 FASTQ 记录的容器
  *
  * @author LessUp
- * @date 2023-10-05
- * @version 1.0
- * @copyright (c) 2023 LessUp. All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #pragma once

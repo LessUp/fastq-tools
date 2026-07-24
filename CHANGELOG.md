@@ -9,6 +9,22 @@ This root changelog is the maintained project history. Older granular work logs 
 
 ---
 
+## [Unreleased]
+
+### Changed
+- Consolidated the maintained repository history into this file and retired the legacy `changelog/` directory.
+- Retired docs-site changelog publication in favor of GitHub Releases plus the root `CHANGELOG.md`.
+
+### Architecture and runtime
+- Continued the post-v3.1.0 architecture cleanup with injectable I/O abstractions, shared CLI/runtime configuration helpers, centralized statistics reporting, and clearer execution-runtime seams.
+- Reduced shallow wrappers and false seams, tightened error-handling boundaries, and fixed follow-up CI workflow regressions plus a CLI test regression during the refactor cycle.
+
+### Documentation and project presentation
+- Rebuilt the documentation whitepaper surface with stronger information architecture, bilingual narrative pages, theme-aware diagrams, research and algorithms routing fixes, and responsive homepage/layout follow-ups.
+- Cleaned publication rules so internal asset README files are not treated as user-facing documentation.
+
+---
+
 ## [4.0.0] - 2026-07-17
 
 FastQTools v4 is an intentional breaking release that narrows the public surface and makes runtime/resource contracts explicit.
@@ -30,22 +46,6 @@ FastQTools v4 is an intentional breaking release that narrows the public surface
 - Rebuilt production benchmarks around a fixed seed=42, 1M×150 bp dataset, real Reader/Writer/Pipeline/StatisticWorker code, and five repetitions with median/CV summaries.
 - Writer measurements cover plain and gzip-1/6/9, each with single and batch APIs; unstable WSL2 clock data did not meet the evidence threshold for speculative Writer/statistics optimization.
 - Manual CI runs format, static analysis, GCC/Clang, ASan, TSan, UBSan, and coverage jobs when dispatched from GitHub Actions.
-
----
-
-## [Unreleased]
-
-### Changed
-- Consolidated the maintained repository history into this file and retired the legacy `changelog/` directory.
-- Retired docs-site changelog publication in favor of GitHub Releases plus the root `CHANGELOG.md`.
-
-### Architecture and runtime
-- Continued the post-v3.1.0 architecture cleanup with injectable I/O abstractions, shared CLI/runtime configuration helpers, centralized statistics reporting, and clearer execution-runtime seams.
-- Reduced shallow wrappers and false seams, tightened error-handling boundaries, and fixed follow-up CI workflow regressions plus a CLI test regression during the refactor cycle.
-
-### Documentation and project presentation
-- Rebuilt the documentation whitepaper surface with stronger information architecture, bilingual narrative pages, theme-aware diagrams, research and algorithms routing fixes, and responsive homepage/layout follow-ups.
-- Cleaned publication rules so internal asset README files are not treated as user-facing documentation.
 
 ---
 

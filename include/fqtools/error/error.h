@@ -1,10 +1,10 @@
 /**
  * @file error.h
  * @brief 定义了项目统一的异常处理框架。
+ *
  * @author LessUp
- * @version 1.0
- * @date 2025-07-31
- * @copyright Copyright (c) 2025 LessUp
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #pragma once

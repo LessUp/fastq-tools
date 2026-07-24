@@ -11,7 +11,7 @@ FastQTools 是一个 C++23 FASTQ 质控工具集，覆盖测序数据日常 QC �
 - **窄而深，而非宽而浅。** 与 fastp（全能 QC）、seqkit（全能工具箱）不同，FastQTools 只做 stat + filter + 库 API，但把这三件事的内核做到现代 C++23 的工程上限。
 - **把预算投到看不见的地方。** 零拷贝、对象池、流水线保序、消毒剂 CI——这些是用户感知不到、但决定工程质量的细节。
 - **约束即安全。** `FastqRecord` 不能逃逸批次、`FastqBatch::clear()` 不释放内存、流水线首尾串行——刻意约束换来零拷贝、确定顺序与有界内存。
-- **CI 是质量合同。** 通过 GitHub Actions 页面手动触发时运行 GCC + Clang + ASan + TSan + UBSan + 静态分析，不是可选的"额外"；fuzzer target 位于 `tools/fuzz/`（CI 集成待定）。
+- **CI 是质量合同。** push/PR 自动触发 format + build-and-test，sanitizer 矩阵仅手动触发；不是可选的"额外"。fuzzer target 位于 `tools/fuzz/`（CI 集成待定）。
 
 ### 与同类工具的定位
 
@@ -191,7 +191,7 @@ I/O seam 直接承载 runtime 需要的完整契约，不再探测具体类型�
 
 ### 7. 质量门：CI 矩阵 + 消毒剂 + 模糊测试
 
-CI（`.github/workflows/ci.yml`）通过 GitHub Actions 页面手动触发，运行：
+CI（`.github/workflows/ci.yml`）push/PR 自动触发 format + build-and-test，sanitizer 矩阵仅手动触发，运行：
 - clang-format 格式检查
 - clang-tidy + cppcheck 静态分析
 - GCC Release / Clang Release / Clang ASan / Clang TSan / Clang UBSan 五矩阵构建 + 测试

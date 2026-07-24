@@ -2,10 +2,10 @@
  * @file error.cpp
  * @brief 错误处理模块实现文件
  * @details 实现了 FastQTools 的错误处理与异常类，包括错误分类、严重性和消息生成。
- * @author FastQTools Team
- * @date 2025-08-01
- * @version 1.0
- * @copyright Copyright (c) 2025 FastQTools
+ *
+ * @author LessUp
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #include "fqtools/error/error.h"

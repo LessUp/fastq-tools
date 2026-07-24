@@ -2,10 +2,10 @@
  * @file main.cpp
  * @brief FastQTools 命令行主程序入口
  * @details 负责解析命令行参数，分发子命令，并输出帮助信息。
- * @author FastQTools Team
- * @date 2025-08-01
- * @version 2.0
- * @copyright Copyright (c) 2025 FastQTools
+ *
+ * @author LessUp
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #include <iostream>
@@ -26,17 +26,6 @@ constexpr int kExitRuntimeError = 1;
 constexpr int kExitParameterError = 2;
 constexpr int kExitFormatError = 3;
 constexpr int kExitIoError = 4;
-
-void printLogo() {
-    std::cout << R"(
-    ███████╗ █████╗ ███████╗████████╗ ██████╗ ████████╗ ██████╗  ██████╗ ██║     ███████╗
-    ██╔════╝██╔══██╗██╔════╝╚══██╔══╝██╔═══██╗╚══██╔══╝██╔═══██╗██╔═══██╗██║     ██╔════╝
-    █████╗  ███████║███████╗   ██║   ██║   ██║   ██║   ██║   ██║██║   ██║██║     ███████╗
-    ██╔══╝  ██╔══██║╚════██║   ██║   ██║   ██║   ██║   ██║   ██║██║   ██║██║     ╚════██║
-    ██║     ██║  ██║███████║   ██║   ╚██████╔╝   ██║   ╚██████╔╝╚██████╔╝███████╗███████║
-    ╚═╝     ╚═╝  ╚═╝╚══════╝   ╚═╝    ╚══▀▀═╝    ╚═╝    ╚═════╝  ╚═════╝  ╚══════╝╚══════╝
-        )" << '\n';
-}
 
 auto parseGlobalOptions(int argc, char* argv[], std::vector<char*>& subArgs)
     -> std::pair<std::string, std::string> {
@@ -75,15 +64,8 @@ auto main(int argc, char* argv[]) -> int {
         std::vector<char*> subArgs;
         auto [logLevel, subcommand] = parseGlobalOptions(argc, argv, subArgs);
 
-        const bool quietMode = (logLevel == "error");
-
         // 初始化日志
         fq::logging::setLevel(logLevel);
-
-        // 打印项目 Logo
-        if (!quietMode) {
-            printLogo();
-        }
 
         // 创建命令注册表
         auto registry = fq::cli::createDefaultCommandRegistry();

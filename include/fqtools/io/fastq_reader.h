@@ -4,9 +4,8 @@
  * @details 提供高性能的 FASTQ 文件读取功能，支持 gzip 压缩文件自动解压。
  *
  * @author LessUp
- * @date 2023-10-05
- * @version 1.0
- * @copyright (c) 2023 LessUp. All rights reserved.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #pragma once
