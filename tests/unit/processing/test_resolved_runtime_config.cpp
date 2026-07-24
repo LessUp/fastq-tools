@@ -3,9 +3,6 @@
  * @brief 统一运行时配置的单元测试
  * @details 合并 test_runtime_policy.cpp 和 test_pipeline_execution_plan.cpp 的测试
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #include "processing/resolved_runtime_config.h"

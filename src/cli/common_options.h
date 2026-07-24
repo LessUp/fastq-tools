@@ -4,9 +4,6 @@
  * @details 定义 stat 和 filter 命令共享的 CLI 参数，
  *          消除重复代码，提高维护性。
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #pragma once

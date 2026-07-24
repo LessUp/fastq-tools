@@ -3,9 +3,6 @@
  * @brief FASTQ 统计功能实现文件
  * @details 包含 FqStatistic 类及相关统计方法的实现，支持 TBB 并行统计。
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #include "statistics/fq_statistic.h"
@@ -16,12 +13,7 @@
 
 #include <algorithm>
 #include <cerrno>
-#include <filesystem>
 #include <fstream>
-#include <iomanip>
-#include <iterator>
-#include <memory>
-#include <numeric>
 #include <utility>
 #include <vector>
 

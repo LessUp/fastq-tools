@@ -3,9 +3,6 @@
  * @brief 统一的字符串-枚举转换工具
  * @details 提供类型安全的字符串到枚举的转换，消除分散的转换逻辑。
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #pragma once

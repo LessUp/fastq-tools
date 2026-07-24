@@ -20,7 +20,7 @@
 
 - **快照与叙事分离**：`benchmark-reports/` 只放数据，不写分析；分析写进 `optimizations/` 并链接快照。
 - **同口径对比**：所有快照必须引用 `environment.md` 中的基线；偏离基线需在快照头注明。
-- **文件命名**：`YYYY-MM-DD-<kebab-case-slug>.md`，与 `postmortems/` 一致。
+- **文件命名**：`YYYY-MM-DD-<kebab-case-slug>.md`。
 - **快照归档路径**：`benchmark-reports/<scenario>/<YYYY-MM-DD>/`，内含 `summary.md` 与原始输出文件。
 - **优化条目必填**：基线快照链接、优化后快照链接、同口径对比表。
 - **中文撰写**。

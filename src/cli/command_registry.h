@@ -3,9 +3,6 @@
  * @brief 命令注册表
  * @details 统一管理 CLI 子命令的注册和分发，消除分散的命令注册代码。
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #pragma once

@@ -157,13 +157,7 @@ void LengthTrimmer::process(fq::io::FastqRecord& read) {
                 newLen = targetLength_;
             }
             break;
-        case TrimStrategy::FromStart:  // Trim first N bases? No, name implies "Keep from start"?
-            // Usually "HeadCrop" removes first N.
-            // But "FromStart" strategy here likely means "Trim N bases from start".
-            // Wait, target_length usually means "Resulting length".
-            // If strategy is "FromStart", maybe it means "Keep the end, remove start so length is
-            // N"? Or "Remove N bases from start"? Let's assume "Trim to length N by removing from
-            // start" (Keep last N)
+        case TrimStrategy::FromStart:  // 保留末尾 N 个碱基
             if (len > targetLength_) {
                 start = len - targetLength_;
                 newLen = targetLength_;

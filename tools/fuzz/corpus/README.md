@@ -21,8 +21,8 @@ cmake --build build-fuzz
 # Run parser fuzzer
 ./build-fuzz/fuzzers/fastq_parser_fuzzer tools/fuzz/corpus/ -max_len=4096
 
-# Run record fuzzer
-./build-fuzz/fuzzers/fastq_record_fuzzer tools/fuzz/corpus/ -max_len=1024
+# Run mutator fuzzer
+./build-fuzz/fuzzers/fastq_mutator_fuzzer tools/fuzz/corpus/ -max_len=1024
 ```
 
 ## Adding New Seeds

@@ -2,9 +2,6 @@
  * @file command_interface.h
  * @brief 定义了命令行命令的抽象接口。
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #pragma once

@@ -3,9 +3,6 @@
  * @brief 处理管道实现
  * @details 实现 FastQ 数据处理管道的串行和并行处理逻辑
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #include "processing/processing_pipeline.h"

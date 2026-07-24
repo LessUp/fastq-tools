@@ -4,7 +4,7 @@
 
 ## 项目概述
 
-**FastQTools** — C++23 高性能 FASTQ 处理工具，面向生物信息学 QC 工作流。工程能力展示项目。
+**FastQTools** — C++23 并行流水线框架，FASTQ 质控是它的首要应用。工程能力展示项目。
 
 ### 技术栈
 
@@ -14,7 +14,7 @@
 | 并行 | Intel oneTBB | `tbb::parallel_pipeline` 流水线并行 |
 | 构建 | CMake 3.28+ + Ninja | 增量构建 |
 | 包管理 | Conan 2.x | 依赖管理 |
-| 测试 | GoogleTest 1.14+ | 单元/集成/E2E |
+| 测试 | GoogleTest 1.17 | 单元/集成/E2E |
 | CLI | cxxopts | 参数解析 |
 
 ## 构建命令

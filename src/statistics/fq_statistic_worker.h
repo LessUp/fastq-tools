@@ -3,9 +3,6 @@
  * @brief FASTQ 统计信息工作器类定义
  * @details 该文件定义了 FASTQ 统计信息工作器类，用于处理 FASTQ 记录批次并生成统计信息
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #pragma once

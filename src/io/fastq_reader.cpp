@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <cstring>
 #include <limits>
-#include <stdexcept>
 #include <utility>
 
 #include <fcntl.h>
@@ -15,9 +14,6 @@
 #include <zlib.h>
 
 #include <fmt/format.h>
-
-#ifdef __linux__
-#endif
 
 namespace fq::io {
 

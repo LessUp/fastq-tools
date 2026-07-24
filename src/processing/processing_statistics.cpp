@@ -1,30 +1,26 @@
-/**
- * @file processing_statistics.cpp
- * @brief 处理统计信息实现
- */
-
 #include "fqtools/processing/processing_pipeline_interface.h"
 
-#include <iomanip>
-#include <sstream>
+#include <fmt/format.h>
 
 namespace fq::processing {
 
 auto ProcessingStatistics::toString() const -> std::string {
-    std::ostringstream oss;
-
-    oss << "处理统计信息:\n";
-    oss << "  总读取数: " << totalReads << "\n";
-    oss << "  通过读取数: " << passedReads << " (" << std::fixed << std::setprecision(2)
-        << getPassRate() * 100.0 << "%)\n";
-    oss << "  过滤读取数: " << filteredReads << " (" << std::fixed << std::setprecision(2)
-        << getFilterRate() * 100.0 << "%)\n";
-    oss << "  修改读取数: " << modifiedReads << "\n";
-    oss << "  错误读取数: " << errorReads << "\n";
-    oss << "  处理时间: " << elapsedMs << " ms\n";
-    oss << "  处理吞吐量: " << std::fixed << std::setprecision(2) << throughputMbps << " MB/s";
-
-    return oss.str();
+    return fmt::format(
+        "处理统计信息:\n"
+        "  总读取数: {}\n"
+        "  通过读取数: {} ({:.2f}%)\n"
+        "  过滤读取数: {} ({:.2f}%)\n"
+        "  修改读取数: {}\n"
+        "  处理时间: {} ms\n"
+        "  处理吞吐量: {:.2f} MB/s",
+        totalReads,
+        passedReads,
+        getPassRate() * 100.0,
+        filteredReads,
+        getFilterRate() * 100.0,
+        modifiedReads,
+        elapsedMs,
+        throughputMbps);
 }
 
 }  // namespace fq::processing

@@ -46,7 +46,9 @@ Options:
 
 Available Fuzzers:
   parser                    FASTQ parser fuzzer
-  record                    FASTQ record operations fuzzer
+  mutator                   FASTQ mutator fuzzer
+  predicate                 FASTQ predicate fuzzer
+  statistics                FASTQ statistics fuzzer
   all                       Run all fuzzers (default)
 
 Examples:
@@ -97,7 +99,7 @@ while [[ $# -gt 0 ]]; do
             print_usage
             exit 0
             ;;
-        parser|record|all)
+        parser|mutator|predicate|statistics|all)
             FUZZER_NAME="$1"
             shift
             ;;
@@ -240,12 +242,30 @@ case "$FUZZER_NAME" in
             exit 1
         fi
         ;;
-    record)
-        if [[ -x "${FUZZER_DIR}/fastq_record_fuzzer" ]]; then
-            run_single_fuzzer "${FUZZER_DIR}/fastq_record_fuzzer" || ((FUZZERS_FAILED++))
+    mutator)
+        if [[ -x "${FUZZER_DIR}/fastq_mutator_fuzzer" ]]; then
+            run_single_fuzzer "${FUZZER_DIR}/fastq_mutator_fuzzer" || ((FUZZERS_FAILED++))
             ((FUZZERS_RUN++))
         else
-            log_error "Record fuzzer not found"
+            log_error "Mutator fuzzer not found"
+            exit 1
+        fi
+        ;;
+    predicate)
+        if [[ -x "${FUZZER_DIR}/fastq_predicate_fuzzer" ]]; then
+            run_single_fuzzer "${FUZZER_DIR}/fastq_predicate_fuzzer" || ((FUZZERS_FAILED++))
+            ((FUZZERS_RUN++))
+        else
+            log_error "Predicate fuzzer not found"
+            exit 1
+        fi
+        ;;
+    statistics)
+        if [[ -x "${FUZZER_DIR}/fastq_statistics_fuzzer" ]]; then
+            run_single_fuzzer "${FUZZER_DIR}/fastq_statistics_fuzzer" || ((FUZZERS_FAILED++))
+            ((FUZZERS_RUN++))
+        else
+            log_error "Statistics fuzzer not found"
             exit 1
         fi
         ;;

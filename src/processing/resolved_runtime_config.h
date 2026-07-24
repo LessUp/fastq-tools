@@ -4,9 +4,6 @@
  * @details 合并 RuntimePolicy 和 PipelineExecutionPlan，提供完整的运行时配置。
  *          消除多层配置转换，提高局部性。
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #pragma once

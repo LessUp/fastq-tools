@@ -2,9 +2,6 @@
  * @file stat_command.h
  * @brief 定义了 'stat' 子命令。
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #pragma once

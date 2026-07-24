@@ -3,9 +3,6 @@
  * @brief FastQTools 命令行主程序入口
  * @details 负责解析命令行参数，分发子命令，并输出帮助信息。
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #include <iostream>

@@ -2,9 +2,6 @@
  * @file command_registry.cpp
  * @brief 命令注册表实现
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #include "command_registry.h"

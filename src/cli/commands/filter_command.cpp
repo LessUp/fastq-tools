@@ -3,9 +3,6 @@
  * @brief filter 子命令实现
  * @details 过滤和修剪 FASTQ 文件
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #include "filter_command.h"

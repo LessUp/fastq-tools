@@ -1,10 +1,6 @@
 /**
  * @file error.h
- * @brief 定义了项目统一的异常处理框架。
- *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
+ * @brief 统一异常框架：FastQException 基类与 IOError/FormatError/ConfigurationError 子类
  */
 
 #pragma once
@@ -15,7 +11,6 @@
 
 namespace fq::error {
 
-/// @brief 错误类别枚举。
 enum class ErrorCategory {
     IO = 1,
     Format = 2,
@@ -24,22 +19,12 @@ enum class ErrorCategory {
     Resource = 5,
     Configuration = 6
 };
-/// @brief 错误严重性枚举。
+
 enum class ErrorSeverity { Info = 1, Warning = 2, Error = 3, Critical = 4 };
 
-/**
- * @brief 项目所有异常的基类。
- */
+/// 项目所有异常的基类
 class FastQException : public std::exception {
 public:
-    /**
-     * @brief 构造函数
-     * @details 使用指定的错误类别、严重性和消息创建 FastQException 实例
-     *
-     * @param category 错误类别
-     * @param severity 错误严重性
-     * @param message 错误消息
-     */
     FastQException(ErrorCategory category, ErrorSeverity severity, std::string message);
 
     [[nodiscard]] auto category() const noexcept -> ErrorCategory;
@@ -59,44 +44,24 @@ private:
     void formatWhatMessage();
 };
 
-/// @brief 表示 I/O 错误的异常。
+/// I/O 错误（文件打开、读写、关闭失败）
 class IOError : public FastQException {
 public:
-    /**
-     * @brief 构造函数
-     * @details 使用文件路径和错误代码创建 IOError 实例
-     *
-     * @param file_path 文件路径
-     * @param error_code 错误代码，默认为0
-     */
     explicit IOError(std::string_view filePath, int errorCode = 0);
 };
 
-/// @brief 表示文件格式错误的异常。
+/// FASTQ 格式错误（记录结构损坏、长度不匹配）
 class FormatError : public FastQException {
 public:
-    /**
-     * @brief 构造函数
-     * @details 使用错误消息创建 FormatError 实例
-     *
-     * @param message 错误消息
-     */
     explicit FormatError(std::string_view message);
 };
 
-/// @brief 表示配置错误的异常。
+/// 配置错误（参数无效、内存预算不足）
 class ConfigurationError : public FastQException {
 public:
-    /**
-     * @brief 构造函数
-     * @details 使用错误消息创建 ConfigurationError 实例
-     *
-     * @param message 错误消息
-     */
     explicit ConfigurationError(std::string_view message);
 };
 
-// Convenience Macros
 #define FQ_THROW_IO_ERROR(filePath, errorCode) throw fq::error::IOError(filePath, errorCode)
 #define FQ_THROW_FORMAT_ERROR(message) throw fq::error::FormatError(message)
 #define FQ_THROW_CONFIG_ERROR(message) throw fq::error::ConfigurationError(message)

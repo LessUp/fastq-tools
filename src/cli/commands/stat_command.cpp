@@ -3,9 +3,6 @@
  * @brief stat 子命令实现
  * @details 生成 FASTQ 文件的统计信息
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #include "stat_command.h"

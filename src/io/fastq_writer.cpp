@@ -8,7 +8,6 @@
 #include <cerrno>
 #include <cstring>
 #include <filesystem>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -16,9 +15,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <zlib.h>
-
-#ifdef __linux__
-#endif
 
 namespace fq::io {
 

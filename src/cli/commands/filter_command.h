@@ -2,9 +2,6 @@
  * @file filter_command.h
  * @brief 定义了 'filter' 子命令。
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #pragma once

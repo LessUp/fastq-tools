@@ -195,7 +195,7 @@ CI（`.github/workflows/ci.yml`）push/PR 自动触发 format + build-and-test�
 - clang-format 格式检查
 - clang-tidy + cppcheck 静态分析
 - GCC Release / Clang Release / Clang ASan / Clang TSan / Clang UBSan 五矩阵构建 + 测试
-- fuzzer target 在 `tools/fuzz/`（fastq_parser_fuzzer、fastq_record_fuzzer），尚未接入 CI
+- fuzzer target 在 `tools/fuzz/`（fastq_parser_fuzzer 等），尚未接入 CI
 
 **为什么**：C++ 内存安全是核心风险。ASan 在 CI 里常态化跑，能在合并前抓到越界和 UAF。fuzzer target 针对解析器入口，因为 FASTQ 输入是外部不可信数据；可用 libFuzzer 构建在本地运行。静态分析抓 API 误用和现代 C++ 反模式。
 

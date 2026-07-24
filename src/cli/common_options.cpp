@@ -2,9 +2,6 @@
  * @file common_options.cpp
  * @brief CLI 共享参数实现
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #include "common_options.h"

@@ -2,9 +2,6 @@
  * @file processing_options.cpp
  * @brief ProcessingOptions 验证实现
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #include "fqtools/processing/processing_options.h"

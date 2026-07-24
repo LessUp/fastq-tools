@@ -4,9 +4,6 @@
  * @details 该文件定义了 FASTQ 统计信息管理器类，用于管理完整的 FASTQ 统计信息生成过程，
  *          利用 TBB 管道来提高性能
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #pragma once

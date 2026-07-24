@@ -2,9 +2,6 @@
  * @file enum_parser.cpp
  * @brief 统一的字符串-枚举转换实现
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #include "enum_parser.h"

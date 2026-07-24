@@ -3,9 +3,6 @@
  * @brief 统一运行时配置的实现
  * @details 合并 runtime_policy.cpp 和 pipeline_execution_plan.cpp 的逻辑
  *
- * @author LessUp
- *
- * SPDX-License-Identifier: MIT
  */
 
 #include "processing/resolved_runtime_config.h"
