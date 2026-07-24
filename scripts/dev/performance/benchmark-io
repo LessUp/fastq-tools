@@ -1,45 +1,34 @@
 #!/bin/bash
+# 快速 I/O 基准测试：用 time 粗测 Reader/Writer 吞吐
+# 精确基准请用 tools/benchmark/ 下的 Google Benchmark 套件
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../../lib/common.sh"
 
-# Compile benchmark tool
-log_info "Building FastQTools..."
-if [ -f "build/Release/generators/conan_toolchain.cmake" ]; then
-    cmake -B build -DCMAKE_TOOLCHAIN_FILE=$(pwd)/build/Release/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
-else
-    cmake -B build -DCMAKE_BUILD_TYPE=Release
-fi
-cmake --build build -j$(nproc)
+BUILD_DIR="${BUILD_DIR:-build/clang-release}"
+BINARY="$BUILD_DIR/FastQTools"
 
-# Create dummy input data if not exists (needs some size to be useful)
-TEST_FILE="test_input.fq"
-if [ ! -f "$TEST_FILE" ]; then
-    log_info "Generating test data..."
-    # Generate ~50MB of FASTQ-like data
-    for i in {1..200000}; do
-        echo "@READ_$i" >> $TEST_FILE
-        echo "AGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCT" >> $TEST_FILE
-        echo "+" >> $TEST_FILE
-        echo "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII" >> $TEST_FILE
-    done
+if [ ! -x "$BINARY" ]; then
+    log_error "找不到 $BINARY，请先运行: ./scripts/core/build"
+    exit 1
 fi
+
+# 生成测试数据（如不存在）
+TEST_FILE="test_input.fq"
 COMPRESSED_INPUT="test_input.fq.gz"
 if [ ! -f "$COMPRESSED_INPUT" ]; then
-    gzip -c $TEST_FILE > $COMPRESSED_INPUT
+    log_info "生成测试数据..."
+    python3 tools/data/gen_fastq.py -o "$TEST_FILE" -n 200000
+    gzip -c "$TEST_FILE" > "$COMPRESSED_INPUT"
+    rm -f "$TEST_FILE"
 fi
 
-log_info "Running IO Benchmark..."
+log_info "--- Reader Benchmark (zlib-ng) ---"
+time "$BINARY" stat -i "$COMPRESSED_INPUT" -o /dev/null
 
-# Test Decompression (Reader) speed - currently zlib/gzip
-log_info "--- Reader Benchmark (Zlib) ---"
-time ./build/FastQTools stat $COMPRESSED_INPUT > /dev/null
+log_info "--- Writer Benchmark (zlib-ng gzip) ---"
+time "$BINARY" filter -i "$COMPRESSED_INPUT" -o test_output.fq.gz --min-length 0
 
-# Test Compression (Writer) speed - should be libdeflate
-log_info "--- Writer Benchmark (Libdeflate) ---"
-# Use Filter command to read and then write back
-time ./build/FastQTools filter --output test_output.fq.gz --min-len 0 $COMPRESSED_INPUT
-
-log_info "Cleaning up..."
+log_info "清理..."
 rm -f test_output.fq.gz

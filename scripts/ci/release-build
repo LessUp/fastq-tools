@@ -5,7 +5,7 @@
 # 在 Docker 容器内运行，自适应 Alpine (musl) / Debian (glibc) 环境
 #
 # 用法:
-#   release-build.sh <compiler> [--static]
+#   release-build <compiler> [--static]
 #
 # 参数:
 #   compiler    gcc | clang
@@ -89,7 +89,6 @@ install_deps_debian() {
         python3 \
         python3-pip \
         ccache \
-        libdeflate-dev \
         zlib1g-dev \
         libtbb-dev
 }

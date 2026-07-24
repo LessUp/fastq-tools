@@ -16,11 +16,26 @@
 #include <fqtools/io/fastq_reader.h>
 #include <fqtools/io/fastq_writer.h>
 
+#include "benchmark/data_collector.h"
+
 #ifdef __linux__
 #include <unistd.h>
 #endif
 
 namespace fq::benchmark {
+
+/// 向 Google Benchmark 注册系统元数据，使 JSON 输出自文档化
+inline void registerSystemContext() {
+    auto metadata = DataCollector::collectSystemMetadata();
+    ::benchmark::AddCustomContext("git_commit", metadata.gitCommit);
+    ::benchmark::AddCustomContext("git_branch", metadata.gitBranch);
+    ::benchmark::AddCustomContext("cpu_model", metadata.cpuModel);
+    ::benchmark::AddCustomContext("core_count", std::to_string(metadata.coreCount));
+    ::benchmark::AddCustomContext("memory_bytes", std::to_string(metadata.memoryBytes));
+    ::benchmark::AddCustomContext("compiler", metadata.compilerVersion);
+    ::benchmark::AddCustomContext("os", metadata.osVersion);
+    ::benchmark::AddCustomContext("timestamp", metadata.timestamp);
+}
 
 inline constexpr std::size_t kBenchmarkReadCount = 1'000'000;
 inline constexpr std::size_t kBenchmarkReadLength = 150;

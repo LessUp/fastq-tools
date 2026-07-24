@@ -7,17 +7,17 @@ find_package(benchmark CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
-# 通用链接库：Google Benchmark + 项目主库
+# 通用链接库：Google Benchmark + 项目主库 + 内部 benchmark 支撑库
 set(BENCHMARK_COMMON_LIBS
     benchmark::benchmark
-    benchmark::benchmark_main
     fq_lib
+    fq_benchmark
     nlohmann_json::nlohmann_json
 )
 
-# 基准测试工具函数
+# 基准测试工具函数（使用自定义 main 注入系统元数据）
 function(add_benchmark benchmark_name source_files)
-    add_executable(${benchmark_name} ${source_files})
+    add_executable(${benchmark_name} ${source_files} benchmark_main.cpp)
     
     target_link_libraries(${benchmark_name} PRIVATE
         ${BENCHMARK_COMMON_LIBS}

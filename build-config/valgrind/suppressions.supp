@@ -52,34 +52,6 @@
 }
 
 # =============================================================================
-# spdlog Suppressions
-# =============================================================================
-
-{
-   spdlog_static_init
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   ...
-   fun:*spdlog*
-}
-
-{
-   spdlog_registry
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   ...
-   fun:*spdlog*registry*
-}
-
-{
-   spdlog_logger_creation
-   Memcheck:Leak
-   match-leak-kinds: possible
-   ...
-   fun:*spdlog*logger*
-}
-
-# =============================================================================
 # fmt Library Suppressions
 # =============================================================================
 
@@ -107,18 +79,6 @@
    Memcheck:Cond
    fun:deflate
    ...
-}
-
-# =============================================================================
-# libdeflate Suppressions
-# =============================================================================
-
-{
-   libdeflate_alloc
-   Memcheck:Leak
-   match-leak-kinds: possible
-   ...
-   fun:*libdeflate*
 }
 
 # =============================================================================

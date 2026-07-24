@@ -10,18 +10,20 @@
 ## 阅读顺序
 
 1. [`environment.md`](./environment.md) — 测试环境基线，所有快照的口径。
-2. [`benchmark-reports/v4-baseline/2026-07-17/summary.md`](./benchmark-reports/v4-baseline/2026-07-17/summary.md) — v4 生产路径基线、原始 JSON 和 median/CV 摘要。
-3. [`optimizations/2026-07-13-backlog.md`](./optimizations/2026-07-13-backlog.md) — 已按 v4 证据校正的性能优化路线图。
-4. [`benchmark-reports/`](./benchmark-reports/) — 历次原始数据。
-4. [`optimizations/`](./optimizations/) — 数据背后的故事（已完成的优化叙事）。
-5. [`../benchmark.md`](../benchmark.md) — 面向用户的代表性结果摘要。
+2. [`benchmark-reports/README.md`](./benchmark-reports/README.md) — 报告归档规范与 summary.md 模板。
+3. [`benchmark-reports/v4-baseline/2026-07-17/summary.md`](./benchmark-reports/v4-baseline/2026-07-17/summary.md) — v4 生产路径基线、原始 JSON 和 median/CV 摘要。
+4. [`optimizations/2026-07-13-backlog.md`](./optimizations/2026-07-13-backlog.md) — 已按 v4 证据校正的性能优化路线图。
+5. [`benchmark-reports/`](./benchmark-reports/) — 历次原始数据。
+6. [`optimizations/`](./optimizations/) — 数据背后的故事（已完成的优化叙事）。
+7. [`../benchmark.md`](../benchmark.md) — 面向用户的代表性结果摘要。
 
 ## 写作规范
 
 - **快照与叙事分离**：`benchmark-reports/` 只放数据，不写分析；分析写进 `optimizations/` 并链接快照。
+- **报告格式**：`summary.md` 按 [`benchmark-reports/README.md`](./benchmark-reports/README.md) 中的模板撰写。
 - **同口径对比**：所有快照必须引用 `environment.md` 中的基线；偏离基线需在快照头注明。
 - **文件命名**：`YYYY-MM-DD-<kebab-case-slug>.md`。
-- **快照归档路径**：`benchmark-reports/<scenario>/<YYYY-MM-DD>/`，内含 `summary.md` 与原始输出文件。
+- **快照归档路径**：`benchmark-reports/<场景>/<YYYY-MM-DD>/`，内含 `summary.md` 与原始输出文件。
 - **优化条目必填**：基线快照链接、优化后快照链接、同口径对比表。
 - **中文撰写**。
 

@@ -109,3 +109,4 @@
 - 不擅自重命名公共头文件、导出目标或 CLI 命令。
 - commit message、代码注释优先中文。
 - 提交规范：Conventional Commits `feat|fix|docs|refactor|test|chore(scope): subject`。
+- 开始工作前检查 `issues/` 目录中的 open issue，了解待办上下文。

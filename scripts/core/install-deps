@@ -55,7 +55,6 @@ RUNTIME_PACKAGES=(
     ca-certificates
     libtbb12
     zlib1g
-    libdeflate0
 )
 
 # =============================================================================
@@ -78,7 +77,6 @@ DEVELOPMENT_PACKAGES=(
     # 开发库
     libtbb-dev
     zlib1g-dev
-    libdeflate-dev
     
     # 测试和覆盖率
     libgtest-dev

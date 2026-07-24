@@ -6,7 +6,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-BENCHMARK_DIR="$PROJECT_ROOT/docs/benchmark-reports"
+BENCHMARK_DIR="$PROJECT_ROOT/docs/performance/benchmark-reports"
 TOOLS_DIR="$PROJECT_ROOT/tools/benchmark/scripts"
 
 # 默认配置
@@ -44,7 +44,7 @@ Examples:
   $(basename "$0") baseline save v1.0     # 保存当前结果为基线
   $(basename "$0") baseline list          # 列出所有基线
   $(basename "$0") data generate          # 生成测试数据
-  $(basename "$0") compiler --data-dir docs/benchmark-reports/data
+  $(basename "$0") compiler --data-dir docs/performance/benchmark-reports/data
   $(basename "$0") visualize --format html
 EOF
 }

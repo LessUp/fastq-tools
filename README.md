@@ -188,6 +188,7 @@ CI（GitHub Actions，push/PR 自动触发 format + build-and-test；sanitizer �
 | C++ API | [API 概览](./docs/api.md) |
 | 架构与设计 | [架构文档](./docs/architecture.md) |
 | 性能数据 | [性能总览](./docs/benchmark.md) |
+| 待办与问题 | [Issue 跟踪](./issues/README.md) |
 | 贡献 | [贡献指南](./CONTRIBUTING.md) |
 | 变更记录 | [CHANGELOG.md](./CHANGELOG.md) |
 
