@@ -2,7 +2,6 @@ add_library(fq_processing STATIC
     execution_backend.cpp
     execution_runtime.cpp
     one_tbb_execution_backend.cpp
-    factory.cpp
     resolved_runtime_config.cpp
     processing_options.cpp
     processing_pipeline.cpp

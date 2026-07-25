@@ -5,13 +5,18 @@
  *
  */
 
-#include "processing/processing_pipeline.h"
+#include "fqtools/processing/processing_pipeline_interface.h"
 
 #include "fqtools/processing/interfaces.h"
 
 #include <chrono>
+#include <cstdint>
 #include <functional>
+#include <memory>
 #include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "processing/execution_runtime.h"
 
@@ -62,42 +67,66 @@ private:
 
 }  // namespace
 
-ProcessingPipeline::ProcessingPipeline() = default;
-ProcessingPipeline::~ProcessingPipeline() = default;
+class Pipeline::Impl {
+public:
+    std::string inputPath_;                                            ///< 输入文件路径
+    std::string outputPath_;                                           ///< 输出文件路径
+    ProcessingOptions options_;                                        ///< 用户可见的处理选项
+    std::vector<std::unique_ptr<ReadMutatorInterface>> mutators_;      ///< 数据修改器列表
+    std::vector<std::unique_ptr<ReadPredicateInterface>> predicates_;  ///< 数据过滤器列表
+    std::unique_ptr<fq::io::IReader> customReader_;                    ///< 自定义读取器（测试用）
+    std::shared_ptr<fq::io::IWriter> customWriter_;                    ///< 自定义写入器（测试用）
+    bool customReaderConfigured_ = false;
 
-void ProcessingPipeline::setInputPath(const std::string& inputPath) {
-    inputPath_ = inputPath;
+    auto run() -> ProcessingStatistics;
+
+private:
+    /// @brief 对一批数据应用所有修改器和过滤器
+    auto processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats) -> void;
+};
+
+Pipeline::Pipeline() : impl_(std::make_unique<Impl>()) {}
+Pipeline::~Pipeline() = default;
+Pipeline::Pipeline(Pipeline&&) noexcept = default;
+auto Pipeline::operator=(Pipeline&&) noexcept -> Pipeline& = default;
+
+void Pipeline::setInputPath(const std::string& inputPath) {
+    impl_->inputPath_ = inputPath;
 }
 
-void ProcessingPipeline::setOutputPath(const std::string& outputPath) {
-    outputPath_ = outputPath;
+void Pipeline::setOutputPath(const std::string& outputPath) {
+    impl_->outputPath_ = outputPath;
 }
 
-void ProcessingPipeline::setReader(std::unique_ptr<fq::io::IReader> reader) {
-    customReaderConfigured_ = static_cast<bool>(reader);
-    customReader_ = std::move(reader);
+void Pipeline::setReader(std::unique_ptr<fq::io::IReader> reader) {
+    impl_->customReaderConfigured_ = static_cast<bool>(reader);
+    impl_->customReader_ = std::move(reader);
 }
 
-void ProcessingPipeline::setWriter(std::unique_ptr<fq::io::IWriter> writer) {
-    customWriter_ = std::shared_ptr<fq::io::IWriter>(std::move(writer));
+void Pipeline::setWriter(std::unique_ptr<fq::io::IWriter> writer) {
+    impl_->customWriter_ = std::shared_ptr<fq::io::IWriter>(std::move(writer));
 }
 
-void ProcessingPipeline::setProcessingOptions(const ProcessingOptions& options) {
-    options_ = options;
+void Pipeline::setProcessingOptions(const ProcessingOptions& options) {
+    impl_->options_ = options;
 }
 
-void ProcessingPipeline::addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator) {
-    mutators_.push_back(std::move(mutator));
+void Pipeline::addReadMutator(std::unique_ptr<ReadMutatorInterface> mutator) {
+    impl_->mutators_.push_back(std::move(mutator));
 }
 
-void ProcessingPipeline::addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicate) {
-    predicates_.push_back(std::move(predicate));
+void Pipeline::addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicate) {
+    impl_->predicates_.push_back(std::move(predicate));
 }
 
-auto ProcessingPipeline::run() -> ProcessingStatistics {
+auto Pipeline::run() -> ProcessingStatistics {
+    return impl_->run();
+}
+
+auto Pipeline::Impl::run() -> ProcessingStatistics {
     if (customReaderConfigured_ && !customReader_) {
         throw std::invalid_argument(
-            "ProcessingPipeline: custom reader must be reset before rerunning");
+            "Pipeline: custom reader must be reset before rerunning");
     }
 
     ExecutionRuntimeRequest runtimePlan;
@@ -142,7 +171,7 @@ auto ProcessingPipeline::run() -> ProcessingStatistics {
     return stats;
 }
 
-auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats)
+auto Pipeline::Impl::processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats)
     -> void {
     stats.inputBytes += batch.buffer().size();
     auto& records = batch.records();
@@ -190,4 +219,5 @@ auto ProcessingPipeline::processBatch(fq::io::FastqBatch& batch, ProcessingStati
     stats.modifiedReads += modifiedCount;
     records.resize(passedCount);
 }
+
 }  // namespace fq::processing
