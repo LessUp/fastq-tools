@@ -72,15 +72,6 @@ TEST(CommandRegistryTest, HasCommandReturnsCorrectStatus) {
     EXPECT_FALSE(registry.hasCommand("nonexistent"));
 }
 
-TEST(CommandRegistryTest, GetCommandNamesListsAll) {
-    CommandRegistry registry;
-    registry.registerCommand("alpha", std::make_unique<StubCommand>("alpha", "a"));
-    registry.registerCommand("beta", std::make_unique<StubCommand>("beta", "b"));
-
-    auto names = registry.getCommandNames();
-    EXPECT_EQ(names.size(), 2u);
-}
-
 TEST(CommandRegistryTest, ExecuteCommandInvokesHandler) {
     CommandRegistry registry;
     auto stub = std::make_unique<StubCommand>("stub", "desc", 42);

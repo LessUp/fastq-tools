@@ -31,7 +31,6 @@ public:
     [[nodiscard]] auto severity() const noexcept -> ErrorSeverity;
     [[nodiscard]] auto message() const noexcept -> const std::string&;
     [[nodiscard]] auto what() const noexcept -> const char* override;
-    [[nodiscard]] auto isRecoverable() const noexcept -> bool;
 
 private:
     ErrorCategory category_;
@@ -61,9 +60,5 @@ class ConfigurationError : public FastQException {
 public:
     explicit ConfigurationError(std::string_view message);
 };
-
-#define FQ_THROW_IO_ERROR(filePath, errorCode) throw fq::error::IOError(filePath, errorCode)
-#define FQ_THROW_FORMAT_ERROR(message) throw fq::error::FormatError(message)
-#define FQ_THROW_CONFIG_ERROR(message) throw fq::error::ConfigurationError(message)
 
 }  // namespace fq::error

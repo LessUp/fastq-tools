@@ -6,12 +6,10 @@
 
 #pragma once
 
-#include <memory>
 #include <string>
-#include <vector>
 
 #include "commands/command_interface.h"
-#include <fqtools/fq.h>
+#include <fqtools/processing/processing_pipeline_interface.h>
 
 namespace fq::cli::commands {
 

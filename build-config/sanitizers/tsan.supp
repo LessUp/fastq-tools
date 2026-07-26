@@ -13,3 +13,7 @@ race:tbb::detail::d1::concrete_filter
 race:tbb::detail::d1::filter_node_leaf
 race:tbb::detail::r1::pipeline::fill_pipeline
 race:tbb::detail::r1::stage_task::execute_filter
+
+# oneTBB malloc 内部：BootStrapBlocks::allocate 并发内存分配时的竞争
+# tbbmalloc 内部同步（自旋锁）对 TSan 不可见，触发于 concurrent_bounded_queue 扩容
+race:rml::internal::BootStrapBlocks::allocate

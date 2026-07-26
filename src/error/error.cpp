@@ -65,14 +65,6 @@ auto FastQException::what() const noexcept -> const char* {
 }
 
 /**
- * @brief 判断异常是否可恢复
- * @return 可恢复返回 true，不可恢复返回 false
- */
-auto FastQException::isRecoverable() const noexcept -> bool {
-    return severity_ != ErrorSeverity::Critical;
-}
-
-/**
  * @brief 错误类别枚举转字符串
  * @param cat 错误类别
  * @return 字符串视图

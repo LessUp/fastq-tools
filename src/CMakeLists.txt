@@ -12,8 +12,7 @@ if(BUILD_BENCHMARKS)
 endif()
 
 # 聚合库：将所有组件统一为一个 INTERFACE target，供 CLI 层链接
-# fq_processing / fq_statistics → fq_modern_io, fq_error
-# 因此只需列出叶子模块，无需重复列出已被传递链接的 target
+# 显式列出全部组件（含已被传递的底层库 fq_error/fq_modern_io），保证聚合依赖可见性
 add_library(fq_runtime INTERFACE)
 set_target_properties(fq_runtime PROPERTIES EXPORT_NAME FastQTools)
 

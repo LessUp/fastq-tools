@@ -36,9 +36,9 @@ private:
 
 class LengthTrimmer : public ReadMutatorInterface {
 public:
-    enum class TrimStrategy { FixedLength, MaxLength, FromStart, FromEnd };
+    enum class TrimStrategy { MaxLength, FromStart };
 
-    LengthTrimmer(size_t targetLength, TrimStrategy strategy = TrimStrategy::FixedLength);
+    LengthTrimmer(size_t targetLength, TrimStrategy strategy = TrimStrategy::MaxLength);
 
     void process(fq::io::FastqRecord& read) override;
 

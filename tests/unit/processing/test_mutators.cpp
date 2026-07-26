@@ -132,8 +132,8 @@ protected:
     void SetUp() override {}
 };
 
-TEST_F(LengthTrimmerTest, FixedLengthTrimsToExactLength) {
-    LengthTrimmer trimmer(3, LengthTrimmer::TrimStrategy::FixedLength);
+TEST_F(LengthTrimmerTest, MaxLengthTrimsToExactLength) {
+    LengthTrimmer trimmer(3, LengthTrimmer::TrimStrategy::MaxLength);
 
     FastqRecord read{"read1", {}, "ACGTACGT", "IIIIIIII", "+"};
     trimmer.process(read);
@@ -149,16 +149,6 @@ TEST_F(LengthTrimmerTest, FromStartKeepsSuffix) {
     trimmer.process(read);
 
     EXPECT_EQ(read.seq, "CGT");
-    EXPECT_EQ(read.qual, "III");
-}
-
-TEST_F(LengthTrimmerTest, FromEndKeepsPrefix) {
-    LengthTrimmer trimmer(3, LengthTrimmer::TrimStrategy::FromEnd);
-
-    FastqRecord read{"read1", {}, "ACGT", "IIII", "+"};
-    trimmer.process(read);
-
-    EXPECT_EQ(read.seq, "ACG");
     EXPECT_EQ(read.qual, "III");
 }
 
@@ -183,7 +173,7 @@ TEST_F(LengthTrimmerTest, MaxLengthTrimsIfExceeded) {
 }
 
 TEST_F(LengthTrimmerTest, HandlesShorterRead) {
-    LengthTrimmer trimmer(10, LengthTrimmer::TrimStrategy::FixedLength);
+    LengthTrimmer trimmer(10, LengthTrimmer::TrimStrategy::MaxLength);
 
     FastqRecord read{"read1", {}, "ACGT", "IIII", "+"};
     trimmer.process(read);
@@ -193,7 +183,7 @@ TEST_F(LengthTrimmerTest, HandlesShorterRead) {
 }
 
 TEST_F(LengthTrimmerTest, HandlesEmptyRead) {
-    LengthTrimmer trimmer(3, LengthTrimmer::TrimStrategy::FixedLength);
+    LengthTrimmer trimmer(3, LengthTrimmer::TrimStrategy::MaxLength);
 
     FastqRecord read{"read1", {}, {}, {}, "+"};
     trimmer.process(read);
@@ -358,7 +348,7 @@ protected:
 
 TEST_F(MutatorBoundaryTest, SingleBaseRead) {
     QualityTrimmer qualityTrimmer(20.0);
-    LengthTrimmer lengthTrimmer(1, LengthTrimmer::TrimStrategy::FixedLength);
+    LengthTrimmer lengthTrimmer(1, LengthTrimmer::TrimStrategy::MaxLength);
 
     FastqRecord read1{"read1", {}, "A", "I", "+"};
     qualityTrimmer.process(read1);
@@ -435,7 +425,7 @@ protected:
 
 TEST_F(MutatorCompositionTest, QualityThenLengthTrimmer) {
     QualityTrimmer qualityTrimmer(20.0);
-    LengthTrimmer lengthTrimmer(2, LengthTrimmer::TrimStrategy::FromEnd);
+    LengthTrimmer lengthTrimmer(2, LengthTrimmer::TrimStrategy::MaxLength);
 
     FastqRecord read{"read1", {}, "ACGTACGT", "!!IIII!!", "+"};
 

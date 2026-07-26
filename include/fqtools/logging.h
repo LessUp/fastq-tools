@@ -2,6 +2,7 @@
 /**
  * @file logging.h
  * @brief 统一日志接口（基于 fmt 的轻量实现）
+ * @note 内部头：不安装、不被 fq.h 聚合，仅供项目内部 .cpp 使用。
  */
 
 #include <atomic>
@@ -15,28 +16,18 @@ namespace fq::logging {
 
 /// @brief 日志级别
 enum class Level : int {
-    Trace = 0,
     Debug = 1,
     Info = 2,
     Warn = 3,
     Error = 4,
-    Critical = 5,
-    Off = 6
+    Off = 5,
 };
 
 /// @brief 全局日志级别
 inline std::atomic<Level> currentLevel{Level::Info};
 
-/// @brief 日志配置选项
-struct LogOptions {
-    std::string level = "info";  ///< 日志级别: trace, debug, info, warn, error, critical, off
-};
-
 /// @brief 解析日志级别字符串
 inline auto parseLevel(std::string_view name) -> Level {
-    if (name == "trace") {
-        return Level::Trace;
-    }
     if (name == "debug") {
         return Level::Debug;
     }
@@ -49,19 +40,10 @@ inline auto parseLevel(std::string_view name) -> Level {
     if (name == "error") {
         return Level::Error;
     }
-    if (name == "critical") {
-        return Level::Critical;
-    }
     if (name == "off") {
         return Level::Off;
     }
     return Level::Info;
-}
-
-/// @brief 初始化日志系统
-/// @param options 日志配置选项
-inline void init(const LogOptions& options = {}) {
-    currentLevel.store(parseLevel(options.level), std::memory_order_relaxed);
 }
 
 /// @brief 便捷函数：设置日志级别
@@ -91,16 +73,6 @@ inline void logImpl(Level level,
 }  // namespace detail
 
 template <typename... Args>
-inline void trace(fmt::format_string<Args...> fmt, Args&&... args) {
-    detail::logImpl(Level::Trace, "trace", fmt, std::forward<Args>(args)...);
-}
-
-template <typename... Args>
-inline void debug(fmt::format_string<Args...> fmt, Args&&... args) {
-    detail::logImpl(Level::Debug, "debug", fmt, std::forward<Args>(args)...);
-}
-
-template <typename... Args>
 inline void info(fmt::format_string<Args...> fmt, Args&&... args) {
     detail::logImpl(Level::Info, "info", fmt, std::forward<Args>(args)...);
 }
@@ -113,11 +85,6 @@ inline void warn(fmt::format_string<Args...> fmt, Args&&... args) {
 template <typename... Args>
 inline void error(fmt::format_string<Args...> fmt, Args&&... args) {
     detail::logImpl(Level::Error, "error", fmt, std::forward<Args>(args)...);
-}
-
-template <typename... Args>
-inline void critical(fmt::format_string<Args...> fmt, Args&&... args) {
-    detail::logImpl(Level::Critical, "critical", fmt, std::forward<Args>(args)...);
 }
 
 }  // namespace fq::logging

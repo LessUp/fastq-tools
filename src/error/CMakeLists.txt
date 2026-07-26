@@ -9,7 +9,7 @@ target_include_directories(fq_error
 )
 
 target_link_libraries(fq_error
-    PUBLIC
+    PRIVATE
         fmt::fmt
 )
 

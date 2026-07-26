@@ -56,19 +56,6 @@ public:
     }
 
     /**
-     * @brief 获取所有命令名称
-     * @return 命令名称列表
-     */
-    [[nodiscard]] auto getCommandNames() const -> std::vector<std::string> {
-        std::vector<std::string> names;
-        names.reserve(commands_.size());
-        for (const auto& [name, _] : commands_) {
-            names.push_back(name);
-        }
-        return names;
-    }
-
-    /**
      * @brief 执行命令
      * @param name 命令名称
      * @param argc 参数数量

@@ -112,7 +112,7 @@ auto fuzzQualityTrimmer(FuzzedDataProvider& dp, const std::string& seqBuf, const
 
 auto fuzzLengthTrimmer(FuzzedDataProvider& dp, const std::string& seqBuf, const std::string& qualBuf) -> void {
     using TS = fq::processing::LengthTrimmer::TrimStrategy;
-    const auto stratSel = dp.ConsumeIntegralInRange<int>(0, 3);
+    const auto stratSel = dp.ConsumeIntegralInRange<int>(0, 1);
     const auto strat = static_cast<TS>(stratSel);
     const auto target = dp.ConsumeIntegralInRange<size_t>(0, 512);
 

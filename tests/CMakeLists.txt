@@ -38,9 +38,15 @@ function(add_fq_test test_name label timeout)
 
     add_test(NAME ${test_name} COMMAND ${test_name})
 
+    if(ENABLE_TSAN)
+        # TSan 插桩开销显著放大并发测试耗时，统一放宽 timeout
+        math(EXPR _fq_test_timeout "${timeout} * 3")
+    else()
+        set(_fq_test_timeout ${timeout})
+    endif()
     set_tests_properties(${test_name} PROPERTIES
         LABELS "${label}"
-        TIMEOUT ${timeout}
+        TIMEOUT ${_fq_test_timeout}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 

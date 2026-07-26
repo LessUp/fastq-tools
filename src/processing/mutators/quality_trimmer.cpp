@@ -139,36 +139,14 @@ LengthTrimmer::LengthTrimmer(size_t targetLength, TrimStrategy strategy)
     : targetLength_(targetLength), strategy_(strategy) {}
 
 void LengthTrimmer::process(fq::io::FastqRecord& read) {
-    size_t len = read.seq.size();
-
-    if (len <= targetLength_ && strategy_ != TrimStrategy::FixedLength) {
-        // Nothing to do if shorter (unless FixedLength padding logic? usually not implemented)
+    const size_t len = read.seq.size();
+    if (len <= targetLength_) {
         return;
     }
-
-    size_t newLen = len;
-    size_t start = 0;
-
-    switch (strategy_) {
-        case TrimStrategy::FixedLength:
-        case TrimStrategy::MaxLength:
-        case TrimStrategy::FromEnd:  // Keep first N bases
-            if (len > targetLength_) {
-                newLen = targetLength_;
-            }
-            break;
-        case TrimStrategy::FromStart:  // 保留末尾 N 个碱基
-            if (len > targetLength_) {
-                start = len - targetLength_;
-                newLen = targetLength_;
-            }
-            break;
-    }
-
-    if (newLen < len) {
-        read.seq = read.seq.substr(start, newLen);
-        read.qual = read.qual.substr(start, newLen);
-    }
+    // MaxLength: 保留前 N 个碱基；FromStart: 保留末尾 N 个碱基
+    const size_t start = (strategy_ == TrimStrategy::FromStart) ? (len - targetLength_) : 0;
+    read.seq = read.seq.substr(start, targetLength_);
+    read.qual = read.qual.substr(start, targetLength_);
 }
 
 auto LengthTrimmer::getName() const -> std::string {

@@ -76,7 +76,7 @@ FastQTools 不是 fastp 的替代品，而是一个聚焦、现代内核的 QC �
 
 ### 3. 可替换的三级执行 backend
 
-`ExecutionRuntime` 只负责解析 `ResolvedRuntimeConfig`、创建 I/O adapter 和选择 backend。调度框架位于私有 implementation 中，不出现在公共头或调用方编译依赖里。
+`ExecutionRuntime` 只负责解析 `ResolvedRuntimeConfig`、创建 I/O adapter 和选择 backend。调度后端位于私有 implementation 中，不出现在公共头或调用方编译依赖里。
 
 ```text
 ProcessingOptions

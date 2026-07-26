@@ -13,7 +13,7 @@
 #include "command_registry.h"
 #include <cxxopts.hpp>
 
-#include <fqtools/fq.h>
+#include <fqtools/error/error.h>
 #include <fqtools/logging.h>
 
 namespace {

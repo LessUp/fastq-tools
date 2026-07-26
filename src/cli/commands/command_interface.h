@@ -8,11 +8,6 @@
 #include <memory>
 #include <string>
 
-namespace cxxopts {
-class Options;
-class ParseResult;
-}  // namespace cxxopts
-
 namespace fq::cli {
 
 /**

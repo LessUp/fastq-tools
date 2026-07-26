@@ -180,8 +180,9 @@ TEST(PipelineSmokeTest, LengthTrimmerFromStartKeepsSuffix) {
     EXPECT_EQ(read.qual, "III");
 }
 
-TEST(PipelineSmokeTest, LengthTrimmerFromEndKeepsPrefix) {
-    fq::processing::LengthTrimmer trimmer(3, fq::processing::LengthTrimmer::TrimStrategy::FromEnd);
+TEST(PipelineSmokeTest, LengthTrimmerMaxLengthKeepsPrefix) {
+    fq::processing::LengthTrimmer trimmer(3,
+                                          fq::processing::LengthTrimmer::TrimStrategy::MaxLength);
 
     fq::io::FastqRecord read{"read1", {}, "ACGT", "IIII", "+"};
     trimmer.process(read);

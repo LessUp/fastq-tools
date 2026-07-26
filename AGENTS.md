@@ -4,7 +4,7 @@
 
 ## 项目概述
 
-**FastQTools** — C++23 并行流水线框架，FASTQ 质控是它的首要应用。工程能力展示项目。
+**FastQTools** — C++23 FASTQ 质控工具，内置并行流水线内核。工程能力展示项目。
 
 ### 技术栈
 
@@ -81,9 +81,8 @@
 ### 错误处理与日志
 
 - 异常基类 `fq::error::FastQException`；子类 `IOError`、`FormatError`、`ConfigurationError`。
-- 宏：`FQ_THROW_IO_ERROR`、`FQ_THROW_FORMAT_ERROR`、`FQ_THROW_CONFIG_ERROR`。
 - 不静默吞异常；CLI 边界捕获并记录。
-- 日志 `fq::logging::trace/debug/info/warn/error/critical`，fmt 风格格式串。
+- 日志 `fq::logging::info/warn/error`，fmt 风格格式串。
 - 不用 `std::endl`；统一 `"\n"`。
 
 ### 注释
@@ -107,6 +106,7 @@
 - 单人项目，默认在当前分支直接改动。
 - 修改 C++ 源码后至少运行 `./scripts/core/lint format` 和相关测试。
 - 不擅自重命名公共头文件、导出目标或 CLI 命令。
+- 保持公共 API 精简：不为假设的扩展预留未用 API（函数、宏、枚举值）；新增公共面需有真实调用方或测试覆盖。
 - commit message、代码注释优先中文。
 - 提交规范：Conventional Commits `feat|fix|docs|refactor|test|chore(scope): subject`。
 - 开始工作前检查 `issues/` 目录中的 open issue，了解待办上下文。

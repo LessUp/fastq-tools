@@ -11,6 +11,19 @@ This root changelog is the maintained project history. Older granular work logs 
 
 ## [Unreleased]
 
+### Refactor: 收回框架定位，追求轻灵巧
+
+定位从"并行流水线框架"收回为"FASTQ 质控工具 + 流水线参考实现"，删除为假设扩展预留的抽象与未用 API 表面。净减约 200 行（增 161 / 删 362）。
+
+- **定位收回**：README / AGENTS / architecture / CMake DESCRIPTION 的"并行流水线框架"统一改为"FASTQ 质控工具"；删除"替换批类型接入其他格式""自定义后端"等不真实承诺。
+- **CMake 依赖传播修正**：`fq_statistics` 的 `fq_processing` 改 PUBLIC、`fq_cli` 的 `cxxopts` 改 PUBLIC；`fq_error` 的 `fmt`、`fq_processing` 的 `fq_error` 改 PRIVATE；删除 `FastqTools` / `test_cli` 显式补链、benchmark `nlohmann_json` 冗余、可执行文件冗余 `cxx_std_23`；修正 `src/CMakeLists.txt` 注释矛盾。
+- **死 API 清理**：删除 `logging` 的 `trace/debug/critical/init`、`LogOptions`、`Level::Trace/Critical/Off`；`error` 的 `isRecoverable` 与 `FQ_THROW_*` 三宏；`CommandRegistry::getCommandNames`。保留 `message/severity`（测试在用）与 `ErrorCategory` 扩展枚举（公共契约）。
+- **间接层削减**：删除 `FilterRuntimeAdapter` 与 3 个 `std::function`，`Pipeline::Impl` 直接实现 `ExecutionRuntime` Adapter 契约；`FastqStatisticCalculator` 合并入 `Calculator::Impl`，删除 `factory.cpp`。
+- **杂项清理**：删除未用 include（`<iomanip>` / `<numeric>` / `<memory>` / `<vector>` / cxxopts 前向声明）；`main.cpp` / `filter_command.h` 的 `fq.h` 改精确头；`statistics_report.cpp` 三处重复格式化提 `fixedStream()` helper；`LengthTrimmer` 删除 `FixedLength` / `FromEnd` 冗余枚举，简化 `process`。
+- **Sanitizer 配置**：`tsan.supp` 增加 tbbmalloc `BootStrapBlocks::allocate` 误报抑制；`add_fq_test` 在 TSan 下 timeout ×3。
+
+ASan / TSan（clang-debug + clang-release）12/12 通过，packaging install 传播验证通过。
+
 ### Changed
 - Consolidated the maintained repository history into this file and retired the legacy `changelog/` directory.
 - Retired docs-site changelog publication in favor of GitHub Releases plus the root `CHANGELOG.md`.

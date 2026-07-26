@@ -1,5 +1,4 @@
 add_library(fq_statistics STATIC
-    factory.cpp
     fq_statistic.cpp
     fq_statistic_worker.cpp
     statistics_report.cpp
@@ -14,10 +13,11 @@ target_include_directories(fq_statistics
 
 target_link_libraries(fq_statistics
     PUBLIC
-        fq_error
         fq_modern_io
-    PRIVATE
         fq_processing
+    PRIVATE
+        fq_error
+        fmt::fmt
 )
 
 target_compile_features(fq_statistics PUBLIC cxx_std_23)

@@ -56,9 +56,14 @@ auto estimateDuplicates(uint64_t duplicateSampledReads, size_t sampleModulo) -> 
     return duplicateSampledReads * std::max<size_t>(1, sampleModulo);
 }
 
+[[nodiscard]] auto fixedStream() -> std::ostringstream {
+    std::ostringstream s;
+    s << std::fixed << std::setprecision(2);
+    return s;
+}
+
 auto formatMetricLine(const std::string& name, uint64_t count, uint64_t totalBases) -> std::string {
-    std::ostringstream line;
-    line << std::fixed << std::setprecision(2);
+    auto line = fixedStream();
     const double ratio = totalBases == 0
         ? 0.0
         : 100.0 * static_cast<double>(count) / static_cast<double>(totalBases);
@@ -84,8 +89,7 @@ auto buildStatisticsReport(const FqStatisticResult& result, const StatisticsWrit
     report.summaryLines.push_back("#ReadNum\t" + std::to_string(result.readCount));
     report.summaryLines.push_back("#DuplicateEstimate\t" + std::to_string(duplicateEstimate));
     {
-        std::ostringstream line;
-        line << std::fixed << std::setprecision(2);
+        auto line = fixedStream();
         line << "#DuplicateEstimateRate\t"
              << 100.0 * static_cast<double>(duplicateEstimate) /
                 static_cast<double>(result.readCount)
@@ -142,8 +146,7 @@ auto buildStatisticsReport(const FqStatisticResult& result, const StatisticsWrit
             countReadsAtPos += qSlot[j];
         }
 
-        std::ostringstream line;
-        line << std::fixed << std::setprecision(2);
+        auto line = fixedStream();
         line << i + 1 << '\t' << bSlot[0] << '\t' << bSlot[1] << '\t' << bSlot[2] << '\t'
              << bSlot[3] << '\t' << bSlot[4] << '\t';
 

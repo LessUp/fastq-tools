@@ -10,7 +10,7 @@ FastQTools 的公共 C++ API 以 `include/fqtools/fq.h` 为 Façade 入口，聚
 
 | 模块 | 头文件 | 用途 |
 |------|--------|------|
-| error | `fqtools/error/error.h` | 异常基类与宏 |
+| error | `fqtools/error/error.h` | 异常基类与子类 |
 | io | `fqtools/io/fastq_io.h` | `FastqRecord`/`FastqBatch` 核心数据结构 |
 | io | `fqtools/io/fastq_reader.h` / `fastq_writer.h` | 读取器/写入器 |
 | io | `fqtools/io/interfaces.h` | `IReader`/`IWriter` 抽象接口 |
@@ -121,4 +121,4 @@ auto stats = pipeline.run();
 
 ## 错误处理
 
-库内部抛 `fq::error::FastQException` 子类（`IOError`/`FormatError`/`ConfigurationError`）。宏 `FQ_THROW_IO_ERROR`/`FQ_THROW_FORMAT_ERROR`/`FQ_THROW_CONFIG_ERROR` 统一抛点。调用方在边界捕获。
+库内部抛 `fq::error::FastQException` 子类（`IOError`/`FormatError`/`ConfigurationError`）。调用方在边界捕获。

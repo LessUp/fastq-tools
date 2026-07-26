@@ -8,11 +8,11 @@ find_package(nlohmann_json CONFIG REQUIRED)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 # 通用链接库：Google Benchmark + 项目主库 + 内部 benchmark 支撑库
+# nlohmann_json 由 fq_benchmark PUBLIC 传播，无需重复列出
 set(BENCHMARK_COMMON_LIBS
     benchmark::benchmark
     fq_lib
     fq_benchmark
-    nlohmann_json::nlohmann_json
 )
 
 # 基准测试工具函数（使用自定义 main 注入系统元数据）

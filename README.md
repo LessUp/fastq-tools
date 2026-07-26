@@ -1,7 +1,7 @@
 <h1 align="center">FastQTools</h1>
 
 <p align="center">
-  <b>C++23 并行流水线框架。FASTQ 质控是它的首要应用。</b>
+  <b>C++23 FASTQ 质控工具，内置并行流水线内核。</b>
 </p>
 
 <p align="center">
@@ -28,9 +28,9 @@
 
 ## 简介
 
-FastQTools 是一个 C++23 并行流水线框架，当前面向 FASTQ 质控场景。它提供：
+FastQTools 是一个 C++23 FASTQ 质控工具，内置并行流水线内核。它提供：
 
-- **批处理执行层**：`ExecutionRuntime` + `ExecutionBackend`（Sequential / oneTBB），执行后端不感知数据格式，通过 Adapter 契约接入具体计算逻辑；当前 Adapter 面向 `FastqBatch`，替换批类型即可接入其他格式。
+- **批处理执行层**：`ExecutionRuntime` + `ExecutionBackend`（Sequential / oneTBB），执行后端不感知数据格式，通过 Adapter 契约接入具体计算逻辑。
 - **可扩展的算子体系**：`Predicate`（过滤器）、`Mutator`（修改器）接口，策略模式组合，依赖注入便于测试。
 - **FASTQ 质控作为首要应用**：`stat`（统计）和 `filter`（过滤修剪）两个命令，覆盖测序数据日常 QC 的核心需求。
 
@@ -43,13 +43,13 @@ FastQTools 是一个 C++23 并行流水线框架，当前面向 FASTQ 质控场�
   (gzip/zlib-ng)        (predicates + mutators)  (写出 + 归约)
 ```
 
-### 框架分层
+### 模块分层
 
 | 层 | 职责 | 扩展方式 |
 |---|---|---|
-| ExecutionRuntime | 接收任意 Adapter，选择后端，管理生命周期 | 实现 Adapter 契约 |
-| ExecutionBackend | 具体调度框架（Sequential / oneTBB） | 新增 Backend 实现 |
-| ExecutionOperation | 类型擦除的批结果契约（当前批类型为 FastqBatch） | 替换批类型可接入其他格式 |
+| ExecutionRuntime | 接收任意 Adapter，选择后端，管理生命周期 | 内部设施，不对外暴露 |
+| ExecutionBackend | 具体调度后端（Sequential / oneTBB） | 内部设施，不对外暴露 |
+| ExecutionOperation | 类型擦除的批结果契约 | 内部契约，不对外暴露 |
 | Pipeline（FASTQ） | FASTQ 专用管道，注册 Predicate / Mutator | 实现接口注入 |
 
 ### 核心要点
@@ -79,8 +79,7 @@ FastQTools 不是黑盒。你可以：
 
 - **自定义过滤/修改逻辑**：实现 `ReadPredicateInterface` 或 `ReadMutatorInterface`，通过 `Pipeline::addReadPredicate()` / `addReadMutator()` 注册。
 - **自定义 I/O**：实现 `IReader` / `IWriter`，通过 `Pipeline::setReader()` / `setWriter()` 注入。
-- **自定义后端**：实现 `ExecutionBackend`，接入你自己的调度框架。
-- **接入其他数据格式**：替换 `ExecutionOperation` 的批类型参数，复用 `ExecutionRuntime` 和 `ExecutionBackend`。
+（执行后端 `ExecutionRuntime` / `ExecutionBackend` 为内部设施，不作为公共扩展点。）
 
 ```cpp
 // 自定义质量过滤器示例
@@ -169,7 +168,7 @@ CI（GitHub Actions，push/PR 自动触发 format + build-and-test；sanitizer �
 
 | | FastQTools | fastp | fastqc |
 |---|---|---|---|
-| 定位 | 并行流水线框架 + QC 应用 | 全能 FASTQ 质控 | 质量报告 |
+| 定位 | FASTQ 质控工具 | 全能 FASTQ 质控 | 质量报告 |
 | 统计 | Q20/Q30、GC、长度、碱基 | 更丰富的 QC 指标 | 可视化 HTML 报告 |
 | 过滤/修剪 | 一趟扫描，全部可配置 | 自动 adapter 检测 | 不支持 |
 | Adapter 推断 | 不支持（需显式指定） | 内置自动检测 | 不支持 |
@@ -178,7 +177,7 @@ CI（GitHub Actions，push/PR 自动触发 format + build-and-test；sanitizer �
 | 可嵌入 | 库 API（Pipeline / Calculator） | 命令行工具 | 命令行工具 |
 | 语言 | C++23 | C++11 | Java |
 
-需要自动 adapter 检测或可视化报告？请用 fastp 或 fastqc。需要确定性、可复现、高性能的统计与过滤——或者想基于并行流水线框架构建自己的批处理应用？请用 FastQTools。
+需要自动 adapter 检测或可视化报告？请用 fastp 或 fastqc。需要确定性、可复现、高性能的统计与过滤？请用 FastQTools。
 
 ## 文档
 

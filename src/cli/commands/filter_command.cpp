@@ -7,7 +7,6 @@
 
 #include "filter_command.h"
 
-#include <iomanip>
 #include <iostream>
 #include <stdexcept>
 

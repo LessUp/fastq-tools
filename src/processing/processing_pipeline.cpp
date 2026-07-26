@@ -1,17 +1,15 @@
 /**
  * @file processing_pipeline.cpp
  * @brief 处理管道实现
- * @details 实现 FastQ 数据处理管道的串行和并行处理逻辑
- *
+ * @details Pipeline::Impl 直接实现 ExecutionRuntime 的 Adapter 契约，
+ *          无需 FilterRuntimeAdapter / std::function 中间层。
  */
 
-#include "fqtools/processing/processing_pipeline_interface.h"
-
 #include "fqtools/processing/interfaces.h"
+#include "fqtools/processing/processing_pipeline_interface.h"
 
 #include <chrono>
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -30,59 +28,50 @@ namespace {
         lhs.qual == rhs.qual && lhs.plus == rhs.plus;
 }
 
-class FilterRuntimeAdapter {
+}  // namespace
+
+class Pipeline::Impl {
 public:
     using result_type = ProcessingStatistics;
 
-    using ProcessBatchFn = std::function<result_type(fq::io::FastqBatch&)>;
-    using AfterCommitFn = std::function<void(result_type&, std::uint64_t)>;
-    using MergeFn = std::function<void(result_type&, result_type)>;
+    std::string inputPath_;
+    std::string outputPath_;
+    ProcessingOptions options_;
+    std::vector<std::unique_ptr<ReadMutatorInterface>> mutators_;
+    std::vector<std::unique_ptr<ReadPredicateInterface>> predicates_;
+    std::unique_ptr<fq::io::IReader> customReader_;
+    std::shared_ptr<fq::io::IWriter> customWriter_;
+    bool customReaderConfigured_ = false;
 
-    FilterRuntimeAdapter(ProcessBatchFn processBatch, AfterCommitFn afterCommit, MergeFn merge)
-        : processBatch_(std::move(processBatch)),
-          afterCommit_(std::move(afterCommit)),
-          merge_(std::move(merge)) {}
+    auto run() -> ProcessingStatistics;
 
+    // ExecutionRuntime::execute 的 Adapter 契约：直接成员函数，不经 std::function 间接。
     [[nodiscard]] auto makeResult() const -> result_type {
         return {};
     }
 
     auto processBatch(fq::io::FastqBatch& batch) -> result_type {
-        return processBatch_(batch);
+        ProcessingStatistics partial;
+        applyOperations(batch, partial);
+        return partial;
     }
 
     void afterCommit(result_type& partial, std::uint64_t committedBytes) const {
-        afterCommit_(partial, committedBytes);
+        partial.outputBytes += committedBytes;
     }
 
     void merge(result_type& total, result_type partial) const {
-        merge_(total, partial);
+        total.totalReads += partial.totalReads;
+        total.passedReads += partial.passedReads;
+        total.filteredReads += partial.filteredReads;
+        total.modifiedReads += partial.modifiedReads;
+        total.inputBytes += partial.inputBytes;
+        total.outputBytes += partial.outputBytes;
     }
 
 private:
-    ProcessBatchFn processBatch_;
-    AfterCommitFn afterCommit_;
-    MergeFn merge_;
-};
-
-}  // namespace
-
-class Pipeline::Impl {
-public:
-    std::string inputPath_;                                            ///< 输入文件路径
-    std::string outputPath_;                                           ///< 输出文件路径
-    ProcessingOptions options_;                                        ///< 用户可见的处理选项
-    std::vector<std::unique_ptr<ReadMutatorInterface>> mutators_;      ///< 数据修改器列表
-    std::vector<std::unique_ptr<ReadPredicateInterface>> predicates_;  ///< 数据过滤器列表
-    std::unique_ptr<fq::io::IReader> customReader_;                    ///< 自定义读取器（测试用）
-    std::shared_ptr<fq::io::IWriter> customWriter_;                    ///< 自定义写入器（测试用）
-    bool customReaderConfigured_ = false;
-
-    auto run() -> ProcessingStatistics;
-
-private:
     /// @brief 对一批数据应用所有修改器和过滤器
-    auto processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats) -> void;
+    auto applyOperations(fq::io::FastqBatch& batch, ProcessingStatistics& stats) -> void;
 };
 
 Pipeline::Pipeline() : impl_(std::make_unique<Impl>()) {}
@@ -125,8 +114,7 @@ auto Pipeline::run() -> ProcessingStatistics {
 
 auto Pipeline::Impl::run() -> ProcessingStatistics {
     if (customReaderConfigured_ && !customReader_) {
-        throw std::invalid_argument(
-            "Pipeline: custom reader must be reset before rerunning");
+        throw std::invalid_argument("Pipeline: custom reader must be reset before rerunning");
     }
 
     ExecutionRuntimeRequest runtimePlan;
@@ -138,27 +126,9 @@ auto Pipeline::Impl::run() -> ProcessingStatistics {
 
     ExecutionRuntime runtime(std::move(customReader_), customWriter_);
 
-    auto adapter =
-        FilterRuntimeAdapter{[this](fq::io::FastqBatch& batch) {
-                                 ProcessingStatistics partial;
-                                 processBatch(batch, partial);
-                                 return partial;
-                             },
-                             [](ProcessingStatistics& partial, std::uint64_t committedBytes) {
-                                 partial.outputBytes += committedBytes;
-                             },
-                             [](ProcessingStatistics& total, ProcessingStatistics partial) {
-                                 total.totalReads += partial.totalReads;
-                                 total.passedReads += partial.passedReads;
-                                 total.filteredReads += partial.filteredReads;
-                                 total.modifiedReads += partial.modifiedReads;
-                                 total.inputBytes += partial.inputBytes;
-                                 total.outputBytes += partial.outputBytes;
-                             }};
-
     auto startTime = std::chrono::steady_clock::now();
-    auto outcome = runtime.execute(runtimePlan, adapter);
-    auto stats = outcome.result;
+    auto outcome = runtime.execute(runtimePlan, *this);
+    auto stats = std::move(outcome.result);
 
     auto endTime = std::chrono::steady_clock::now();
     auto duration =
@@ -171,7 +141,7 @@ auto Pipeline::Impl::run() -> ProcessingStatistics {
     return stats;
 }
 
-auto Pipeline::Impl::processBatch(fq::io::FastqBatch& batch, ProcessingStatistics& stats)
+auto Pipeline::Impl::applyOperations(fq::io::FastqBatch& batch, ProcessingStatistics& stats)
     -> void {
     stats.inputBytes += batch.buffer().size();
     auto& records = batch.records();

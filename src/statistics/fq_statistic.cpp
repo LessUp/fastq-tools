@@ -1,8 +1,8 @@
 /**
  * @file fq_statistic.cpp
- * @brief FASTQ 统计功能实现文件
- * @details 包含 FqStatistic 类及相关统计方法的实现，支持 TBB 并行统计。
- *
+ * @brief FASTQ 统计计算器实现
+ * @details Calculator::Impl 内部走 ExecutionRuntime + StatisticRuntimeAdapter，
+ *          合并了原 FastqStatisticCalculator 的职责（消除中间类）。
  */
 
 #include "statistics/fq_statistic.h"
@@ -59,9 +59,6 @@ private:
 
 }  // namespace
 
-/**
- * @brief 统计结果累加操作符重载
- */
 auto FqStatisticResult::operator+=(const FqStatisticResult& other) -> FqStatisticResult& {
     this->readCount += other.readCount;
     this->totalBases += other.totalBases;
@@ -107,65 +104,80 @@ auto FqStatisticResult::operator+=(const FqStatisticResult& other) -> FqStatisti
     return *this;
 }
 
-FastqStatisticCalculator::FastqStatisticCalculator(StatisticOptions options)
-    : options_(std::move(options)) {
-    // 验证配置
-    options_.processing.validate();
-}
-
-void FastqStatisticCalculator::run() {
-    fq::logging::info("Starting FASTQ statistics generation for '{}' using execution runtime.",
-                      options_.inputFastqPath);
-
-    processing::ExecutionRuntime runtime;
-    processing::ExecutionRuntimeRequest plan;
-    plan.inputPath = options_.inputFastqPath;
-    plan.options = options_.processing;
-
-    auto outcome = runtime.execute(plan,
-                                   StatisticRuntimeAdapter{options_.qualityEncoding,
-                                                           options_.signatureKmerSize,
-                                                           options_.duplicateEstimateSampleModulo});
-    auto finalResult = std::move(outcome.result);
-
-    fq::logging::info("Execution runtime finished. Aggregated results from all batches.");
-    writeResult(finalResult);
-    fq::logging::info("Statistics report saved to '{}'", options_.outputStatPath);
-}
-
-void FastqStatisticCalculator::writeResult(const FqStatisticResult& result) {
-    std::ofstream writer(options_.outputStatPath);
-    if (!writer) {
-        throw fq::error::IOError(options_.outputStatPath, errno);
+class Calculator::Impl {
+public:
+    explicit Impl(StatisticOptions options) : options_(std::move(options)) {
+        options_.processing.validate();
     }
 
-    StatisticsWriterOptions writerOptions;
-    writerOptions.inputFastqPath = options_.inputFastqPath;
-    writerOptions.qualityEncoding = options_.qualityEncoding;
-    writerOptions.duplicateEstimateSampleModulo = options_.duplicateEstimateSampleModulo;
-    writerOptions.signatureReportPath = options_.signatureReportPath;
-    writerOptions.maxReportedSignatures = options_.maxReportedSignatures;
+    void run() {
+        fq::logging::info("Starting FASTQ statistics generation for '{}' using execution runtime.",
+                          options_.inputFastqPath);
 
-    StatisticsWriter statsWriter(writerOptions);
-    statsWriter.write(writer, result);
+        processing::ExecutionRuntime runtime;
+        processing::ExecutionRuntimeRequest plan;
+        plan.inputPath = options_.inputFastqPath;
+        plan.options = options_.processing;
 
-    if (!options_.signatureReportPath.empty()) {
-        writeSignatureSidecar(result);
+        auto outcome =
+            runtime.execute(plan,
+                            StatisticRuntimeAdapter{options_.qualityEncoding,
+                                                    options_.signatureKmerSize,
+                                                    options_.duplicateEstimateSampleModulo});
+        auto finalResult = std::move(outcome.result);
+
+        fq::logging::info("Execution runtime finished. Aggregated results from all batches.");
+        writeResult(finalResult);
+        fq::logging::info("Statistics report saved to '{}'", options_.outputStatPath);
     }
-}
 
-void FastqStatisticCalculator::writeSignatureSidecar(const FqStatisticResult& result) const {
-    std::ofstream writer(options_.signatureReportPath);
-    if (!writer) {
-        throw fq::error::IOError(options_.signatureReportPath, errno);
+private:
+    void writeResult(const FqStatisticResult& result) {
+        std::ofstream writer(options_.outputStatPath);
+        if (!writer) {
+            throw fq::error::IOError(options_.outputStatPath, errno);
+        }
+
+        StatisticsWriterOptions writerOptions;
+        writerOptions.inputFastqPath = options_.inputFastqPath;
+        writerOptions.qualityEncoding = options_.qualityEncoding;
+        writerOptions.duplicateEstimateSampleModulo = options_.duplicateEstimateSampleModulo;
+        writerOptions.signatureReportPath = options_.signatureReportPath;
+        writerOptions.maxReportedSignatures = options_.maxReportedSignatures;
+
+        StatisticsWriter statsWriter(writerOptions);
+        statsWriter.write(writer, result);
+
+        if (!options_.signatureReportPath.empty()) {
+            writeSignatureSidecar(result);
+        }
     }
 
-    StatisticsWriterOptions writerOptions;
-    writerOptions.duplicateEstimateSampleModulo = options_.duplicateEstimateSampleModulo;
-    writerOptions.maxReportedSignatures = options_.maxReportedSignatures;
+    void writeSignatureSidecar(const FqStatisticResult& result) const {
+        std::ofstream writer(options_.signatureReportPath);
+        if (!writer) {
+            throw fq::error::IOError(options_.signatureReportPath, errno);
+        }
 
-    StatisticsWriter statsWriter(writerOptions);
-    statsWriter.writeSignature(writer, result);
+        StatisticsWriterOptions writerOptions;
+        writerOptions.duplicateEstimateSampleModulo = options_.duplicateEstimateSampleModulo;
+        writerOptions.maxReportedSignatures = options_.maxReportedSignatures;
+
+        StatisticsWriter statsWriter(writerOptions);
+        statsWriter.writeSignature(writer, result);
+    }
+
+    StatisticOptions options_;
+};
+
+Calculator::Calculator(StatisticOptions options)
+    : impl_(std::make_unique<Impl>(std::move(options))) {}
+Calculator::~Calculator() = default;
+Calculator::Calculator(Calculator&&) noexcept = default;
+auto Calculator::operator=(Calculator&&) noexcept -> Calculator& = default;
+
+void Calculator::run() {
+    impl_->run();
 }
 
 }  // namespace fq::statistics

@@ -1,7 +1,5 @@
 #include "fqtools/processing/predicates/min_quality_predicate.h"
 
-#include <numeric>
-
 #include <fmt/format.h>
 
 namespace fq::processing {
