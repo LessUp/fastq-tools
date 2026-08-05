@@ -4,7 +4,6 @@
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/io/fastq_writer.h"
 
-#include <cerrno>
 #include <filesystem>
 #include <stdexcept>
 #include <utility>
@@ -108,22 +107,15 @@ auto ExecutionRuntime::executeErased(const ExecutionRuntimeRequest& request,
     if (impl_->customReader) {
         reader = std::shared_ptr<fq::io::IReader>(std::move(impl_->customReader));
     } else {
-        auto concreteReader =
+        // FastqReader/FastqWriter 构造失败时直接抛 IOError，无需 isOpen() 复查
+        reader =
             std::make_shared<fq::io::FastqReader>(request.inputPath, makeReaderOptions(config));
-        if (!concreteReader->isOpen()) {
-            throw fq::error::IOError(request.inputPath, errno);
-        }
-        reader = std::move(concreteReader);
     }
 
     auto writer = impl_->customWriter;
     if (!writer && request.outputPath) {
-        auto concreteWriter =
+        writer =
             std::make_shared<fq::io::FastqWriter>(*request.outputPath, makeWriterOptions(config));
-        if (!concreteWriter->isOpen()) {
-            throw fq::error::IOError(*request.outputPath, errno);
-        }
-        writer = std::move(concreteWriter);
     }
 
     auto backend = selectBackend(request.backend, config);

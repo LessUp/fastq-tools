@@ -390,12 +390,18 @@ if [[ "$STATIC_ANALYSIS" == "true" ]]; then
 fi
 
 if command -v conan &>/dev/null; then
-    TOOLCHAIN_PATH="${BUILD_DIR}/conan_toolchain.cmake"
+    # 规范化为绝对路径：CMake 会把 FILEPATH 缓存项规范成绝对路径，
+    # 用相对路径比较会永久误判"toolchain 变化"，导致每次运行都清空重建
+    case "${BUILD_DIR}" in
+        /*) TOOLCHAIN_PATH="${BUILD_DIR}/conan_toolchain.cmake" ;;
+        *) TOOLCHAIN_PATH="${PROJECT_ROOT}/${BUILD_DIR}/conan_toolchain.cmake" ;;
+    esac
 
     if [[ -f "${BUILD_DIR}/CMakeCache.txt" ]]; then
-        CACHE_TOOLCHAIN_LINE=$(grep -E '^CMAKE_TOOLCHAIN_FILE:FILEPATH=' "${BUILD_DIR}/CMakeCache.txt" 2>/dev/null || true)
-        EXPECTED_TOOLCHAIN_LINE="CMAKE_TOOLCHAIN_FILE:FILEPATH=${TOOLCHAIN_PATH}"
-        if [[ "${CACHE_TOOLCHAIN_LINE}" != "${EXPECTED_TOOLCHAIN_LINE}" ]]; then
+        # 缓存条目类型不固定（-D 裸传为 UNINITIALIZED，显式带类型为 FILEPATH），
+        # 只比较值本身，避免因类型差异永久误判"toolchain 变化"
+        CACHE_TOOLCHAIN_VALUE=$(grep -E '^CMAKE_TOOLCHAIN_FILE[^=]*=' "${BUILD_DIR}/CMakeCache.txt" 2>/dev/null | head -n1 | cut -d'=' -f2-)
+        if [[ "${CACHE_TOOLCHAIN_VALUE}" != "${TOOLCHAIN_PATH}" ]]; then
             if [[ "${BUILD_DIR_DEFAULTED}" == "true" ]]; then
                 log_warning "检测到构建目录已存在且 toolchain 发生变化/未设置；将自动清理构建目录以确保 Conan toolchain 生效: ${BUILD_DIR}"
                 safe_remove_dir "${BUILD_DIR}"
@@ -406,8 +412,19 @@ if command -v conan &>/dev/null; then
         fi
     fi
 
+    CONANFILE_PATH="build-config/dependencies/conanfile.py"
+    LOCKFILE_PATH="conan.lock"
+    CONANFILE_HASH_FILE="${BUILD_DIR}/conanfile.sha256"
+    # lockfile 一并纳入变更检测：仅更新 conan.lock（依赖升级）也能触发重装。
+    # --lockfile-out 回写经实测字节稳定（内容不变则文件不变），不会造成重装循环；
+    # lockfile 不存在时 cat 自动忽略该参数，退化为仅检测 conanfile.py。
+    CURRENT_CONANFILE_HASH=$(cat "${CONANFILE_PATH}" "${LOCKFILE_PATH}" 2>/dev/null | sha256sum | cut -d' ' -f1)
+
     NEED_CONAN_INSTALL=false
     if [[ ! -f "${TOOLCHAIN_PATH}" ]]; then
+        NEED_CONAN_INSTALL=true
+    elif [[ ! -f "${CONANFILE_HASH_FILE}" ]] || [[ "$(cat "${CONANFILE_HASH_FILE}" 2>/dev/null)" != "${CURRENT_CONANFILE_HASH}" ]]; then
+        log_info "检测到 conanfile.py/conan.lock 发生变化，将重新生成 Conan 依赖"
         NEED_CONAN_INSTALL=true
     fi
 
@@ -439,6 +456,10 @@ if command -v conan &>/dev/null; then
         CONAN_ARGS=(install build-config/dependencies/ --build=missing -of="${BUILD_DIR}" -s "build_type=${CONAN_BUILD_TYPE}")
         CONAN_ARGS+=(-o "fastqtools/*:build_testing=True")
         CONAN_ARGS+=(-o "fastqtools/*:build_benchmarks=False")
+        if [[ -f "${LOCKFILE_PATH}" ]]; then
+            # 强制使用入库的锁定依赖图，并回写更新（字节稳定，不产生无谓 diff）
+            CONAN_ARGS+=(--lockfile="${LOCKFILE_PATH}" --lockfile-out="${LOCKFILE_PATH}")
+        fi
         if [[ -n "${CONAN_PROFILE}" && -f "${CONAN_PROFILE}" ]]; then
             CONAN_ARGS+=(-pr:h "${CONAN_PROFILE}")
         fi
@@ -469,8 +490,14 @@ if command -v conan &>/dev/null; then
 
         if ! conan "${CONAN_ARGS[@]}"; then
             log_error "Conan 依赖安装失败"
+            if [[ -f "${LOCKFILE_PATH}" ]]; then
+                log_error "若因 conanfile.py 依赖变更与锁定文件不同步，请先重新生成：conan lock create ${CONANFILE_PATH} --lockfile-out=${LOCKFILE_PATH}"
+            fi
             exit 1
         fi
+
+        # 记录 conanfile.py 校验和，下次构建时比对以触发依赖更新
+        echo "${CURRENT_CONANFILE_HASH}" > "${CONANFILE_HASH_FILE}"
     fi
 
     if [[ -f "${TOOLCHAIN_PATH}" ]]; then

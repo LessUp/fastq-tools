@@ -1,6 +1,5 @@
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
-from conan.tools.cmake import cmake_layout
 import os
 
 class FastQTools(ConanFile):
@@ -19,6 +18,9 @@ class FastQTools(ConanFile):
     }
     
     # Sources are located in the same place as this recipe, copy them to the recipe
+    # 注意：tests 的 TSAN_OPTIONS 引用 ${CMAKE_SOURCE_DIR}/build-config/sanitizers/tsan.supp，
+    # 该文件位于 recipe 目录之外，而 Conan 不允许 exports_sources 引用 recipe 目录之外的文件，
+    # 因此 conan create 导出构建场景不支持 TSan 测试；本地 conan install + 源码内构建不受影响。
     exports_sources = "CMakeLists.txt", "src/*", "include/*", "cmake/*", "tests/*", "tools/*"
 
     def configure(self):
@@ -44,7 +46,8 @@ class FastQTools(ConanFile):
         """
         Dependencies required only for building the project, like testing frameworks.
         """
-        self.tool_requires("cmake/[>=3.20]")
+        # 与 cmake_minimum_required(VERSION 3.28) 保持一致
+        self.tool_requires("cmake/[>=3.28]")
         if self.options.build_testing:
             self.requires("gtest/1.17.0")
 
@@ -81,7 +84,10 @@ endif()
         Build the project using CMake.
         """
         cmake = CMake(self)
-        cmake.configure()
+        cmake.configure(variables={
+            "BUILD_TESTING": self.options.build_testing,
+            "BUILD_BENCHMARKS": self.options.build_benchmarks,
+        })
         cmake.build()
 
     def package(self):

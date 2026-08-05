@@ -5,12 +5,13 @@
 ```
 tests/
 ├── CMakeLists.txt            # 测试根配置 + add_fq_test() 函数定义
-├── unit/                     # 单元测试（GTest，按模块镜像 src/ 目录）
+├── unit/                     # 单元测试（GTest，大体按 src/ 模块划分）
+│   ├── cli/                  #   CommandRegistry、CLI 参数解析、过滤计划
 │   ├── error/                #   类型化异常体系
 │   ├── io/                   #   FastqReader、FastqWriter
-│   ├── memory/               #   ObjectPool、FastqBatchPool
-│   ├── processing/           #   Pipeline 冒烟测试
-│   ├── statistics/           #   FqStatisticWorker
+│   ├── memory/               #   ObjectPool 并发对象池（实现位于 src/processing/）
+│   ├── processing/           #   执行运行时、运行时配置、Pipeline 冒烟、谓词与修改器
+│   ├── statistics/           #   FqStatisticWorker、统计报告
 │   └── CMakeLists.txt
 ├── integration/              # 集成测试（跨模块交互、文件 I/O）
 │   ├── test_pipeline_integration.cpp
@@ -156,11 +157,11 @@ TEST_F(ProcessorTest, FilterReads_ByQuality_RemovesLowQuality) {
 ./scripts/core/test --verbose
 
 # GDB 调试
-gdb --args build/clang-debug/test_common
+gdb --args build/clang-debug/tests/unit/test_io
 
 # ASan 构建
 ./scripts/core/build --sanitizer asan && ./scripts/core/test
 
 # Valgrind
-valgrind --leak-check=full build/clang-debug/test_common
+valgrind --leak-check=full build/clang-debug/tests/unit/test_io
 ```

@@ -67,7 +67,7 @@ FastQTools 是一个 C++23 FASTQ 质控工具，内置并行流水线内核。�
 
 ### `stat` — 统计
 
-read 计数、长度分布、碱基组成、GC 含量、Q20/Q30。
+read 计数、最大读长、碱基组成、GC 含量、Q20/Q30。
 
 ### `filter` — 过滤与修剪
 
@@ -98,7 +98,7 @@ auto stats = pipeline.run();
 
 ## 快速开始
 
-**环境要求**：GCC 13+ / Clang 17+，CMake 3.28+，Conan 2.x。Linux / macOS 原生支持；Windows 建议使用 WSL 或 Docker。
+**环境要求**：GCC 13+ / Clang 17+，CMake 3.28+，Conan 2.x。Linux 原生支持；macOS 脚本支持开发中（可手动构建）；Windows 建议 WSL 或 Docker。
 
 ```bash
 git clone https://github.com/LessUp/fastq-tools.git
@@ -106,6 +106,8 @@ cd fastq-tools
 ./scripts/core/build
 ./build/clang-release/FastQTools --help
 ```
+
+示例输入不随仓库附带，先用 `tools/data/gen_fastq.py` 生成示例数据：`python3 tools/data/gen_fastq.py -o sample.fastq && gzip -kf sample.fastq`。
 
 统计：
 
@@ -156,7 +158,7 @@ cd fastq-tools
 
 ## 测试与质量保证
 
-CI（GitHub Actions，push/PR 自动触发 format + build-and-test；sanitizer 仅手动触发）覆盖：
+CI（GitHub Actions，push/PR 均触发，sanitizer 矩阵随 PR 与主分支运行）覆盖：
 
 - 静态检查：clang-format、clang-tidy、cppcheck
 - 多编译器：GCC + Clang，Release 模式
@@ -169,7 +171,7 @@ CI（GitHub Actions，push/PR 自动触发 format + build-and-test；sanitizer �
 | | FastQTools | fastp | fastqc |
 |---|---|---|---|
 | 定位 | FASTQ 质控工具 | 全能 FASTQ 质控 | 质量报告 |
-| 统计 | Q20/Q30、GC、长度、碱基 | 更丰富的 QC 指标 | 可视化 HTML 报告 |
+| 统计 | Q20/Q30、GC、最大读长、碱基 | 更丰富的 QC 指标 | 可视化 HTML 报告 |
 | 过滤/修剪 | 一趟扫描，全部可配置 | 自动 adapter 检测 | 不支持 |
 | Adapter 推断 | 不支持（需显式指定） | 内置自动检测 | 不支持 |
 | 可视化 | 无 | HTML + JSON 报告 | 交互式 HTML |

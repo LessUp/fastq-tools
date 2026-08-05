@@ -5,7 +5,16 @@
 - C++23 编译器（GCC 13+ 或 Clang 17+ 最低）
 - CMake 3.28+
 - Conan 2.x
-- Linux 或 macOS；Windows 用 Docker 或 WSL
+- Linux 原生支持；macOS 脚本支持开发中（可手动构建）；Windows 用 Docker 或 WSL
+
+## 安装 Conan
+
+FastQTools 用 Conan 2.x 管理 C++ 依赖。`scripts/core/install-deps` 不会安装 Conan，需要先手动安装：
+
+```bash
+pipx install conan        # 或 pip install conan
+conan profile detect      # 生成默认 profile
+```
 
 ## 安装依赖
 
@@ -24,11 +33,18 @@
 
 构建产物在 `build/clang-release/FastQTools`。
 
-v4 生产和 benchmark 构建只保留 Sequential 与 oneTBB backend；历史 Taskflow 对照数据仍保存在性能归档中，不再作为可选依赖构建。GitHub Actions 质量流水线 push/PR 自动触发 format + build-and-test，sanitizer 仅手动触发。
+v4 生产和 benchmark 构建只保留 Sequential 与 oneTBB backend；历史 Taskflow 对照数据仍保存在性能归档中，不再作为可选依赖构建。GitHub Actions 质量流水线 push/PR 均触发，sanitizer 矩阵随 PR 与主分支运行。
 
 如需构建 benchmark，可在已有构建目录中启用 `-DBUILD_BENCHMARKS=ON`；benchmark、nlohmann_json 和 GoogleTest 由 Conan 构建选项按需加入。安装后库消费者只需链接 `FastQTools::FastQTools`，无需引入 cxxopts 或 nlohmann_json。
 
 ## 首次运行
+
+仓库不附带样本数据，先生成（默认 10,000 条 reads、80–150 bp，seed=42 可复现）：
+
+```bash
+python3 tools/data/gen_fastq.py -o sample.fastq
+gzip -kf sample.fastq   # 生成 sample.fastq.gz，供下面的示例使用
+```
 
 ```bash
 ./build/clang-release/FastQTools --help

@@ -59,7 +59,10 @@ public:
     /// 设置输出文件路径（自定义 Writer 优先）
     void setOutputPath(const std::string& outputPath);
 
+    /// 注入自定义 reader（单次消费）：一次 run() 后必须重新注入才能再次运行
     void setReader(std::unique_ptr<fq::io::IReader> reader);
+    /// 注入自定义 writer（共享所有权，调用方可控制 flush 生命周期）：
+    /// run() 成功返回时 finish() 已被调用，重跑需注入新 writer
     void setWriter(std::unique_ptr<fq::io::IWriter> writer);
     void setProcessingOptions(const ProcessingOptions& options);
 

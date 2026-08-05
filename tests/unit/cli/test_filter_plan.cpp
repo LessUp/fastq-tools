@@ -1,3 +1,4 @@
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -269,6 +270,35 @@ TEST(FilterPlanTest, RejectsNegativeQualityThresholds) {
     const auto common = CommonCliOptions::parse(parsed);
 
     EXPECT_THROW(static_cast<void>(buildFilterPlan(parsed, common)), std::invalid_argument);
+}
+
+// 超大 MB/GB 值换算字节会回绕 size_t，必须在换算前拒绝
+TEST(CommonCliOptionsTest, RejectsOverflowingBatchCapacityMb) {
+    CommonCliOptions common;
+    common.batchCapacityMb = std::numeric_limits<size_t>::max();
+
+    EXPECT_THROW(static_cast<void>(common.toProcessingOptions()), std::invalid_argument);
+}
+
+TEST(CommonCliOptionsTest, RejectsOverflowingMemoryLimitGb) {
+    CommonCliOptions common;
+    common.memoryLimitGb = std::numeric_limits<size_t>::max();
+
+    EXPECT_THROW(static_cast<void>(common.toProcessingOptions()), std::invalid_argument);
+}
+
+// 合法值不受上限影响，换算正确
+TEST(CommonCliOptionsTest, ConvertsInRangeCapacityAndLimitToBytes) {
+    CommonCliOptions common;
+    common.batchCapacityMb = 8;
+    common.memoryLimitGb = 2;
+
+    const auto opts = common.toProcessingOptions();
+
+    ASSERT_TRUE(opts.batchCapacityBytes.has_value());
+    EXPECT_EQ(opts.batchCapacityBytes.value(), 8ULL * 1024ULL * 1024ULL);
+    ASSERT_TRUE(opts.memoryLimitBytes.has_value());
+    EXPECT_EQ(opts.memoryLimitBytes.value(), 2ULL * 1024ULL * 1024ULL * 1024ULL);
 }
 
 }  // namespace fq::cli

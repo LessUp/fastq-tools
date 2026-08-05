@@ -42,7 +42,7 @@ benchmark-reports/
 | 工具 | <如：Google Benchmark 1.9.5 / Valgrind 3.22.0 Callgrind> |
 | 构建 | <如：Clang 21 Release / RelWithDebInfo> |
 | 数据集 | <如：1M×150 bp seed=42 / sample_1k> |
-| 基线 | [environment.md](../../environment.md)（偏离时注明） |
+| 基线 | [environment.md](../environment.md)（偏离时注明） |
 
 ## 结论
 

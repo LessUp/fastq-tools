@@ -79,7 +79,7 @@ public:
             << "Global options:\n"
             << "  -v, --verbose        Enable verbose/debug output\n"
             << "  -q, --quiet          Suppress non-error output\n"
-            << "  --log-level=LEVEL    Set log level (trace,debug,info,warn,error)\n\n"
+            << "  --log-level=LEVEL    Set log level (debug,info,warn,error,off)\n\n"
             << "Available commands:\n";
 
         for (const auto& [name, command] : commands_) {

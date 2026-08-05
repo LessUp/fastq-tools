@@ -110,9 +110,10 @@ TEST_F(MinQualityPredicateTest, ThreadSafeStatistics) {
         t.join();
     }
 
-    // 4 线程 × 100 次 = 400 次评估
+    // 4 线程 × 100 次 = 400 次评估，全部通过（q40 >= 20）。
+    // 断言精确计数：计数器丢失更新（原子性回归）会直接失败
     std::string stats = predicate.getStatistics();
-    EXPECT_FALSE(stats.empty());
+    EXPECT_NE(stats.find("Passed 400/400"), std::string::npos) << stats;
 }
 
 // ============================================================================

@@ -82,7 +82,11 @@ struct FastqReader::Impl {
             return 0;
         }
         if (isGzip) {
-            const int n = gzread(gzfile, dst, static_cast<unsigned>(toRead));
+            // gzread 接受 unsigned int 参数：分块避免大缓冲静默截断（外层循环会续读）
+            constexpr size_t kMaxGzChunk =
+                static_cast<size_t>(std::numeric_limits<unsigned>::max()) / 2;
+            const auto chunk = static_cast<unsigned>(std::min(toRead, kMaxGzChunk));
+            const int n = gzread(gzfile, dst, chunk);
             return static_cast<ssize_t>(n);
         }
 
@@ -115,6 +119,10 @@ auto FastqReader::isOpen() const -> bool {
 }
 
 auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
+    if (maxRecords == 0) {
+        // 0 会使读取循环不读任何数据即报 EOF（或携 remainder 时空转），属调用方契约错误
+        throw std::invalid_argument("FastqReader::nextBatch maxRecords must be >= 1");
+    }
     if (!impl_ || !impl_->isOpen()) {
         return false;
     }
@@ -122,9 +130,10 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
     batch.records().clear();
     batch.buffer().clear();
 
-    // 优化：直接移动 remainder 到 batch buffer，避免额外的 swap + clear
+    // 将上批未消费的残片拷入 batch buffer 头部：保留对象池预分配的容量，
+    // 避免 std::move(remainder) 把池缓冲替换成小存储后又反复重新分配
     if (!impl_->remainder.empty()) {
-        batch.buffer() = std::move(impl_->remainder);
+        batch.buffer().assign(impl_->remainder.begin(), impl_->remainder.end());
         impl_->remainder.clear();
     }
 
@@ -178,8 +187,15 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
                 if (kBytesRead < 0) {
                     if (impl_->isGzip) {
                         int err = 0;
-                        (void)gzerror(impl_->gzfile, &err);
-                        throw fq::error::IOError(impl_->path, err);
+                        const char* msg = gzerror(impl_->gzfile, &err);
+                        if (err == Z_ERRNO) {
+                            throw fq::error::IOError(impl_->path, errno);
+                        }
+                        // 其余 Z_* 码不是 errno，直接携带 zlib 的错误描述，
+                        // 避免 strerror() 把压缩库错误码渲染成无意义文本
+                        throw fq::error::FastQException(fq::error::ErrorCategory::IO,
+                                                        fq::error::ErrorSeverity::Critical,
+                                                        msg ? msg : "gzread failed");
                     }
                     throw fq::error::IOError(impl_->path, errno);
                 }
@@ -305,6 +321,9 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
             }
             rec.qual = std::string_view(line4Start, qualLen);
 
+            if (rec.seq.empty()) {
+                throw fq::error::FormatError(fmt::format("Empty sequence for read '{}'", rec.id));
+            }
             if (!rec.validateLengths()) {
                 throw fq::error::FormatError(
                     fmt::format("Sequence and quality length mismatch for read '{}': {} vs {}",
@@ -326,7 +345,7 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
             const auto kConsumed = static_cast<size_t>(lastValidPtr - data);
             const auto kTotal = static_cast<size_t>(end - data);
             if (kConsumed < kTotal) {
-                // 优化：预分配 remainder 容量避免反复分配
+                // 未消费的残片暂存 reader 侧；resize 复用 remainder 既有容量（clear 不释放）
                 const size_t remainderLen = kTotal - kConsumed;
                 impl_->remainder.resize(remainderLen);
                 std::memcpy(
@@ -344,8 +363,10 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
         if (impl_->options.maxBufferBytes > 0 &&
             batch.buffer().size() >= impl_->options.maxBufferBytes) {
             throw fq::error::FormatError(
-                "FastqReader reached maxBufferBytes without parsing a complete record; increase "
-                "batchCapacityBytes/maxBufferBytes");
+                "FastqReader reached the per-batch buffer capacity without parsing a complete "
+                "record (a single read is longer than the buffer); increase --batch-capacity-mb "
+                "(library users: ProcessingOptions::batchCapacityBytes / "
+                "FastqReaderOptions::maxBufferBytes)");
         }
     }
 }

@@ -6,7 +6,7 @@
 | 工具 | Google Benchmark 1.9.5 |
 | 构建类型 | Release（-O3，LTO） |
 | 重复次数 | 3（报告 mean / median / stddev / cv） |
-| 基线 | [environment.md](../../environment.md) |
+| 基线 | [environment.md](../../../environment.md) |
 
 ## 调用方式
 

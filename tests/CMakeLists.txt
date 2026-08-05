@@ -1,5 +1,3 @@
-enable_testing()
-
 # ---------------------------------------------------------------------------
 # add_fq_test(<name> <label> <timeout> <source_files...>)
 #

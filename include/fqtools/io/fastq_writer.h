@@ -31,6 +31,8 @@ struct FastqWriterOptions {
 /**
  * @brief FASTQ 文件写入器（move-only）
  * @details 先写同目录临时文件，finish() 成功后原子 rename 发布。
+ * 未调用 finish() 即析构时只清理临时文件、不发布输出——
+ * 异常展开路径下的不完整内容绝不会出现在目标路径上。
  */
 class FastqWriter : public IWriter {
 public:

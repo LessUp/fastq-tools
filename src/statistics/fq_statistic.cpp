@@ -12,10 +12,18 @@
 #include "fqtools/statistics/statistics_writer.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cerrno>
+#include <cstdint>
+#include <filesystem>
 #include <fstream>
+#include <functional>
+#include <string>
+#include <system_error>
 #include <utility>
 #include <vector>
+
+#include <unistd.h>
 
 #include "processing/execution_runtime.h"
 #include "statistics/fq_statistic_worker.h"
@@ -97,8 +105,25 @@ auto FqStatisticResult::operator+=(const FqStatisticResult& other) -> FqStatisti
         current += count;
     }
 
+    // 合并每批的有界 sketch 到全局有界 sketch：worker 侧每批限 64 个 key，
+    // 但高多样性数据下批间几乎不重复，无界合并会随批数线性膨胀
+    // （10 万批 → 数百万 map 节点）。允许临时超界一倍，超限后按计数保留 top-K——
+    // 报告只取 top-N（N << K），剪枝不影响结果。
+    constexpr size_t kMaxHeadKmerEntries = 4096;
     for (const auto& [kmer, count] : other.headKmerCounts) {
         headKmerCounts[kmer] += count;
+    }
+    if (headKmerCounts.size() > kMaxHeadKmerEntries * 2) {
+        std::vector<std::pair<std::string, uint64_t>> entries(headKmerCounts.begin(),
+                                                              headKmerCounts.end());
+        std::partial_sort(entries.begin(),
+                          entries.begin() + kMaxHeadKmerEntries,
+                          entries.end(),
+                          [](const auto& lhs, const auto& rhs) { return lhs.second > rhs.second; });
+        headKmerCounts.clear();
+        for (size_t i = 0; i < kMaxHeadKmerEntries; ++i) {
+            headKmerCounts.emplace(std::move(entries[i].first), entries[i].second);
+        }
     }
 
     return *this;
@@ -132,12 +157,41 @@ public:
     }
 
 private:
-    void writeResult(const FqStatisticResult& result) {
-        std::ofstream writer(options_.outputStatPath);
-        if (!writer) {
-            throw fq::error::IOError(options_.outputStatPath, errno);
+    // 先写同目录临时文件、校验流状态、再原子 rename 发布——
+    // 与 FastqWriter 的发布协议一致：磁盘满等写失败抛 IOError，绝不产出半截报告
+    static void writeAtomically(const std::string& target,
+                                const std::function<void(std::ofstream&)>& writeBody) {
+        // 唯一后缀（pid+counter）：与 FastqWriter 临时文件命名一致，
+        // 避免固定 .tmp 在多进程写同一目标时互相覆盖/发布对方的半成品
+        static std::atomic<std::uint64_t> counter{0};
+        const auto tmpPath = target + ".tmp-" + std::to_string(::getpid()) + "-" +
+            std::to_string(counter.fetch_add(1, std::memory_order_relaxed));
+        // 任意阶段抛异常（writeBody/flush/rename）都清理残留临时文件，避免磁盘遗留半截报告
+        try {
+            {
+                std::ofstream writer(tmpPath);
+                if (!writer) {
+                    throw fq::error::IOError(tmpPath, errno);
+                }
+                writeBody(writer);
+                writer.flush();
+                if (!writer.good()) {
+                    throw fq::error::IOError(target, EIO);
+                }
+            }  // writer 此处析构关闭，确保数据落盘后再 rename
+            std::error_code renameError;
+            std::filesystem::rename(tmpPath, target, renameError);
+            if (renameError) {
+                throw fq::error::IOError(target, renameError.value());
+            }
+        } catch (...) {
+            std::error_code removeError;
+            std::filesystem::remove(tmpPath, removeError);
+            throw;
         }
+    }
 
+    void writeResult(const FqStatisticResult& result) {
         StatisticsWriterOptions writerOptions;
         writerOptions.inputFastqPath = options_.inputFastqPath;
         writerOptions.qualityEncoding = options_.qualityEncoding;
@@ -146,7 +200,8 @@ private:
         writerOptions.maxReportedSignatures = options_.maxReportedSignatures;
 
         StatisticsWriter statsWriter(writerOptions);
-        statsWriter.write(writer, result);
+        writeAtomically(options_.outputStatPath,
+                        [&](std::ofstream& writer) { statsWriter.write(writer, result); });
 
         if (!options_.signatureReportPath.empty()) {
             writeSignatureSidecar(result);
@@ -154,17 +209,13 @@ private:
     }
 
     void writeSignatureSidecar(const FqStatisticResult& result) const {
-        std::ofstream writer(options_.signatureReportPath);
-        if (!writer) {
-            throw fq::error::IOError(options_.signatureReportPath, errno);
-        }
-
         StatisticsWriterOptions writerOptions;
         writerOptions.duplicateEstimateSampleModulo = options_.duplicateEstimateSampleModulo;
         writerOptions.maxReportedSignatures = options_.maxReportedSignatures;
 
         StatisticsWriter statsWriter(writerOptions);
-        statsWriter.writeSignature(writer, result);
+        writeAtomically(options_.signatureReportPath,
+                        [&](std::ofstream& writer) { statsWriter.writeSignature(writer, result); });
     }
 
     StatisticOptions options_;

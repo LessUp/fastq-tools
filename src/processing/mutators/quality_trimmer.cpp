@@ -1,6 +1,7 @@
 #include "fqtools/processing/mutators/quality_trimmer.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include <fmt/format.h>
 
@@ -69,35 +70,32 @@ auto QualityTrimmer::trimFivePrime(std::string_view sequence, std::string_view q
     size_t i = 0;
 
 #ifdef __AVX2__
-    // Align? No usually just loadu.
-    // Quality is char, encoded.
-    // Threshold check: qual[i] - encoding >= threshold
-    // => qual[i] >= threshold + encoding
-    // Let target = threshold + encoding
-    int target = static_cast<int>(qualityThreshold_) + qualityEncoding_;
-    // If target > 127 or so, be careful with signed comparisons.
-    // char is usually signed. -128 to 127.
-    // Quality scores are usually 33..70+.
-    // _mm256_cmpgt_epi8 does signed comparison.
-    // If target > 127, we might have issues if char is signed.
-    // Standard fastq qual is printable ASCII (33-126).
-    // So all positive in signed char.
-
-    __m256i vTarget = _mm256_set1_epi8(static_cast<char>(target - 1));
-    // We want to find FIRST char where q >= target.
-    // Equivalent to q > target - 1.
-    // So we invoke cmpgt(q, target - 1).
-
-    for (; i + 32 <= len; i += 32) {
-        __m256i chunk = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(quality.data() + i));
-        __m256i result = _mm256_cmpgt_epi8(chunk, vTarget);
-        int mask = _mm256_movemask_epi8(result);
-        if (mask != 0) {
-            // Found a high quality base
-            return i + __builtin_ctz(mask);
+    // 必须与标量路径 isHighQuality() 语义一致：q >= threshold（q 为整数），
+    // 等价于 char >= ceil(threshold) + encoding。历史实现用 static_cast<int>
+    // 截断阈值（floor），使小数阈值在 AVX2 构建与标量构建下剪出不同结果。
+    const int target = static_cast<int>(std::ceil(qualityThreshold_)) + qualityEncoding_;
+    if (target > 127) {
+        // 任何 char 都无法达到门限：q = char - encoding <= 127 - encoding < threshold，
+        // 全剪（同时规避 set1_epi8 的符号回绕）
+        return len;
+    }
+    if (target - 1 >= -128) {
+        // 找第一个高质量碱基：char >= target ⟺ char > target - 1。
+        // _mm256_cmpgt_epi8 是有符号比较；target-1 落在 [-128, 126] 时，
+        // 对全部字节取值都与标量整数比较一致。
+        const __m256i vTarget = _mm256_set1_epi8(static_cast<char>(target - 1));
+        for (; i + 32 <= len; i += 32) {
+            __m256i chunk =
+                _mm256_loadu_si256(reinterpret_cast<const __m256i*>(quality.data() + i));
+            __m256i result = _mm256_cmpgt_epi8(chunk, vTarget);
+            int mask = _mm256_movemask_epi8(result);
+            if (mask != 0) {
+                return i + static_cast<size_t>(__builtin_ctz(static_cast<unsigned>(mask)));
+            }
         }
     }
-    // Handle remaining... falls through to scalar
+    // target - 1 < -128 仅在阈值极低时出现（CLI 拒绝负值）；
+    // 跳过 SIMD，由下方标量循环保证语义一致
 #endif
 
     for (; i < len; ++i) {
@@ -143,7 +141,8 @@ void LengthTrimmer::process(fq::io::FastqRecord& read) {
     if (len <= targetLength_) {
         return;
     }
-    // MaxLength: 保留前 N 个碱基；FromStart: 保留末尾 N 个碱基
+    // MaxLength: 从 3' 端截断，保留前 N 个碱基；
+    // FromStart: 从 5' 端截断，保留末尾 N 个碱基
     const size_t start = (strategy_ == TrimStrategy::FromStart) ? (len - targetLength_) : 0;
     read.seq = read.seq.substr(start, targetLength_);
     read.qual = read.qual.substr(start, targetLength_);

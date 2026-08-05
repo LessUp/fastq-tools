@@ -8,6 +8,7 @@
 #include <cerrno>
 #include <cstring>
 #include <filesystem>
+#include <limits>
 #include <string>
 #include <utility>
 #include <vector>
@@ -20,7 +21,14 @@ namespace fq::io {
 
 namespace {
 
-auto makeTemporaryPath(const std::filesystem::path& target) -> std::filesystem::path {
+struct TemporaryFile {
+    std::filesystem::path path;
+    int fd = -1;
+};
+
+// 创建临时文件并返回持有其 fd 的结果：后续 gz/plain 写入直接复用该 fd，
+// 消除"O_EXCL 创建后关闭、再以普通 open 重开"之间的 TOCTOU 窗口。
+auto makeTemporaryFile(const std::filesystem::path& target) -> TemporaryFile {
     static std::atomic<std::uint64_t> counter{0};
     const auto parent =
         target.parent_path().empty() ? std::filesystem::path(".") : target.parent_path();
@@ -30,10 +38,9 @@ auto makeTemporaryPath(const std::filesystem::path& target) -> std::filesystem::
         const auto suffix = ".tmp-" + std::to_string(processId) + "-" +
             std::to_string(counter.fetch_add(1, std::memory_order_relaxed));
         const auto candidate = parent / (filename + suffix);
-        const int marker = ::open(candidate.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600);
-        if (marker >= 0) {
-            ::close(marker);
-            return candidate;
+        const int descriptor = ::open(candidate.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600);
+        if (descriptor >= 0) {
+            return {candidate, descriptor};
         }
         if (errno != EEXIST) {
             throw fq::error::IOError(candidate.string(), errno);
@@ -60,15 +67,16 @@ struct FastqWriter::Impl {
     FastqWriterCompressionMode compression = FastqWriterCompressionMode::Auto;
     std::vector<char> buffer;
 
-    std::atomic<std::uint64_t> totalUncompressedBytes{0};
+    // writer 只在执行后端的串行输出阶段被访问（IWriter 契约），无需原子计数
+    std::uint64_t totalUncompressedBytes = 0;
     bool finished = false;
-    bool finishFailed = false;
 
     // 记录已刷写到磁盘的文件偏移，用于 posix_fadvise DONTNEED
     off_t flushedOffset = 0;
 
     explicit Impl(std::string p, const FastqWriterOptions& opt) : path(std::move(p)), options(opt) {
-        temporaryPath = makeTemporaryPath(path);
+        auto temp = makeTemporaryFile(path);
+        temporaryPath = temp.path;
 
         try {
             if (options.compression == FastqWriterCompressionMode::Auto) {
@@ -84,21 +92,28 @@ struct FastqWriter::Impl {
                         "gzip compression level must be between 1 and 9");
                 }
                 // 使用 zlib gz API 写入 gzip 文件，默认压缩级别 6。
+                // gzdopen 接管临时文件 fd（gzclose 时一并关闭），不再重开文件。
                 const std::string mode = "wb" + std::to_string(options.compressionLevel);
-                gzfile = gzopen(temporaryPath.c_str(), mode.c_str());
+                gzfile = gzdopen(temp.fd, mode.c_str());
                 if (!gzfile) {
                     throw fq::error::IOError(temporaryPath.string(), errno);
                 }
+                temp.fd = -1;  // fd 所有权移交给 gzFile
                 gzbuffer(gzfile, static_cast<unsigned>(options.outputBufferBytes));
             } else {
-                fd = ::open(temporaryPath.c_str(), O_WRONLY | O_TRUNC, 0600);
-                if (fd < 0) {
-                    throw fq::error::IOError(temporaryPath.string(), errno);
-                }
+                fd = temp.fd;
+                temp.fd = -1;
             }
 
             buffer.reserve(options.outputBufferBytes);
         } catch (...) {
+            if (temp.fd >= 0) {
+                ::close(temp.fd);
+            }
+            if (gzfile) {
+                gzclose(gzfile);
+                gzfile = nullptr;
+            }
             std::error_code error;
             std::filesystem::remove(temporaryPath, error);
             throw;
@@ -106,15 +121,10 @@ struct FastqWriter::Impl {
     }
 
     ~Impl() {
-        if (!finished && !finishFailed) {
-            try {
-                finish();
-            } catch (const std::exception& e) {
-                // 析构只做兜底；显式 finish() 的错误已由调用方获得。
-                fq::logging::error("FastqWriter finish failed on close: {}", e.what());
-                cleanupTemporaryFile();
-            }
-        } else if (!finished) {
+        // 析构只做兜底清理，绝不发布输出：异常展开到达这里时内容必然不完整，
+        // 若调用 finish() 会把截断结果 rename 成目标文件，被误认为完整产物。
+        // 发布只能经由显式 finish()（见 IWriter::finish 契约）。
+        if (!finished) {
             cleanupTemporaryFile();
         }
     }
@@ -166,7 +176,6 @@ struct FastqWriter::Impl {
             }
             finished = true;
         } catch (...) {
-            finishFailed = true;
             cleanupTemporaryFile();
             throw;
         }
@@ -178,15 +187,24 @@ struct FastqWriter::Impl {
         }
 
         if (compression == FastqWriterCompressionMode::Gzip) {
-            // gzwrite 返回写入的未压缩字节数（0 表示错误）
-            const auto toWrite = static_cast<unsigned>(buffer.size());
-            int written = gzwrite(gzfile, buffer.data(), toWrite);
-            if (written == 0 || static_cast<unsigned>(written) != toWrite) {
-                int err = 0;
-                const char* msg = gzerror(gzfile, &err);
-                throw fq::error::FastQException(fq::error::ErrorCategory::IO,
-                                                fq::error::ErrorSeverity::Critical,
-                                                msg ? msg : "gzwrite failed");
+            // gzwrite 接受 unsigned int 参数：分块写出避免大缓冲静默截断。
+            // 返回写入的未压缩字节数（0 表示错误）
+            constexpr size_t kMaxGzChunk =
+                static_cast<size_t>(std::numeric_limits<unsigned>::max()) / 2;
+            const char* outPtr = buffer.data();
+            size_t remaining = buffer.size();
+            while (remaining > 0) {
+                const auto toWrite = static_cast<unsigned>(std::min(remaining, kMaxGzChunk));
+                const int written = gzwrite(gzfile, outPtr, toWrite);
+                if (written <= 0 || static_cast<unsigned>(written) != toWrite) {
+                    int err = 0;
+                    const char* msg = gzerror(gzfile, &err);
+                    throw fq::error::FastQException(fq::error::ErrorCategory::IO,
+                                                    fq::error::ErrorSeverity::Critical,
+                                                    msg ? msg : "gzwrite failed");
+                }
+                outPtr += written;
+                remaining -= static_cast<size_t>(written);
             }
         } else {
             const char* outPtr = buffer.data();
@@ -228,8 +246,6 @@ struct FastqWriter::Impl {
             needed += 1 + rec.comment.size();  // Space + Comment
         }
 
-        totalUncompressedBytes.fetch_add(needed, std::memory_order_relaxed);
-
         // Flush if buffer full
         if (buffer.size() + needed > buffer.capacity()) {
             flush();
@@ -267,6 +283,9 @@ struct FastqWriter::Impl {
         std::memcpy(dst, rec.qual.data(), rec.qual.size());
         dst += rec.qual.size();
         *dst++ = '\n';
+
+        // 记录确实进入缓冲区后才计数：flush 抛异常时不把未接受的字节算进提交量
+        totalUncompressedBytes += needed;
     }
 };
 
@@ -312,7 +331,7 @@ void FastqWriter::finish() {
 }
 
 auto FastqWriter::totalUncompressedBytes() const -> std::uint64_t {
-    return impl_ ? impl_->totalUncompressedBytes.load(std::memory_order_relaxed) : 0;
+    return impl_ ? impl_->totalUncompressedBytes : 0;
 }
 
 }  // namespace fq::io

@@ -81,8 +81,11 @@
 # 基本用法
 ./scripts/core/lint check                    # 检查代码风格
 ./scripts/core/lint format                   # 自动格式化
+./scripts/core/lint format-check             # 仅检查格式（不修改）
 ./scripts/core/lint tidy                     # 静态分析
 ./scripts/core/lint tidy-fix                 # 自动修复问题
+./scripts/core/lint cppcheck                 # Cppcheck 静态分析
+./scripts/core/lint iwyu                     # Include-What-You-Use 分析
 ./scripts/core/lint all                      # 运行所有检查
 
 # 高级用法
@@ -239,9 +242,7 @@ chmod +x scripts/core/*
 ## 更多文档
 
 - **完整脚本文档**: `scripts/README.md`
-- **架构设计**: `scripts/architecture.md`
 - **测试文档**: `tests/README.md`
-- **迁移指南**: `docs/migration.md`
 
 ---
 
@@ -261,6 +262,6 @@ chmod +x scripts/core/*
 
 ---
 
-**维护**: FastQTools 团队  
+**维护**: shijiashuai  
 **更新**: 2026-01-08  
 **版本**: 2.0

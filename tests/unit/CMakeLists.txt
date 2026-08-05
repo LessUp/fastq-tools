@@ -22,6 +22,7 @@ add_custom_target(unit_tests
         test_error
         test_io
         test_processing
+        test_cli
         test_predicates
         test_mutators
         test_statistics

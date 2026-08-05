@@ -231,6 +231,19 @@ class TestFastQToolsCLI(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertTrue(os.path.exists(output_stats))
 
+    def test_filter_accepts_batch_capacity_option(self):
+        output_fastq = os.path.join(self.test_dir, "batch-capacity.fastq")
+        result = self.run_cmd([
+            "filter",
+            "--input", self.sample_fastq,
+            "--output", output_fastq,
+            "--threads", "2",
+            "--batch-capacity-mb", "8",
+        ])
+
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(os.path.exists(output_fastq))
+
     def test_filter_accepts_adapter_and_poly_tail_options(self):
         input_fastq = os.path.join(self.test_dir, "preprocess.fastq")
         output_fastq = os.path.join(self.test_dir, "preprocess.out.fastq")

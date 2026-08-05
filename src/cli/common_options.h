@@ -38,7 +38,8 @@ struct CommonCliOptions {
 
     /// @name 高级参数（可选）
     /// @{
-    std::optional<size_t> memoryLimitGb;  ///< 内存限制（GB）
+    std::optional<size_t> memoryLimitGb;    ///< 内存限制（GB）
+    std::optional<size_t> batchCapacityMb;  ///< 单批缓冲上限（MB），超长记录需调大
     /// @}
 
     /**

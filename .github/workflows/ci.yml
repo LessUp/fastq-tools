@@ -1,6 +1,7 @@
 name: CI
 
-# push/PR 自动触发 format + build-and-test(Release)；sanitizer 仅手动触发
+# push/PR 自动触发全部 job：format、static-analysis、build-and-test（含 sanitizer）、fuzz-smoke、coverage。
+# PR 上除 TSan 外全部运行（TSan 仅 push 主分支，理由见 build-and-test 注释）；亦支持手动触发（workflow_dispatch）。
 on:
   push:
     branches: [main, master, develop]
@@ -31,7 +32,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
 
       - name: Setup formatter
         uses: ./.github/actions/setup-cpp
@@ -50,12 +51,17 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
 
       - name: Cache Conan packages
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25  # v5
         with:
           path: ~/.conan2
+          # 刻意保留独立主键（-analysis-）而非与 build-and-test 统一：
+          # 本 job 消费 gcc-Debug Conan 二进制，build-and-test(GCC) 消费 gcc-Release，
+          # 二者 package_id 不同；而 actions/cache 不会覆盖已存在的同 key 条目，
+          # 共享精确 key 会产生保存竞态，导致其中一方的包永远无法持久化。
+          # restore-keys 前缀回退已提供跨 job 的缓存复用（源码包等共享内容）。
           key: ${{ runner.os }}-conan-gcc-analysis-${{ hashFiles('build-config/dependencies/**') }}
           restore-keys: |
             ${{ runner.os }}-conan-gcc-analysis-
@@ -84,47 +90,77 @@ jobs:
   build-and-test:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
-    # PR 时跳过 sanitizer 构建（耗时较长），push 和手动触发时全跑
+    # PR 门禁：PR 运行除 TSan 外的全部构建（含 ASan/UBSan），push/手动触发全跑。
+    # TSan 仅 push 主分支的理由：TSan 运行时开销约 5-15 倍且内存占用翻倍，全量 ctest
+    # 作为 PR 门禁耗时过长；数据竞争回归频率低，由 push 到主分支的完整运行兜底。
     if: |
       github.event_name != 'pull_request' ||
-      !contains(matrix.name, 'San')
+      !contains(matrix.name, 'TSan')
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: GCC Release
             compiler: gcc
+            cache_slug: gcc-release
             build_command: ./scripts/core/build --preset gcc-release --no-lto
             test_command: ./scripts/core/test --preset gcc-release --timeout 180
           - name: Clang Release
             compiler: clang
+            cache_slug: clang-release
             build_command: ./scripts/core/build --compiler clang --type Release --build-dir build/ci-clang-release --conan-profile build-config/conan/profile-clang-ci --no-lto
             test_command: ./scripts/core/test --build-dir build/ci-clang-release --timeout 180
           - name: Clang ASan
             compiler: clang
+            cache_slug: clang-asan
             build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer asan --build-dir build/ci-clang-asan --conan-profile build-config/conan/profile-clang-ci --no-lto
-            test_command: ctest --test-dir build/ci-clang-asan --exclude-regex 'packaging_test'
+            test_command: ctest --test-dir build/ci-clang-asan --output-on-failure --parallel $(nproc) --exclude-regex 'packaging_test'
           - name: Clang TSan
             compiler: clang
+            cache_slug: clang-tsan
             build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer tsan --build-dir build/ci-clang-tsan --conan-profile build-config/conan/profile-clang-ci --no-lto
-            test_command: ctest --test-dir build/ci-clang-tsan --exclude-regex 'packaging_test'
+            test_command: ctest --test-dir build/ci-clang-tsan --output-on-failure --parallel $(nproc) --exclude-regex 'packaging_test'
           - name: Clang UBSan
             compiler: clang
+            cache_slug: clang-ubsan
             build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer ubsan --build-dir build/ci-clang-ubsan --conan-profile build-config/conan/profile-clang-ci --no-lto
-            test_command: ctest --test-dir build/ci-clang-ubsan --exclude-regex 'packaging_test'
+            test_command: ctest --test-dir build/ci-clang-ubsan --output-on-failure --parallel $(nproc) --exclude-regex 'packaging_test'
+
+    env:
+      # ccache 以环境变量方式注入 compiler launcher：CMake ≥ 3.17 会用同名环境变量初始化
+      # CMAKE_<LANG>_COMPILER_LAUNCHER，无需修改 scripts/core/build（其不支持透传 -D）；
+      # launcher 与 Conan toolchain 正交（在编译命令层注入），可正常穿透。
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      # 确保 sanitizer 发现问题时测试非零退出：UBSan 默认仅告警继续执行，必须
+      # halt_on_error=1 才能使 ctest 失败；ASan/TSan 显式声明以保持行为一致。
+      ASAN_OPTIONS: detect_leaks=1:halt_on_error=1:print_stacktrace=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+      TSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
 
       - name: Cache Conan packages
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25  # v5
         with:
           path: ~/.conan2
           key: ${{ runner.os }}-conan-${{ matrix.compiler }}-${{ hashFiles('build-config/dependencies/**') }}
           restore-keys: |
             ${{ runner.os }}-conan-${{ matrix.compiler }}-
             ${{ runner.os }}-conan-
+
+      - name: Cache ccache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25  # v5
+        with:
+          path: ~/.ccache
+          # cache_slug 编码 compiler + 构建类型 + sanitizer；主键随 commit 轮换，
+          # restore-keys 回退到同 slug 的历史缓存
+          key: ${{ runner.os }}-ccache-${{ matrix.cache_slug }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-${{ matrix.cache_slug }}-
+            ${{ runner.os }}-ccache-
 
       - name: Setup build toolchain
         uses: ./.github/actions/setup-cpp
@@ -133,12 +169,116 @@ jobs:
           conan-version: ${{ env.CONAN_VERSION }}
           llvm-version: ${{ env.LLVM_VERSION }}
           compiler: ${{ matrix.compiler }}
+          extra-apt-packages: ccache
+
+      - name: Configure ccache
+        run: |
+          ccache --set-config=max_size=2G
+          ccache --set-config=compiler_check=content
+          ccache --zero-stats
 
       - name: Build preset
         run: ${{ matrix.build_command }}
 
       - name: Run tests
         run: ${{ matrix.test_command }}
+
+      - name: Show ccache statistics
+        if: always()
+        run: ccache --show-stats
+
+  fuzz-smoke:
+    name: Fuzz Smoke
+    runs-on: ubuntu-latest
+
+    env:
+      # 同 build-and-test：ccache launcher 经环境变量注入，与 Conan toolchain 正交
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      # fuzzer 内置 libFuzzer + ASan（+UBSan，见 cmake/modules/fq_fuzzing.cmake），
+      # 显式声明确保发现问题时非零退出
+      ASAN_OPTIONS: detect_leaks=1:halt_on_error=1:print_stacktrace=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
+
+      - name: Cache Conan packages
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25  # v5
+        with:
+          path: ~/.conan2
+          key: ${{ runner.os }}-conan-clang-fuzz-${{ hashFiles('build-config/dependencies/**') }}
+          restore-keys: |
+            ${{ runner.os }}-conan-clang-fuzz-
+            ${{ runner.os }}-conan-clang-
+            ${{ runner.os }}-conan-
+
+      - name: Cache ccache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25  # v5
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-clang-fuzz-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-clang-fuzz-
+            ${{ runner.os }}-ccache-clang-
+            ${{ runner.os }}-ccache-
+
+      - name: Setup build toolchain
+        uses: ./.github/actions/setup-cpp
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+          conan-version: ${{ env.CONAN_VERSION }}
+          llvm-version: ${{ env.LLVM_VERSION }}
+          compiler: clang
+          extra-apt-packages: ccache
+
+      - name: Configure ccache
+        run: |
+          ccache --set-config=max_size=2G
+          ccache --set-config=compiler_check=content
+          ccache --zero-stats
+
+      # scripts/core/build 不支持透传 -D 参数，故分两步：先用脚本完成 Conan 依赖与
+      # 基础构建（复用其 Conan profile/版本推导逻辑），再重新 configure 打开
+      # ENABLE_FUZZING（toolchain 与编译器已持久化在 CMakeCache，无需重复指定）
+      - name: Build base project
+        run: ./scripts/core/build --compiler clang --type Debug --build-dir build/ci-fuzz --conan-profile build-config/conan/profile-clang-ci --no-lto
+
+      - name: Enable and build fuzzers
+        run: |
+          cmake -S . -B build/ci-fuzz -DENABLE_FUZZING=ON
+          cmake --build build/ci-fuzz --parallel "$(nproc)" \
+            --target fastq_parser_fuzzer fastq_mutator_fuzzer fastq_predicate_fuzzer fastq_statistics_fuzzer
+
+      # 每个 fuzzer 跑 60s 冒烟（4×60s）；set -e 下任一 crash（非零退出）即失败整个 job，
+      # crash 输入由 -artifact_prefix 收集到 fuzz-artifacts/ 并作为 artifact 上传供复现
+      - name: Run fuzzers (60s each)
+        run: |
+          set -euo pipefail
+          mkdir -p fuzz-artifacts tools/fuzz/corpus
+          for fuzzer in fastq_parser_fuzzer fastq_mutator_fuzzer fastq_predicate_fuzzer fastq_statistics_fuzzer; do
+            echo "::group::Fuzzing ${fuzzer}"
+            ./build/ci-fuzz/fuzzers/"${fuzzer}" tools/fuzz/corpus \
+              -max_total_time=60 \
+              -max_len=4096 \
+              -artifact_prefix="fuzz-artifacts/${fuzzer}-" \
+              -print_final_stats=1
+            echo "::endgroup::"
+          done
+
+      - name: Show ccache statistics
+        if: always()
+        run: ccache --show-stats
+
+      - name: Upload fuzz crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6
+        with:
+          name: fuzz-crash-artifacts
+          path: fuzz-artifacts/
+          if-no-files-found: ignore
+          retention-days: 14
 
   coverage:
     name: Coverage
@@ -147,12 +287,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
 
       - name: Cache Conan packages
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25  # v5
         with:
           path: ~/.conan2
+          # 独立主键（-coverage-）：与 static-analysis 同为 gcc-Debug 二进制，但
+          # actions/cache 不覆盖已存在的同 key 条目，共享精确 key 会因保存竞态
+          # 使一方无法持久化；restore-keys 前缀回退已提供跨 job 复用。
           key: ${{ runner.os }}-conan-gcc-coverage-${{ hashFiles('build-config/dependencies/**') }}
           restore-keys: |
             ${{ runner.os }}-conan-gcc-coverage-
@@ -175,17 +318,19 @@ jobs:
         run: ctest --preset coverage --exclude-regex 'packaging_test'
 
       - name: Generate coverage report
-        run: bash ./scripts/dev/analysis/coverage-report -b build/coverage -o coverage_report --xml
+        # --check-threshold 强制执行 build-config/coverage/thresholds.json 中的阈值
+        # （行覆盖 ≥70%、函数覆盖 ≥80%），未达标时脚本非零退出使 job 失败
+        run: bash ./scripts/dev/analysis/coverage-report -b build/coverage -o coverage_report --xml --check-threshold
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac  # v5
         with:
           files: coverage_report/coverage.xml
           fail_ci_if_error: false
           verbose: true
 
       - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6
         with:
           name: coverage-report
           path: coverage_report/

@@ -2,6 +2,7 @@
 
 #include "fqtools/io/fastq_io.h"
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <functional>
@@ -108,11 +109,18 @@ auto FqStatisticWorker::calculateStats(const Batch& batch) -> IStatistic::Result
         result.ensureCapacity(len);
 
         const char* seqPtr = read.seq.data();
-        const char* qualPtr = read.qual.data();
 
+        // 碱基统计（查找表，无分支）
         for (size_t i = 0; i < len; ++i) {
-            // 质量分数统计（clamp 到 [0, kMaxQual)）
-            int qVal = static_cast<int>(qualPtr[i]) - qualOffset_;
+            result.baseAt(i)[kBaseLut[static_cast<unsigned char>(seqPtr[i])]]++;
+        }
+
+        // 质量分数统计（clamp 到 [0, kMaxQual)）。
+        // 上界取 min(seq, qual)：内置 reader 保证两者等长，但 calculateStats 是公共接口，
+        // 自定义 IStatistic/IReader 可注入不等长记录，防御性限界避免堆越界读。
+        const size_t qualLen = std::min(len, read.qual.size());
+        for (size_t i = 0; i < qualLen; ++i) {
+            int qVal = static_cast<int>(read.qual[i]) - qualOffset_;
             if (qVal < 0) {
                 qVal = 0;
             }
@@ -120,9 +128,6 @@ auto FqStatisticWorker::calculateStats(const Batch& batch) -> IStatistic::Result
                 qVal = kMaxQual - 1;
             }
             result.qualityAt(i)[qVal]++;
-
-            // 碱基统计（查找表，无分支）
-            result.baseAt(i)[kBaseLut[static_cast<unsigned char>(seqPtr[i])]]++;
         }
     }
 

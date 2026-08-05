@@ -7,7 +7,7 @@
 | 构建类型 | RelWithDebInfo（-O2 + -g） |
 | 数据集 | sample_1k（1K reads × 100 bp） |
 | 模拟 cache 参数 | L1d 32KiB 8-way / L1i 32KiB 8-way / LL 16MiB 16-way（匹配 5800H 真实参数） |
-| 基线 | [environment.md](../../environment.md) |
+| 基线 | [environment.md](../../../environment.md) |
 
 ## 调用方式
 

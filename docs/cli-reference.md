@@ -7,14 +7,15 @@
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
 | `-i, --input` | 输入 FASTQ 文件（支持 `.gz`） | 必填 |
-| `-o, --output` | 输出文件 | stat 可选，filter 必填 |
+| `-o, --output` | 输出文件 | 必填 |
 | `-t, --threads` | 线程数 | 1 |
 | `--batch-size` | 每批记录数 | 10000 |
 | `--profile` | 性能档位：`default`/`lowMemory`/`highThroughput` | default |
 | `--memory-limit-gb` | 内存上限 GB（0=不限） | 0 |
+| `--batch-capacity-mb` | 单批缓冲上限 MB（0=档位默认） | 0 |
 | `--quality-encoding` | 质量编码偏移（33 或 64） | 33 |
 
-`--profile` 只调整运行时资源预算：`lowMemory` 使用较小的 batch/缓冲区，`highThroughput` 使用较大的 batch/缓冲区。`--memory-limit-gb` 会把 batch buffer、record vector、reader remainder、writer/zlib buffer 一并计入；不足以容纳最小运行集时命令以配置错误退出。
+`--profile` 只调整运行时资源预算：`lowMemory` 使用较小的 batch/缓冲区，`highThroughput` 使用较大的 batch/缓冲区。`--memory-limit-gb` 会把 batch buffer、record vector、reader remainder、writer/zlib buffer 一并计入；不足以容纳最小运行集时命令以配置错误退出。`--batch-capacity-mb` 覆盖档位的批缓冲默认值（default 4MB / lowMemory 1MB / highThroughput 16MB）；单条记录超过该上限时命令以格式错误退出——处理 ONT 等超长 read 时需要调大。
 
 全局选项（`main.cpp`）：`--verbose`/`-v`、`--quiet`/`-q`、`--log-level=<level>`。
 
@@ -31,7 +32,7 @@ FastQTools stat -i sample.fastq.gz -o sample.stats.txt
 | `--signature-limit` | 签名最大行数 | 20 |
 | `--duplicate-sample-modulo` | 重复估计采样模数（1=精确） | 1024 |
 
-输出指标：读段数、长度分布、碱基组成、GC 含量、Q20/Q30 质量指标。
+输出指标（TSV 摘要行）：文件名、质量编码、读段数、重复估计（`#DuplicateEstimate` 与 `#DuplicateEstimateRate`）、最大读长、总碱基数、Q20/Q30、碱基组成（A/C/G/T/N）与 GC 含量。摘要之后是逐位置明细表：`#Pos`、A/C/G/T/N 计数、`AvgQual`、`ErrRate`。
 
 ## filter — 过滤与修剪
 

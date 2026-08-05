@@ -449,4 +449,70 @@ TEST_F(PipelineIntegrationTest, StatisticCalculatorWritesSignatureSidecarWhenEna
     EXPECT_NE(signatures.find("head_kmer\tACGT\t2\n"), std::string::npos);
 }
 
+// 回归：并行流水线必须在有效规模上保证输出保序。
+// 历史保序测试仅 2 条记录，任何乱序 bug 在该规模下几乎不可能显现；
+// 本测试以 10k 条唯一 ID 记录、4 线程、小批次运行，读回输出逐条比对。
+// 若 serial_in_order 被误改为 parallel，此测试必然失败。
+TEST_F(PipelineIntegrationTest, ParallelPipelinePreservesRecordOrderAtScale) {
+    constexpr size_t kRecordCount = 10000;
+    constexpr size_t kSeqLen = 50;
+
+    const auto input = tempDir_.path() / "input.fastq";
+    const auto output = tempDir_.path() / "output.fastq";
+
+    // 确定性伪随机序列（LCG）：每条记录唯一且跨运行可复现
+    std::vector<std::string> seqs(kRecordCount);
+    std::vector<std::string> quals(kRecordCount);
+    {
+        std::ofstream out(input);
+        ASSERT_TRUE(out.is_open());
+        std::uint64_t state = 0x9E3779B97F4A7C15ULL;
+        auto nextRandom = [&state]() -> std::uint64_t {
+            state = state * 6364136223846793005ULL + 1442695040888963407ULL;
+            return state >> 33;
+        };
+        constexpr std::string_view kBases = "ACGT";
+        for (size_t i = 0; i < kRecordCount; ++i) {
+            std::string seq(kSeqLen, 'A');
+            std::string qual(kSeqLen, 'I');
+            for (size_t j = 0; j < kSeqLen; ++j) {
+                seq[j] = kBases[nextRandom() % 4];
+                qual[j] = static_cast<char>(33 + nextRandom() % 41);  // q0..q40
+            }
+            seqs[i] = seq;
+            quals[i] = qual;
+            out << "@read_" << i << '\n' << seq << "\n+\n" << qual << '\n';
+        }
+    }
+
+    fq::processing::Pipeline pipeline;
+    pipeline.setInputPath(input.string());
+    pipeline.setOutputPath(output.string());
+
+    fq::processing::ProcessingOptions options;
+    options.threadCount = 4;
+    options.batchSize = 100;  // 小批次 → 100 个并行处理单元，最大化乱序机会
+    pipeline.setProcessingOptions(options);
+
+    const auto stats = pipeline.run();
+    EXPECT_EQ(stats.totalReads, kRecordCount);
+    EXPECT_EQ(stats.passedReads, kRecordCount);
+
+    // 读回输出，逐条比对顺序与内容
+    fq::io::FastqReader reader(output.string());
+    fq::io::FastqBatch batch;
+    size_t verified = 0;
+    while (reader.nextBatch(batch)) {
+        for (const auto& rec : batch) {
+            ASSERT_LT(verified, kRecordCount) << "输出记录数超过输入";
+            EXPECT_EQ(rec.id, "read_" + std::to_string(verified)) << "记录乱序，位置 " << verified;
+            ASSERT_EQ(rec.seq.size(), kSeqLen);
+            EXPECT_EQ(rec.seq, seqs[verified]);
+            EXPECT_EQ(rec.qual, quals[verified]);
+            ++verified;
+        }
+    }
+    EXPECT_EQ(verified, kRecordCount);
+}
+
 }  // namespace fq::test

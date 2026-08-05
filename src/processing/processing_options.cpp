@@ -20,6 +20,9 @@ void ProcessingOptions::validate() const {
     if (memoryLimitBytes.has_value() && memoryLimitBytes.value() == 0) {
         throw std::invalid_argument("memoryLimitBytes must be greater than 0 if specified");
     }
+    if (batchCapacityBytes.has_value() && batchCapacityBytes.value() == 0) {
+        throw std::invalid_argument("batchCapacityBytes must be greater than 0 if specified");
+    }
 }
 
 }  // namespace fq::processing

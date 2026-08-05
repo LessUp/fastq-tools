@@ -15,7 +15,8 @@ namespace fq::io {
 
 /**
  * @brief FASTQ Reader 抽象接口
- * @details 构造时不抛异常，具体实现可通过 isOpen() 检查状态。
+ * @details 具体实现（FastqReader）在构造失败时抛 IOError；
+ *          isOpen() 可用于 move-from 状态检查。
  */
 class IReader {
 public:
@@ -24,12 +25,16 @@ public:
     /**
      * @brief 读取下一批 FASTQ 记录
      * @param batch 输出批次（会被清空后填充）
-     * @param maxRecords 本批最多读取的记录数
+     * @param maxRecords 本批最多读取的记录数，必须 >= 1（传 0 抛 std::invalid_argument）
      * @return false 表示 EOF；格式或 I/O 错误抛异常，不静默转换为 EOF
      */
-    [[nodiscard]] virtual auto nextBatch(FastqBatch& batch,
-                                         size_t maxRecords = std::numeric_limits<size_t>::max())
-        -> bool = 0;
+    [[nodiscard]] virtual auto nextBatch(FastqBatch& batch, size_t maxRecords) -> bool = 0;
+
+    /// 无上限重载。虚函数不给默认参数（默认参数按静态类型解析，属经典陷阱），
+    /// 以非虚重载转发代替
+    [[nodiscard]] auto nextBatch(FastqBatch& batch) -> bool {
+        return nextBatch(batch, std::numeric_limits<size_t>::max());
+    }
 };
 
 /**

@@ -55,10 +55,21 @@ if(EXISTS "${cache_file}")
     if(msan_enabled)
         string(APPEND consumer_link_flags " -fsanitize=memory -fsanitize-memory-track-origins=2")
     endif()
-    # 主项目启用 LTO 时，安装的 .a 是 ThinLTO bitcode，
-    # consumer 也需要启用 LTO 才能链接
+    # 主项目启用 LTO 时，安装的 .a 是 LTO bitcode，consumer 也需要启用 LTO 才能链接。
+    # GCC 不接受 -flto=thin（仅 auto/整数），按编译器区分：Clang 用 thin，GCC 用 auto。
+    # 脚本模式（cmake -P）下没有 CMAKE_CXX_COMPILER_ID 变量，从编译器信息文件读取。
     if(lto_enabled)
-        string(APPEND consumer_link_flags " -flto=thin")
+        set(consumer_lto_flag " -flto=thin")
+        file(GLOB cxx_compiler_info_files "${FQTOOLS_BINARY_DIR}/CMakeFiles/*/CMakeCXXCompiler.cmake")
+        if(cxx_compiler_info_files)
+            list(GET cxx_compiler_info_files 0 cxx_compiler_info_file)
+            file(STRINGS "${cxx_compiler_info_file}" cxx_compiler_id_line
+                REGEX "^set\\(CMAKE_CXX_COMPILER_ID ")
+            if(cxx_compiler_id_line MATCHES "\"GNU\"")
+                set(consumer_lto_flag " -flto=auto")
+            endif()
+        endif()
+        string(APPEND consumer_link_flags "${consumer_lto_flag}")
     endif()
 
     string(STRIP "${consumer_link_flags}" consumer_link_flags)

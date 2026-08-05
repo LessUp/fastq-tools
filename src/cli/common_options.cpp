@@ -27,6 +27,10 @@ void CommonCliOptions::addOptions(cxxopts::Options& options) {
         cxxopts::value<std::string>()->default_value("default"))(
         "memory-limit-gb",
         "Memory limit in GB (0=unlimited)",
+        cxxopts::value<size_t>()->default_value("0"))(
+        "batch-capacity-mb",
+        "Buffer capacity per batch in MB; raise for very long reads, e.g. ONT "
+        "(0=profile default: 4MB default / 1MB lowMemory / 16MB highThroughput)",
         cxxopts::value<size_t>()->default_value("0"));
 }
 
@@ -55,17 +59,39 @@ auto CommonCliOptions::parse(const cxxopts::ParseResult& result) -> CommonCliOpt
         opts.memoryLimitGb = memGb;
     }
 
+    // 单批缓冲上限
+    size_t batchCapacityMb = result["batch-capacity-mb"].as<size_t>();
+    if (batchCapacityMb > 0) {
+        opts.batchCapacityMb = batchCapacityMb;
+    }
+
     return opts;
 }
 
 auto CommonCliOptions::toProcessingOptions() const -> processing::ProcessingOptions {
+    // 单位换算上限：超出即物理上无意义，且乘 1024^n 会回绕 size_t
+    constexpr size_t kMaxMemoryLimitGb = 1024ULL * 1024ULL;    // 1 PiB
+    constexpr size_t kMaxBatchCapacityMb = 1024ULL * 1024ULL;  // 1 TiB
+
     processing::ProcessingOptions opts;
     opts.batchSize = batchSize;
     opts.threadCount = threadCount;
     opts.profile = profile;
 
     if (memoryLimitGb.has_value()) {
+        if (memoryLimitGb.value() > kMaxMemoryLimitGb) {
+            throw std::invalid_argument("memory-limit-gb must be <= " +
+                                        std::to_string(kMaxMemoryLimitGb));
+        }
         opts.memoryLimitBytes = memoryLimitGb.value() * 1024ULL * 1024ULL * 1024ULL;
+    }
+
+    if (batchCapacityMb.has_value()) {
+        if (batchCapacityMb.value() > kMaxBatchCapacityMb) {
+            throw std::invalid_argument("batch-capacity-mb must be <= " +
+                                        std::to_string(kMaxBatchCapacityMb));
+        }
+        opts.batchCapacityBytes = batchCapacityMb.value() * 1024ULL * 1024ULL;
     }
 
     return opts;

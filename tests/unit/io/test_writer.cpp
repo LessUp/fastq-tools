@@ -43,6 +43,8 @@ TEST_F(FastqWriterTest, WriteBasic) {
         rec2.seq = "AAAA";
         rec2.qual = "JJJJ";
         writer.write(rec2);
+
+        writer.finish();
     }
 
     ASSERT_TRUE(std::filesystem::exists(tmpFile_));
@@ -79,6 +81,8 @@ TEST_F(FastqWriterTest, PreservesCustomPlusLineWhenWriting) {
         rec.plus = "+read1 desc";
         rec.qual = "IIII";
         writer.write(rec);
+
+        writer.finish();
     }
 
     std::ifstream in(tmpFile_);
@@ -139,6 +143,43 @@ TEST_F(FastqWriterTest, FinishFailurePreservesExistingTarget) {
         EXPECT_TRUE(std::filesystem::is_directory(tmpFile_));
     }
     std::filesystem::remove_all(tmpFile_);
+}
+
+// 未 finish 即析构：只清理临时文件，绝不发布输出（IWriter 契约）
+TEST_F(FastqWriterTest, DestructorWithoutFinishDoesNotPublish) {
+    {
+        FastqWriter writer(tmpFile_);
+        FastqRecord rec{"read1", {}, "ACGT", "IIII", "+"};
+        writer.write(rec);
+        // 不调用 finish()，直接析构
+    }
+
+    EXPECT_FALSE(std::filesystem::exists(tmpFile_));
+    for (const auto& entry : std::filesystem::directory_iterator(".")) {
+        EXPECT_EQ(entry.path().filename().string().find("test_writer_output.fastq.tmp-"),
+                  std::string::npos)
+            << "临时文件残留: " << entry.path();
+    }
+}
+
+// 异常展开场景：处理中途失败时，截断内容不得出现在目标路径
+TEST_F(FastqWriterTest, ExceptionUnwindDoesNotPublishTruncatedOutput) {
+    try {
+        FastqWriter writer(tmpFile_);
+        FastqRecord rec{"read1", {}, "ACGT", "IIII", "+"};
+        writer.write(rec);
+        throw std::runtime_error("simulated pipeline failure");
+        // writer 在栈展开中析构，未经 finish()
+    } catch (const std::runtime_error&) {
+        // 预期异常
+    }
+
+    EXPECT_FALSE(std::filesystem::exists(tmpFile_));
+    for (const auto& entry : std::filesystem::directory_iterator(".")) {
+        EXPECT_EQ(entry.path().filename().string().find("test_writer_output.fastq.tmp-"),
+                  std::string::npos)
+            << "临时文件残留: " << entry.path();
+    }
 }
 
 }  // namespace fq::io

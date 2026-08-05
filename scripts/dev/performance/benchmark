@@ -2,7 +2,7 @@
 # FastQTools Benchmark CLI
 # 统一的性能基准测试命令行接口
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
@@ -266,7 +266,8 @@ cmd_report() {
     ensure_dirs
 
     if [[ -z "$input_file" ]]; then
-        input_file=$(ls -t "$BENCHMARK_DIR/results"/*.json 2>/dev/null | head -1)
+        # pipefail 下无结果文件时 ls 失败不应中断脚本，由下方空值检查统一报错
+        input_file=$(ls -t "$BENCHMARK_DIR/results"/*.json 2>/dev/null | head -1 || true)
         if [[ -z "$input_file" ]]; then
             log_error "No benchmark results found"
             exit 1
@@ -339,7 +340,8 @@ cmd_baseline() {
             local source="${2:-}"
 
             if [[ -z "$source" ]]; then
-                source=$(ls -t "$BENCHMARK_DIR/results"/*.json 2>/dev/null | head -1)
+                # pipefail 下无结果文件时 ls 失败不应中断脚本，由下方空值检查统一报错
+                source=$(ls -t "$BENCHMARK_DIR/results"/*.json 2>/dev/null | head -1 || true)
                 if [[ -z "$source" ]]; then
                     log_error "No benchmark results found"
                     exit 1

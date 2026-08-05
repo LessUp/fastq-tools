@@ -24,6 +24,8 @@ struct FastqReaderOptions {
 /// FASTQ 文件读取器（move-only），根据文件头自动检测 gzip
 class FastqReader : public IReader {
 public:
+    using IReader::nextBatch;  // 引入基类无上限重载（否则被下方 override 名字隐藏）
+
     explicit FastqReader(const std::string& path);
     FastqReader(const std::string& path, const FastqReaderOptions& options);
     ~FastqReader() override;
@@ -33,9 +35,8 @@ public:
     FastqReader(FastqReader&&) noexcept;
     FastqReader& operator=(FastqReader&&) noexcept;
 
-    [[nodiscard]] auto nextBatch(FastqBatch& batch,
-                                 size_t maxRecords = std::numeric_limits<size_t>::max())
-        -> bool override;
+    // 无默认参数：基类 IReader 以非虚单参重载提供无上限调用
+    [[nodiscard]] auto nextBatch(FastqBatch& batch, size_t maxRecords) -> bool override;
 
     [[nodiscard]] auto isOpen() const -> bool;
 

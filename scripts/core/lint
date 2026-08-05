@@ -24,7 +24,6 @@ STYLE_FILE=".clang-format"
 TIDY_CONFIG=".clang-tidy"
 FIX=false
 VERBOSE=false
-JOBS=$(get_cpu_cores)
 PRESET=""
 
 # =============================================================================
@@ -49,7 +48,6 @@ print_usage() {
   -p, --preset NAME         使用指定 preset 对应的构建目录
   -s, --style FILE          clang-format 样式文件 (默认: .clang-format)
   -t, --tidy-config FILE    clang-tidy 配置文件 (默认: .clang-tidy)
-  -j, --jobs N              并行任务数 (默认: 自动检测)
   -v, --verbose             详细输出
   -h, --help                显示此帮助信息
 
@@ -383,12 +381,18 @@ PY
         fi
         
         local tidy_output=""
-        if ! tidy_output=$(clang-tidy "${tidy_args[@]}" "$file" 2>&1); then
-            :
-        fi
+        local tidy_rc=0
+        tidy_output=$(clang-tidy "${tidy_args[@]}" "$file" 2>&1) || tidy_rc=$?
 
         if [[ -n "${tidy_output}" ]]; then
             printf '%s\n' "${tidy_output}"
+        fi
+
+        # 退出码 1 且有输出视为正常检出 warning/error；其他退出码（段错误、配置错误等）
+        # 或退出码非零却无输出，一律视为 clang-tidy 执行失败，避免工具崩溃被静默判为通过
+        if [[ $tidy_rc -ne 0 && ( $tidy_rc -ne 1 || -z "${tidy_output}" ) ]]; then
+            log_error "clang-tidy 执行异常 (退出码 ${tidy_rc}): $file"
+            return 1
         fi
 
         if grep -Eq "warning:|error:" <<< "${tidy_output}"; then
@@ -436,10 +440,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         -t|--tidy-config)
             TIDY_CONFIG="$2"
-            shift 2
-            ;;
-        -j|--jobs)
-            JOBS="$2"
             shift 2
             ;;
         -v|--verbose)

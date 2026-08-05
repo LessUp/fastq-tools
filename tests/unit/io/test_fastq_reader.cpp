@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <stdexcept>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -74,6 +75,13 @@ TEST_F(FastqReaderTest, ConstructorThrowsOnMissingFile) {
     EXPECT_THROW(fq::io::FastqReader reader("/nonexistent/path/to/file.fastq"), fq::error::IOError);
 }
 
+TEST_F(FastqReaderTest, RejectsZeroMaxRecords) {
+    // maxRecords=0 会使读取循环不读数据即报 EOF（或携残片时空转），属契约错误
+    fq::io::FastqReader reader(tmpFile_);
+    fq::io::FastqBatch batch;
+    EXPECT_THROW(static_cast<void>(reader.nextBatch(batch, 0)), std::invalid_argument);
+}
+
 TEST_F(FastqReaderTest, PreservesPlusLineContent) {
     const std::string customFile = "test_reader_plus.fastq";
     {
@@ -90,6 +98,32 @@ TEST_F(FastqReaderTest, PreservesPlusLineContent) {
     ASSERT_TRUE(reader.nextBatch(batch));
     ASSERT_EQ(batch.records().size(), 1);
     EXPECT_EQ(batch.records()[0].plus, "+read-plus comment");
+
+    std::filesystem::remove(customFile);
+}
+
+// 空序列记录（seq/qual 均空）：旧行为 validateLengths 0==0 会放行，
+// 现显式拒绝，避免空 read 静默进入下游统计与修剪
+TEST_F(FastqReaderTest, RejectsEmptySequenceRecord) {
+    const std::string customFile = "test_reader_empty_seq.fastq";
+    {
+        std::ofstream out(customFile);
+        out << "@read-empty\n"
+            << "\n"
+            << "+\n"
+            << "\n";
+    }
+
+    fq::io::FastqReader reader(customFile);
+    fq::io::FastqBatch batch;
+
+    try {
+        static_cast<void>(reader.nextBatch(batch));
+        FAIL() << "expected FormatError for empty sequence";
+    } catch (const fq::error::FormatError& e) {
+        EXPECT_NE(std::string(e.message()).find("Empty sequence"), std::string::npos)
+            << e.message();
+    }
 
     std::filesystem::remove(customFile);
 }

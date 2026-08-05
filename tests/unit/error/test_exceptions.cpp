@@ -75,14 +75,6 @@ TEST(ErrorExceptionTest, ConfigurationErrorCreation) {
                 testing::AllOf(testing::HasSubstr("CONFIG"), testing::HasSubstr("ERROR")));
 }
 
-TEST(ErrorExceptionTest, SourceLocation) {
-    // 测试源位置信息
-    // Note: FastQException currently doesn't store location in the header I saw,
-    // but the test refers to it. Let me check the header again.
-    // If it doesn't exist, I should remove this test.
-    SUCCEED();
-}
-
 TEST(ErrorExceptionTest, ExceptionAsStdException) {
     try {
         throw FastQException(

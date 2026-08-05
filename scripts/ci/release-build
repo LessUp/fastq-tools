@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # =============================================================================
 # FastQTools Release Build — 容器内构建脚本
 # =============================================================================
@@ -14,7 +14,7 @@
 # 环境变量:
 #   CC / CXX    编译器路径（可选，默认由 compiler 参数决定）
 # =============================================================================
-set -eu
+set -euo pipefail
 
 # =============================================================================
 # 参数解析
@@ -57,6 +57,7 @@ echo ""
 install_deps_alpine() {
     echo ">>> [Alpine] 安装构建依赖..."
     apk add --no-cache \
+        bash \
         build-base \
         ninja \
         pkgconf \
@@ -208,20 +209,24 @@ conan install build-config/dependencies/ ${CONAN_ARGS}
 # CMake 配置
 # =============================================================================
 echo ">>> CMake 配置..."
-CMAKE_ARGS="-B ${BUILD_DIR} -G Ninja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_TOOLCHAIN_FILE=${BUILD_DIR}/conan_toolchain.cmake \
-    -DCMAKE_C_COMPILER=${CC} \
-    -DCMAKE_CXX_COMPILER=${CXX} \
-    -DENABLE_COVERAGE=OFF \
-    -DBUILD_TESTING=OFF \
-    -DBUILD_BENCHMARKS=OFF"
+# 用 bash 数组传参，避免无引号词分割在含空格路径下损坏参数
+CMAKE_ARGS=(
+    -B "${BUILD_DIR}"
+    -G Ninja
+    -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_TOOLCHAIN_FILE="${BUILD_DIR}/conan_toolchain.cmake"
+    -DCMAKE_C_COMPILER="${CC}"
+    -DCMAKE_CXX_COMPILER="${CXX}"
+    -DENABLE_COVERAGE=OFF
+    -DBUILD_TESTING=OFF
+    -DBUILD_BENCHMARKS=OFF
+)
 
 if [ "$STATIC" = "true" ]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_EXE_LINKER_FLAGS=-static"
+    CMAKE_ARGS+=(-DCMAKE_EXE_LINKER_FLAGS=-static)
 fi
 
-cmake ${CMAKE_ARGS}
+cmake "${CMAKE_ARGS[@]}"
 
 # =============================================================================
 # 构建
@@ -246,10 +251,12 @@ echo "    类型:   $(file "$BINARY")"
 
 # 对静态构建，验证没有动态链接
 if [ "$STATIC" = "true" ]; then
-    if ldd "$BINARY" 2>&1 | grep -q "not a dynamic executable\|statically linked"; then
+    # ldd 对静态二进制以非零退出，pipefail 下需 || true 接管，否则管道判败使检测结果反转
+    ldd_output=$(ldd "$BINARY" 2>&1 || true)
+    if printf '%s\n' "$ldd_output" | grep -q "not a dynamic executable\|statically linked"; then
         echo "    链接:   静态 ✓"
     else
         echo "    链接:   警告 — 可能包含动态依赖:"
-        ldd "$BINARY" 2>&1 || true
+        printf '%s\n' "$ldd_output"
     fi
 fi

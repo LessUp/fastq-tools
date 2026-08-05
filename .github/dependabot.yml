@@ -1,0 +1,9 @@
+# Dependabot 自动更新 GitHub Actions 版本。
+# 仓库内所有 action 已 pin 到完整 SHA；当 tag（如 v5）前移时，
+# Dependabot 会提交携带新 SHA 的更新 PR（依赖 uses 行尾的 "# vN" 注释识别版本）。
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

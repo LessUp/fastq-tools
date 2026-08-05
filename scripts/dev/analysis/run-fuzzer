@@ -235,8 +235,8 @@ FUZZERS_FAILED=0
 case "$FUZZER_NAME" in
     parser)
         if [[ -x "${FUZZER_DIR}/fastq_parser_fuzzer" ]]; then
-            run_single_fuzzer "${FUZZER_DIR}/fastq_parser_fuzzer" || ((FUZZERS_FAILED++))
-            ((FUZZERS_RUN++))
+            run_single_fuzzer "${FUZZER_DIR}/fastq_parser_fuzzer" || FUZZERS_FAILED=$((FUZZERS_FAILED + 1))
+            FUZZERS_RUN=$((FUZZERS_RUN + 1))
         else
             log_error "Parser fuzzer not found"
             exit 1
@@ -244,8 +244,8 @@ case "$FUZZER_NAME" in
         ;;
     mutator)
         if [[ -x "${FUZZER_DIR}/fastq_mutator_fuzzer" ]]; then
-            run_single_fuzzer "${FUZZER_DIR}/fastq_mutator_fuzzer" || ((FUZZERS_FAILED++))
-            ((FUZZERS_RUN++))
+            run_single_fuzzer "${FUZZER_DIR}/fastq_mutator_fuzzer" || FUZZERS_FAILED=$((FUZZERS_FAILED + 1))
+            FUZZERS_RUN=$((FUZZERS_RUN + 1))
         else
             log_error "Mutator fuzzer not found"
             exit 1
@@ -253,8 +253,8 @@ case "$FUZZER_NAME" in
         ;;
     predicate)
         if [[ -x "${FUZZER_DIR}/fastq_predicate_fuzzer" ]]; then
-            run_single_fuzzer "${FUZZER_DIR}/fastq_predicate_fuzzer" || ((FUZZERS_FAILED++))
-            ((FUZZERS_RUN++))
+            run_single_fuzzer "${FUZZER_DIR}/fastq_predicate_fuzzer" || FUZZERS_FAILED=$((FUZZERS_FAILED + 1))
+            FUZZERS_RUN=$((FUZZERS_RUN + 1))
         else
             log_error "Predicate fuzzer not found"
             exit 1
@@ -262,8 +262,8 @@ case "$FUZZER_NAME" in
         ;;
     statistics)
         if [[ -x "${FUZZER_DIR}/fastq_statistics_fuzzer" ]]; then
-            run_single_fuzzer "${FUZZER_DIR}/fastq_statistics_fuzzer" || ((FUZZERS_FAILED++))
-            ((FUZZERS_RUN++))
+            run_single_fuzzer "${FUZZER_DIR}/fastq_statistics_fuzzer" || FUZZERS_FAILED=$((FUZZERS_FAILED + 1))
+            FUZZERS_RUN=$((FUZZERS_RUN + 1))
         else
             log_error "Statistics fuzzer not found"
             exit 1
@@ -272,8 +272,8 @@ case "$FUZZER_NAME" in
     all)
         for fuzzer in "${FUZZER_DIR}"/*_fuzzer; do
             if [[ -x "$fuzzer" ]]; then
-                run_single_fuzzer "$fuzzer" || ((FUZZERS_FAILED++))
-                ((FUZZERS_RUN++))
+                run_single_fuzzer "$fuzzer" || FUZZERS_FAILED=$((FUZZERS_FAILED + 1))
+                FUZZERS_RUN=$((FUZZERS_RUN + 1))
                 log_separator "-"
             fi
         done

@@ -4,14 +4,14 @@
 
 ## 项目定位
 
-FastQTools 是一个 C++23 FASTQ 质控工具集，覆盖测序数据日常 QC 的两个最高频操作：统计（`stat`）与过滤修剪（`filter`）。它同时提供一个最小 C++ 库 API。项目刻意把维护面收得很窄——不做比对、不做变异检测、不做可视化——把工程精力集中在**把少数事做到极致**。
+FastQTools 是一个 C++23 FASTQ 质控工具，覆盖测序数据日常 QC 的两个最高频操作：统计（`stat`）与过滤修剪（`filter`）。它同时提供一个最小 C++ 库 API。项目刻意把维护面收得很窄——不做比对、不做变异检测、不做可视化，也不做双端（paired-end/interleaved）处理、UMI/去重、质控前后对比报告，`stat` 当前只输出 TSV 而不提供 JSON——把工程精力集中在**把少数事做到极致**。以上都是当前的已知缺口，而非路线图承诺。
 
 ### 设计哲学
 
 - **窄而深，而非宽而浅。** 与 fastp（全能 QC）、seqkit（全能工具箱）不同，FastQTools 只做 stat + filter + 库 API，但把这三件事的内核做到现代 C++23 的工程上限。
 - **把预算投到看不见的地方。** 零拷贝、对象池、流水线保序、消毒剂 CI——这些是用户感知不到、但决定工程质量的细节。
 - **约束即安全。** `FastqRecord` 不能逃逸批次、`FastqBatch::clear()` 不释放内存、流水线首尾串行——刻意约束换来零拷贝、确定顺序与有界内存。
-- **CI 是质量合同。** push/PR 自动触发 format + build-and-test，sanitizer 矩阵仅手动触发；不是可选的"额外"。fuzzer target 位于 `tools/fuzz/`（CI 集成待定）。
+- **CI 是质量合同。** push/PR 均触发，sanitizer 矩阵随 PR 与主分支运行；不是可选的"额外"。fuzzer target 位于 `tools/fuzz/`，CI 每 PR 对 4 个 target 各跑 60s 冒烟。
 
 ### 与同类工具的定位
 
@@ -38,7 +38,7 @@ FastQTools 不是 fastp 的替代品，而是一个聚焦、现代内核的 QC �
           ▼               ▼               ▼
    src/io            src/processing    src/statistics
    Reader/Writer     Pipeline          Calculator/Writer
-   (gzip, 批量)      (backend + 规则)   (Q20/Q30, GC, 长度)
+   (gzip, 批量)      (backend + 规则)   (Q20/Q30, GC, 最大读长)
           │               │               │
           └───────────────┼───────────────┘
                           ▼
@@ -51,7 +51,7 @@ FastQTools 不是 fastp 的替代品，而是一个聚焦、现代内核的 QC �
 | `io` | gzip 解压、批量读取、批量写入、零拷贝记录视图 | `include/fqtools/io/fastq_io.h`, `src/io/fastq_reader.cpp`, `fastq_writer.cpp` |
 | `processing` | 规则组合、统一运行时配置、执行 backend 选择 | `src/processing/execution_runtime.*`, `execution_backend.*` |
 | `statistics` | 统计计算与报告输出 | `src/statistics/fq_statistic.cpp`, `statistics_report.cpp` |
-| `error` | 类型化异常和错误宏 | `include/fqtools/error/error.h` |
+| `error` | 类型化异常体系 | `include/fqtools/error/error.h` |
 
 公共 API 入口是 `include/fqtools/fq.h`，一个 Façade 头文件，聚合所有对外接口。
 
@@ -175,14 +175,14 @@ I/O seam 直接承载 runtime 需要的完整契约，不再探测具体类型�
 - **libdeflate** → `fastq_writer.cpp` 用 zlib-ng 的 gz API 统一压缩库
 
 **为什么**：
-- spdlog 在这个项目体量下是过度依赖：日志需求简单（trace/debug/info/warn/error/critical 六级 + fmt 风格格式串），一个薄封装足够
+- spdlog 在这个项目体量下是过度依赖：日志需求简单（Debug/Info/Warn/Error/Off 五级、info/warn/error 三个便捷函数、fmt 风格格式串），一个薄封装足够
 - libdeflate 与 zlib-ng 并存导致两套压缩 API，统一到 zlib-ng 减少依赖面和认知负担
-- 结果：可执行文件 676K，依赖树浅，构建快
+- 结果：可执行文件不足 1MB，依赖树浅，构建快
 
-### 6. 错误边界：异常基类 + 宏 + CLI 边界捕获
+### 6. 错误边界：异常基类 + 子类 + CLI 边界捕获
 
-- 异常基类 `fq::error::FastQException`，子类 `IOError`/`FormatError`/`ConfigurationError`
-- 宏 `FQ_THROW_IO_ERROR`/`FQ_THROW_FORMAT_ERROR`/`FQ_THROW_CONFIG_ERROR` 统一抛点
+- 异常基类 `fq::error::FastQException`（携带 `ErrorCategory` 与 `ErrorSeverity`），子类 `IOError`/`FormatError`/`ConfigurationError`
+- 各模块直接抛出子类异常，不再有宏封装层
 - 库内部不静默吞异常；CLI 边界（`main.cpp`）捕获并记录后退出
 
 退出码在 CLI 边界稳定映射：参数/配置错误为 2，FASTQ 格式错误为 3，I/O 错误为 4，其它运行时错误为 1。库层只抛出类型化异常，不重复记录同一错误。
@@ -191,13 +191,13 @@ I/O seam 直接承载 runtime 需要的完整契约，不再探测具体类型�
 
 ### 7. 质量门：CI 矩阵 + 消毒剂 + 模糊测试
 
-CI（`.github/workflows/ci.yml`）push/PR 自动触发 format + build-and-test，sanitizer 矩阵仅手动触发，运行：
+CI（`.github/workflows/ci.yml`）push/PR 均触发，sanitizer 矩阵随 PR 与主分支运行，包含：
 - clang-format 格式检查
 - clang-tidy + cppcheck 静态分析
 - GCC Release / Clang Release / Clang ASan / Clang TSan / Clang UBSan 五矩阵构建 + 测试
-- fuzzer target 在 `tools/fuzz/`（fastq_parser_fuzzer 等），尚未接入 CI
+- fuzzer target 在 `tools/fuzz/`（fastq_parser_fuzzer 等），CI 每 PR 跑 60s fuzz 冒烟（见 fuzz-smoke job）
 
-**为什么**：C++ 内存安全是核心风险。ASan 在 CI 里常态化跑，能在合并前抓到越界和 UAF。fuzzer target 针对解析器入口，因为 FASTQ 输入是外部不可信数据；可用 libFuzzer 构建在本地运行。静态分析抓 API 误用和现代 C++ 反模式。
+**为什么**：C++ 内存安全是核心风险。ASan 在 CI 里常态化跑，能在合并前抓到越界和 UAF。fuzzer target 针对解析器入口，因为 FASTQ 输入是外部不可信数据；CI 每 PR 对 4 个 fuzzer 跑 60s 冒烟，本地可用 libFuzzer 长跑深挖。静态分析抓 API 误用和现代 C++ 反模式。
 
 ## 性能特征
 

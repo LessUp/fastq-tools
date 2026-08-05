@@ -24,6 +24,8 @@ struct ProcessingOptions {
     size_t threadCount = 1;                                  ///< 线程数量（1 = 串行）
     ProcessingProfile profile = ProcessingProfile::Default;  ///< 性能预设
     std::optional<size_t> memoryLimitBytes;                  ///< 内存限制（字节），可选
+    std::optional<size_t> batchCapacityBytes;  ///< 单批缓冲上限（字节），可选；覆盖预设默认值。
+                                               ///< 超长记录（如 ONT read）需要调大此上限
 
     /// @throws std::invalid_argument 如果配置无效
     void validate() const;

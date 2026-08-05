@@ -27,7 +27,7 @@ COVERAGE=false
 JOBS=$(get_cpu_cores)
 REPEAT=1
 OUTPUT_ON_FAILURE=true
-TIMEOUT=60
+TIMEOUT=""  # 空 = 不传 --timeout，由各测试自身的 TIMEOUT 属性决定
 TEST_TYPE="all"  # all | unit | integration | e2e
 VALGRIND=false
 VALGRIND_OPTS=""
@@ -70,7 +70,7 @@ Valgrind:
   -v, --verbose             详细输出
   -q, --quiet               静默模式
   --no-output-on-failure    测试失败时不显示输出
-  --timeout SECONDS         测试超时时间 (默认: 60)
+  --timeout SECONDS         测试超时时间 (默认: 不传递, 使用各测试自身的 TIMEOUT 属性)
 
 其他:
   -h, --help                显示此帮助信息
@@ -255,8 +255,13 @@ fi
 CTEST_ARGS=(
     --test-dir "$BUILD_DIR"
     --parallel "$JOBS"
-    --timeout "$TIMEOUT"
 )
+
+# 仅在用户显式指定时传递 --timeout：ctest --timeout 会覆盖测试自身的 TIMEOUT 属性，
+# 默认传值会掐死本地裸跑时的慢测试（packaging/e2e 的属性为 180s）
+if [[ -n "$TIMEOUT" ]]; then
+    CTEST_ARGS+=(--timeout "$TIMEOUT")
+fi
 
 # 输出控制
 if [[ "$OUTPUT_ON_FAILURE" == "true" ]]; then

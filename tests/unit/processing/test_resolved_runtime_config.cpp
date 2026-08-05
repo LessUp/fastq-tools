@@ -93,4 +93,23 @@ TEST(ResolvedRuntimeConfigTest, UsesSequentialModeForSingleThread) {
     EXPECT_EQ(config.threadCount, 1U);
 }
 
+TEST(ResolvedRuntimeConfigTest, ExplicitBatchCapacityOverridesProfileDefault) {
+    ProcessingOptions options;
+    options.threadCount = 4;
+    options.batchCapacityBytes = 32ULL * 1024ULL * 1024ULL;  // 超长记录（ONT）场景
+
+    const auto config = resolveRuntimeConfig(options);
+
+    EXPECT_EQ(config.batchCapacityBytes, 32ULL * 1024ULL * 1024ULL);
+    // 覆盖值参与每 token 内存核算
+    EXPECT_GE(config.memoryPerTokenBytes, 32ULL * 1024ULL * 1024ULL);
+}
+
+TEST(ResolvedRuntimeConfigTest, RejectsZeroBatchCapacity) {
+    ProcessingOptions options;
+    options.batchCapacityBytes = 0;
+
+    EXPECT_THROW(static_cast<void>(resolveRuntimeConfig(options)), std::invalid_argument);
+}
+
 }  // namespace fq::processing

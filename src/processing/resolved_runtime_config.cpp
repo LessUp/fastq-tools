@@ -98,6 +98,11 @@ auto resolveRuntimeConfig(const ProcessingOptions& options,
 
     // Apply profile defaults
     applyProfileDefaults(config, options.profile);
+    // 显式指定的批缓冲上限覆盖预设默认值（超长记录场景），
+    // 并参与下方每 token 内存核算，受 memoryLimitBytes 总量约束
+    if (options.batchCapacityBytes.has_value()) {
+        config.batchCapacityBytes = options.batchCapacityBytes.value();
+    }
     config.batchSize = options.batchSize;
     config.memoryPerTokenBytes = estimateMemoryPerToken(config, options.batchSize);
 

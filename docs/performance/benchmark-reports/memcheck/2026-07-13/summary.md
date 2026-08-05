@@ -6,7 +6,7 @@
 | 工具 | Valgrind 3.22.0 / Memcheck |
 | 构建类型 | RelWithDebInfo（-O2 + -g） |
 | 数据集 | sample_1k（1K reads × 100 bp） |
-| 基线 | [environment.md](../../environment.md) |
+| 基线 | [environment.md](../../../environment.md) |
 
 ## 调用方式
 

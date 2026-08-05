@@ -123,6 +123,65 @@ TEST_F(QualityTrimmerTest, GetDescriptionReturnsNonEmpty) {
     EXPECT_FALSE(trimmer.getDescription().empty());
 }
 
+// 回归：小数阈值在 SIMD（AVX2）与标量构建下必须语义一致。
+// q >= 20.5 对整数 q 等价于 q >= 21（ceil 语义）；历史 AVX2 路径按 floor
+// 截断阈值，会保留 q=20 的碱基，而标量构建剪掉它。
+TEST_F(QualityTrimmerTest, FractionalThresholdUsesCeilSemantics) {
+    QualityTrimmer trimmer(20.5, 1, QualityTrimmer::TrimMode::FivePrime);
+
+    // Phred+33: '5' = q20, '6' = q21
+    FastqRecord read{"read1", {}, "ACGTACGT", "55556666", "+"};
+    trimmer.process(read);
+
+    EXPECT_EQ(read.seq, "ACGT");
+    EXPECT_EQ(read.qual, "6666");
+}
+
+// 长 qual 串（>=32 字符）覆盖 SIMD 循环路径，小数阈值行为与标量一致
+TEST_F(QualityTrimmerTest, FractionalThresholdConsistentOnSimdLengthInput) {
+    QualityTrimmer trimmer(20.5, 1, QualityTrimmer::TrimMode::FivePrime);
+
+    // FastqRecord 字段为 string_view：必须用命名存储，不能传临时 string
+    const std::string low(36, '5');  // q20 × 36
+    const std::string high(4, '6');  // q21 × 4
+    const std::string seq(40, 'A');
+    const std::string qual = low + high;
+    FastqRecord read{"read1", {}, seq, qual, "+"};
+    trimmer.process(read);
+
+    EXPECT_EQ(read.seq.size(), 4U);
+    EXPECT_EQ(read.qual, "6666");
+}
+
+// 整数阈值不受 SIMD 路径影响（长串覆盖循环）
+TEST_F(QualityTrimmerTest, IntegerThresholdUnchangedOnSimdLengthInput) {
+    QualityTrimmer trimmer(20.0, 1, QualityTrimmer::TrimMode::Both);
+
+    const std::string low(33, '5');  // q20 × 33：整数阈值 20 下通过
+    const std::string tail(7, '!');  // q0 × 7
+    const std::string seq(40, 'A');
+    const std::string qual = low + tail;
+    FastqRecord read{"read1", {}, seq, qual, "+"};
+    trimmer.process(read);
+
+    EXPECT_EQ(read.seq.size(), 33U);
+}
+
+// 回归：Phred+64 下极端阈值（encoding + threshold > 127）必须全剪；
+// 历史 AVX2 路径 set1_epi8 符号回绕，反而完全不剪
+TEST_F(QualityTrimmerTest, Phred64ExtremeThresholdTrimsAll) {
+    QualityTrimmer trimmer(70.0, 1, QualityTrimmer::TrimMode::FivePrime, 64);
+
+    // '~' = 126 = Phred+64 下 q62，全部低于阈值；长度 >= 32 覆盖 SIMD 路径
+    const std::string seq(40, 'A');
+    const std::string qual(40, '~');
+    FastqRecord read{"read1", {}, seq, qual, "+"};
+    trimmer.process(read);
+
+    EXPECT_TRUE(read.seq.empty());
+    EXPECT_TRUE(read.qual.empty());
+}
+
 // ============================================================================
 // LengthTrimmer 测试
 // ============================================================================
@@ -386,22 +445,23 @@ TEST_F(MutatorBoundaryTest, QualityThresholdAtExactValue) {
 TEST_F(MutatorBoundaryTest, MixedQualityPattern) {
     QualityTrimmer trimmer(20.0);
 
-    // 复杂质量模式：低高低
-    FastqRecord read{"read1", {}, "ACGTACGT", "!II!II!II", "+"};
+    // 复杂质量模式（低高低…）：5' 端 '!' 被剪，3' 端 'I' 保留
+    FastqRecord read{"read1", {}, "ACGTACGT", "!II!II!I", "+"};
     trimmer.process(read);
 
-    // 应正确处理复杂的质量分布
-    EXPECT_FALSE(read.seq.empty());
+    EXPECT_EQ(read.seq, "CGTACGT");
+    EXPECT_EQ(read.qual, "II!II!I");
 }
 
 TEST_F(MutatorBoundaryTest, AdapterAtStart) {
     AdapterTrimmer trimmer({"ACGT"}, 4, 0);
 
-    // 接头在开头（非标准情况）
+    // 接头在开头：find() 命中位置 0，从该位置起全部剪除 → 空 read
     FastqRecord read{"read1", {}, "ACGTTTAA", "IIIIIIII", "+"};
     trimmer.process(read);
 
-    // AdapterTrimmer 通常查找末尾接头
+    EXPECT_TRUE(read.seq.empty());
+    EXPECT_TRUE(read.qual.empty());
 }
 
 TEST_F(MutatorBoundaryTest, MultipleAdaptersWithPriority) {

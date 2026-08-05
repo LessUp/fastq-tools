@@ -12,6 +12,9 @@ scripts/
 │   ├── lint                # 代码质量检查
 │   └── install-deps        # 依赖安装
 │
+├── ci/                      # 🚀 CI 专用脚本
+│   └── release-build       # 容器内发布构建（Alpine/Debian 自适应）
+│
 ├── dev/                     # 🛠️ 开发与分析工具（特定场景）
 │   ├── performance/        # 性能分析
 │   │   ├── benchmark       # 性能基准测试 CLI
@@ -323,6 +326,6 @@ chmod +x scripts/dev/*
 
 ---
 
-**维护**: FastQTools 团队
+**维护**: shijiashuai
 **更新**: 2026-02-24
 **版本**: 2.1

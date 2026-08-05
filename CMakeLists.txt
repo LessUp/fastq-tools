@@ -66,12 +66,13 @@ option(ENABLE_NATIVE_ARCH "Use -march=native for local build (not portable)" OFF
 # 快速浮点：允许重排浮点运算，提升向量化但牺牲精度与可复现性
 option(ENABLE_FAST_MATH "Enable -ffast-math (impairs numerical reproducibility)" OFF)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+# 显式 STREQUAL 以排除 AppleClang：-march=armv8-a 等选项 Apple clang 不接受
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_options(-g -O0)
-    else()
-        # Release build optimizations
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+        # 仅 Release 追加激进优化；RelWithDebInfo/MinSizeRel 使用 CMake 对应类型的内置 flags
         if(ENABLE_NATIVE_ARCH)
             add_compile_options(-march=native)
         else()
@@ -89,13 +90,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
             add_compile_options(-ffast-math)
         endif()
         # 使用函数段和数据段，配合链接器 --gc-sections 消除未使用代码
-        # 仅在非 Debug 构建启用，避免影响调试体验
         add_compile_options(-ffunction-sections -fdata-sections)
     endif()
 endif()
 
-# 链接器优化：移除未使用的段
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+# 链接器优化：移除未使用的段（ld64 不支持 --gc-sections，显式排除 AppleClang）
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_link_options(-Wl,--gc-sections)
 endif()
 
@@ -166,8 +166,8 @@ if(ENABLE_FUZZING)
 endif()
 
 # --- Testing ---
+# include(CTest) 已定义 BUILD_TESTING option（默认 ON）并调用 enable_testing()，无需重复声明
 include(CTest)
-option(BUILD_TESTING "Build tests" ON)
 if(BUILD_TESTING)
     find_package(GTest CONFIG REQUIRED)
     add_subdirectory(tests)
@@ -189,7 +189,6 @@ install(DIRECTORY
     COMPONENT Development
     FILES_MATCHING
     PATTERN "*.h"
-    PATTERN "fastq_batch_pool.h" EXCLUDE
 )
 install(FILES ${CMAKE_SOURCE_DIR}/include/fqtools/fq.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fqtools

@@ -29,7 +29,6 @@ CMakeUserPresets.json
 # ===== Conan 生成文件 =====
 conaninfo.txt
 conanbuildinfo.*
-conan.lock
 conan_toolchain.cmake
 
 # Conan CMakeDeps 生成文件（conan install 在 conanfile.py 目录生成）

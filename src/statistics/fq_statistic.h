@@ -22,7 +22,7 @@ constexpr int kMaxBaseNum = 5;  ///< 最大碱基数量
 
 /**
  * @brief FASTQ 统计信息结果结构体
- * @details 存储 FASTQ 文件统计分析的结果数据，包括读取数量、长度分布、
+ * @details 存储 FASTQ 文件统计分析的结果数据，包括读取数量、最大读长、
  *          位置质量分数分布和位置碱基分布等信息
  */
 struct FqStatisticResult {

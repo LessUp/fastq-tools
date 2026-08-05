@@ -10,7 +10,7 @@ MinQualityPredicate::MinQualityPredicate(double minQuality, int qualityEncoding)
     : minQuality_(minQuality), qualityEncoding_(qualityEncoding) {}
 
 auto MinQualityPredicate::evaluate(const fq::io::FastqRecord& read) const -> bool {
-    totalEvaluated_.fetch_add(1, std::memory_order_relaxed);
+    totalEvaluated_.increment();
     if (read.qual.empty()) {
         return false;
     }
@@ -18,7 +18,7 @@ auto MinQualityPredicate::evaluate(const fq::io::FastqRecord& read) const -> boo
     double avgQual = calculateAverageQuality(read.qual);
 
     if (avgQual >= minQuality_) {
-        passedCount_.fetch_add(1, std::memory_order_relaxed);
+        passedCount_.increment();
         return true;
     }
     return false;
@@ -60,9 +60,9 @@ auto MinQualityPredicate::getStatistics() const -> std::string {
 MinLengthPredicate::MinLengthPredicate(size_t minLength) : minLength_(minLength) {}
 
 auto MinLengthPredicate::evaluate(const fq::io::FastqRecord& read) const -> bool {
-    totalEvaluated_.fetch_add(1, std::memory_order_relaxed);
+    totalEvaluated_.increment();
     if (read.seq.size() >= minLength_) {
-        passedCount_.fetch_add(1, std::memory_order_relaxed);
+        passedCount_.increment();
         return true;
     }
     return false;
@@ -83,9 +83,9 @@ auto MinLengthPredicate::getStatistics() const -> std::string {
 MaxLengthPredicate::MaxLengthPredicate(size_t maxLength) : maxLength_(maxLength) {}
 
 auto MaxLengthPredicate::evaluate(const fq::io::FastqRecord& read) const -> bool {
-    totalEvaluated_.fetch_add(1, std::memory_order_relaxed);
+    totalEvaluated_.increment();
     if (read.seq.size() <= maxLength_) {
-        passedCount_.fetch_add(1, std::memory_order_relaxed);
+        passedCount_.increment();
         return true;
     }
     return false;
@@ -106,9 +106,9 @@ auto MaxLengthPredicate::getStatistics() const -> std::string {
 MaxNRatioPredicate::MaxNRatioPredicate(double maxNRatio) : maxNRatio_(maxNRatio) {}
 
 auto MaxNRatioPredicate::evaluate(const fq::io::FastqRecord& read) const -> bool {
-    totalEvaluated_.fetch_add(1, std::memory_order_relaxed);
+    totalEvaluated_.increment();
     if (calculateNRatio(read.seq) <= maxNRatio_) {
-        passedCount_.fetch_add(1, std::memory_order_relaxed);
+        passedCount_.increment();
         return true;
     }
     return false;

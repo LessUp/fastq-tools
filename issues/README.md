@@ -59,6 +59,7 @@ grep -rl "根因" issues/*.md                  # 有根因分析的
 
 | # | 标题 | 状态 | 标签 | 创建 |
 |---|------|------|------|------|
-| — | （暂无） | — | — | — |
+| 001 | [stat 机器可读 JSON 输出](./001-stat-json-output.md) | open | enhancement | 2026-07-28 |
+| 002 | [macOS 构建支持](./002-macos-build-support.md) | open | enhancement | 2026-07-28 |
 
 > 新增/关闭时更新此表。

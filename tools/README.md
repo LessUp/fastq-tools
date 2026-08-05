@@ -15,9 +15,9 @@ tools/
 │       ├── badge_generator.py       # shields.io 徽章生成
 │       ├── gen_benchmark_data.py    # 基准测试数据生成
 │       └── run_baseline.sh          # 端到端基线测试
-├── data/                   # 测试数据
-│   ├── gen_fastq.py        # 合成 FASTQ 数据生成器
-│   └── sample_*.fastq      # 预生成的样本数据
+├── data/                   # 测试数据（样本不入库，按需生成）
+│   ├── README.md           # 数据生成说明
+│   └── gen_fastq.py        # 合成 FASTQ 数据生成器
 └── fuzz/                   # 模糊测试（LibFuzzer）
     ├── CMakeLists.txt      # CMake 构建配置
     ├── *_fuzzer.cpp         # Fuzzer 源码
