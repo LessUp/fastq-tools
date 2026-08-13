@@ -88,6 +88,15 @@
             }
         },
         {
+            "name": "gcc-v3-release",
+            "displayName": "GCC Release (x86-64-v3)",
+            "description": "Release build with x86-64-v3 (AVX2+FMA+BMI) baseline",
+            "inherits": "gcc-release",
+            "cacheVariables": {
+                "FQTOOLS_CPU_BASELINE": "x86-64-v3"
+            }
+        },
+        {
             "name": "gcc-relwithdebinfo",
             "displayName": "GCC RelWithDebInfo",
             "description": "Release build with debug info using the preferred GCC profile",
@@ -112,6 +121,15 @@
             "inherits": "conan-clang-base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "clang-v3-release",
+            "displayName": "Clang Release (x86-64-v3)",
+            "description": "Release build with x86-64-v3 (AVX2+FMA+BMI) baseline",
+            "inherits": "clang-release",
+            "cacheVariables": {
+                "FQTOOLS_CPU_BASELINE": "x86-64-v3"
             }
         },
         {
@@ -210,6 +228,16 @@
             "name": "coverage",
             "configurePreset": "coverage",
             "displayName": "Coverage Build"
+        },
+        {
+            "name": "gcc-v3-release",
+            "configurePreset": "gcc-v3-release",
+            "displayName": "GCC v3 Release Build"
+        },
+        {
+            "name": "clang-v3-release",
+            "configurePreset": "clang-v3-release",
+            "displayName": "Clang v3 Release Build"
         }
     ],
     "testPresets": [

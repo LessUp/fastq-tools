@@ -5,11 +5,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml">
-    <img src="https://github.com/LessUp/fastq-tools/actions/workflows/ci.yml/badge.svg" alt="CI Status">
+  <a href="https://github.com/open-genomics/fastq-tools/actions/workflows/ci.yml">
+    <img src="https://github.com/open-genomics/fastq-tools/actions/workflows/ci.yml/badge.svg" alt="CI Status">
   </a>
-  <a href="https://github.com/LessUp/fastq-tools/releases">
-    <img src="https://img.shields.io/github/v/release/LessUp/fastq-tools?label=Release&logo=github" alt="GitHub Release">
+  <a href="https://github.com/open-genomics/fastq-tools/releases">
+    <img src="https://img.shields.io/github/v/release/open-genomics/fastq-tools?label=Release&logo=github" alt="GitHub Release">
   </a>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
@@ -21,7 +21,7 @@
 <p align="center">
   <a href="./docs/getting-started.md">快速开始</a> ·
   <a href="./docs/architecture.md">架构</a> ·
-  <a href="https://github.com/LessUp/fastq-tools/releases">发布版本</a>
+  <a href="https://github.com/open-genomics/fastq-tools/releases">发布版本</a>
 </p>
 
 ---
@@ -101,10 +101,29 @@ auto stats = pipeline.run();
 **环境要求**：GCC 13+ / Clang 17+，CMake 3.28+，Conan 2.x。Linux 原生支持；macOS 脚本支持开发中（可手动构建）；Windows 建议 WSL 或 Docker。
 
 ```bash
-git clone https://github.com/LessUp/fastq-tools.git
+git clone https://github.com/open-genomics/fastq-tools.git
 cd fastq-tools
 ./scripts/core/build
 ./build/clang-release/FastQTools --help
+
+### CPU 架构基线
+
+构建默认使用 `portable` 基线（不添加 `-march` 标志），确保二进制可在任何基线
+x86-64 或 ARM CPU 上运行。如需针对特定 CPU 优化：
+
+```bash
+# portable（默认，最大兼容性）
+./scripts/core/build --cpu-baseline portable
+
+# x86-64-v3（AVX2+FMA+BMI，仅 x86-64）
+./scripts/core/build --cpu-baseline x86-64-v3
+# 或使用 preset: cmake --preset gcc-v3-release
+
+# native（本地 CPU 优化，不用于发布）
+./scripts/core/build --cpu-baseline native
+```
+
+> **注意**：项目不实现运行时 SIMD dispatch。选择的基线在编译时固定。
 ```
 
 示例输入不随仓库附带，先用 `tools/data/gen_fastq.py` 生成示例数据：`python3 tools/data/gen_fastq.py -o sample.fastq && gzip -kf sample.fastq`。

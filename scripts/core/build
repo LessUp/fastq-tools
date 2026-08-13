@@ -27,6 +27,7 @@ SANITIZER=""
 COVERAGE=false
 STATIC_ANALYSIS=false
 LTO=true
+CPU_BASELINE=""
 VERBOSE=false
 DEV_MODE=false
 PRESET=""
@@ -62,6 +63,7 @@ print_usage() {
   --conan-compiler-version VERSION  覆盖 Conan 使用的编译器版本
   --conan-profile PATH      显式指定 Conan host profile
   --no-lto                  禁用链接时优化
+  --cpu-baseline PROFILE     CPU 基线: portable | x86-64-v3 | native (默认: portable)
   --clean                   构建前清理构建目录
   -p, --preset NAME         使用 CMake preset (覆盖其他选项)
   
@@ -137,6 +139,10 @@ while [[ $# -gt 0 ]]; do
         --no-lto)
             LTO=false
             shift
+            ;;
+        --cpu-baseline)
+            CPU_BASELINE="$2"
+            shift 2
             ;;
         --clean)
             CLEAN=true
@@ -303,6 +309,7 @@ log_info "构建类型: ${BUILD_TYPE}"
 [[ "$COVERAGE" == "true" ]] && log_info "覆盖率: 已启用"
 [[ "$STATIC_ANALYSIS" == "true" ]] && log_info "静态分析: 已启用"
 log_info "并行任务: ${JOBS}"
+[[ -n "$CPU_BASELINE" ]] && log_info "CPU 基线: ${CPU_BASELINE}"
 
 # =============================================================================
 # 清理（如果需要）
@@ -387,6 +394,11 @@ fi
 # 静态分析
 if [[ "$STATIC_ANALYSIS" == "true" ]]; then
     CMAKE_ARGS+=(-DENABLE_CLANG_TIDY=ON)
+fi
+
+# CPU baseline
+if [[ -n "$CPU_BASELINE" ]]; then
+    CMAKE_ARGS+=(-DFQTOOLS_CPU_BASELINE="$CPU_BASELINE")
 fi
 
 if command -v conan &>/dev/null; then

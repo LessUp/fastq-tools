@@ -60,36 +60,55 @@ else()
     endif()
 endif()
 
-# --- Compiler-specific options ---
-# 架构扩展：默认 x86-64-v3（AVX2+，可移植），可选 native 用于本地极致性能
-option(ENABLE_NATIVE_ARCH "Use -march=native for local build (not portable)" OFF)
-# 快速浮点：允许重排浮点运算，提升向量化但牺牲精度与可复现性
+# --- CPU baseline profile ---
+# FQTOOLS_CPU_BASELINE controls the instruction set available to the compiler.
+#   portable   : no -march flag (default; runs on any baseline x86-64/ARM CPU)
+#   x86-64-v3  : -march=x86-64-v3 (AVX2+FMA+BMI; only on x86-64)
+#   native     : -march=native (local benchmark only; not for release)
+set(FQTOOLS_CPU_BASELINE "portable" CACHE STRING "CPU baseline profile: portable | x86-64-v3 | native")
+set_property(CACHE FQTOOLS_CPU_BASELINE PROPERTY STRINGS portable x86-64-v3 native)
+
+# Deprecated: ENABLE_NATIVE_ARCH maps to FQTOOLS_CPU_BASELINE=native for migration.
+option(ENABLE_NATIVE_ARCH "Deprecated: use -DFQTOOLS_CPU_BASELINE=native instead" OFF)
+if(ENABLE_NATIVE_ARCH)
+    message(WARNING "ENABLE_NATIVE_ARCH is deprecated. Use -DFQTOOLS_CPU_BASELINE=native instead.")
+    set(FQTOOLS_CPU_BASELINE "native" CACHE STRING "" FORCE)
+endif()
+
+# Validate and apply CPU baseline
+if(NOT FQTOOLS_CPU_BASELINE STREQUAL "portable"
+   AND NOT FQTOOLS_CPU_BASELINE STREQUAL "x86-64-v3"
+   AND NOT FQTOOLS_CPU_BASELINE STREQUAL "native")
+    message(FATAL_ERROR "Invalid FQTOOLS_CPU_BASELINE='${FQTOOLS_CPU_BASELINE}'. "
+                         "Valid values: portable | x86-64-v3 | native")
+endif()
+
+message(STATUS "FastQTools CPU baseline: ${FQTOOLS_CPU_BASELINE}")
+
+# Fast math: impairs numerical reproducibility, off by default
 option(ENABLE_FAST_MATH "Enable -ffast-math (impairs numerical reproducibility)" OFF)
 
-# 显式 STREQUAL 以排除 AppleClang：-march=armv8-a 等选项 Apple clang 不接受
+# Apply compiler flags (explicit STREQUAL to exclude AppleClang)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_options(-g -O0)
     elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-        # 仅 Release 追加激进优化；RelWithDebInfo/MinSizeRel 使用 CMake 对应类型的内置 flags
-        if(ENABLE_NATIVE_ARCH)
+        # Apply CPU baseline only in Release (dev builds stay portable)
+        if(FQTOOLS_CPU_BASELINE STREQUAL "native")
             add_compile_options(-march=native)
-        else()
-            # 按架构选择可移植基线：x86-64-v3（AVX2+FMA+BMI）或 armv8-a
+        elseif(FQTOOLS_CPU_BASELINE STREQUAL "x86-64-v3")
             if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|i386|i686")
                 add_compile_options(-march=x86-64-v3)
-            elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|arm")
-                add_compile_options(-march=armv8-a)
+            else()
+                message(WARNING "FQTOOLS_CPU_BASELINE=x86-64-v3 ignored on ${CMAKE_SYSTEM_PROCESSOR}; using portable")
             endif()
         endif()
-        # 显式启用向量化和循环展开（-O3 默认包含，但显式声明确保一致性）
+        # portable: no -march flag (baseline x86-64 / ARM default)
         add_compile_options(-O3 -ftree-vectorize -funroll-loops)
-        # -ffast-math 影响统计模块数值可复现性，默认关闭
         if(ENABLE_FAST_MATH)
             add_compile_options(-ffast-math)
         endif()
-        # 使用函数段和数据段，配合链接器 --gc-sections 消除未使用代码
         add_compile_options(-ffunction-sections -fdata-sections)
     endif()
 endif()
