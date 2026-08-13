@@ -4,7 +4,7 @@ project(FastQTools
     LANGUAGES CXX
     VERSION 4.0.0
     DESCRIPTION "C++23 FASTQ quality control tool with parallel pipeline core"
-    HOMEPAGE_URL "https://github.com/LessUp/fastq-tools"
+    HOMEPAGE_URL "https://github.com/open-genomics/fastq-tools"
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
