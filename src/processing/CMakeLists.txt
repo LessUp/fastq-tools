@@ -25,6 +25,7 @@ target_link_libraries(fq_processing
         fq_modern_io
         TBB::tbb
     PRIVATE
+        fq_stat_core
         fq_error
         fmt::fmt
 )

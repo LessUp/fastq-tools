@@ -33,6 +33,9 @@ auto pathsAlias(const std::string& inputPath, const std::string& outputPath) -> 
     if (inputPath.empty() || outputPath.empty()) {
         return false;
     }
+    if (inputPath == "-" || outputPath == "-") {
+        return false;
+    }
     std::error_code error;
     const auto input = std::filesystem::absolute(inputPath, error).lexically_normal();
     error.clear();

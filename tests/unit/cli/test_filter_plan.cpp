@@ -180,6 +180,74 @@ TEST(FilterPlanTest, BuildsAdapterAndPolyXTailMutatorsFromRepeatableOptions) {
     EXPECT_EQ(shortPolyXRead.qual, "IIIIIII");
 }
 
+TEST(FilterPlanTest, BuildsLengthTrimmerAfterQualityTrimAndKeepsPrefix) {
+    cxxopts::Options options("filter", "Filter and trim FastQ files");
+    CommonCliOptions::addOptions(options);
+    addFilterPlanOptions(options);
+
+    const std::vector<std::string> args = {
+        "filter",
+        "--input",
+        "input.fastq",
+        "--output",
+        "output.fastq",
+        "--trim-quality",
+        "20",
+        "--trim-length",
+        "3",
+        "--max-length",
+        "10",
+    };
+
+    std::vector<char*> argv;
+    argv.reserve(args.size());
+    for (const auto& arg : args) {
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+
+    const auto parsed = options.parse(static_cast<int>(argv.size()), argv.data());
+    const auto common = CommonCliOptions::parse(parsed);
+
+    auto plan = buildFilterPlan(parsed, common);
+    CapturingPipeline pipeline;
+    plan.applyTo(pipeline);
+
+    ASSERT_EQ(pipeline.predicates_.size(), 1U);
+    EXPECT_NE(dynamic_cast<fq::processing::MaxLengthPredicate*>(pipeline.predicates_[0].get()),
+              nullptr);
+
+    ASSERT_EQ(pipeline.mutators_.size(), 2U);
+    EXPECT_NE(dynamic_cast<fq::processing::QualityTrimmer*>(pipeline.mutators_[0].get()), nullptr);
+    auto* const lengthTrimmer =
+        dynamic_cast<fq::processing::LengthTrimmer*>(pipeline.mutators_[1].get());
+    ASSERT_NE(lengthTrimmer, nullptr);
+
+    fq::io::FastqRecord read{"read1", {}, "ACGTAA", "IIIIII", "+"};
+    lengthTrimmer->process(read);
+    EXPECT_EQ(read.seq, "ACG");
+    EXPECT_EQ(read.qual, "III");
+}
+
+TEST(FilterPlanTest, RejectsZeroTrimLength) {
+    cxxopts::Options options("filter", "Filter and trim FastQ files");
+    CommonCliOptions::addOptions(options);
+    addFilterPlanOptions(options);
+
+    const std::vector<std::string> args = {
+        "filter", "--input", "input.fastq", "--output", "output.fastq", "--trim-length", "0"};
+
+    std::vector<char*> argv;
+    argv.reserve(args.size());
+    for (const auto& arg : args) {
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+
+    const auto parsed = options.parse(static_cast<int>(argv.size()), argv.data());
+    const auto common = CommonCliOptions::parse(parsed);
+
+    EXPECT_THROW(static_cast<void>(buildFilterPlan(parsed, common)), std::invalid_argument);
+}
+
 TEST(FilterPlanTest, RejectsUnsupportedQualityEncoding) {
     cxxopts::Options options("filter", "Filter and trim FastQ files");
     CommonCliOptions::addOptions(options);

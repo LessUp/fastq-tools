@@ -4,7 +4,7 @@ import os
 
 class FastQTools(ConanFile):
     name = "fastqtools"
-    version = "4.0.0"
+    version = "4.1.0"
     
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"

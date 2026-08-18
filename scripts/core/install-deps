@@ -132,9 +132,13 @@ check_system() {
             esac
             ;;
         macos)
-            log_error "macOS 支持开发中"
-            log_info "请使用 Homebrew 手动安装依赖"
-            return 1
+            if ! command -v brew >/dev/null 2>&1; then
+                log_error "未找到 Homebrew"
+                log_info "先安装 Homebrew: https://brew.sh"
+                return 1
+            fi
+            log_success "检测到系统: macOS (Homebrew)"
+            return 0
             ;;
         windows)
             log_error "Windows 不支持此脚本"
@@ -166,6 +170,16 @@ install_packages() {
     fi
     
     log_info "安装 ${#packages[@]} 个包..."
+
+    local os
+    os=$(detect_os)
+    if [[ "$os" == "macos" ]]; then
+        if ! brew install "${packages[@]}"; then
+            log_error "Homebrew 包安装失败"
+            return 1
+        fi
+        return 0
+    fi
     
     local apt_args=(install -y)
     if [[ "$VERBOSE" == "false" ]]; then
@@ -192,15 +206,23 @@ verify_installation() {
     
     case "$mode" in
         runtime)
-            for pkg in "${RUNTIME_PACKAGES[@]}"; do
-                if ! dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"; then
-                    missing+=("$pkg")
-                fi
-            done
+            if [[ "$(detect_os)" == "macos" ]]; then
+                log_info "macOS 运行时依赖由构建产物 / Conan 提供，跳过 dpkg 检查"
+            else
+                for pkg in "${RUNTIME_PACKAGES[@]}"; do
+                    if ! dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"; then
+                        missing+=("$pkg")
+                    fi
+                done
+            fi
             ;;
         dev)
-            # 检查关键开发工具
-            local tools=(cmake ninja gcc g++ clang git)
+            local tools=(cmake ninja git)
+            if [[ "$(detect_os)" == "macos" ]]; then
+                tools+=(clang)
+            else
+                tools+=(gcc g++ clang)
+            fi
             for tool in "${tools[@]}"; do
                 if ! command -v "$tool" &>/dev/null; then
                     missing+=("$tool")
@@ -302,14 +324,19 @@ if [[ "$SKIP_UPDATE" == "false" ]]; then
     show_step 2 4 "更新包管理器"
     
     if [[ "$DRY_RUN" == "false" ]]; then
-        log_info "更新 apt 包列表..."
-        if ! sudo apt-get update -qq; then
-            log_error "更新包列表失败"
-            exit 1
+        if [[ "$(detect_os)" == "macos" ]]; then
+            log_info "更新 Homebrew..."
+            brew update || log_warning "brew update 失败（继续安装）"
+        else
+            log_info "更新 apt 包列表..."
+            if ! sudo apt-get update -qq; then
+                log_error "更新包列表失败"
+                exit 1
+            fi
         fi
         log_success "包列表已更新"
     else
-        log_info "DRY RUN: 跳过 apt update"
+        log_info "DRY RUN: 跳过包管理器更新"
     fi
 else
     show_step 2 4 "跳过包管理器更新"
@@ -318,30 +345,39 @@ fi
 # 安装依赖
 show_step 3 4 "安装依赖包"
 
-case "$INSTALL_MODE" in
-    runtime)
-        log_info "安装模式: 运行时依赖"
-        install_packages "${RUNTIME_PACKAGES[@]}" || exit 1
-        ;;
-        
-    dev)
-        log_info "安装模式: 开发依赖（包括运行时）"
-        install_packages "${RUNTIME_PACKAGES[@]}" "${DEVELOPMENT_PACKAGES[@]}" || exit 1
-        
-        if [[ "$DRY_RUN" == "false" ]]; then
-            install_python_deps
-        fi
-        ;;
-        
-    all)
-        log_info "安装模式: 所有依赖（包括可选工具）"
-        install_packages "${RUNTIME_PACKAGES[@]}" "${DEVELOPMENT_PACKAGES[@]}" "${OPTIONAL_PACKAGES[@]}" || exit 1
-        
-        if [[ "$DRY_RUN" == "false" ]]; then
-            install_python_deps
-        fi
-        ;;
-esac
+select_packages() {
+    if [[ "$(detect_os)" == "macos" ]]; then
+        case "$1" in
+            runtime)
+                echo cmake ninja
+                ;;
+            dev)
+                echo cmake ninja llvm
+                ;;
+            all)
+                echo cmake ninja llvm ccache
+                ;;
+        esac
+        return
+    fi
+    case "$1" in
+        runtime)
+            printf '%s\n' "${RUNTIME_PACKAGES[@]}"
+            ;;
+        dev)
+            printf '%s\n' "${RUNTIME_PACKAGES[@]}" "${DEVELOPMENT_PACKAGES[@]}"
+            ;;
+        all)
+            printf '%s\n' "${RUNTIME_PACKAGES[@]}" "${DEVELOPMENT_PACKAGES[@]}" "${OPTIONAL_PACKAGES[@]}"
+            ;;
+    esac
+}
+
+mapfile -t SELECTED_PACKAGES < <(select_packages "$INSTALL_MODE")
+install_packages "${SELECTED_PACKAGES[@]}" || exit 1
+if [[ "$INSTALL_MODE" != "runtime" && "$DRY_RUN" == "false" ]]; then
+    install_python_deps
+fi
 
 # 验证
 if [[ "$DRY_RUN" == "false" ]]; then

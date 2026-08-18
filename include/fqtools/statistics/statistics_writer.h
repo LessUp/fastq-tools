@@ -18,6 +18,7 @@ struct StatisticsWriterOptions {
     int qualityEncoding = 33;                     ///< 质量编码偏移
     size_t duplicateEstimateSampleModulo = 1024;  ///< 重复估计采样模数
     std::string signatureReportPath;              ///< 签名报告路径（空则不生成）
+    std::string jsonOutputPath;                   ///< 可选 JSON 报告路径（空则不生成）
     size_t maxReportedSignatures = 20;            ///< 最大报告签名数
 };
 
@@ -34,6 +35,7 @@ public:
 
     void write(std::ostream& os, const FqStatisticResult& result);
     void writeSignature(std::ostream& os, const FqStatisticResult& result);
+    void writeJson(std::ostream& os, const FqStatisticResult& result);
 
 private:
     StatisticsWriterOptions options_;

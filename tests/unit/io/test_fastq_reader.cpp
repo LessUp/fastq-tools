@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <unistd.h>
+
 #include <gtest/gtest.h>
 
 class FastqReaderTest : public ::testing::Test {
@@ -206,6 +208,51 @@ TEST(FastqReaderValidationTest, ThrowsOnInvalidPlusLine) {
         fq::error::FormatError);
 
     std::filesystem::remove(brokenFile);
+}
+
+TEST(FastqReaderStdioTest, ReadsUncompressedStdinDash) {
+    int fds[2] = {-1, -1};
+    ASSERT_EQ(::pipe(fds), 0);
+    const char payload[] = "@read1\nACGT\n+\nIIII\n";
+    ASSERT_EQ(::write(fds[1], payload, sizeof(payload) - 1),
+              static_cast<ssize_t>(sizeof(payload) - 1));
+    ::close(fds[1]);
+
+    const int savedStdin = ::dup(STDIN_FILENO);
+    ASSERT_GE(savedStdin, 0);
+    ASSERT_EQ(::dup2(fds[0], STDIN_FILENO), STDIN_FILENO);
+    ::close(fds[0]);
+
+    {
+        fq::io::FastqReader reader("-");
+        fq::io::FastqBatch batch;
+        ASSERT_TRUE(reader.nextBatch(batch));
+        ASSERT_EQ(batch.records().size(), 1U);
+        EXPECT_EQ(batch.records()[0].seq, "ACGT");
+        EXPECT_FALSE(reader.nextBatch(batch));
+    }
+
+    ::dup2(savedStdin, STDIN_FILENO);
+    ::close(savedStdin);
+}
+
+TEST(FastqReaderStdioTest, RejectsGzipStdin) {
+    int fds[2] = {-1, -1};
+    ASSERT_EQ(::pipe(fds), 0);
+    const unsigned char gzipMagic[] = {0x1f, 0x8b, 0x00, 0x00};
+    ASSERT_EQ(::write(fds[1], gzipMagic, sizeof(gzipMagic)),
+              static_cast<ssize_t>(sizeof(gzipMagic)));
+    ::close(fds[1]);
+
+    const int savedStdin = ::dup(STDIN_FILENO);
+    ASSERT_GE(savedStdin, 0);
+    ASSERT_EQ(::dup2(fds[0], STDIN_FILENO), STDIN_FILENO);
+    ::close(fds[0]);
+
+    EXPECT_THROW(fq::io::FastqReader reader("-"), fq::error::ConfigurationError);
+
+    ::dup2(savedStdin, STDIN_FILENO);
+    ::close(savedStdin);
 }
 
 TEST_F(FastqReaderTest, SmallBufferBoundary) {

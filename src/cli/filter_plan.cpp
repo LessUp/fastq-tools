@@ -59,7 +59,9 @@ void addFilterPlanOptions(cxxopts::Options& options) {
         "trim-poly-g", "Trim polyG tail with minimum run length", cxxopts::value<size_t>())(
         "trim-poly-x",
         "Trim low-complexity polyX tail with minimum run length",
-        cxxopts::value<size_t>());
+        cxxopts::value<size_t>())("trim-length",
+                                  "Trim reads to this length from the 3' end (keep 5' prefix)",
+                                  cxxopts::value<size_t>());
 }
 
 auto buildFilterPlan(const cxxopts::ParseResult& result, const CommonCliOptions& common)
@@ -96,7 +98,7 @@ auto buildFilterPlan(const cxxopts::ParseResult& result, const CommonCliOptions&
         plan.predicates.push_back(std::make_unique<fq::processing::MaxNRatioPredicate>(maxNRatio));
     }
 
-    // CLI 契约：adapter → poly-G/poly-X → quality trim，所有 predicate 在其后评估。
+    // CLI 契约：adapter → poly-G/poly-X → quality trim → length trim，所有 predicate 在其后评估。
     if (result.count("adapter-seq")) {
         plan.mutators.push_back(std::make_unique<fq::processing::AdapterTrimmer>(
             result["adapter-seq"].as<std::vector<std::string>>(),
@@ -122,6 +124,15 @@ auto buildFilterPlan(const cxxopts::ParseResult& result, const CommonCliOptions&
             static_cast<size_t>(1),
             parseTrimMode(result["trim-mode"].as<std::string>()),
             qualityEncoding));
+    }
+
+    if (result.count("trim-length")) {
+        const size_t trimLength = result["trim-length"].as<size_t>();
+        if (trimLength == 0) {
+            throw std::invalid_argument("trim-length must be >= 1");
+        }
+        plan.mutators.push_back(std::make_unique<fq::processing::LengthTrimmer>(
+            trimLength, fq::processing::LengthTrimmer::TrimStrategy::MaxLength));
     }
 
     return plan;

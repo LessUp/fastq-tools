@@ -152,6 +152,25 @@ class TestFastQToolsCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(output_fastq))
         self.assertEqual(self._read_fastq_content(output_fastq), "")
 
+    def test_filter_trim_length_keeps_prefix(self):
+        input_fastq = os.path.join(self.test_dir, "trim_length.fastq")
+        output_fastq = os.path.join(self.test_dir, "trimmed_length.fastq")
+        with open(input_fastq, "w") as f:
+            f.write("@read1\nACGTAA\n+\nIIIIII\n")
+            f.write("@read2\nAC\n+\nII\n")
+
+        result = self.run_cmd([
+            "filter",
+            "--input", input_fastq,
+            "--output", output_fastq,
+            "--trim-length", "3",
+        ])
+
+        self.assertEqual(result.returncode, 0)
+        content = self._read_fastq_content(output_fastq)
+        self.assertIn("@read1\nACG\n+\nIII\n", content)
+        self.assertIn("@read2\nAC\n+\nII\n", content)
+
     def test_filter_max_length(self):
         # Filter for max 99bp should result in 0 reads.
         output_fastq = os.path.join(self.test_dir, "empty.fastq")
@@ -291,6 +310,75 @@ class TestFastQToolsCLI(unittest.TestCase):
         self.assertIn("#DuplicateEstimate\t1", stats_content)
         self.assertIn("summary\tduplicate_estimate\t1", sidecar_content)
         self.assertIn("head_kmer\tACGT\t2", sidecar_content)
+
+    def test_stat_writes_json_report(self):
+        output_stats = os.path.join(self.test_dir, "stats.txt")
+        output_json = os.path.join(self.test_dir, "stats.json")
+        result = self.run_cmd([
+            "stat",
+            "--input", self.sample_fastq,
+            "--output", output_stats,
+            "--json", output_json,
+        ])
+
+        self.assertEqual(result.returncode, 0)
+        with open(output_json, "r") as f:
+            content = f.read()
+        self.assertIn('"read_num": 10000', content)
+        self.assertIn('"base_count": 1000000', content)
+        self.assertIn('"positions"', content)
+        self.assertTrue(content.startswith("{"))
+
+    def test_filter_stat_counts_kept_reads_only(self):
+        input_fastq = os.path.join(self.test_dir, "mixed.fastq")
+        output_fastq = os.path.join(self.test_dir, "kept.fastq")
+        output_stats = os.path.join(self.test_dir, "kept.stats.txt")
+        output_json = os.path.join(self.test_dir, "kept.stats.json")
+        with open(input_fastq, "w") as f:
+            f.write("@keep1\nACGT\n+\nIIII\n")
+            f.write("@drop\nAC\n+\nII\n")
+            f.write("@keep2\nTTTT\n+\nIIII\n")
+
+        result = self.run_cmd([
+            "filter",
+            "--input", input_fastq,
+            "--output", output_fastq,
+            "--min-length", "4",
+            "--stat", output_stats,
+            "--stat-json", output_json,
+        ])
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        content = self._read_fastq_content(output_fastq)
+        self.assertIn("@keep1\nACGT\n+\nIIII\n", content)
+        self.assertIn("@keep2\nTTTT\n+\nIIII\n", content)
+        self.assertNotIn("@drop", content)
+        with open(output_stats, "r") as f:
+            stats_content = f.read()
+        self.assertIn("#ReadNum\t2", stats_content)
+        self.assertIn("#BaseCount\t8", stats_content)
+        with open(output_json, "r") as f:
+            json_content = f.read()
+        self.assertIn('"read_num": 2', json_content)
+        self.assertIn('"base_count": 8', json_content)
+
+    def test_filter_stdio_pipeline(self):
+        input_fastq = os.path.join(self.test_dir, "stdio.fastq")
+        with open(input_fastq, "w") as f:
+            f.write("@read1\nACGTAA\n+\nIIIIII\n")
+
+        cmd = [
+            self.fastqtools,
+            "filter",
+            "--input", "-",
+            "--output", "-",
+            "--trim-length", "3",
+        ]
+        with open(input_fastq, "r") as stdin_fh:
+            result = subprocess.run(cmd, stdin=stdin_fh, capture_output=True, text=True)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("@read1\nACG\n+\nIII\n", result.stdout)
 
 if __name__ == "__main__":
     unittest.main()

@@ -21,12 +21,18 @@ struct FastqReader::Impl {
     gzFile gzfile = nullptr;
     int fd = -1;
     bool isGzip = false;
+    bool ownsFd = true;
     std::string path;
     bool isEofReached = false;
     FastqReaderOptions options{};
     std::vector<char> remainder;
 
     explicit Impl(std::string p, const FastqReaderOptions& opt) : path(std::move(p)), options(opt) {
+        if (path == "-") {
+            openStdin();
+            return;
+        }
+
         unsigned char header[2] = {0, 0};
         {
             const int sniffFd = ::open(path.c_str(), O_RDONLY);
@@ -58,15 +64,32 @@ struct FastqReader::Impl {
         }
     }
 
+    void openStdin() {
+        fd = STDIN_FILENO;
+        ownsFd = false;
+        unsigned char header[2] = {0, 0};
+        const auto n = ::read(STDIN_FILENO, header, sizeof(header));
+        if (n < 0) {
+            throw fq::error::IOError(path, errno);
+        }
+        if (n == static_cast<ssize_t>(sizeof(header)) && header[0] == 0x1f && header[1] == 0x8b) {
+            throw fq::error::ConfigurationError(
+                "gzip-compressed stdin is not supported; decompress first (e.g. gzip -dc file.gz | "
+                "FastQTools ... -i -)");
+        }
+        if (n > 0) {
+            remainder.assign(reinterpret_cast<const char*>(header),
+                             reinterpret_cast<const char*>(header) + n);
+        }
+    }
+
     ~Impl() {
         if (isGzip) {
             if (gzfile) {
                 gzclose(gzfile);
             }
-        } else {
-            if (fd >= 0) {
-                ::close(fd);
-            }
+        } else if (ownsFd && fd >= 0) {
+            ::close(fd);
         }
     }
 

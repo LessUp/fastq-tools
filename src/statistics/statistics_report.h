@@ -17,4 +17,7 @@ struct StatisticsReport {
                                          const StatisticsWriterOptions& options)
     -> StatisticsReport;
 
+[[nodiscard]] auto formatStatisticsJson(const FqStatisticResult& result,
+                                        const StatisticsWriterOptions& options) -> std::string;
+
 }  // namespace fq::statistics

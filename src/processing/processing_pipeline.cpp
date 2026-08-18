@@ -9,6 +9,7 @@
 #include "fqtools/processing/processing_pipeline_interface.h"
 
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
@@ -17,6 +18,8 @@
 #include <vector>
 
 #include "processing/execution_runtime.h"
+#include "statistics/fq_statistic.h"
+#include "statistics/fq_statistic_worker.h"
 
 namespace fq::processing {
 
@@ -32,7 +35,12 @@ namespace {
 
 class Pipeline::Impl {
 public:
-    using result_type = ProcessingStatistics;
+    struct Token {
+        ProcessingStatistics processing;
+        fq::statistics::FqStatisticResult qc;
+    };
+
+    using result_type = Token;
 
     std::string inputPath_;
     std::string outputPath_;
@@ -42,6 +50,11 @@ public:
     std::unique_ptr<fq::io::IReader> customReader_;
     std::shared_ptr<fq::io::IWriter> customWriter_;
     bool customReaderConfigured_ = false;
+    bool collectQc_ = false;
+    int qualityEncoding_ = 33;
+    std::size_t signatureKmerSize_ = 15;
+    std::size_t duplicateEstimateSampleModulo_ = 1024;
+    fq::statistics::FqStatisticResult qc_;
 
     auto run() -> ProcessingStatistics;
 
@@ -51,22 +64,30 @@ public:
     }
 
     auto processBatch(fq::io::FastqBatch& batch) -> result_type {
-        ProcessingStatistics partial;
-        applyOperations(batch, partial);
+        Token partial;
+        applyOperations(batch, partial.processing);
+        if (collectQc_) {
+            fq::statistics::FqStatisticWorker worker(
+                qualityEncoding_, signatureKmerSize_, duplicateEstimateSampleModulo_);
+            partial.qc = worker.calculateStats(batch);
+        }
         return partial;
     }
 
     void afterCommit(result_type& partial, std::uint64_t committedBytes) const {
-        partial.outputBytes += committedBytes;
+        partial.processing.outputBytes += committedBytes;
     }
 
     void merge(result_type& total, result_type partial) const {
-        total.totalReads += partial.totalReads;
-        total.passedReads += partial.passedReads;
-        total.filteredReads += partial.filteredReads;
-        total.modifiedReads += partial.modifiedReads;
-        total.inputBytes += partial.inputBytes;
-        total.outputBytes += partial.outputBytes;
+        total.processing.totalReads += partial.processing.totalReads;
+        total.processing.passedReads += partial.processing.passedReads;
+        total.processing.filteredReads += partial.processing.filteredReads;
+        total.processing.modifiedReads += partial.processing.modifiedReads;
+        total.processing.inputBytes += partial.processing.inputBytes;
+        total.processing.outputBytes += partial.processing.outputBytes;
+        if (collectQc_) {
+            total.qc += partial.qc;
+        }
     }
 
 private:
@@ -108,6 +129,26 @@ void Pipeline::addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicat
     impl_->predicates_.push_back(std::move(predicate));
 }
 
+void Pipeline::enableReadStatistics(int qualityEncoding,
+                                    std::size_t signatureKmerSize,
+                                    std::size_t duplicateEstimateSampleModulo) {
+    impl_->collectQc_ = true;
+    impl_->qualityEncoding_ = qualityEncoding;
+    impl_->signatureKmerSize_ = signatureKmerSize;
+    impl_->duplicateEstimateSampleModulo_ = duplicateEstimateSampleModulo;
+}
+
+auto Pipeline::hasReadStatistics() const -> bool {
+    return impl_->collectQc_;
+}
+
+auto Pipeline::readStatistics() const -> const fq::statistics::FqStatisticResult& {
+    if (!impl_->collectQc_) {
+        throw std::logic_error("Pipeline: read statistics were not enabled");
+    }
+    return impl_->qc_;
+}
+
 auto Pipeline::run() -> ProcessingStatistics {
     return impl_->run();
 }
@@ -128,7 +169,8 @@ auto Pipeline::Impl::run() -> ProcessingStatistics {
 
     auto startTime = std::chrono::steady_clock::now();
     auto outcome = runtime.execute(runtimePlan, *this);
-    auto stats = std::move(outcome.result);
+    qc_ = std::move(outcome.result.qc);
+    auto stats = std::move(outcome.result.processing);
 
     auto endTime = std::chrono::steady_clock::now();
     auto duration =

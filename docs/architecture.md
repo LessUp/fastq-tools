@@ -4,7 +4,7 @@
 
 ## 项目定位
 
-FastQTools 是一个 C++23 FASTQ 质控工具，覆盖测序数据日常 QC 的两个最高频操作：统计（`stat`）与过滤修剪（`filter`）。它同时提供一个最小 C++ 库 API。项目刻意把维护面收得很窄——不做比对、不做变异检测、不做可视化，也不做双端（paired-end/interleaved）处理、UMI/去重、质控前后对比报告，`stat` 当前只输出 TSV 而不提供 JSON——把工程精力集中在**把少数事做到极致**。以上都是当前的已知缺口，而非路线图承诺。
+FastQTools 是一个 C++23 FASTQ 质控工具，覆盖测序数据日常 QC 的两个最高频操作：统计（`stat`）与过滤修剪（`filter`）。它同时提供一个最小 C++ 库 API。项目刻意把维护面收得很窄——不做比对、不做变异检测、不做可视化，也不做双端（paired-end/interleaved）处理、UMI/去重、质控前后对比报告——把工程精力集中在**把少数事做到极致**。`stat` 输出 TSV，并可用 `--json` 写出同一指标集的机器可读 JSON。
 
 ### 设计哲学
 
@@ -49,8 +49,8 @@ FastQTools 不是 fastp 的替代品，而是一个聚焦、现代内核的 QC �
 |----|------|----------|
 | `cli` | 参数解析、子命令分发、依赖装配 | `src/cli/main.cpp`, `command_registry.cpp`, `commands/*` |
 | `io` | gzip 解压、批量读取、批量写入、零拷贝记录视图 | `include/fqtools/io/fastq_io.h`, `src/io/fastq_reader.cpp`, `fastq_writer.cpp` |
-| `processing` | 规则组合、统一运行时配置、执行 backend 选择 | `src/processing/execution_runtime.*`, `execution_backend.*` |
-| `statistics` | 统计计算与报告输出 | `src/statistics/fq_statistic.cpp`, `statistics_report.cpp` |
+| `processing` | 规则组合、统一运行时配置、执行 backend 选择；可选对保留 read 做 QC reduce | `src/processing/execution_runtime.*`, `execution_backend.*` |
+| `statistics` | 统计计算与报告输出（批次核 `fq_stat_core` 供 Pipeline 与 `Calculator` 共用） | `src/statistics/fq_statistic.cpp`, `statistics_report.cpp` |
 | `error` | 类型化异常体系 | `include/fqtools/error/error.h` |
 
 公共 API 入口是 `include/fqtools/fq.h`，一个 Façade 头文件，聚合所有对外接口。

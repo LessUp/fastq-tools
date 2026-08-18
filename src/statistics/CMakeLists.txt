@@ -1,6 +1,5 @@
 add_library(fq_statistics STATIC
     fq_statistic.cpp
-    fq_statistic_worker.cpp
     statistics_report.cpp
     statistics_writer.cpp
 )
@@ -13,6 +12,7 @@ target_include_directories(fq_statistics
 
 target_link_libraries(fq_statistics
     PUBLIC
+        fq_stat_core
         fq_modern_io
         fq_processing
     PRIVATE

@@ -61,6 +61,8 @@ static auto endsWithGzSuffix(const std::string& path) -> bool {
 struct FastqWriter::Impl {
     int fd = -1;
     gzFile gzfile = nullptr;
+    bool ownsFd = true;
+    bool streamingStdout = false;
     std::string path;
     std::filesystem::path temporaryPath;
     FastqWriterOptions options{};
@@ -75,6 +77,11 @@ struct FastqWriter::Impl {
     off_t flushedOffset = 0;
 
     explicit Impl(std::string p, const FastqWriterOptions& opt) : path(std::move(p)), options(opt) {
+        if (path == "-") {
+            openStdout();
+            return;
+        }
+
         auto temp = makeTemporaryFile(path);
         temporaryPath = temp.path;
 
@@ -120,6 +127,14 @@ struct FastqWriter::Impl {
         }
     }
 
+    void openStdout() {
+        streamingStdout = true;
+        ownsFd = false;
+        fd = STDOUT_FILENO;
+        compression = FastqWriterCompressionMode::None;
+        buffer.reserve(options.outputBufferBytes);
+    }
+
     ~Impl() {
         // 析构只做兜底清理，绝不发布输出：异常展开到达这里时内容必然不完整，
         // 若调用 finish() 会把截断结果 rename 成目标文件，被误认为完整产物。
@@ -130,7 +145,7 @@ struct FastqWriter::Impl {
     }
 
     void cleanupTemporaryFile() noexcept {
-        if (fd >= 0) {
+        if (ownsFd && fd >= 0) {
             ::close(fd);
             fd = -1;
         }
@@ -138,8 +153,10 @@ struct FastqWriter::Impl {
             gzclose(gzfile);
             gzfile = nullptr;
         }
-        std::error_code error;
-        std::filesystem::remove(temporaryPath, error);
+        if (!temporaryPath.empty()) {
+            std::error_code error;
+            std::filesystem::remove(temporaryPath, error);
+        }
     }
 
     void finish() {
@@ -150,7 +167,12 @@ struct FastqWriter::Impl {
         try {
             flush();
 
-            if (fd >= 0) {
+            if (streamingStdout) {
+                finished = true;
+                return;
+            }
+
+            if (ownsFd && fd >= 0) {
                 if (::close(fd) != 0) {
                     const int error = errno;
                     fd = -1;
@@ -225,9 +247,12 @@ struct FastqWriter::Impl {
             }
 
 #ifdef __linux__
-            // 通知内核释放已写出的 page cache，减少大文件写出时的内存压力
-            ::posix_fadvise(fd, flushedOffset, static_cast<off_t>(outSize), POSIX_FADV_DONTNEED);
-            flushedOffset += static_cast<off_t>(outSize);
+            if (!streamingStdout) {
+                // 通知内核释放已写出的 page cache，减少大文件写出时的内存压力
+                ::posix_fadvise(
+                    fd, flushedOffset, static_cast<off_t>(outSize), POSIX_FADV_DONTNEED);
+                flushedOffset += static_cast<off_t>(outSize);
+            }
 #endif
         }
 

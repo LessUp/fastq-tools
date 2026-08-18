@@ -9,9 +9,14 @@
 #include "fqtools/processing/interfaces.h"
 #include "fqtools/processing/processing_options.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
+
+namespace fq::statistics {
+struct FqStatisticResult;
+}
 
 namespace fq::processing {
 
@@ -71,6 +76,17 @@ public:
 
     /// 添加过滤器，按添加顺序依次执行，任一失败则过滤
     void addReadPredicate(std::unique_ptr<ReadPredicateInterface> predicate);
+
+    /// 在写出前对通过谓词的 read 做 QC 汇总（与 `stat` 同一套指标，不二次扫描）
+    void enableReadStatistics(int qualityEncoding = 33,
+                              std::size_t signatureKmerSize = 15,
+                              std::size_t duplicateEstimateSampleModulo = 1024);
+
+    [[nodiscard]] auto hasReadStatistics() const -> bool;
+
+    /// @brief 取最近一次 run() 汇总的 QC 结果
+    /// @throws std::logic_error 未调用 enableReadStatistics()
+    [[nodiscard]] auto readStatistics() const -> const fq::statistics::FqStatisticResult&;
 
     [[nodiscard]] auto run() -> ProcessingStatistics;
 

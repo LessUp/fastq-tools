@@ -14,8 +14,10 @@
 #include "filter_plan.h"
 #include <cxxopts.hpp>
 
+#include <fqtools/error/error.h>
 #include <fqtools/fq.h>  // 公共 API Façade（包含 pipeline 接口、predicates、mutators）
 #include <fqtools/logging.h>
+#include <fqtools/statistics/interfaces.h>
 
 namespace fq::cli::commands {
 
@@ -31,7 +33,10 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
 
     // 2. 添加 filter 特有参数
     addFilterPlanOptions(options);
-    options.add_options()("h,help", "Print usage");
+    options.add_options()(
+        "stat", "Write TSV QC report for kept reads", cxxopts::value<std::string>())(
+        "stat-json", "Write JSON QC report for kept reads", cxxopts::value<std::string>())(
+        "h,help", "Print usage");
 
     if (argc == 1) {
         std::cout << options.help() << '\n';
@@ -55,8 +60,32 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     auto plan = buildFilterPlan(result, common);
     plan.applyTo(pipeline_);
 
+    const bool wantStat = result.count("stat") > 0 || result.count("stat-json") > 0;
+    fq::statistics::StatisticOptions statOpts;
+    if (wantStat) {
+        statOpts.inputFastqPath = common.inputPath;
+        statOpts.qualityEncoding =
+            fq::cli::validateQualityEncoding(result["quality-encoding"].as<int>());
+        if (result.count("stat")) {
+            statOpts.outputStatPath = result["stat"].as<std::string>();
+        }
+        if (result.count("stat-json")) {
+            statOpts.jsonOutputPath = result["stat-json"].as<std::string>();
+        }
+        if (common.outputPath == "-" &&
+            (statOpts.outputStatPath == "-" || statOpts.jsonOutputPath == "-")) {
+            throw fq::error::ConfigurationError(
+                "cannot write FASTQ and a QC report to stdout; choose one '-' destination");
+        }
+        pipeline_.enableReadStatistics(statOpts.qualityEncoding);
+    }
+
     auto stats = pipeline_.run();
-    if (fq::logging::getLevel() < fq::logging::Level::Error) {
+    if (wantStat) {
+        fq::statistics::writeStatisticsOutputs(statOpts, pipeline_.readStatistics());
+    }
+    const bool reportToStdout = statOpts.outputStatPath == "-" || statOpts.jsonOutputPath == "-";
+    if (!reportToStdout && fq::logging::getLevel() < fq::logging::Level::Error) {
         std::cout << stats.toString() << '\n';
     }
 

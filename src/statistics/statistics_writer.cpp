@@ -38,4 +38,8 @@ void StatisticsWriter::writeSignature(std::ostream& os, const FqStatisticResult&
     }
 }
 
+void StatisticsWriter::writeJson(std::ostream& os, const FqStatisticResult& result) {
+    os << formatStatisticsJson(result, options_);
+}
+
 }  // namespace fq::statistics

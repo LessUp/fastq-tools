@@ -34,6 +34,7 @@ struct StatisticOptions {
     std::string inputFastqPath;       ///< 输入 FASTQ 文件路径
     std::string outputStatPath;       ///< 输出统计结果路径（文本报告）
     std::string signatureReportPath;  ///< 可选 signature sidecar 路径（TSV）
+    std::string jsonOutputPath;       ///< 可选 JSON 报告路径
 
     fq::processing::ProcessingOptions processing;
 
@@ -60,5 +61,8 @@ private:
     class Impl;
     std::unique_ptr<Impl> impl_;
 };
+
+/// 将已汇总的统计结果写成 TSV / JSON / signature sidecar（空路径跳过）
+void writeStatisticsOutputs(const StatisticOptions& options, const FqStatisticResult& result);
 
 }  // namespace fq::statistics

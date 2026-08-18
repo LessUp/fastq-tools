@@ -39,7 +39,9 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
         cxxopts::value<size_t>()->default_value("1024"))(
         "quality-encoding",
         "Quality encoding offset (33 or 64)",
-        cxxopts::value<int>()->default_value("33"))("h,help", "Print usage");
+        cxxopts::value<int>()->default_value("33"))(
+        "json", "Write machine-readable JSON report to this path", cxxopts::value<std::string>())(
+        "h,help", "Print usage");
 
     if (argc == 1) {
         std::cout << options.help() << '\n';
@@ -72,6 +74,9 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
 
     if (result.count("signature-report")) {
         statOpts.signatureReportPath = result["signature-report"].as<std::string>();
+    }
+    if (result.count("json")) {
+        statOpts.jsonOutputPath = result["json"].as<std::string>();
     }
 
     fq::statistics::Calculator calculator(std::move(statOpts));

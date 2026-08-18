@@ -1,10 +1,10 @@
 ---
 id: 001
 title: stat 机器可读 JSON 输出
-status: open
+status: closed
 labels: [enhancement]
 created: 2026-07-28
-closed:
+closed: 2026-08-18
 ---
 
 ## 现象
@@ -15,12 +15,12 @@ closed:
 
 ## 根因
 
-（关闭时填写）
+产品面刻意收窄时只落地了 TSV；指标计算已经集中在 `buildStatisticsReport`，缺的是同一指标集的第二种序列化，而不是新统计。
 
 ## 处理
 
-建议方向：为 `stat` 增加 JSON 输出选项（如 `--json <path>`），内容与 TSV 摘要/逐位置表保持同一指标集；nlohmann_json 已是按构建选项启用的 Conan 依赖，需评估是否引入 CLI 依赖面及其对二进制体积的影响。
+增加 `stat --json <path>`，由 `formatStatisticsJson` 手写序列化同一指标集（不把 nlohmann_json 拉进 CLI）。`-` 可写 stdout，但不能与 `-o -` 同时使用。
 
 ## 复盘
 
-（关闭时填写）
+机器可读输出应复用已有汇总结构，而不是再算一遍或引入新依赖。CLI 体积和指标一致性比“用现成 JSON 库”更重要。

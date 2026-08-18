@@ -1,10 +1,10 @@
 ---
 id: 002
 title: macOS 构建支持
-status: open
+status: closed
 labels: [enhancement]
 created: 2026-07-28
-closed:
+closed: 2026-08-18
 ---
 
 ## 现象
@@ -15,12 +15,12 @@ closed:
 
 ## 根因
 
-（关闭时填写）
+脚本把系统检查写成 Linux/apt 单路径，没有按 OS 选择包管理器，因此 macOS 只能硬拒绝。
 
 ## 处理
 
-建议方向：提供 Homebrew 依赖路径（cmake、ninja、llvm、tbb、zlib-ng、conan），在本地或 macOS CI runner 上验证构建与测试后，解除 `install-deps` 对 macOS 的硬拒绝；在此之前文档维持现状描述。
+`install-deps` 在 macOS 上走 Homebrew：`cmake`/`ninja`/`llvm`（`--all` 另加 `ccache`），跳过 apt/dpkg。Conan 仍需按 getting-started 手动安装。文档改为“可用 install-deps 后构建”。
 
 ## 复盘
 
-（关闭时填写）
+跨平台脚本先分支包管理器，再谈编译器细节。C++ 依赖继续交给 Conan，系统脚本只装工具链，避免两套包树。

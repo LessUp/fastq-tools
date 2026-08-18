@@ -11,6 +11,25 @@ This root changelog is the maintained project history. Older granular work logs 
 
 ## [Unreleased]
 
+### Added
+- `Pipeline::enableReadStatistics()`：过滤写出前对保留 read 做与 `stat` 同一套 QC 汇总，无需二次扫描。
+- `filter --stat` / `--stat-json`：一趟扫描同时写出 FASTQ 与 QC 报告。
+
+---
+
+## [4.1.0] - 2026-08-18
+
+`stat`/`filter` 接入层补齐：JSON、stdin/stdout、`--trim-length`，以及 Linux Release workflow 与 macOS `install-deps`。同时收入 v4 之后的审计修复、API 收口与 CPU baseline。
+
+### Added
+- `filter --trim-length`：从 3' 端截断到指定长度（保留 5' 前缀）。与 `--max-length`（丢弃超长 read）区分；处理顺序为 adapter → poly → quality → length → predicates。
+- `stat --json <path>`：与 TSV 同一指标集的机器可读 JSON（手写序列化，不把 nlohmann_json 拉进 CLI）。
+- `-i -` / `-o -`：未压缩 stdin/stdout。gzip 输入请先 `gzip -dc`；gzip 输出请再管道给 `gzip`。不允许 TSV 与 JSON 同时写 stdout。
+- `scripts/core/install-deps` 支持 macOS Homebrew（cmake/ninja/llvm）。
+- GitHub Release workflow：`v*` tag 构建 portable Linux x86_64 二进制并上传。
+- CPU baseline：`portable` / `x86-64-v3` / `native`（默认 portable）。
+- `--batch-capacity-mb`、有界 head-kmer 合并、大规模保序回归、PR sanitizer/fuzz/coverage 门禁、`conan.lock`。
+
 ### Fixed — 全量审计修复（正确性 / 测试 / 基建 / 文档）
 
 五维审计（代码逐文件通读、测试覆盖对照、构建/CI/打包、文档一致性、产品完整度）后的集中修复。Debug / Release / ASan 三配置 12/12 通过。

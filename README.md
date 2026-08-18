@@ -71,7 +71,7 @@ read 计数、最大读长、碱基组成、GC 含量、Q20/Q30。
 
 ### `filter` — 过滤与修剪
 
-长度过滤、质量过滤、N 比例过滤、5'/3'/两端质量修剪、adapter 修剪、polyG/polyX 尾修剪，一趟扫描全部完成。
+长度过滤、质量过滤、N 比例过滤、5'/3'/两端质量修剪、adapter 修剪、polyG/polyX 尾修剪，一趟扫描全部完成。可选 `--stat` / `--stat-json` 在同一趟里对保留的 read 写出与 `stat` 相同的 QC 报告。
 
 ## 扩展性
 
@@ -98,7 +98,7 @@ auto stats = pipeline.run();
 
 ## 快速开始
 
-**环境要求**：GCC 13+ / Clang 17+，CMake 3.28+，Conan 2.x。Linux 原生支持；macOS 脚本支持开发中（可手动构建）；Windows 建议 WSL 或 Docker。
+**环境要求**：GCC 13+ / Clang 17+，CMake 3.28+，Conan 2.x。Linux 原生支持；macOS 可用 `./scripts/core/install-deps`（需 Homebrew）后构建；Windows 建议 WSL 或 Docker。
 
 ```bash
 git clone https://github.com/open-genomics/fastq-tools.git
@@ -190,10 +190,10 @@ CI（GitHub Actions，push/PR 均触发，sanitizer 矩阵随 PR 与主分支运
 | | FastQTools | fastp | fastqc |
 |---|---|---|---|
 | 定位 | FASTQ 质控工具 | 全能 FASTQ 质控 | 质量报告 |
-| 统计 | Q20/Q30、GC、最大读长、碱基 | 更丰富的 QC 指标 | 可视化 HTML 报告 |
+| 统计 | Q20/Q30、GC、最大读长、碱基；TSV + JSON | 更丰富的 QC 指标 | 可视化 HTML 报告 |
 | 过滤/修剪 | 一趟扫描，全部可配置 | 自动 adapter 检测 | 不支持 |
 | Adapter 推断 | 不支持（需显式指定） | 内置自动检测 | 不支持 |
-| 可视化 | 无 | HTML + JSON 报告 | 交互式 HTML |
+| 可视化 | 无 HTML | HTML + JSON 报告 | 交互式 HTML |
 | 并行模型 | tbb::parallel_pipeline | 线程池 | 单线程 |
 | 可嵌入 | 库 API（Pipeline / Calculator） | 命令行工具 | 命令行工具 |
 | 语言 | C++23 | C++11 | Java |

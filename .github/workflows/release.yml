@@ -1,0 +1,76 @@
+name: Release
+
+# 在 v* tag 上构建 portable Linux 二进制并创建 GitHub Release。
+# 容器内 musl 静态构建仍可用 scripts/ci/release-build，本 workflow 覆盖日常发布。
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CONAN_VERSION: '2.27.1'
+  CMAKE_VERSION: '4.3.4'
+  LLVM_VERSION: '21'
+
+jobs:
+  linux:
+    name: Linux x86_64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Cache Conan packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.conan2
+          key: ${{ runner.os }}-conan-clang-release-${{ hashFiles('build-config/dependencies/**') }}
+          restore-keys: |
+            ${{ runner.os }}-conan-clang-
+            ${{ runner.os }}-conan-
+
+      - name: Setup build toolchain
+        uses: ./.github/actions/setup-cpp
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+          conan-version: ${{ env.CONAN_VERSION }}
+          llvm-version: ${{ env.LLVM_VERSION }}
+          compiler: clang
+
+      - name: Build portable Release
+        run: ./scripts/core/build --compiler clang --type Release --cpu-baseline portable --no-lto
+
+      - name: Package binary
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          mkdir -p dist
+          cp build/clang-release/FastQTools "dist/FastQTools-${version}-linux-x86_64"
+          chmod +x "dist/FastQTools-${version}-linux-x86_64"
+          (cd dist && sha256sum "FastQTools-${version}-linux-x86_64" > "FastQTools-${version}-linux-x86_64.sha256")
+          ./dist/FastQTools-${version}-linux-x86_64 --help >/dev/null
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          notes="FastQTools ${GITHUB_REF_NAME}
+
+          Linux x86_64 portable binary (no -march). See CHANGELOG.md for details."
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" dist/* --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" dist/* \
+              --title "FastQTools ${GITHUB_REF_NAME}" \
+              --notes "${notes}"
+          fi

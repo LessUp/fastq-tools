@@ -3,9 +3,13 @@
 #include "fqtools/io/fastq_reader.h"
 #include "fqtools/io/fastq_writer.h"
 
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <string>
+
+#include <fcntl.h>
+#include <unistd.h>
 
 #include <gtest/gtest.h>
 
@@ -180,6 +184,34 @@ TEST_F(FastqWriterTest, ExceptionUnwindDoesNotPublishTruncatedOutput) {
                   std::string::npos)
             << "临时文件残留: " << entry.path();
     }
+}
+
+TEST_F(FastqWriterTest, WritesUncompressedStdoutDash) {
+    const std::string captured = "test_writer_stdout.fastq";
+    const int outFd = ::open(captured.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    ASSERT_GE(outFd, 0);
+    const int savedStdout = ::dup(STDOUT_FILENO);
+    ASSERT_GE(savedStdout, 0);
+    ASSERT_EQ(::dup2(outFd, STDOUT_FILENO), STDOUT_FILENO);
+    ::close(outFd);
+
+    {
+        FastqWriter writer("-");
+        EXPECT_TRUE(writer.isOpen());
+        writer.write(FastqRecord{"read1", {}, "ACGT", "IIII", "+"});
+        writer.finish();
+    }
+
+    fflush(stdout);
+    ::dup2(savedStdout, STDOUT_FILENO);
+    ::close(savedStdout);
+
+    std::ifstream in(captured);
+    const std::string content((std::istreambuf_iterator<char>(in)),
+                              std::istreambuf_iterator<char>());
+    EXPECT_EQ(content, "@read1\nACGT\n+\nIIII\n");
+    EXPECT_FALSE(std::filesystem::exists("-"));
+    std::filesystem::remove(captured);
 }
 
 }  // namespace fq::io

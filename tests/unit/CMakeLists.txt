@@ -8,7 +8,7 @@ add_fq_test(test_error      "unit" 60  error/test_exceptions.cpp)
 
 # --- 核心功能 ---
 add_fq_test(test_io         "unit" 60  io/test_fastq_reader.cpp io/test_writer.cpp)
-add_fq_test(test_processing "unit" 60  processing/test_pipeline_smoke.cpp processing/test_resolved_runtime_config.cpp processing/test_execution_runtime.cpp)
+add_fq_test(test_processing "unit" 60  processing/test_pipeline_smoke.cpp processing/test_resolved_runtime_config.cpp processing/test_execution_runtime.cpp processing/test_pipeline_read_statistics.cpp)
 add_fq_test(test_cli        "unit" 60  cli/test_filter_plan.cpp cli/test_enum_parser.cpp cli/test_command_registry.cpp)
 target_link_libraries(test_cli PRIVATE fq_cli)
 add_fq_test(test_predicates "unit" 60  processing/test_predicates.cpp)

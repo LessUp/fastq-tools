@@ -5,7 +5,7 @@
 - C++23 编译器（GCC 13+ 或 Clang 17+ 最低）
 - CMake 3.28+
 - Conan 2.x
-- Linux 原生支持；macOS 脚本支持开发中（可手动构建）；Windows 用 Docker 或 WSL
+- Linux 原生支持；macOS 可用 `./scripts/core/install-deps`（Homebrew）后构建；Windows 用 Docker 或 WSL
 
 ## 安装 Conan
 

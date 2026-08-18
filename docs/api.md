@@ -72,6 +72,7 @@ public:
 fq::statistics::StatisticOptions options;
 options.inputFastqPath = "sample.fastq.gz";
 options.outputStatPath = "sample.stats.txt";
+options.jsonOutputPath = "sample.stats.json";  // 可选；与 TSV 同一指标集
 options.processing.batchSize = 50000;
 options.processing.threadCount = 8;
 
@@ -102,6 +103,8 @@ pipeline.setProcessingOptions(opts);
 
 auto stats = pipeline.run();
 ```
+
+需要一趟扫描同时拿 QC 时，在 `run()` 前调用 `enableReadStatistics()`，再用 `writeStatisticsOutputs()` 把保留 read 的报告写成 TSV/JSON（与 `stat` 同一指标集）。未启用时调用 `readStatistics()` 会抛 `std::logic_error`。
 
 ## 依赖注入
 

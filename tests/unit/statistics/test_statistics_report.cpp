@@ -66,6 +66,44 @@ TEST(StatisticsReportTest, UsesPerPositionQualityStrideForErrorRate) {
     EXPECT_EQ(report.positionLines[1], "1\t1\t0\t0\t0\t0\t20.00\t1.00");
 }
 
+TEST(StatisticsReportTest, FormatsJsonWithSameMetricsAsTsv) {
+    FqStatisticResult result;
+    result.readCount = 2;
+    result.totalBases = 4;
+    result.duplicateSampledReads = 1;
+    result.ensureCapacity(2);
+
+    result.baseAt(0)[0] = 1;
+    result.baseAt(0)[1] = 1;
+    result.baseAt(1)[2] = 1;
+    result.baseAt(1)[3] = 1;
+
+    result.qualityAt(0)[20] = 2;
+    result.qualityAt(1)[30] = 2;
+
+    StatisticsWriterOptions options;
+    options.inputFastqPath = "/tmp/input.fastq";
+    options.qualityEncoding = 33;
+    options.duplicateEstimateSampleModulo = 2;
+
+    const auto json = formatStatisticsJson(result, options);
+
+    EXPECT_NE(json.find("\"name\": \"input.fastq\""), std::string::npos);
+    EXPECT_NE(json.find("\"phred_qual\": 33"), std::string::npos);
+    EXPECT_NE(json.find("\"read_num\": 2"), std::string::npos);
+    EXPECT_NE(json.find("\"duplicate_estimate\": 2"), std::string::npos);
+    EXPECT_NE(json.find("\"max_read_length\": 2"), std::string::npos);
+    EXPECT_NE(json.find("\"base_count\": 4"), std::string::npos);
+    EXPECT_NE(json.find("\"q20\""), std::string::npos);
+    EXPECT_NE(json.find("\"count\": 4"), std::string::npos);
+    EXPECT_NE(json.find("\"q30\""), std::string::npos);
+    EXPECT_NE(json.find("\"GC\""), std::string::npos);
+    EXPECT_NE(json.find("\"pos\": 1"), std::string::npos);
+    EXPECT_NE(json.find("\"avg_qual\": 20"), std::string::npos);
+    EXPECT_EQ(json.front(), '{');
+    EXPECT_EQ(json.back(), '\n');
+}
+
 TEST(StatisticsReportTest, HandlesZeroTotalBasesWithoutInfOrNanSummary) {
     FqStatisticResult result;
     result.readCount = 2;
