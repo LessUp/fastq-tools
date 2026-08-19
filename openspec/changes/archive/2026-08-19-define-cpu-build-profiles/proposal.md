@@ -2,7 +2,7 @@
 
 ## Metadata
 
-- Status: `Applying`
+- Status: `Archived`
 - Repository: `open-genomics/fastq-tools`
 - Audit base: `5bab799bb9beea272ee07857b31046060e29db53`
 - Capability: `build-portability`

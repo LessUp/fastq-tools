@@ -29,11 +29,15 @@
 | `cmake -DFQTOOLS_CPU_BASELINE=portable` | 0 (config) | "CPU baseline: portable" printed |
 | `cmake -DFQTOOLS_CPU_BASELINE=x86-64-v3` | 0 (config) | "CPU baseline: x86-64-v3" printed |
 | `cmake -DFQTOOLS_CPU_BASELINE=invalid` | 1 (FATAL_ERROR) | Invalid value rejected |
+| `./scripts/core/build --preset clang-release` | 0 | Full build succeeded (118/118 targets, Conan 2.31.2) |
+| `./scripts/core/test --preset clang-release` | 0 | 12/12 tests passed (unit + integration + e2e + packaging) |
 | `git diff --check` | 0 | No whitespace errors |
 
 ## Notes
 
-- Full build/test not run (Conan dependencies not configured in this environment).
+- Full build/test previously deferred (Conan not configured); re-run on 2026-08-19
+  with Conan 2.31.2 available: `./scripts/core/build --preset clang-release` and
+  `./scripts/core/test --preset clang-release` both passed, closing the deferred gate.
 - CMake configuration verified for all three profiles plus invalid rejection.
 - Build script `--cpu-baseline` flag added; passes through to CMake.
 - CMakePresets.json: `gcc-v3-release` and `clang-v3-release` presets added.
