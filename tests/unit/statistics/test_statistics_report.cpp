@@ -1,4 +1,9 @@
 #include <algorithm>
+#include <cstdio>
+#include <string>
+
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "statistics/fq_statistic.h"
 #include "statistics/statistics_report.h"
@@ -6,6 +11,39 @@
 #include <gtest/gtest.h>
 
 namespace fq::statistics {
+
+// 捕获 stderr 内容（logging 直接写 fd 2），用于断言 warn 行为
+class StderrCapture {
+public:
+    StderrCapture() {
+        std::fflush(stderr);
+        captured_ =
+            ::open("/tmp/opencode/fqt-verify/stderr_cap.txt", O_RDWR | O_CREAT | O_TRUNC, 0600);
+        saved_ = ::dup(STDERR_FILENO);
+        ::dup2(captured_, STDERR_FILENO);
+    }
+    ~StderrCapture() {
+        std::fflush(stderr);
+        ::dup2(saved_, STDERR_FILENO);
+        ::close(saved_);
+        ::close(captured_);
+    }
+    static auto content() -> std::string {
+        std::FILE* f = std::fopen("/tmp/opencode/fqt-verify/stderr_cap.txt", "r");
+        std::string out;
+        char buffer[512];
+        while (std::fgets(buffer, sizeof(buffer), f) != nullptr) {
+            out += buffer;
+        }
+        std::fclose(f);
+        return out;
+    }
+
+private:
+    int captured_ = -1;
+    int saved_ = -1;
+};
+
 
 TEST(StatisticsReportTest, BuildsSummaryPositionAndSignatureLines) {
     FqStatisticResult result;
@@ -66,6 +104,24 @@ TEST(StatisticsReportTest, UsesPerPositionQualityStrideForErrorRate) {
     EXPECT_EQ(report.positionLines[1], "1\t1\t0\t0\t0\t0\t20.00\t1.00");
 }
 
+// RFC 8259：U+0000..U+001F 控制字符必须转义，否则产出非法 JSON
+TEST(StatisticsReportTest, JsonEscapesControlCharactersInName) {
+    FqStatisticResult result;
+    result.readCount = 1;
+    result.totalBases = 1;
+    result.ensureCapacity(1);
+
+    StatisticsWriterOptions options;
+    options.inputFastqPath = std::string("/tmp/ba\x01r\b.fq");
+    const auto json = formatStatisticsJson(result, options);
+
+    // \x01 与 \b 均须以 \uXXXX 形式出现，原始控制字节不得进入输出
+    EXPECT_NE(json.find("\\u0001"), std::string::npos);
+    EXPECT_NE(json.find("\\u0008"), std::string::npos);
+    EXPECT_EQ(json.find('\x01'), std::string::npos);
+    EXPECT_EQ(json.find('\b'), std::string::npos);
+}
+
 TEST(StatisticsReportTest, FormatsJsonWithSameMetricsAsTsv) {
     FqStatisticResult result;
     result.readCount = 2;
@@ -122,6 +178,30 @@ TEST(StatisticsReportTest, HandlesZeroTotalBasesWithoutInfOrNanSummary) {
         report.summaryLines.end());
     EXPECT_NE(std::find(report.summaryLines.begin(), report.summaryLines.end(), "#GC\t0\t0.00%"),
               report.summaryLines.end());
+}
+
+// 空数据时三种输出格式都应给出一致的无数据警告，
+// 而不是 TSV/signature 静默产出空文件、JSON 静默产出全零结构
+TEST(StatisticsWriterTest, WarnsOnEmptyResultForAllFormats) {
+    FqStatisticResult empty;
+    StatisticsWriterOptions options;
+    options.inputFastqPath = "/tmp/input.fastq";
+    StatisticsWriter writer(options);
+
+    StderrCapture capture;
+    std::ostringstream tsvOut;
+    writer.write(tsvOut, empty);
+    writer.writeSignature(tsvOut, empty);
+    writer.writeJson(tsvOut, empty);
+    const auto logged = capture.content();
+
+    // 三种格式各警告一次
+    size_t count = 0;
+    for (auto pos = logged.find("No reads found"); pos != std::string::npos;
+         pos = logged.find("No reads found", pos + 1)) {
+        ++count;
+    }
+    EXPECT_EQ(count, 3u) << "logged: " << logged;
 }
 
 }  // namespace fq::statistics

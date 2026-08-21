@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <filesystem>
 #include <iomanip>
 #include <map>
@@ -178,7 +179,14 @@ auto jsonEscape(std::string_view value) -> std::string {
                 out += "\\t";
                 break;
             default:
-                out += ch;
+                // RFC 8259 要求 U+0000..U+001F 全部转义，其余控制字符用 \uXXXX
+                if (static_cast<unsigned char>(ch) < 0x20) {
+                    char buffer[8];
+                    std::snprintf(buffer, sizeof(buffer), "\\u%04x", ch);
+                    out += buffer;
+                } else {
+                    out += ch;
+                }
                 break;
         }
     }
