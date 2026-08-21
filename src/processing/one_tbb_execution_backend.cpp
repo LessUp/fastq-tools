@@ -6,8 +6,8 @@
 
 #include "processing/execution_backend.h"
 #include "processing/fastq_batch_pool.h"
-#include <tbb/global_control.h>
 #include <tbb/parallel_pipeline.h>
+#include <tbb/task_arena.h>
 
 namespace fq::processing {
 
@@ -31,43 +31,47 @@ public:
         std::mutex readerMutex;
         std::mutex writerMutex;
 
-        tbb::global_control globalLimit(tbb::global_control::max_allowed_parallelism,
-                                        context.config.threadCount);
+        // task_arena 提供实例级并行度隔离：同进程并发执行多个 pipeline
+        // （不同 threadCount）互不干扰。global_control 是进程级的，
+        // 多个活跃实例取最小值，会互相压制并行度。
+        tbb::task_arena arena(static_cast<int>(context.config.threadCount));
 
-        tbb::parallel_pipeline(
-            context.config.maxLiveTokens,
-            tbb::make_filter<void, std::shared_ptr<fq::io::FastqBatch>>(
-                tbb::filter_mode::serial_in_order,
-                [&context, batchPool, &readerMutex](
-                    tbb::flow_control& flow) -> std::shared_ptr<fq::io::FastqBatch> {
-                    auto batch = batchPool->acquire();
-                    {
-                        std::lock_guard lock(readerMutex);
-                        if (context.reader->nextBatch(*batch, context.batchSize)) {
-                            return batch;
-                        }
-                    }
-                    flow.stop();
-                    return nullptr;
-                }) &
-                tbb::make_filter<std::shared_ptr<fq::io::FastqBatch>, BatchResult>(
-                    tbb::filter_mode::parallel,
-                    [&operation](std::shared_ptr<fq::io::FastqBatch> batch) -> BatchResult {
-                        auto partial = operation.processBatch(*batch);
-                        return {std::move(batch), std::move(partial)};
-                    }) &
-                tbb::make_filter<BatchResult, void>(
+        arena.execute([&] {
+            tbb::parallel_pipeline(
+                context.config.maxLiveTokens,
+                tbb::make_filter<void, std::shared_ptr<fq::io::FastqBatch>>(
                     tbb::filter_mode::serial_in_order,
-                    [&context, &operation, &result, &batchCount, &committedBytes, &writerMutex](
-                        BatchResult batchResult) {
-                        std::lock_guard lock(writerMutex);
-                        const auto bytes =
-                            context.writer ? context.writer->write(*batchResult.first) : 0;
-                        operation.afterCommit(batchResult.second, bytes);
-                        operation.merge(result, std::move(batchResult.second));
-                        batchCount.fetch_add(1, std::memory_order_relaxed);
-                        committedBytes.fetch_add(bytes, std::memory_order_relaxed);
-                    }));
+                    [&context, batchPool, &readerMutex](
+                        tbb::flow_control& flow) -> std::shared_ptr<fq::io::FastqBatch> {
+                        auto batch = batchPool->acquire();
+                        {
+                            std::lock_guard lock(readerMutex);
+                            if (context.reader->nextBatch(*batch, context.batchSize)) {
+                                return batch;
+                            }
+                        }
+                        flow.stop();
+                        return nullptr;
+                    }) &
+                    tbb::make_filter<std::shared_ptr<fq::io::FastqBatch>, BatchResult>(
+                        tbb::filter_mode::parallel,
+                        [&operation](std::shared_ptr<fq::io::FastqBatch> batch) -> BatchResult {
+                            auto partial = operation.processBatch(*batch);
+                            return {std::move(batch), std::move(partial)};
+                        }) &
+                    tbb::make_filter<BatchResult, void>(
+                        tbb::filter_mode::serial_in_order,
+                        [&context, &operation, &result, &batchCount, &committedBytes, &writerMutex](
+                            BatchResult batchResult) {
+                            std::lock_guard lock(writerMutex);
+                            const auto bytes =
+                                context.writer ? context.writer->write(*batchResult.first) : 0;
+                            operation.afterCommit(batchResult.second, bytes);
+                            operation.merge(result, std::move(batchResult.second));
+                            batchCount.fetch_add(1, std::memory_order_relaxed);
+                            committedBytes.fetch_add(bytes, std::memory_order_relaxed);
+                        }));
+        });
 
         // pipeline 完成后显式建立 reader/writer 与调用线程之间的内存序。
         {
