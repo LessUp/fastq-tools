@@ -38,7 +38,9 @@ auto makeTemporaryFile(const std::filesystem::path& target) -> TemporaryFile {
         const auto suffix = ".tmp-" + std::to_string(processId) + "-" +
             std::to_string(counter.fetch_add(1, std::memory_order_relaxed));
         const auto candidate = parent / (filename + suffix);
-        const int descriptor = ::open(candidate.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600);
+        // 0666 交由 umask 过滤（惯例 0644）：rename 发布保留该权限，
+        // 固定 0600 会无视调用方 umask，产出比预期更严格的权限
+        const int descriptor = ::open(candidate.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0666);
         if (descriptor >= 0) {
             return {candidate, descriptor};
         }
@@ -281,32 +283,36 @@ struct FastqWriter::Impl {
             }
         }
 
-        // 一次 resize + memcpy 批量拼接，避免逐字符 push_back/insert 开销
+        // 一次 resize + memcpy 批量拼接，避免逐字符 push_back/insert 开销；
+        // 空 string_view 的 data() 可能为 nullptr，memcpy(nullptr, 0) 标准上是 UB，
+        // 统一经 appendView 判空后拷贝
         const size_t oldSize = buffer.size();
         buffer.resize(oldSize + needed);
         char* dst = buffer.data() + oldSize;
 
+        const auto appendView = [&dst](std::string_view value) {
+            if (!value.empty()) {
+                std::memcpy(dst, value.data(), value.size());
+                dst += value.size();
+            }
+        };
+
         *dst++ = '@';
-        std::memcpy(dst, rec.id.data(), rec.id.size());
-        dst += rec.id.size();
+        appendView(rec.id);
 
         if (!rec.comment.empty()) {
             *dst++ = ' ';
-            std::memcpy(dst, rec.comment.data(), rec.comment.size());
-            dst += rec.comment.size();
+            appendView(rec.comment);
         }
         *dst++ = '\n';
 
-        std::memcpy(dst, rec.seq.data(), rec.seq.size());
-        dst += rec.seq.size();
+        appendView(rec.seq);
         *dst++ = '\n';
 
-        std::memcpy(dst, plusLine.data(), plusLine.size());
-        dst += plusLine.size();
+        appendView(plusLine);
         *dst++ = '\n';
 
-        std::memcpy(dst, rec.qual.data(), rec.qual.size());
-        dst += rec.qual.size();
+        appendView(rec.qual);
         *dst++ = '\n';
 
         // 记录确实进入缓冲区后才计数：flush 抛异常时不把未接受的字节算进提交量

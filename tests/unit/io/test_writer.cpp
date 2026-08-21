@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include <gtest/gtest.h>
+#include <sys/stat.h>
 
 namespace fq::io {
 
@@ -61,6 +62,41 @@ TEST_F(FastqWriterTest, WriteBasic) {
 
     EXPECT_NE(content.find("@read1\nACGT\n+\nIIII\n"), std::string::npos);
     EXPECT_NE(content.find("@read2 desc\nAAAA\n+\nJJJJ\n"), std::string::npos);
+}
+
+// 特征测试：默认构造记录（全空 string_view，data() 可能为 nullptr）不得崩溃，
+// 且产出结构合法的 FASTQ（防御 memcpy(nullptr, 0) 的未定义行为）
+// 输出文件权限应遵循 umask 惯例（0666 & ~umask），而不是固定 0600
+TEST_F(FastqWriterTest, PublishedOutputFollowsUmask) {
+    const mode_t originalUmask = ::umask(022);
+    {
+        FastqWriter writer(tmpFile_);
+        FastqRecord rec;
+        rec.id = "r";
+        rec.seq = "ACGT";
+        rec.qual = "IIII";
+        writer.write(rec);
+        writer.finish();
+    }
+    ::umask(originalUmask);
+
+    struct stat st{};
+    ASSERT_EQ(::stat(tmpFile_.c_str(), &st), 0);
+    EXPECT_EQ(st.st_mode & 0777, 0644) << std::oct << "mode=" << (st.st_mode & 0777);
+}
+
+TEST_F(FastqWriterTest, WritesDefaultConstructedRecordWithoutCrashing) {
+    {
+        FastqWriter writer(tmpFile_);
+        FastqRecord emptyRec;
+        writer.write(emptyRec);
+        writer.finish();
+    }
+    ASSERT_TRUE(std::filesystem::exists(tmpFile_));
+    std::ifstream in(tmpFile_);
+    const std::string content((std::istreambuf_iterator<char>(in)),
+                              std::istreambuf_iterator<char>());
+    EXPECT_EQ(content, "@\n\n+\n\n");
 }
 
 TEST_F(FastqWriterTest, BatchWriteReportsCommittedUncompressedBytesThroughContract) {

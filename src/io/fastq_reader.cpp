@@ -26,6 +26,12 @@ struct FastqReader::Impl {
     bool isEofReached = false;
     FastqReaderOptions options{};
     std::vector<char> remainder;
+    // 动态学习的平均记录字节数（含全部四行与换行），用于本批目标读取量估算；
+    // 初始 512B 为保守高估，按累计平均在首批后即贴近实际值，
+    // 避免固定高估导致的系统性过读与 remainder 反复搬运
+    double estimatedRecordBytes = 512.0;
+    double learnedParsedBytes = 0.0;
+    double learnedParsedRecords = 0.0;
 
     explicit Impl(std::string p, const FastqReaderOptions& opt) : path(std::move(p)), options(opt) {
         if (path == "-") {
@@ -33,35 +39,64 @@ struct FastqReader::Impl {
             return;
         }
 
-        unsigned char header[2] = {0, 0};
-        {
-            const int sniffFd = ::open(path.c_str(), O_RDONLY);
-            if (sniffFd >= 0) {
-                const auto n = ::read(sniffFd, header, sizeof(header));
-                ::close(sniffFd);
-                if (n == static_cast<ssize_t>(sizeof(header)) && header[0] == 0x1f &&
-                    header[1] == 0x8b) {
-                    isGzip = true;
-                }
-            }
+        // 单次打开：sniff 与后续读取共用同一 fd，消除两次 open 之间
+        // 文件被替换的 TOCTOU 窗口（与 FastqWriter 临时文件协议同理）
+        fd = ::open(path.c_str(), O_RDONLY);
+        if (fd < 0) {
+            throw fq::error::IOError(path, errno);
         }
 
-        if (isGzip) {
-            gzfile = gzopen(path.c_str(), "r");
+        unsigned char header[2] = {0, 0};
+        size_t headerBytes = 0;
+        while (headerBytes < sizeof(header)) {
+            const auto n = ::read(fd, header + headerBytes, sizeof(header) - headerBytes);
+            if (n < 0) {
+                if (errno == EINTR) {
+                    continue;
+                }
+                const int savedErrno = errno;
+                ::close(fd);
+                fd = -1;
+                throw fq::error::IOError(path, savedErrno);
+            }
+            if (n == 0) {
+                break;  // 文件不足 2 字节，按普通文件处理
+            }
+            headerBytes += static_cast<size_t>(n);
+        }
+
+        if (headerBytes == sizeof(header) && header[0] == 0x1f && header[1] == 0x8b) {
+            isGzip = true;
+            // gzdopen 从当前偏移解析 gzip 流，须先回退已消费的 sniff 字节；
+            // 成功后 fd 所有权移交 gzFile
+            if (::lseek(fd, 0, SEEK_SET) < 0) {
+                const int savedErrno = errno;
+                ::close(fd);
+                fd = -1;
+                throw fq::error::IOError(path, savedErrno);
+            }
+            gzfile = gzdopen(fd, "r");
             if (!gzfile) {
+                ::close(fd);
+                fd = -1;
                 throw fq::error::IOError(path, errno);
             }
             gzbuffer(gzfile, static_cast<unsigned>(options.zlibBufferBytes));
-        } else {
-            fd = ::open(path.c_str(), O_RDONLY);
-            if (fd < 0) {
-                throw fq::error::IOError(path, errno);
-            }
-#ifdef __linux__
-            // 提示内核进行顺序预读，显著提升大文件顺序读取性能
-            ::posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
-#endif
+            return;
         }
+
+        // 非 gzip：回退 sniff 已消费的字节后从头读取
+        if (::lseek(fd, 0, SEEK_SET) < 0) {
+            const int savedErrno = errno;
+            ::close(fd);
+            fd = -1;
+            throw fq::error::IOError(path, savedErrno);
+        }
+
+#ifdef __linux__
+        // 提示内核进行顺序预读，显著提升大文件顺序读取性能
+        ::posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
+#endif
     }
 
     void openStdin() {
@@ -168,15 +203,17 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
         if (!impl_->isEofReached) {
             const size_t chunk = std::max<size_t>(1, impl_->options.readChunkBytes);
             const bool unlimited = (maxRecords == std::numeric_limits<size_t>::max());
-            constexpr size_t kBytesPerRecordEst = 512;
             const size_t maxBuf = impl_->options.maxBufferBytes;
 
             size_t targetBytes = 0;
             if (unlimited) {
                 targetBytes = batch.buffer().size() + chunk;
             } else {
-                const size_t want = maxRecords * kBytesPerRecordEst;
-                targetBytes = std::max(batch.buffer().size(), want);
+                // 按动态平均记录大小估算目标字节数：固定高估会系统性过读，
+                // 使每批读满缓冲上限后把大半数据存入 remainder、下批再整体拷回
+                const double want = static_cast<double>(maxRecords) * impl_->estimatedRecordBytes;
+                const double buffered = static_cast<double>(batch.buffer().size());
+                targetBytes = static_cast<size_t>(std::max(buffered, want));
             }
 
             if (maxBuf > 0) {
@@ -365,6 +402,10 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
         }
 
         if (!batch.records().empty()) {
+            impl_->learnedParsedBytes += static_cast<double>(lastValidPtr - data);
+            impl_->learnedParsedRecords += static_cast<double>(batch.records().size());
+            impl_->estimatedRecordBytes = impl_->learnedParsedBytes / impl_->learnedParsedRecords;
+
             const auto kConsumed = static_cast<size_t>(lastValidPtr - data);
             const auto kTotal = static_cast<size_t>(end - data);
             if (kConsumed < kTotal) {
