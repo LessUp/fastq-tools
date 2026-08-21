@@ -412,7 +412,8 @@ if command -v conan &>/dev/null; then
     if [[ -f "${BUILD_DIR}/CMakeCache.txt" ]]; then
         # 缓存条目类型不固定（-D 裸传为 UNINITIALIZED，显式带类型为 FILEPATH），
         # 只比较值本身，避免因类型差异永久误判"toolchain 变化"
-        CACHE_TOOLCHAIN_VALUE=$(grep -E '^CMAKE_TOOLCHAIN_FILE[^=]*=' "${BUILD_DIR}/CMakeCache.txt" 2>/dev/null | head -n1 | cut -d'=' -f2-)
+        # grep 无匹配返回 1，pipefail 下会静默终止脚本；此处"无匹配"是合法状态
+        CACHE_TOOLCHAIN_VALUE=$(grep -E '^CMAKE_TOOLCHAIN_FILE[^=]*=' "${BUILD_DIR}/CMakeCache.txt" 2>/dev/null | head -n1 | cut -d'=' -f2- || true)
         if [[ "${CACHE_TOOLCHAIN_VALUE}" != "${TOOLCHAIN_PATH}" ]]; then
             if [[ "${BUILD_DIR_DEFAULTED}" == "true" ]]; then
                 log_warning "检测到构建目录已存在且 toolchain 发生变化/未设置；将自动清理构建目录以确保 Conan toolchain 生效: ${BUILD_DIR}"
