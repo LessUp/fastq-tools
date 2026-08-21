@@ -49,6 +49,9 @@ public:
     virtual auto write(const FastqBatch& batch) -> std::uint64_t = 0;
 
     /// 显式完成协议：flush、压缩流关闭、输出发布。析构只做兜底清理。
+    /// @note 异常中止路径不会调用 finish()：执行管线在处理抛出异常时直接展开，
+    ///       writer 析构负责丢弃未发布内容。实现方不应依赖 finish() 区分
+    ///       正常结束与异常中止（后者以析构收场）。
     virtual void finish() = 0;
 };
 

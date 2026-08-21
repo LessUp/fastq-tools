@@ -29,6 +29,7 @@ struct ProcessingStatistics {
     uint64_t inputBytes = 0;      ///< 输入字节数（解压后的原始文本字节）
     uint64_t outputBytes = 0;     ///< 输出字节数（写出前的原始文本字节）
     uint64_t elapsedMs = 0;       ///< 处理时间（毫秒）
+                                  /// 处理吞吐量，单位 MB/s（兆字节每秒；字段名沿用历史 Mbps 拼写）
     double throughputMbps = 0.0;  ///< 吞吐量（MB/s）
 
     [[nodiscard]] auto getPassRate() const -> double {

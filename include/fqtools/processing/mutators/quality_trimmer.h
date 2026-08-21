@@ -36,7 +36,10 @@ private:
 
 class LengthTrimmer : public ReadMutatorInterface {
 public:
-    enum class TrimStrategy { MaxLength, FromStart };
+    enum class TrimStrategy {
+        MaxLength,  ///< 保留 5' 前缀，从 3' 端截断到目标长度
+        FromStart   ///< 从 5' 端（start）截掉多余部分，保留末尾 N 个碱基
+    };
 
     LengthTrimmer(size_t targetLength, TrimStrategy strategy = TrimStrategy::MaxLength);
 
