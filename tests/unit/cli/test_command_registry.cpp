@@ -6,11 +6,13 @@
 
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 #include "command_registry.h"
 
 #include "commands/command_interface.h"
+#include <fqtools/logging.h>
 #include <gtest/gtest.h>
 
 using namespace fq::cli;
@@ -108,4 +110,12 @@ TEST(CommandRegistryTest, CreateDefaultRegistryHasStatAndFilter) {
     auto registry = createDefaultCommandRegistry();
     EXPECT_TRUE(registry->hasCommand("stat"));
     EXPECT_TRUE(registry->hasCommand("filter"));
+}
+
+// --log-level 传错值必须在参数阶段报错，而不是静默回退 info
+TEST(LoggingLevelTest, ParseLevelRejectsUnknownValue) {
+    EXPECT_THROW(static_cast<void>(fq::logging::parseLevel("bogus")), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(fq::logging::parseLevel("")), std::invalid_argument);
+    EXPECT_EQ(fq::logging::parseLevel("debug"), fq::logging::Level::Debug);
+    EXPECT_EQ(fq::logging::parseLevel("off"), fq::logging::Level::Off);
 }

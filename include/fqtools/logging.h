@@ -6,6 +6,7 @@
  */
 
 #include <atomic>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -27,6 +28,8 @@ enum class Level : int {
 inline std::atomic<Level> currentLevel{Level::Info};
 
 /// @brief 解析日志级别字符串
+/// @throws std::invalid_argument 未知级别名（拼错的 --log-level 应在参数阶段报错，
+///         静默回退会让用户以为生效了实际没有）
 inline auto parseLevel(std::string_view name) -> Level {
     if (name == "debug") {
         return Level::Debug;
@@ -43,7 +46,7 @@ inline auto parseLevel(std::string_view name) -> Level {
     if (name == "off") {
         return Level::Off;
     }
-    return Level::Info;
+    throw std::invalid_argument("unknown log level: " + std::string(name));
 }
 
 /// @brief 便捷函数：设置日志级别

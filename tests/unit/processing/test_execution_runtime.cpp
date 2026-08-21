@@ -265,6 +265,20 @@ TEST(ExecutionRuntimeTest, ExecuteValidatesProcessingOptionsBeforeTraversal) {
     EXPECT_THROW(static_cast<void>(runtime.execute(request, adapter)), std::invalid_argument);
 }
 
+TEST(ExecutionRuntimeTest, ValidateRejectsUnreasonablyLargeBatchSize) {
+    // 超大 batch-size 会在 FastqBatch 构造时按记录数预分配内存，
+    // 必须在参数校验阶段拒绝而不是运行期 bad_alloc/OOM
+    fq::processing::ProcessingOptions options;
+    options.batchSize = 100'000'000'000ULL;
+    options.threadCount = 1;
+    EXPECT_THROW(static_cast<void>(options.validate()), std::invalid_argument);
+
+    fq::processing::ProcessingOptions boundaryOk;
+    boundaryOk.batchSize = 1'000'000U;
+    boundaryOk.threadCount = 1;
+    EXPECT_NO_THROW(static_cast<void>(boundaryOk.validate()));
+}
+
 TEST(ExecutionRuntimeTest, ExecuteKeepsBatchCommitOrderInParallelMode) {
     fq::test::TempDirectory tempDir("execution_runtime_");
     ExecutionRuntime runtime;

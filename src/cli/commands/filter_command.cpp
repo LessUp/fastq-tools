@@ -77,7 +77,11 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
             throw fq::error::ConfigurationError(
                 "cannot write FASTQ and a QC report to stdout; choose one '-' destination");
         }
-        pipeline_.enableReadStatistics(statOpts.qualityEncoding);
+        // kmer/modulo 与报告外推共用 statOpts 同一来源，
+        // 避免两处独立默认值未来暴露 CLI 参数时失同步
+        pipeline_.enableReadStatistics(statOpts.qualityEncoding,
+                                       statOpts.signatureKmerSize,
+                                       statOpts.duplicateEstimateSampleModulo);
     }
 
     auto stats = pipeline_.run();
