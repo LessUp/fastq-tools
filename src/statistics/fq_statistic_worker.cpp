@@ -62,12 +62,12 @@ void updateBoundedHeadKmers(std::map<std::string, uint64_t, std::less<>>& counts
         return;
     }
 
-    if (minIt->second > 1) {
-        --minIt->second;
-    } else {
-        counts.erase(minIt);
-        counts.emplace(std::string(key), 1);
-    }
+    // Space-Saving：新 key 替换计数最小者并继承其计数+1，
+    // 保证表内计数 >= 真实出现次数 - 已淘汰次数，top-K 近似有意义；
+    // 不能只削减最小者而丢弃新 key（会低估现有条目且新 kmer 永远无法积累）
+    const uint64_t inheritedCount = minIt->second;
+    counts.erase(minIt);
+    counts.emplace(std::string(key), inheritedCount + 1);
 }
 
 }  // namespace

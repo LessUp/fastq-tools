@@ -1,5 +1,6 @@
 #include "fqtools/io/fastq_io.h"
 
+#include <string>
 #include <vector>
 
 #include "statistics/fq_statistic.h"
@@ -139,6 +140,83 @@ TEST(FqStatisticWorkerTest, TracksDuplicatesAndHeadKmers) {
     EXPECT_EQ(result.duplicateSampledReads, 1);
     EXPECT_EQ(result.headKmerCounts.at("ACGT"), 2);
     EXPECT_EQ(result.headKmerCounts.at("TTTT"), 1);
+}
+
+// Space-Saving 淘汰语义：sketch 满时新 key 以"被替换者计数+1"进入，
+// 而不是被丢弃、也不无语义地削减现有条目（回归：低频 kmer 丢失 + 计数低估）
+TEST(FqStatisticWorkerTest, HeadKmerEvictionReplacesMinimumWithInheritedCount) {
+    FqStatisticWorker worker(33, 8, 1);
+    fq::io::FastqBatch batch;
+    // FastqRecord 持有 string_view：序列/质量必须存放于测试存续期内，
+    // 不能指向临时 string（否则视图悬空，断言读到残留内存）
+    // 预留容量：SSO 短串数据存于 string 对象内部，vector 扩容搬移对象会使视图悬空
+    std::vector<std::string> storage;
+    storage.reserve(1024);
+    const auto add = [&batch, &storage](std::string seq) {
+        storage.push_back(std::move(seq));
+        const auto& s = storage.back();
+        batch.records().push_back({"r", {}, s, std::string(s.size(), 'I'), "+"});
+    };
+
+    // 填满 64 条目：63 个高计数(10) + 1 个最低计数 M(3)
+    for (int i = 0; i < 63; ++i) {
+        std::string k = "H";
+        k += static_cast<char>('A' + i / 26);
+        k += static_cast<char>('A' + i % 26);
+        k += "CCCCC";
+        for (int r = 0; r < 10; ++r) {
+            add(k + "GGGGGG");
+        }
+    }
+    for (int r = 0; r < 3; ++r) {
+        add("MMMMMMMMGGGGGG");
+    }
+
+    // 新 key 首次出现：应以 min+1 = 4 替换 M 进入表
+    add("XXXXXXXXGGGGGG");
+
+    const auto result = worker.calculateStats(batch);
+    EXPECT_EQ(result.headKmerCounts.size(), 64u);
+    const auto x = result.headKmerCounts.find("XXXXXXXX");
+    ASSERT_NE(x, result.headKmerCounts.end()) << "新 kmer 被淘汰逻辑丢弃";
+    EXPECT_EQ(x->second, 4u) << "Space-Saving 应继承被替换者计数+1";
+    EXPECT_EQ(result.headKmerCounts.count("MMMMMMMM"), 0u);
+    EXPECT_EQ(result.headKmerCounts.at("HAACCCCC"), 10u);  // 高频条目不受影响
+}
+
+TEST(FqStatisticWorkerTest, HeadKmerEvictionAccumulatesRepeatedNewKey) {
+    FqStatisticWorker worker(33, 8, 1);
+    fq::io::FastqBatch batch;
+    // FastqRecord 持有 string_view：序列/质量必须存放于测试存续期内，
+    // 不能指向临时 string（否则视图悬空，断言读到残留内存）
+    // 预留容量：SSO 短串数据存于 string 对象内部，vector 扩容搬移对象会使视图悬空
+    std::vector<std::string> storage;
+    storage.reserve(1024);
+    const auto add = [&batch, &storage](std::string seq) {
+        storage.push_back(std::move(seq));
+        const auto& s = storage.back();
+        batch.records().push_back({"r", {}, s, std::string(s.size(), 'I'), "+"});
+    };
+
+    for (int i = 0; i < 63; ++i) {
+        std::string k = "H";
+        k += static_cast<char>('A' + i / 26);
+        k += static_cast<char>('A' + i % 26);
+        k += "CCCCC";
+        for (int r = 0; r < 10; ++r) {
+            add(k + "GGGGGG");
+        }
+    }
+    for (int r = 0; r < 3; ++r) {
+        add("MMMMMMMMGGGGGG");
+    }
+    // X 出现 5 次：首次以 4 替换 M，随后 4 次递增 => 8
+    for (int r = 0; r < 5; ++r) {
+        add("XXXXXXXXGGGGGG");
+    }
+
+    const auto result = worker.calculateStats(batch);
+    EXPECT_EQ(result.headKmerCounts.at("XXXXXXXX"), 8u);
 }
 
 }  // namespace fq::statistics
