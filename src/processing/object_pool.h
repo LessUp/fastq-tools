@@ -15,6 +15,9 @@ public:
     using ResetFunc = std::function<void(T&)>;
     using CreateFunc = std::function<std::unique_ptr<T>()>;
 
+    /// @param maxSize 空闲队列容量上限（归还超限时对象直接析构）；
+    ///                不限制活跃对象数——并发获取可超过 maxSize，
+    ///                活跃上限由调用方（如 TBB maxLiveTokens）控制
     explicit ObjectPool(size_t initialSize = 0,
                         size_t maxSize = 0,
                         ResetFunc resetFunc = nullptr,

@@ -113,7 +113,11 @@ auto resolveRuntimeConfig(const ProcessingOptions& options,
                                                 options.profile);
 
     // Determine execution mode
-    // Parallel mode requires: no custom I/O, threadCount > 1
+    // Parallel mode requires: no custom I/O, threadCount > 1。
+    // 自定义 reader/writer 当前强制走串行后端：这是保守契约而非技术限制——
+    // TBB 后端中两者均只在串行阶段被访问（serial filter / serial_in_order 提交），
+    // 并行是安全的；但自定义实现可能对执行模式有隐含假设，
+    // 在没有真实调用方验证前不放开（公共行为变更需有测试与用例支撑）
     if (!hasCustomReader && !hasCustomWriter && config.threadCount > 1) {
         config.executionMode = ExecutionMode::Parallel;
     } else {
