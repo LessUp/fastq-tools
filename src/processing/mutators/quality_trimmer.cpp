@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <stdexcept>
 
 #include <fmt/format.h>
 
@@ -121,7 +123,8 @@ auto QualityTrimmer::trimThreePrime(std::string_view sequence, std::string_view 
 }
 
 auto QualityTrimmer::isHighQuality(char qualityChar) const -> bool {
-    int q = static_cast<int>(qualityChar) - qualityEncoding_;
+    // 显式按 int8_t 解释：非法字节（>=128）在 x86/ARM 上一致视为负质量
+    int q = static_cast<int>(static_cast<std::int8_t>(qualityChar)) - qualityEncoding_;
     return q >= qualityThreshold_;
 }
 
@@ -159,7 +162,15 @@ auto LengthTrimmer::getDescription() const -> std::string {
 AdapterTrimmer::AdapterTrimmer(const std::vector<std::string>& adapterSequences,
                                size_t minOverlap,
                                size_t maxMismatches)
-    : adapters_(adapterSequences), minOverlap_(minOverlap), maxMismatches_(maxMismatches) {}
+    : adapters_(adapterSequences),
+      minOverlap_(std::max<size_t>(1, minOverlap)),
+      maxMismatches_(maxMismatches) {
+    // 最小重叠必须严格大于允许错配数，否则重叠比对退化为必然命中：
+    // 1 字符 overlap + 1 错配下，任何 read 的 3' 端都会被"匹配"而静默截断
+    if (maxMismatches_ >= minOverlap_) {
+        throw std::invalid_argument("adapter maxMismatches must be < minOverlap");
+    }
+}
 
 void AdapterTrimmer::process(fq::io::FastqRecord& read) {
     if (read.empty()) {

@@ -351,6 +351,32 @@ TEST_F(AdapterTrimmerTest, GetNameReturnsNonEmpty) {
     EXPECT_FALSE(trimmer.getName().empty());
 }
 
+
+// 回归：最小重叠 0 时 1 字符 overlap + 1 错配必然命中，任何 read 都会被剪掉 3' 端。
+// 库层契约：不允许 0 最小重叠（CLI 侧另有 >=1 校验）。
+TEST_F(AdapterTrimmerTest, RejectsZeroMinOverlap) {
+    EXPECT_THROW(AdapterTrimmer({"TTAA"}, 0, 1), std::invalid_argument);
+}
+
+// 回归：允许错配数 >= 最小重叠时重叠比对退化为必然命中（空语义），拒绝该配置。
+// 默认 minOverlap=3, maxMismatches=1 合法。
+TEST_F(AdapterTrimmerTest, RejectsMismatchesAtLeastMinOverlap) {
+    EXPECT_THROW(AdapterTrimmer({"TTAA"}, 3, 3), std::invalid_argument);
+    EXPECT_THROW(AdapterTrimmer({"TTAA"}, 1, 1), std::invalid_argument);
+    EXPECT_NO_THROW(AdapterTrimmer({"TTAA"}, 3, 1));
+    EXPECT_NO_THROW(AdapterTrimmer({"TTAA"}, 2, 1));
+}
+
+
+// 非法质量字节（>=128）按 int8_t 语义视为负质量 → 低质量，各平台行为一致
+// （x86 signed char 天然如此，ARM 需显式转换；与 AVX2 有符号比较一致）
+TEST_F(QualityTrimmerTest, NonAsciiQualityByteTreatedAsLow) {
+    QualityTrimmer trimmer(20.0);
+    const std::string qual{static_cast<char>(0xff), static_cast<char>(0xff)};
+    FastqRecord read{"read1", {}, "AC", qual, "+"};
+    trimmer.process(read);
+    EXPECT_TRUE(read.seq.empty());
+}
 class PolyTailTrimmerTest : public ::testing::Test {
 protected:
     void SetUp() override {}

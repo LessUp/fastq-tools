@@ -76,7 +76,7 @@ FqStatisticWorker::FqStatisticWorker(int qualOffset,
                                      size_t signatureKmerSize,
                                      size_t duplicateEstimateSampleModulo)
     : qualOffset_(qualOffset),
-      signatureKmerSize_(signatureKmerSize),
+      signatureKmerSize_(std::max<size_t>(1, signatureKmerSize)),
       duplicateEstimateSampleModulo_(std::max<size_t>(1, duplicateEstimateSampleModulo)) {}
 
 auto FqStatisticWorker::calculateStats(const Batch& batch) -> IStatistic::Result {
@@ -120,7 +120,9 @@ auto FqStatisticWorker::calculateStats(const Batch& batch) -> IStatistic::Result
         // 自定义 IStatistic/IReader 可注入不等长记录，防御性限界避免堆越界读。
         const size_t qualLen = std::min(len, read.qual.size());
         for (size_t i = 0; i < qualLen; ++i) {
-            int qVal = static_cast<int>(read.qual[i]) - qualOffset_;
+            // char 符号性平台差异：显式按 int8_t 解释，使非法字节（>=128）在
+            // x86/ARM 上一致视为负质量（与 AVX2 有符号比较语义一致）
+            int qVal = static_cast<int>(static_cast<std::int8_t>(read.qual[i])) - qualOffset_;
             if (qVal < 0) {
                 qVal = 0;
             }

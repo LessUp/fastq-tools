@@ -78,6 +78,10 @@ struct FastqWriter::Impl {
     // 记录已刷写到磁盘的文件偏移，用于 posix_fadvise DONTNEED
     off_t flushedOffset = 0;
 
+    // gzdopen 会接管临时文件 fd 并在 gzclose 时关闭；dup 一份仅用于发布前 fsync，
+    // 使 rename 前的数据页真正落盘（原子发布在掉电场景下的持久性保证）
+    int syncFd = -1;
+
     explicit Impl(std::string p, const FastqWriterOptions& opt) : path(std::move(p)), options(opt) {
         if (path == "-") {
             openStdout();
@@ -103,6 +107,8 @@ struct FastqWriter::Impl {
                 // 使用 zlib gz API 写入 gzip 文件，默认压缩级别 6。
                 // gzdopen 接管临时文件 fd（gzclose 时一并关闭），不再重开文件。
                 const std::string mode = "wb" + std::to_string(options.compressionLevel);
+                // dup 供发布前 fsync（fd 所有权随后移交 gzFile，gzclose 会关闭原 fd）
+                syncFd = ::dup(temp.fd);
                 gzfile = gzdopen(temp.fd, mode.c_str());
                 if (!gzfile) {
                     throw fq::error::IOError(temporaryPath.string(), errno);
@@ -155,6 +161,10 @@ struct FastqWriter::Impl {
             gzclose(gzfile);
             gzfile = nullptr;
         }
+        if (syncFd >= 0) {
+            ::close(syncFd);
+            syncFd = -1;
+        }
         if (!temporaryPath.empty()) {
             std::error_code error;
             std::filesystem::remove(temporaryPath, error);
@@ -175,6 +185,11 @@ struct FastqWriter::Impl {
             }
 
             if (ownsFd && fd >= 0) {
+                // 数据落盘后再关闭：rename 发布前确保内容已到存储介质
+                // （best-effort：fsync 失败不阻断发布，兼容 tmpfs 等无持久语义的挂载点）
+                if (::fsync(fd) != 0) {
+                    fq::logging::warn("fsync failed for '{}': {}", path, std::strerror(errno));
+                }
                 if (::close(fd) != 0) {
                     const int error = errno;
                     fd = -1;
@@ -191,12 +206,29 @@ struct FastqWriter::Impl {
                                                     fq::error::ErrorSeverity::Critical,
                                                     "gzip close failed");
                 }
+                if (syncFd >= 0) {
+                    if (::fsync(syncFd) != 0) {
+                        fq::logging::warn("fsync failed for '{}': {}", path, std::strerror(errno));
+                    }
+                    ::close(syncFd);
+                    syncFd = -1;
+                }
             }
 
             std::error_code error;
             std::filesystem::rename(temporaryPath, path, error);
             if (error) {
                 throw fq::error::IOError(path, error.value());
+            }
+            // rename 本身不保证持久：fsync 父目录使改名记录落盘
+            // （best-effort，目录打开失败或 fsync 失败不阻断发布）
+            const auto parent = std::filesystem::path(path).parent_path().empty()
+                ? std::filesystem::path(".")
+                : std::filesystem::path(path).parent_path();
+            const int dirFd = ::open(parent.c_str(), O_RDONLY | O_DIRECTORY);
+            if (dirFd >= 0) {
+                ::fsync(dirFd);
+                ::close(dirFd);
             }
             finished = true;
         } catch (...) {

@@ -1,5 +1,7 @@
 #include "fqtools/processing/predicates/min_quality_predicate.h"
 
+#include <cstdint>
+
 #include <fmt/format.h>
 
 namespace fq::processing {
@@ -33,7 +35,8 @@ auto MinQualityPredicate::calculateAverageQuality(std::string_view qualityString
     // 导致坏数据（ASCII < encoding）反而通过质控
     int64_t sumQual = 0;
     for (char q : qualityString) {
-        const int qVal = static_cast<int>(q) - qualityEncoding_;
+        // 显式按 int8_t 解释：非法字节（>=128）在 x86/ARM 上一致视为负质量
+        const int qVal = static_cast<int>(static_cast<std::int8_t>(q)) - qualityEncoding_;
         sumQual += (qVal > 0) ? qVal : 0;
     }
     return static_cast<double>(sumQual) / static_cast<double>(qualityString.size());

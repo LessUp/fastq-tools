@@ -115,9 +115,14 @@ void writeToDestination(const std::string& target,
 }  // namespace
 
 void writeStatisticsOutputs(const StatisticOptions& options, const FqStatisticResult& result) {
-    if (options.outputStatPath == "-" && options.jsonOutputPath == "-") {
+    // 任一输出目标为 '-' 都会写 stdout；多个 '-' 目标会把不同格式拼接在同一个流上
+    // （如 JSON 后跟 TSV），下游无法解析。必须保证最多一个 '-' 目标。
+    const size_t stdoutTargets = static_cast<size_t>(options.outputStatPath == "-") +
+        static_cast<size_t>(options.jsonOutputPath == "-") +
+        static_cast<size_t>(options.signatureReportPath == "-");
+    if (stdoutTargets > 1) {
         throw fq::error::ConfigurationError(
-            "cannot write both TSV and JSON to stdout; choose one '-' destination");
+            "at most one of --output/--json/--signature-report may be '-' (stdout)");
     }
 
     StatisticsWriterOptions writerOptions;

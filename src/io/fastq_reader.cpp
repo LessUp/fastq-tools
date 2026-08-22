@@ -102,19 +102,33 @@ struct FastqReader::Impl {
     void openStdin() {
         fd = STDIN_FILENO;
         ownsFd = false;
+        // 管道等读端可能只返回部分字节（短读）或被信号打断；
+        // 必须循环凑满 2 字节魔数后再判 gzip，否则单字节短读会误判为普通文本，
+        // 把应有的 CONFIG 错误退化成误导性的 FORMAT 错误。语义与文件路径嗅探一致。
         unsigned char header[2] = {0, 0};
-        const auto n = ::read(STDIN_FILENO, header, sizeof(header));
-        if (n < 0) {
-            throw fq::error::IOError(path, errno);
+        size_t headerBytes = 0;
+        while (headerBytes < sizeof(header)) {
+            const auto n = ::read(STDIN_FILENO, header + headerBytes, sizeof(header) - headerBytes);
+            if (n < 0) {
+                if (errno == EINTR) {
+                    continue;
+                }
+                throw fq::error::IOError(path, errno);
+            }
+            if (n == 0) {
+                break;  // EOF：不足 2 字节按普通文本处理
+            }
+            headerBytes += static_cast<size_t>(n);
         }
-        if (n == static_cast<ssize_t>(sizeof(header)) && header[0] == 0x1f && header[1] == 0x8b) {
+
+        if (headerBytes == sizeof(header) && header[0] == 0x1f && header[1] == 0x8b) {
             throw fq::error::ConfigurationError(
                 "gzip-compressed stdin is not supported; decompress first (e.g. gzip -dc file.gz | "
                 "FastQTools ... -i -)");
         }
-        if (n > 0) {
+        if (headerBytes > 0) {
             remainder.assign(reinterpret_cast<const char*>(header),
-                             reinterpret_cast<const char*>(header) + n);
+                             reinterpret_cast<const char*>(header) + headerBytes);
         }
     }
 

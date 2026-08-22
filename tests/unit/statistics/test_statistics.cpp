@@ -1,4 +1,6 @@
+#include "fqtools/error/error.h"
 #include "fqtools/io/fastq_io.h"
+#include "fqtools/statistics/interfaces.h"
 
 #include <string>
 #include <vector>
@@ -218,5 +220,67 @@ TEST(FqStatisticWorkerTest, HeadKmerEvictionAccumulatesRepeatedNewKey) {
     const auto result = worker.calculateStats(batch);
     EXPECT_EQ(result.headKmerCounts.at("XXXXXXXX"), 8u);
 }
+
+// 回归: 多个输出目标同时为 '-'（stdout）时拼接会互相污染——JSON 后跟 TSV 导致不可解析。
+// 历史实现只防护 "TSV + JSON" 一种组合, 漏掉 JSON/signature 与 signature/TSV 组合。
+TEST(StatisticsWriterTest, RejectsMultipleStdoutDestinations) {
+    FqStatisticResult result;
+    result.readCount = 1;
+
+    {
+        fq::statistics::StatisticOptions opts;
+        opts.outputStatPath = "-";
+        opts.jsonOutputPath = "-";
+        EXPECT_THROW(fq::statistics::writeStatisticsOutputs(opts, result),
+                     fq::error::ConfigurationError);
+    }
+    {
+        fq::statistics::StatisticOptions opts;
+        opts.jsonOutputPath = "-";
+        opts.signatureReportPath = "-";
+        EXPECT_THROW(fq::statistics::writeStatisticsOutputs(opts, result),
+                     fq::error::ConfigurationError);
+    }
+    {
+        fq::statistics::StatisticOptions opts;
+        opts.outputStatPath = "-";
+        opts.signatureReportPath = "-";
+        EXPECT_THROW(fq::statistics::writeStatisticsOutputs(opts, result),
+                     fq::error::ConfigurationError);
+    }
+}
+
+
+// 回归：signatureKmerSize 为 0 时 substr(0,0) 会把空字符串塞进 headKmerCounts，
+// 报告出现空 key 行。库层应把 kmer 大小钳制到 >= 1。
+TEST(FqStatisticWorkerTest, ZeroSignatureKmerSizeClampedToAtLeastOne) {
+    FqStatisticWorker worker(33, 0, 1);
+    fq::io::FastqBatch batch;
+    fq::io::FastqRecord rec{"read1", {}, "ACGT", "IIII", "+"};
+    batch.records().push_back(rec);
+
+    const auto result = worker.calculateStats(batch);
+
+    EXPECT_EQ(result.headKmerCounts.count(""), 0u);
+    EXPECT_EQ(result.headKmerCounts.at("A"), 1u);
+}
+
+
+// 质量字节 >= 128 是非法 FASTQ 输入；char 符号性随平台而异（x86 signed / ARM unsigned），
+// 必须显式按 int8_t 解释，保证各平台统计一致（与 AVX2 的有符号比较语义一致）。
+// 契约：0xFF 视为负质量 → clamp 到 bin 0，而非 ARM 上 unsigned char 的 q=222 → bin 41。
+TEST(FqStatisticWorkerTest, NonAsciiQualityByteTreatedAsLowAcrossPlatforms) {
+    FqStatisticWorker worker(33);
+    fq::io::FastqBatch batch;
+    const std::string qual{static_cast<char>(0xff)};
+    const std::string seq{"A"};
+    batch.records().push_back({"r", {}, seq, qual, "+"});
+
+    const auto result = worker.calculateStats(batch);
+
+    EXPECT_EQ(result.qualityAt(0)[0], 1u);
+    EXPECT_EQ(result.qualityAt(0)[41], 0u);
+}
+
 
 }  // namespace fq::statistics

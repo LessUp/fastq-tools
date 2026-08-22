@@ -369,4 +369,63 @@ TEST(CommonCliOptionsTest, ConvertsInRangeCapacityAndLimitToBytes) {
     EXPECT_EQ(opts.memoryLimitBytes.value(), 2ULL * 1024ULL * 1024ULL * 1024ULL);
 }
 
+
+// 回归：0 最小重叠会让 1 字符 overlap + 默认 1 错配必然命中，静默剪掉每条 read 的 3' 端
+TEST(FilterPlanTest, RejectsZeroAdapterMinOverlap) {
+    cxxopts::Options options("filter", "Filter and trim FastQ files");
+    CommonCliOptions::addOptions(options);
+    addFilterPlanOptions(options);
+
+    const std::vector<std::string> args = {"filter",
+                                           "--input",
+                                           "input.fastq",
+                                           "--output",
+                                           "output.fastq",
+                                           "--adapter-seq",
+                                           "TTAA",
+                                           "--adapter-min-overlap",
+                                           "0"};
+
+    std::vector<char*> argv;
+    argv.reserve(args.size());
+    for (const auto& arg : args) {
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+
+    const auto parsed = options.parse(static_cast<int>(argv.size()), argv.data());
+    const auto common = CommonCliOptions::parse(parsed);
+
+    EXPECT_THROW(static_cast<void>(buildFilterPlan(parsed, common)), std::invalid_argument);
+}
+
+// 回归：允许错配数 >= 最小重叠时，重叠比对退化为必然命中（空语义）
+TEST(FilterPlanTest, RejectsAdapterMismatchesAtLeastMinOverlap) {
+    cxxopts::Options options("filter", "Filter and trim FastQ files");
+    CommonCliOptions::addOptions(options);
+    addFilterPlanOptions(options);
+
+    const std::vector<std::string> args = {"filter",
+                                           "--input",
+                                           "input.fastq",
+                                           "--output",
+                                           "output.fastq",
+                                           "--adapter-seq",
+                                           "TTAA",
+                                           "--adapter-min-overlap",
+                                           "3",
+                                           "--adapter-max-mismatches",
+                                           "3"};
+
+    std::vector<char*> argv;
+    argv.reserve(args.size());
+    for (const auto& arg : args) {
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+
+    const auto parsed = options.parse(static_cast<int>(argv.size()), argv.data());
+    const auto common = CommonCliOptions::parse(parsed);
+
+    EXPECT_THROW(static_cast<void>(buildFilterPlan(parsed, common)), std::invalid_argument);
+}
+
 }  // namespace fq::cli

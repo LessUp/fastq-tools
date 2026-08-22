@@ -22,6 +22,21 @@ void validateMaxNRatio(double value) {
     }
 }
 
+void validateAdapterParams(const cxxopts::ParseResult& result) {
+    if (!result.count("adapter-seq")) {
+        return;
+    }
+
+    const size_t minOverlap = result["adapter-min-overlap"].as<size_t>();
+    const size_t maxMismatches = result["adapter-max-mismatches"].as<size_t>();
+    if (minOverlap == 0) {
+        throw std::invalid_argument("adapter-min-overlap must be >= 1");
+    }
+    if (maxMismatches >= minOverlap) {
+        throw std::invalid_argument("adapter-max-mismatches must be < adapter-min-overlap");
+    }
+}
+
 void validateLengthBounds(const cxxopts::ParseResult& result) {
     if (!result.count("min-length") || !result.count("max-length")) {
         return;
@@ -72,6 +87,7 @@ auto buildFilterPlan(const cxxopts::ParseResult& result, const CommonCliOptions&
     plan.processingOptions = common.toProcessingOptions();
 
     validateLengthBounds(result);
+    validateAdapterParams(result);
 
     const int qualityEncoding = validateQualityEncoding(result["quality-encoding"].as<int>());
 

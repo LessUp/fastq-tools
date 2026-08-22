@@ -69,6 +69,9 @@ auto StatCommand::execute(int argc, char* argv[]) -> int {
     statOpts.qualityEncoding =
         fq::cli::validateQualityEncoding(result["quality-encoding"].as<int>());
     statOpts.signatureKmerSize = result["signature-kmer-size"].as<size_t>();
+    if (statOpts.signatureKmerSize == 0) {
+        throw std::invalid_argument("signature-kmer-size must be >= 1");
+    }
     statOpts.maxReportedSignatures = result["signature-limit"].as<size_t>();
     statOpts.duplicateEstimateSampleModulo = result["duplicate-sample-modulo"].as<size_t>();
 

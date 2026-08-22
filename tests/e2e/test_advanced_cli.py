@@ -3,6 +3,7 @@ import os
 import unittest
 import shutil
 import gzip
+import time
 import uuid
 
 class TestFastQToolsCLI(unittest.TestCase):
@@ -380,5 +381,30 @@ class TestFastQToolsCLI(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("@read1\nACG\n+\nIII\n", result.stdout)
 
+    def test_stdin_gzip_partial_read_reports_config_error(self):
+        # 回归：stdin gzip 嗅探必须凑满 2 字节魔数、容忍短读（管道逐字节到达）。
+        # 历史实现单次 read() 只拿到 1 字节时误判为普通文本，
+        # 报误导性 FORMAT 错误（exit 3）而非清晰的 CONFIG 错误（exit 2）。
+        gz = gzip.compress(b"@read1\nACGT\n+\nIIII\n")
+
+        proc = subprocess.Popen(
+            [self.fastqtools, "stat", "-i", "-", "-o", "/dev/null"],
+            stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+        )
+        assert proc.stdin is not None
+        proc.stdin.write(gz[:1])  # 只写魔数首字节 \x1f
+        proc.stdin.flush()
+        time.sleep(0.2)  # 让 reader 在首字节可读时执行 read()
+        proc.stdin.write(gz[1:])
+        proc.stdin.close()
+        proc.wait()
+        stderr = proc.stderr.read() if proc.stderr else b""
+        if proc.stderr:
+            proc.stderr.close()
+
+        self.assertEqual(proc.returncode, 2, stderr.decode(errors="replace"))
+        self.assertIn("gzip", stderr.decode(errors="replace").lower())
 if __name__ == "__main__":
     unittest.main()
