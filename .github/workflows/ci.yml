@@ -32,7 +32,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # 组内区分事件类型：push（秒级 format）不得取消手动触发的长时间重任务
+  # CI，反之亦然；同类事件（连续 push / 连续手动触发）仍保留"最新者胜"。
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 env:

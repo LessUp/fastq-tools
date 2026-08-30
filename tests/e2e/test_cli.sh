@@ -39,7 +39,6 @@ python3 "$DATA_DIR/gen_fastq.py" -o "$SAMPLE_FASTQ" -n 10000 --min-len 100 --max
 # 颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 pass() {
@@ -49,10 +48,6 @@ pass() {
 fail() {
     echo -e "${RED}[FAIL]${NC} $1"
     exit 1
-}
-
-warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
 # 检查可执行文件是否存在
