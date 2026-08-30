@@ -124,3 +124,6 @@ benchmark-*.csv
 docs/performance/benchmark-reports/**/*-annotate.txt
 docs/performance/benchmark-reports/**/stat-helgrind.txt
 docs/performance/benchmark-reports/**/stat-massif.txt
+
+# benchmark-io 本机数据缓存（脚本按需重新生成）
+/test_input.fq.gz
