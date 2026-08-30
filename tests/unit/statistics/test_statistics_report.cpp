@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <cstdio>
+#include <filesystem>
+#include <stdexcept>
 #include <string>
 
 #include <fcntl.h>
@@ -12,13 +14,22 @@
 
 namespace fq::statistics {
 
-// 捕获 stderr 内容（logging 直接写 fd 2），用于断言 warn 行为
+// 捕获 stderr 内容（logging 直接写 fd 2），用于断言 warn 行为。
+// 回归：此前硬编码 /tmp 固定路径，目录不存在时 open 失败仍继续执行，
+// content() 对空 FILE* 调用 fgets 导致段错误。现改为系统临时目录下的
+// 唯一文件 + 创建失败快速抛错，content() 直接从已持有的 fd 读取。
 class StderrCapture {
 public:
     StderrCapture() {
         std::fflush(stderr);
-        captured_ =
-            ::open("/tmp/opencode/fqt-verify/stderr_cap.txt", O_RDWR | O_CREAT | O_TRUNC, 0600);
+        path_ = (std::filesystem::temp_directory_path()
+                 / ("fqtools_stderr_" + std::to_string(::getpid()) + "_"
+                    + std::to_string(counter++) + ".txt"))
+                    .string();
+        captured_ = ::open(path_.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0600);
+        if (captured_ < 0) {
+            throw std::runtime_error("StderrCapture: failed to create temp capture file");
+        }
         saved_ = ::dup(STDERR_FILENO);
         ::dup2(captured_, STDERR_FILENO);
     }
@@ -27,19 +38,28 @@ public:
         ::dup2(saved_, STDERR_FILENO);
         ::close(saved_);
         ::close(captured_);
+        ::unlink(path_.c_str());
     }
-    static auto content() -> std::string {
-        std::FILE* f = std::fopen("/tmp/opencode/fqt-verify/stderr_cap.txt", "r");
+
+    auto content() -> std::string {
+        std::fflush(stderr);
         std::string out;
         char buffer[512];
-        while (std::fgets(buffer, sizeof(buffer), f) != nullptr) {
-            out += buffer;
+        off_t offset = 0;
+        while (true) {
+            const auto bytesRead = ::pread(captured_, buffer, sizeof(buffer), offset);
+            if (bytesRead <= 0) {
+                break;
+            }
+            out.append(buffer, static_cast<size_t>(bytesRead));
+            offset += bytesRead;
         }
-        std::fclose(f);
         return out;
     }
 
 private:
+    inline static int counter = 0;
+    std::string path_;
     int captured_ = -1;
     int saved_ = -1;
 };
