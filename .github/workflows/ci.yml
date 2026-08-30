@@ -1,17 +1,32 @@
 name: CI
 
-# push/PR 自动触发全部 job：format、static-analysis、build-and-test（含 sanitizer）、fuzz-smoke、coverage。
-# PR 上除 TSan 外全部运行（TSan 仅 push 主分支，理由见 build-and-test 注释）；亦支持手动触发（workflow_dispatch）。
+# 触发策略（减轻 GitHub Actions 负担，重任务优先在本地运行）：
+# - push/PR 仅自动运行 format（秒级，无构建）；
+# - 静态分析、多编译器构建测试、sanitizer、fuzz、coverage 等重任务一律手动触发
+#   （Actions 页面 Run workflow，选择 suite 范围：full/quick/sanitizers/coverage/fuzz）。
+# 本地等价命令：
+#   ./scripts/core/lint all -b build/gcc-debug          # format + clang-tidy + cppcheck
+#   ./scripts/core/test --build-dir build/gcc-debug     # unit + integration + e2e + packaging
+#   ./scripts/core/build --sanitizer asan && ./scripts/core/test  # sanitizer
+#   ./scripts/core/test --coverage                      # 覆盖率报告
+#   （fuzz 本地运行方式见 tools/fuzz/corpus/README.md）
 on:
   push:
     branches: [main, master, develop]
   pull_request:
   workflow_dispatch:
     inputs:
-      reason:
-        description: '触发原因'
+      suite:
+        description: '运行范围: full=全部 | quick=快速构建测试 | sanitizers=仅 sanitizer | coverage=仅覆盖率 | fuzz=仅 fuzz 冒烟'
         required: false
-        default: 'manual'
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - quick
+          - sanitizers
+          - coverage
+          - fuzz
 
 permissions:
   contents: read
@@ -48,6 +63,8 @@ jobs:
   static-analysis:
     name: Static Analysis
     runs-on: ubuntu-latest
+    # 重任务：仅手动触发 full 范围时运行
+    if: github.event_name == 'workflow_dispatch' && inputs.suite == 'full'
 
     steps:
       - name: Checkout
@@ -90,37 +107,42 @@ jobs:
   build-and-test:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
-    # PR 门禁：PR 运行除 TSan 外的全部构建（含 ASan/UBSan），push/手动触发全跑。
-    # TSan 仅 push 主分支的理由：TSan 运行时开销约 5-15 倍且内存占用翻倍，全量 ctest
-    # 作为 PR 门禁耗时过长；数据竞争回归频率低，由 push 到主分支的完整运行兜底。
+    # 重任务：仅手动触发时运行。suite 决定运行的矩阵子集：
+    # quick → 两个 Release 构建测试；sanitizers → ASan/TSan/UBSan；full → 全部。
+    # push/PR 不运行任何构建（inputs 为空，event_name 守卫先行短路）。
     if: |
-      github.event_name != 'pull_request' ||
-      !contains(matrix.name, 'TSan')
+      github.event_name == 'workflow_dispatch' &&
+      contains(matrix.suites, inputs.suite || 'full')
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: GCC Release
+            suites: quick,full
             compiler: gcc
             cache_slug: gcc-release
             build_command: ./scripts/core/build --preset gcc-release --no-lto
             test_command: ./scripts/core/test --preset gcc-release --timeout 180
           - name: Clang Release
+            suites: quick,full
             compiler: clang
             cache_slug: clang-release
             build_command: ./scripts/core/build --compiler clang --type Release --build-dir build/ci-clang-release --conan-profile build-config/conan/profile-clang-ci --no-lto
             test_command: ./scripts/core/test --build-dir build/ci-clang-release --timeout 180
           - name: Clang ASan
+            suites: sanitizers,full
             compiler: clang
             cache_slug: clang-asan
             build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer asan --build-dir build/ci-clang-asan --conan-profile build-config/conan/profile-clang-ci --no-lto
             test_command: ctest --test-dir build/ci-clang-asan --output-on-failure --parallel $(nproc) --exclude-regex 'packaging_test'
           - name: Clang TSan
+            suites: sanitizers,full
             compiler: clang
             cache_slug: clang-tsan
             build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer tsan --build-dir build/ci-clang-tsan --conan-profile build-config/conan/profile-clang-ci --no-lto
             test_command: ctest --test-dir build/ci-clang-tsan --output-on-failure --parallel $(nproc) --exclude-regex 'packaging_test'
           - name: Clang UBSan
+            suites: sanitizers,full
             compiler: clang
             cache_slug: clang-ubsan
             build_command: ./scripts/core/build --compiler clang --type Debug --sanitizer ubsan --build-dir build/ci-clang-ubsan --conan-profile build-config/conan/profile-clang-ci --no-lto
@@ -190,6 +212,8 @@ jobs:
   fuzz-smoke:
     name: Fuzz Smoke
     runs-on: ubuntu-latest
+    # 重任务：仅手动触发 full / fuzz 范围时运行
+    if: github.event_name == 'workflow_dispatch' && (inputs.suite == 'full' || inputs.suite == 'fuzz')
 
     env:
       # 同 build-and-test：ccache launcher 经环境变量注入，与 Conan toolchain 正交
@@ -284,6 +308,13 @@ jobs:
     name: Coverage
     needs: build-and-test
     runs-on: ubuntu-latest
+    # 重任务：仅手动触发 full / coverage 范围时运行。coverage 范围下 build-and-test
+    # 会被跳过，故需 always() 并显式接受 skipped 依赖，否则 needs 会连带跳过本 job。
+    if: |
+      always() &&
+      github.event_name == 'workflow_dispatch' &&
+      (inputs.suite == 'full' || inputs.suite == 'coverage') &&
+      (needs.build-and-test.result == 'success' || needs.build-and-test.result == 'skipped')
 
     steps:
       - name: Checkout
