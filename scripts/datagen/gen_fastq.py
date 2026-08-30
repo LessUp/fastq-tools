@@ -37,6 +37,9 @@ def main() -> None:
 
     random.seed(args.seed)
 
+    # 输出目录可能不存在（如 tests/data/generated 不入库），自动创建
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+
     with args.output.open("w", encoding="ascii") as f:
         for idx in range(args.reads):
             seq_len = random.randint(args.min_len, args.max_len)
