@@ -22,9 +22,9 @@ class StderrCapture {
 public:
     StderrCapture() {
         std::fflush(stderr);
-        path_ = (std::filesystem::temp_directory_path()
-                 / ("fqtools_stderr_" + std::to_string(::getpid()) + "_"
-                    + std::to_string(counter++) + ".txt"))
+        path_ = (std::filesystem::temp_directory_path() /
+                 ("fqtools_stderr_" + std::to_string(::getpid()) + "_" + std::to_string(counter++) +
+                  ".txt"))
                     .string();
         captured_ = ::open(path_.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0600);
         if (captured_ < 0) {
@@ -222,6 +222,19 @@ TEST(StatisticsWriterTest, WarnsOnEmptyResultForAllFormats) {
         ++count;
     }
     EXPECT_EQ(count, 3u) << "logged: " << logged;
+}
+
+// 字符设备目标（/dev/null 等）不支持"同目录临时文件 + rename"的原子发布，
+// 必须直接顺序写入；writeStatisticsOutputs 对特殊文件目标不得抛错
+TEST(StatisticsWriterTest, WritesToCharacterDeviceWithoutAtomicTemporary) {
+    FqStatisticResult result;
+    result.readCount = 1;
+
+    StatisticOptions options;
+    options.inputFastqPath = "input.fastq";
+    options.outputStatPath = "/dev/null";
+
+    EXPECT_NO_THROW(writeStatisticsOutputs(options, result));
 }
 
 }  // namespace fq::statistics

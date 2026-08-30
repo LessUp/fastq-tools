@@ -71,6 +71,16 @@ struct FastqReader::Impl {
             // 成功后 fd 所有权移交 gzFile
             if (::lseek(fd, 0, SEEK_SET) < 0) {
                 const int savedErrno = errno;
+                if (savedErrno == ESPIPE) {
+                    // 管道/FIFO 等不可回退输入：gzdopen 无法从偏移 0 重新解析
+                    // gzip 头（魔数已被消费），与 stdin 的 gzip 语义保持一致，
+                    // 给出明确的配置错误而不是令人困惑的 "Illegal seek"
+                    ::close(fd);
+                    fd = -1;
+                    throw fq::error::ConfigurationError(
+                        "gzip-compressed input from a pipe/FIFO is not supported; "
+                        "decompress first (e.g. gzip -dc file.gz | FastQTools ... -i -)");
+                }
                 ::close(fd);
                 fd = -1;
                 throw fq::error::IOError(path, savedErrno);
@@ -85,9 +95,18 @@ struct FastqReader::Impl {
             return;
         }
 
-        // 非 gzip：回退 sniff 已消费的字节后从头读取
+        // 非 gzip：回退 sniff 已消费的字节后从头读取。
+        // 管道/FIFO 不可 seek（ESPIPE）：把已消费的 sniff 字节存入 remainder，
+        // 后续读取从剩余流继续（与 stdin 路径同一模式）。
         if (::lseek(fd, 0, SEEK_SET) < 0) {
             const int savedErrno = errno;
+            if (savedErrno == ESPIPE) {
+                if (headerBytes > 0) {
+                    remainder.assign(reinterpret_cast<const char*>(header),
+                                     reinterpret_cast<const char*>(header) + headerBytes);
+                }
+                return;
+            }
             ::close(fd);
             fd = -1;
             throw fq::error::IOError(path, savedErrno);
@@ -227,7 +246,13 @@ auto FastqReader::nextBatch(FastqBatch& batch, size_t maxRecords) -> bool {
                 // 使每批读满缓冲上限后把大半数据存入 remainder、下批再整体拷回
                 const double want = static_cast<double>(maxRecords) * impl_->estimatedRecordBytes;
                 const double buffered = static_cast<double>(batch.buffer().size());
-                targetBytes = static_cast<size_t>(std::max(buffered, want));
+                // 目标至少比当前缓冲大一个 chunk：当估算过小（单条记录超过
+                // maxRecords × 平均记录长）且上次迭代未能解析出任何记录时，
+                // 若目标仍等于当前大小，内层读取循环条件恒为假、不读任何字节，
+                // 解析再次失败 → 外层死循环（挂起）。+chunk 保证总能取得新数据，
+                // 直到记录完整或触及 maxBufferBytes 守卫
+                targetBytes =
+                    static_cast<size_t>(std::max(buffered + static_cast<double>(chunk), want));
             }
 
             if (maxBuf > 0) {

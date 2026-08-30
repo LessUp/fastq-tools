@@ -88,7 +88,10 @@ auto FilterCommand::execute(int argc, char* argv[]) -> int {
     if (wantStat) {
         fq::statistics::writeStatisticsOutputs(statOpts, pipeline_.readStatistics());
     }
-    const bool reportToStdout = statOpts.outputStatPath == "-" || statOpts.jsonOutputPath == "-";
+    // stdout 已被 FASTQ 或 QC 报告占用时，人类可读摘要不得混入字节流
+    // （下游 FASTQ 消费者会把摘要解析为格式错误），此时静默抑制
+    const bool reportToStdout = statOpts.outputStatPath == "-" || statOpts.jsonOutputPath == "-" ||
+        common.outputPath == "-";
     if (!reportToStdout && fq::logging::getLevel() < fq::logging::Level::Error) {
         std::cout << stats.toString() << '\n';
     }

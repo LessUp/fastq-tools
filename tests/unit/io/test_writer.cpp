@@ -80,7 +80,7 @@ TEST_F(FastqWriterTest, PublishedOutputFollowsUmask) {
     }
     ::umask(originalUmask);
 
-    struct stat st{};
+    struct stat st {};
     ASSERT_EQ(::stat(tmpFile_.c_str(), &st), 0);
     EXPECT_EQ(st.st_mode & 0777, 0644) << std::oct << "mode=" << (st.st_mode & 0777);
 }
@@ -183,6 +183,14 @@ TEST_F(FastqWriterTest, FinishFailurePreservesExistingTarget) {
         EXPECT_TRUE(std::filesystem::is_directory(tmpFile_));
     }
     std::filesystem::remove_all(tmpFile_);
+}
+
+TEST_F(FastqWriterTest, WritesToCharacterDeviceWithoutAtomicTemporary) {
+    FastqWriter writer("/dev/null");
+    EXPECT_TRUE(writer.isOpen());
+
+    writer.write(FastqRecord{"read1", {}, "ACGT", "IIII", "+"});
+    EXPECT_NO_THROW(writer.finish());
 }
 
 // 未 finish 即析构：只清理临时文件，绝不发布输出（IWriter 契约）

@@ -17,6 +17,8 @@
 #include <unistd.h>
 #include <zlib.h>
 
+#include <sys/stat.h>
+
 namespace fq::io {
 
 namespace {
@@ -60,11 +62,26 @@ static auto endsWithGzSuffix(const std::string& path) -> bool {
     return path.compare(path.size() - 3, 3, kGz) == 0;
 }
 
+// 目标是否为特殊文件（字符/块设备、FIFO、socket）：
+// 这些目标不支持"同目录临时文件 + rename"的原子发布协议——
+// 在 /dev 下创建临时文件会被拒绝（Permission denied），
+// 且对设备做 rename 覆盖也无意义。此类目标直接写入（与 stdout 语义一致）。
+// 目标不存在或 stat 失败时按普通文件处理（走原子路径，open 阶段报错）。
+auto isSpecialFileTarget(const std::string& path) -> bool {
+    struct stat st {};
+    if (::stat(path.c_str(), &st) != 0) {
+        return false;
+    }
+    return S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode) || S_ISFIFO(st.st_mode) ||
+        S_ISSOCK(st.st_mode);
+}
+
 struct FastqWriter::Impl {
     int fd = -1;
     gzFile gzfile = nullptr;
     bool ownsFd = true;
     bool streamingStdout = false;
+    bool directWrite = false;  // 特殊文件目标（/dev/null 等）：无临时文件 + rename
     std::string path;
     std::filesystem::path temporaryPath;
     FastqWriterOptions options{};
@@ -85,6 +102,11 @@ struct FastqWriter::Impl {
     explicit Impl(std::string p, const FastqWriterOptions& opt) : path(std::move(p)), options(opt) {
         if (path == "-") {
             openStdout();
+            return;
+        }
+
+        if (isSpecialFileTarget(path)) {
+            openDirect();
             return;
         }
 
@@ -143,6 +165,42 @@ struct FastqWriter::Impl {
         buffer.reserve(options.outputBufferBytes);
     }
 
+    // 特殊文件目标（字符/块设备、FIFO、socket）：绕过临时文件 + rename，
+    // 直接以目标 fd 顺序写入；finish() 只 flush/关闭，不做发布。
+    void openDirect() {
+        directWrite = true;
+        ownsFd = true;
+        fd = ::open(path.c_str(), O_WRONLY | O_CREAT, 0666);
+        if (fd < 0) {
+            throw fq::error::IOError(path, errno);
+        }
+        if (options.compression == FastqWriterCompressionMode::Auto) {
+            compression = endsWithGzSuffix(path) ? FastqWriterCompressionMode::Gzip
+                                                 : FastqWriterCompressionMode::None;
+        } else {
+            compression = options.compression;
+        }
+        if (compression == FastqWriterCompressionMode::Gzip) {
+            if (options.compressionLevel < 1 || options.compressionLevel > 9) {
+                ::close(fd);
+                fd = -1;
+                throw fq::error::ConfigurationError(
+                    "gzip compression level must be between 1 and 9");
+            }
+            const std::string mode = "wb" + std::to_string(options.compressionLevel);
+            gzfile = gzdopen(fd, mode.c_str());
+            if (!gzfile) {
+                const int savedErrno = errno;
+                ::close(fd);
+                fd = -1;
+                throw fq::error::IOError(path, savedErrno);
+            }
+            fd = -1;  // fd 所有权移交给 gzFile
+            gzbuffer(gzfile, static_cast<unsigned>(options.outputBufferBytes));
+        }
+        buffer.reserve(options.outputBufferBytes);
+    }
+
     ~Impl() {
         // 析构只做兜底清理，绝不发布输出：异常展开到达这里时内容必然不完整，
         // 若调用 finish() 会把截断结果 rename 成目标文件，被误认为完整产物。
@@ -180,6 +238,29 @@ struct FastqWriter::Impl {
             flush();
 
             if (streamingStdout) {
+                finished = true;
+                return;
+            }
+
+            if (directWrite) {
+                // 特殊文件目标：无 rename 发布。设备/FIFO 无 page cache 语义，
+                // 跳过 fsync；正确关闭即可（gzclose 会关闭其接管的 fd）。
+                if (gzfile) {
+                    const int closeResult = gzclose(gzfile);
+                    gzfile = nullptr;
+                    if (closeResult != Z_OK) {
+                        throw fq::error::FastQException(fq::error::ErrorCategory::IO,
+                                                        fq::error::ErrorSeverity::Critical,
+                                                        "gzip close failed");
+                    }
+                } else if (ownsFd && fd >= 0) {
+                    if (::close(fd) != 0) {
+                        const int error = errno;
+                        fd = -1;
+                        throw fq::error::IOError(path, error);
+                    }
+                    fd = -1;
+                }
                 finished = true;
                 return;
             }
@@ -281,7 +362,7 @@ struct FastqWriter::Impl {
             }
 
 #ifdef __linux__
-            if (!streamingStdout) {
+            if (!streamingStdout && !directWrite) {
                 // 通知内核释放已写出的 page cache，减少大文件写出时的内存压力
                 ::posix_fadvise(
                     fd, flushedOffset, static_cast<off_t>(outSize), POSIX_FADV_DONTNEED);

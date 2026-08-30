@@ -27,6 +27,7 @@
 
 #include "processing/execution_runtime.h"
 #include "statistics/fq_statistic_worker.h"
+#include <sys/stat.h>
 
 namespace fq::statistics {
 
@@ -97,6 +98,18 @@ void writeAtomically(const std::string& target,
     }
 }
 
+// 目标是否为特殊文件（字符/块设备、FIFO、socket）：与 FastqWriter 同一判断，
+// 这些目标不支持"同目录临时文件 + rename"的原子发布（/dev 下创建临时文件会
+// Permission denied，对设备 rename 也无意义），直接顺序写入。
+auto isSpecialFileTarget(const std::string& target) -> bool {
+    struct stat st {};
+    if (::stat(target.c_str(), &st) != 0) {
+        return false;  // 不存在或 stat 失败 → 走原子路径，open 阶段报错
+    }
+    return S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode) || S_ISFIFO(st.st_mode) ||
+        S_ISSOCK(st.st_mode);
+}
+
 // 先写同目录临时文件、校验流状态、再原子 rename 发布——
 // 与 FastqWriter 的发布协议一致：磁盘满等写失败抛 IOError，绝不产出半截报告
 void writeToDestination(const std::string& target,
@@ -105,6 +118,18 @@ void writeToDestination(const std::string& target,
         writeBody(std::cout);
         std::cout.flush();
         if (!std::cout) {
+            throw fq::error::IOError(target, EIO);
+        }
+        return;
+    }
+    if (isSpecialFileTarget(target)) {
+        std::ofstream out(target, std::ios::binary);
+        if (!out) {
+            throw fq::error::IOError(target, errno);
+        }
+        writeBody(out);
+        out.flush();
+        if (!out.good()) {
             throw fq::error::IOError(target, EIO);
         }
         return;
