@@ -91,6 +91,10 @@ Thumbs.db
 tests/e2e/.tmp/
 tests/e2e/.tmp_python/
 
+# ----- 测试数据（生成数据与运行时临时输出不入库） -----
+tests/data/generated/
+tests/data/tmp/
+
 # ===== 覆盖率与分析数据 =====
 coverage/
 !build-config/coverage/

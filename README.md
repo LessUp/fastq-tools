@@ -126,7 +126,7 @@ x86-64 或 ARM CPU 上运行。如需针对特定 CPU 优化：
 > **注意**：项目不实现运行时 SIMD dispatch。选择的基线在编译时固定。
 ```
 
-示例输入不随仓库附带，先用 `tools/data/gen_fastq.py` 生成示例数据：`python3 tools/data/gen_fastq.py -o sample.fastq && gzip -kf sample.fastq`。
+示例输入不随仓库附带，先用 `scripts/datagen/gen_fastq.py` 生成示例数据：`python3 scripts/datagen/gen_fastq.py -o sample.fastq && gzip -kf sample.fastq`。
 
 统计：
 

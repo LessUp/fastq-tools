@@ -18,11 +18,12 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 # 默认可执行文件路径
 FASTQTOOLS="${FASTQTOOLS:-$PROJECT_ROOT/build/clang-release/FastQTools}"
 
-# 测试数据目录
-DATA_DIR="$PROJECT_ROOT/tools/data"
+# 数据生成脚本与静态 fixture 目录
+DATA_DIR="$PROJECT_ROOT/scripts/datagen"
+FIXTURES_DIR="$PROJECT_ROOT/tests/data/fixtures"
 
-# 临时输出目录（限制在仓库内，避免写入系统临时目录）
-TMP_ROOT="$PROJECT_ROOT/tests/e2e/.tmp"
+# 临时输出目录（统一收敛到 tests/data/tmp，已 gitignore）
+TMP_ROOT="$PROJECT_ROOT/tests/data/tmp/e2e_shell"
 mkdir -p "$TMP_ROOT"
 TMP_DIR="$(mktemp -d "$TMP_ROOT/test_cli.XXXXXX")"
 cleanup() {
@@ -135,12 +136,7 @@ fi
 # Test 8: filter 缺少必需参数
 echo "Test 8: filter missing required args"
 NEGATIVE_INPUT="$TMP_DIR/negative-input.fastq"
-cat > "$NEGATIVE_INPUT" <<'EOF'
-@negative-read
-ACGT
-+
-!!!!
-EOF
+cp "$FIXTURES_DIR/fastq/valid/minimal_record.fastq" "$NEGATIVE_INPUT"
 set +euo pipefail
 $FASTQTOOLS --quiet filter --input "$NEGATIVE_INPUT" > "$TMP_DIR/filter-missing-output.txt" 2>&1
 STATUS_OUTPUT=$?
@@ -202,12 +198,7 @@ fi
 # Test 12: 错误类别使用稳定退出码
 echo "Test 12: stable error exit codes"
 MALFORMED_FASTQ="$TMP_DIR/malformed.fastq"
-cat > "$MALFORMED_FASTQ" <<'EOF'
-@malformed-read
-ACGT
--
-!!!!
-EOF
+cp "$FIXTURES_DIR/fastq/invalid/plus_line_mismatch.fastq" "$MALFORMED_FASTQ"
 set +euo pipefail
 $FASTQTOOLS -q filter --input "$MALFORMED_FASTQ" --output "$TMP_DIR/malformed-output.fastq" > "$TMP_DIR/format-error.txt" 2>&1
 STATUS_FORMAT=$?
@@ -224,12 +215,7 @@ fi
 
 echo "Test 13: trim-quality changes output"
 TRIM_INPUT="$TMP_DIR/trim-input.fastq"
-cat > "$TRIM_INPUT" <<'EOF'
-@trim-read
-ACGT
-+
-!!II
-EOF
+cp "$FIXTURES_DIR/fastq/valid/low_quality_tail.fastq" "$TRIM_INPUT"
 if $FASTQTOOLS -q filter --input "$TRIM_INPUT" --output "$TMP_DIR/trimmed.fastq" --trim-quality 20 2>&1; then
     if grep -q '^GT$' "$TMP_DIR/trimmed.fastq"; then
         pass "trim-quality trims low-quality ends"

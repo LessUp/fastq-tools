@@ -11,7 +11,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 FASTQTOOLS="${FASTQTOOLS:-$PROJECT_ROOT/build/clang-release/FastQTools}"
-DATA_DIR="$PROJECT_ROOT/tools/data"
+GENERATED_DIR="$PROJECT_ROOT/tests/data/generated"
+DATAGEN="$PROJECT_ROOT/scripts/datagen/gen_fastq.py"
 TMP_DIR=$(mktemp -d)
 trap "rm -rf $TMP_DIR" EXIT
 
@@ -21,11 +22,12 @@ if [[ ! -x "$FASTQTOOLS" ]]; then
     exit 1
 fi
 
-# 生成更大的测试数据（如果不存在）
-BENCH_DATA="$DATA_DIR/sample_100k_len100.fastq"
+# 生成更大的测试数据（如果不存在；生成数据不入库，统一放 tests/data/generated）
+BENCH_DATA="$GENERATED_DIR/sample_100k_len100.fastq"
 if [[ ! -f "$BENCH_DATA" ]]; then
     echo "Generating benchmark data (100k reads, 100bp)..."
-    python3 "$DATA_DIR/gen_fastq.py" -o "$BENCH_DATA" -n 100000 --min-len 100 --max-len 100 --seed 42
+    mkdir -p "$GENERATED_DIR"
+    python3 "$DATAGEN" -o "$BENCH_DATA" -n 100000 --min-len 100 --max-len 100 --seed 42
 fi
 
 FILE_SIZE=$(stat -c %s "$BENCH_DATA" 2>/dev/null || stat -f %z "$BENCH_DATA")

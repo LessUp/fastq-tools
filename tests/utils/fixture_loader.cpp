@@ -35,17 +35,17 @@ std::vector<std::string> FixtureLoader::loadLines(const std::filesystem::path& p
 }
 
 std::filesystem::path FixtureLoader::getFixturePath(const std::string& filename) {
-    auto current_path = std::filesystem::current_path();
-
-    // 优先查找 tools/data/（项目标准测试数据目录）
-    auto fixture_path = current_path / "tools" / "data" / filename;
-    if (std::filesystem::exists(fixture_path)) {
-        return fixture_path;
+    // 自当前目录向上查找源码根下的 tests/data/fixtures/（测试工作目录位于
+    // 构建树内任意深度），最多回溯 6 级；未找到时返回相对路径便于错误信息定位。
+    auto dir = std::filesystem::current_path();
+    for (int depth = 0; depth < 6; ++depth) {
+        auto fixture_path = dir / "tests" / "data" / "fixtures" / filename;
+        if (std::filesystem::exists(fixture_path)) {
+            return fixture_path;
+        }
+        dir = dir / "..";
     }
-
-    // 回退：从构建目录向上查找
-    fixture_path = current_path / ".." / "tools" / "data" / filename;
-    return fixture_path;
+    return std::filesystem::path("tests") / "data" / "fixtures" / filename;
 }
 
 bool FixtureLoader::fixtureExists(const std::string& filename) {

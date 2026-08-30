@@ -13,6 +13,10 @@ tests/
 │   ├── processing/           #   执行运行时、运行时配置、Pipeline 冒烟、谓词与修改器
 │   ├── statistics/           #   FqStatisticWorker、统计报告
 │   └── CMakeLists.txt
+├── data/                     # 测试数据（fixtures 入库；generated/tmp 忽略，见 data/README.md）
+│   ├── fixtures/             #   手工维护的静态小文件（fastq/valid|invalid|gzip、expected）
+│   ├── generated/            #   脚本生成的大样本（不入库）
+│   └── tmp/                  #   运行时临时输出（不入库）
 ├── integration/              # 集成测试（跨模块交互、文件 I/O）
 │   ├── test_pipeline_integration.cpp
 │   └── CMakeLists.txt
@@ -62,7 +66,7 @@ ctest --test-dir build/clang-debug -R packaging_test --output-on-failure
 using namespace fq::test;
 
 // 加载测试数据
-auto content = FixtureLoader::loadTextFile("tools/data/sample_10k.fastq");
+auto content = FixtureLoader::loadTextFile("tests/data/fixtures/fastq/valid/minimal_record.fastq");
 
 // 创建临时 FASTQ 文件
 auto temp = FixtureLoader::createTempFastq(1000, 100);
@@ -100,7 +104,7 @@ auto tmpFile = TestDataGenerator::createTempFile(records);
 class MyTest : public fq::test::FastQToolsTest {
 protected:
     // tempDir_     — TempDirectory（RAII 自动清理）
-    // testDataDir_ — tools/data/ 路径
+    // testDataDir_ — tests/data/fixtures 路径（自工作目录向上定位）
 };
 ```
 

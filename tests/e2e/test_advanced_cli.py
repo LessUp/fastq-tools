@@ -11,8 +11,8 @@ class TestFastQToolsCLI(unittest.TestCase):
     def setUpClass(cls):
         # Path to the executable
         cls.fastqtools = os.environ.get("FASTQTOOLS", "./build/clang-release/FastQTools")
-        cls.data_dir = os.path.join(os.getcwd(), "tools/data")
-        cls.tmp_root = os.path.join(os.getcwd(), "tests", "e2e", ".tmp_python")
+        cls.data_dir = os.path.join(os.getcwd(), "scripts", "datagen")
+        cls.tmp_root = os.path.join(os.getcwd(), "tests", "data", "tmp", "e2e_python")
         os.makedirs(cls.tmp_root, exist_ok=True)
         # 样本生成到独立 tmp 目录，避免与 e2e_shell_cli 并发写同一文件
         cls.sample_fastq = os.path.join(cls.tmp_root, "sample_10k_len100.fastq")

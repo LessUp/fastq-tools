@@ -42,7 +42,7 @@ v4 生产和 benchmark 构建只保留 Sequential 与 oneTBB backend；历史 Ta
 仓库不附带样本数据，先生成（默认 10,000 条 reads、80–150 bp，seed=42 可复现）：
 
 ```bash
-python3 tools/data/gen_fastq.py -o sample.fastq
+python3 scripts/datagen/gen_fastq.py -o sample.fastq
 gzip -kf sample.fastq   # 生成 sample.fastq.gz，供下面的示例使用
 ```
 

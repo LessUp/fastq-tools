@@ -53,7 +53,7 @@ cmake --build build-fuzz
 
 ```bash
 # 生成自定义 FASTQ 数据
-python3 tools/data/gen_fastq.py -o output.fastq -n 10000
+python3 scripts/datagen/gen_fastq.py -o output.fastq -n 10000
 
 # 生成完整 benchmark 数据集
 python3 tools/benchmark/scripts/gen_benchmark_data.py --generate-dataset
