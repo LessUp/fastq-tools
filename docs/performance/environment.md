@@ -48,7 +48,7 @@
 
 | 名称 | 规模 | 来源 | 用途 |
 |------|------|------|------|
-| sample_10k_len100 | 10K reads × 100 bp，2.1 MiB | `tests/e2e/.tmp_python/sample_10k_len100.fastq` | Google Benchmark / 端到端 |
+| sample_10k_len100 | 10K reads × 100 bp，2.1 MiB | `tests/data/tmp/e2e_python/sample_10k_len100.fastq` | Google Benchmark / 端到端 |
 | sample_1k | 1K reads × 100 bp，214 KiB | `sample_10k_len100` 前 1000 条 | Valgrind 分析（慢工具用小数据） |
 | v4_production_seed42 | 1M reads × 150 bp，316,888,890 bytes | benchmark 进程临时生成，`std::mt19937(42)` | 生产 Reader/Writer/filter/stat 基线 |
 

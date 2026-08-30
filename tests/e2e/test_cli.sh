@@ -167,32 +167,23 @@ else
     fail "stat did not reject missing input/output arguments"
 fi
 
-# Test 10: filter 命令基本执行
-
+# Test 10: filter 命令基本执行（使用启动时生成的 $SAMPLE_FASTQ；样本不入库，
+# 不能引用 $DATA_DIR 下的文件——否则本用例会静默跳过）
 echo "Test 10: filter command execution"
-if [[ -f "$DATA_DIR/sample_10k_len100.fastq" ]]; then
-    if $FASTQTOOLS -q filter --input "$DATA_DIR/sample_10k_len100.fastq" --output "$TMP_DIR/filtered.fastq" --threads 2 2>&1; then
-        pass "filter command executes without error"
-        [[ -s "$TMP_DIR/filtered.fastq" ]] || fail "filter command did not produce output"
-    else
-        fail "filter command returned non-zero"
-    fi
+if $FASTQTOOLS -q filter --input "$SAMPLE_FASTQ" --output "$TMP_DIR/filtered.fastq" --threads 2 2>&1; then
+    pass "filter command executes without error"
+    [[ -s "$TMP_DIR/filtered.fastq" ]] || fail "filter command did not produce output"
 else
-    warn "Skipping filter test: sample data not found"
+    fail "filter command returned non-zero"
 fi
 
 # Test 11: stat 命令基本执行
-
 echo "Test 11: stat command execution"
-if [[ -f "$DATA_DIR/sample_10k_len100.fastq" ]]; then
-    if $FASTQTOOLS -q stat --input "$DATA_DIR/sample_10k_len100.fastq" --output "$TMP_DIR/stats.txt" --threads 2 2>&1; then
-        pass "stat command executes without error"
-        grep -q $'^#ReadNum\t10000$' "$TMP_DIR/stats.txt" || fail "stat output missing read count"
-    else
-        fail "stat command returned non-zero"
-    fi
+if $FASTQTOOLS -q stat --input "$SAMPLE_FASTQ" --output "$TMP_DIR/stats.txt" --threads 2 2>&1; then
+    pass "stat command executes without error"
+    grep -q $'^#ReadNum\t10000$' "$TMP_DIR/stats.txt" || fail "stat output missing read count"
 else
-    warn "Skipping stat test: sample data not found"
+    fail "stat command returned non-zero"
 fi
 
 # Test 12: 错误类别使用稳定退出码
