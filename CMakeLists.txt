@@ -141,9 +141,11 @@ find_package(cxxopts CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(TBB CONFIG REQUIRED)
+# nlohmann_json 无条件查找：除 benchmark 模块外，benchmark 结果存储的单元测试
+# （tests/unit/benchmark/test_result_storage.cpp）在默认构建中也直接消费
+find_package(nlohmann_json CONFIG REQUIRED)
 if(BUILD_BENCHMARKS)
     find_package(benchmark CONFIG REQUIRED)
-    find_package(nlohmann_json CONFIG REQUIRED)
 endif()
 
 if(TARGET fmt::fmt-header-only AND NOT TARGET fmt::fmt)

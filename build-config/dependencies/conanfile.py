@@ -38,9 +38,10 @@ class FastQTools(ConanFile):
         self.requires("fmt/12.1.0")
         # Intel's Threading Building Blocks for high-level parallelism
         self.requires("onetbb/2022.3.0")
+        # benchmark 结果存储（types.h）消费；其单元测试在默认构建中也运行
+        self.requires("nlohmann_json/3.12.0")
         if self.options.build_benchmarks:
             self.requires("benchmark/1.9.5")
-            self.requires("nlohmann_json/3.12.0")
 
     def build_requirements(self):
         """

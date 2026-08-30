@@ -2,14 +2,18 @@
 #include <fstream>
 #include <memory>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "fixture_loader.h"
 #include "test_helpers.h"
 
+#include "processing/execution_backend.h"
 #include "processing/execution_runtime.h"
+#include "processing/resolved_runtime_config.h"
 #include <fqtools/error/error.h>
+#include <fqtools/io/fastq_reader.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -25,6 +29,7 @@ struct WriterCallState {
     size_t writeCalls = 0;
     size_t finishCalls = 0;
     bool failOnFinish = false;
+    bool failOnWrite = false;
 };
 
 class RecordingWriter final : public fq::io::IWriter {
@@ -33,6 +38,9 @@ public:
 
     auto write(const fq::io::FastqBatch& batch) -> std::uint64_t override {
         ++state_->writeCalls;
+        if (state_->failOnWrite) {
+            throw fq::error::IOError("recording-writer", 5);
+        }
         return batch.buffer().size();
     }
 
@@ -73,11 +81,17 @@ class RecordingCommandAdapter {
 public:
     using result_type = BatchSummary;
 
+    // 置位后 processBatch 抛异常，用于验证并行管线中的异常传播
+    bool failOnBatch = false;
+
     auto makeResult() const -> result_type {
         return {};
     }
 
     auto processBatch(fq::io::FastqBatch& batch) const -> result_type {
+        if (failOnBatch) {
+            throw std::runtime_error("adapter batch failure");
+        }
         result_type partial;
         partial.batchSizes.push_back(batch.records().size());
         partial.totalReads = batch.records().size();
@@ -323,6 +337,130 @@ TEST(ExecutionRuntimeTest, ExecuteBackendsHonorTheSameObservableContract) {
     EXPECT_EQ(oneTbb.result.batchSizes, sequential.result.batchSizes);
     EXPECT_EQ(oneTbb.metrics.batchCount, sequential.metrics.batchCount);
     EXPECT_EQ(oneTbb.metrics.committedBytes, sequential.metrics.committedBytes);
+}
+
+// ---------------------------------------------------------------------------
+// oneTBB 后端异常路径。ExecutionRuntime 对自定义 writer 强制回退串行后端
+// （resolveRuntimeConfig 的契约），因此经 runtime 注入的 writer 永远到不了
+// 并行后端；这里直连 createOneTbbExecutionBackend() 验证并行管线中
+// adapter/writer 异常的传播与 finish 语义。
+// ---------------------------------------------------------------------------
+class AnyBatchSummaryOperation final : public ExecutionOperation {
+public:
+    explicit AnyBatchSummaryOperation(bool failOnProcess = false)
+        : failOnProcess_(failOnProcess) {}
+
+    auto makeResult() -> std::any override {
+        return BatchSummary{};
+    }
+
+    auto processBatch(fq::io::FastqBatch& batch) -> std::any override {
+        if (failOnProcess_) {
+            throw std::runtime_error("operation batch failure");
+        }
+        BatchSummary partial;
+        partial.totalReads = batch.records().size();
+        return partial;
+    }
+
+    void afterCommit(std::any& /*partial*/, std::uint64_t /*committedBytes*/) override {}
+
+    void merge(std::any& total, std::any partial) override {
+        std::any_cast<BatchSummary&>(total).totalReads +=
+            std::any_cast<BatchSummary&>(partial).totalReads;
+    }
+
+private:
+    bool failOnProcess_;
+};
+
+auto makeOneTbbContext(fq::test::TempDirectory& tempDir,
+                       std::shared_ptr<fq::io::IWriter> writer) -> ExecutionBackendContext {
+    ProcessingOptions options;
+    options.batchSize = 1;
+    options.threadCount = 2;
+
+    ExecutionBackendContext context;
+    context.reader = std::make_shared<fq::io::FastqReader>(
+        writeFastqInput(tempDir, "backend_input.fastq", "@read1\nACGT\n+\nIIII\n"));
+    context.writer = std::move(writer);
+    context.config = resolveRuntimeConfig(options, false, false);
+    context.batchSize = options.batchSize;
+    return context;
+}
+
+TEST(ExecutionRuntimeTest, ExecutePropagatesAdapterFailureInParallelMode) {
+    fq::test::TempDirectory tempDir("execution_runtime_");
+    ExecutionRuntime runtime;
+    RecordingCommandAdapter adapter;
+    adapter.failOnBatch = true;
+
+    ExecutionRuntimeRequest request;
+    request.inputPath = writeFastqInput(tempDir, "input.fastq", "@read1\nACGT\n+\nIIII\n");
+    request.outputPath = (tempDir.path() / "output.fastq").string();
+    request.options.batchSize = 1;
+    request.options.threadCount = 2;
+
+    // 并行批次中抛出的异常必须传播出 execute 且不得挂起（TBB 管线异常传播回归）
+    EXPECT_THROW(static_cast<void>(runtime.execute(request, adapter)), std::runtime_error);
+}
+
+TEST(OneTbbBackendTest, PropagatesAdapterFailureWithoutFinishingWriter) {
+    fq::test::TempDirectory tempDir("execution_runtime_");
+    auto state = std::make_shared<WriterCallState>();
+    auto context = makeOneTbbContext(tempDir, std::make_shared<RecordingWriter>(state));
+
+    AnyBatchSummaryOperation operation(/*failOnProcess=*/true);
+    auto backend = createOneTbbExecutionBackend();
+
+    EXPECT_THROW(static_cast<void>(backend->execute(std::move(context), operation)),
+                 std::runtime_error);
+    EXPECT_EQ(state->finishCalls, 0U);
+}
+
+TEST(OneTbbBackendTest, PropagatesWriterWriteFailure) {
+    fq::test::TempDirectory tempDir("execution_runtime_");
+    auto state = std::make_shared<WriterCallState>();
+    state->failOnWrite = true;
+    auto context = makeOneTbbContext(tempDir, std::make_shared<RecordingWriter>(state));
+
+    AnyBatchSummaryOperation operation;
+    auto backend = createOneTbbExecutionBackend();
+
+    EXPECT_THROW(static_cast<void>(backend->execute(std::move(context), operation)),
+                 fq::error::IOError);
+    EXPECT_EQ(state->finishCalls, 0U);
+}
+
+TEST(OneTbbBackendTest, PropagatesWriterFinishFailure) {
+    fq::test::TempDirectory tempDir("execution_runtime_");
+    auto state = std::make_shared<WriterCallState>();
+    state->failOnFinish = true;
+    auto context = makeOneTbbContext(tempDir, std::make_shared<RecordingWriter>(state));
+
+    AnyBatchSummaryOperation operation;
+    auto backend = createOneTbbExecutionBackend();
+
+    EXPECT_THROW(static_cast<void>(backend->execute(std::move(context), operation)),
+                 fq::error::IOError);
+    EXPECT_EQ(state->finishCalls, 1U);
+}
+
+TEST(OneTbbBackendTest, FinishesWriterExactlyOnceOnSuccess) {
+    fq::test::TempDirectory tempDir("execution_runtime_");
+    auto state = std::make_shared<WriterCallState>();
+    auto context = makeOneTbbContext(tempDir, std::make_shared<RecordingWriter>(state));
+
+    AnyBatchSummaryOperation operation;
+    auto backend = createOneTbbExecutionBackend();
+
+    auto outcome = backend->execute(std::move(context), operation);
+    const auto summary = std::any_cast<BatchSummary>(std::move(outcome.result));
+
+    EXPECT_EQ(summary.totalReads, 1U);
+    EXPECT_EQ(state->writeCalls, 1U);
+    EXPECT_EQ(state->finishCalls, 1U);
+    EXPECT_EQ(outcome.metrics.batchCount, 1U);
 }
 
 }  // namespace fq::processing

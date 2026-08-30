@@ -146,9 +146,12 @@ TEST_F(ProcessorTest, FilterReads_ByQuality_RemovesLowQuality) {
 
 ### 覆盖率目标
 
-- **单元测试**: > 80% 行覆盖率
-- **集成测试**: 关键路径 100%
-- **E2E 测试**: 主要 CLI 用例 100%
+与 `build-config/coverage/thresholds.json` 及 CI coverage job 的门禁口径保持一致：
+
+- **单元测试**: 行覆盖率 CI 门禁 ≥ 70%，目标 80%
+- **函数覆盖率**: CI 门禁 ≥ 80%，目标 90%
+- **集成测试**: 关键路径覆盖
+- **E2E 测试**: 主要 CLI 用例
 
 ## 调试
 

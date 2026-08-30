@@ -8,6 +8,7 @@
 #include <string>
 
 #include <unistd.h>
+#include <zlib.h>
 
 #include <gtest/gtest.h>
 
@@ -259,4 +260,56 @@ TEST_F(FastqReaderTest, SmallBufferBoundary) {
     // This test is hard to deterministicly trigger buffer resizing logic
     // without mocking internal buffer size, but it verifies overall correctness.
     // We can write a large file to force multiple batches if we wanted.
+}
+
+// ---------------------------------------------------------------------------
+// gzip 数据损坏路径：gzread 错误必须以 IO 类别异常传播，
+// 而不是静默返回空数据或截断输出。
+// ---------------------------------------------------------------------------
+class FastqReaderGzipTest : public ::testing::Test {
+protected:
+    void TearDown() override {
+        std::error_code ec;
+        std::filesystem::remove(gzipPath_, ec);
+    }
+
+    std::string gzipPath_ = "test_reader_corruption.gz";
+};
+
+TEST_F(FastqReaderGzipTest, ThrowsOnCorruptedGzipPayload) {
+    // 合法 gzip 魔数头 + 非 deflate 数据：gzread 返回 Z_DATA_ERROR
+    std::ofstream out(gzipPath_, std::ios::binary);
+    ASSERT_TRUE(out);
+    const unsigned char gzipHeader[] = {0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03};
+    out.write(reinterpret_cast<const char*>(gzipHeader), sizeof(gzipHeader));
+    out << "this is not a deflate stream";
+    out.close();
+
+    fq::io::FastqReader reader(gzipPath_);
+    fq::io::FastqBatch batch;
+    EXPECT_THROW(static_cast<void>(reader.nextBatch(batch, 10)), fq::error::FastQException);
+}
+
+TEST_F(FastqReaderGzipTest, ThrowsOnTruncatedGzipFile) {
+    // 用 zlib 生成合法 gzip 后截断一半，模拟下载中断产生的损坏文件
+    std::string content;
+    for (int i = 0; i < 50; ++i) {
+        content += "@read" + std::to_string(i) + "\nACGTACGT\n+\nIIIIIIII\n";
+    }
+
+    {
+        gzFile gz = gzopen(gzipPath_.c_str(), "wb");
+        ASSERT_NE(gz, nullptr);
+        ASSERT_EQ(gzwrite(gz, content.data(), static_cast<unsigned>(content.size())),
+                  static_cast<int>(content.size()));
+        ASSERT_EQ(gzclose(gz), Z_OK);
+    }
+
+    const auto originalSize = std::filesystem::file_size(gzipPath_);
+    ASSERT_GT(originalSize, 64U);
+    std::filesystem::resize_file(gzipPath_, originalSize / 2);
+
+    fq::io::FastqReader reader(gzipPath_);
+    fq::io::FastqBatch batch;
+    EXPECT_THROW(static_cast<void>(reader.nextBatch(batch, 100)), fq::error::FastQException);
 }
