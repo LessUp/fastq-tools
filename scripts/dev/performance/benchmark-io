@@ -14,21 +14,26 @@ if [ ! -x "$BINARY" ]; then
     exit 1
 fi
 
+# 输出目录：writer 为原子发布（在目标目录创建临时文件），不能直接写
+# /dev/null（需 root 权限在 /dev 下创建临时文件），统一落盘到 mktemp 目录
+OUT_DIR=$(mktemp -d)
+trap 'rm -rf "$OUT_DIR"' EXIT
+
 # 生成测试数据（如不存在）
 TEST_FILE="test_input.fq"
 COMPRESSED_INPUT="test_input.fq.gz"
 if [ ! -f "$COMPRESSED_INPUT" ]; then
     log_info "生成测试数据..."
-    python3 tools/data/gen_fastq.py -o "$TEST_FILE" -n 200000
+    python3 "${SCRIPT_DIR}/../../datagen/gen_fastq.py" -o "$TEST_FILE" -n 200000
     gzip -c "$TEST_FILE" > "$COMPRESSED_INPUT"
     rm -f "$TEST_FILE"
 fi
 
 log_info "--- Reader Benchmark (zlib-ng) ---"
-time "$BINARY" stat -i "$COMPRESSED_INPUT" -o /dev/null
+time "$BINARY" stat -i "$COMPRESSED_INPUT" -o "$OUT_DIR/stats.txt"
 
 log_info "--- Writer Benchmark (zlib-ng gzip) ---"
-time "$BINARY" filter -i "$COMPRESSED_INPUT" -o test_output.fq.gz --min-length 0
+time "$BINARY" filter -i "$COMPRESSED_INPUT" -o "$OUT_DIR/test_output.fq.gz" --min-length 0
 
 log_info "清理..."
-rm -f test_output.fq.gz
+rm -f "$OUT_DIR/test_output.fq.gz"
